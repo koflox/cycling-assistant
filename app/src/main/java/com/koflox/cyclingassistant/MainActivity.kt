@@ -21,7 +21,7 @@ class MainActivity : ComponentActivity() {
             CyclingAssistantTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     Greeting(
-                        name = "Android",
+                        name = "Main screen",
                         modifier = Modifier.padding(innerPadding)
                     )
                 }
