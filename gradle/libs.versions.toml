@@ -34,6 +34,9 @@ playServicesMaps = "19.2.0"
 # JSON Parsing
 kotlinxSerialization = "1.9.0"
 
+# Navigation
+navigationCompose = "2.9.6"
+
 # Permissions
 accompanistPermissions = "0.37.3"
 
@@ -88,6 +91,9 @@ play-services-maps = { group = "com.google.android.gms", name = "play-services-m
 
 # JSON Serialization
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
+
+# Navigation
+androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
 
 # Permissions
 accompanist-permissions = { group = "com.google.accompanist", name = "accompanist-permissions", version.ref = "accompanistPermissions" }

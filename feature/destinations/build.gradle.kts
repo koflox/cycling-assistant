@@ -1,7 +1,5 @@
-import java.util.Properties
-
 plugins {
-    alias(libs.plugins.android.application)
+    alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
@@ -9,37 +7,24 @@ plugins {
 }
 
 android {
-    namespace = "com.koflox.cyclingassistant"
-
-    defaultConfig {
-        applicationId = "com.koflox.cyclingassistant"
-        targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
-
-        val secretsProperties = Properties()
-        val secretsPropertiesFile = rootProject.file("secrets.properties")
-        if (secretsPropertiesFile.exists()) {
-            secretsProperties.load(secretsPropertiesFile.inputStream())
-        }
-
-        manifestPlaceholders["MAPS_API_KEY"] = secretsProperties.getProperty("MAPS_API_KEY", "")
-
-        ksp {
-            arg("room.schemaLocation", "${rootProject.projectDir}/schemas/app")
-        }
-    }
+    namespace = "com.koflox.destinations"
 
     buildFeatures {
         compose = true
-        buildConfig = true
+    }
+
+    defaultConfig {
+        ksp {
+            arg("room.schemaLocation", "${rootProject.projectDir}/schemas/destinations")
+        }
     }
 }
 
 dependencies {
+    // Core Android
     implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.lifecycle.runtime.ktx)
-    implementation(libs.androidx.activity.compose)
+
+    // Compose
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
@@ -54,7 +39,7 @@ dependencies {
     // Navigation
     implementation(libs.androidx.navigation.compose)
 
-    // Concurrency
+    // Coroutines
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.android)
 
@@ -63,10 +48,22 @@ dependencies {
     implementation(libs.koin.androidx.compose)
     implementation(libs.koin.core)
 
-    // Feature modules
-    implementation(project(":feature:destinations"))
+    // Room
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    ksp(libs.androidx.room.compiler)
 
-    // Shared modules
+    // Google Maps
+    implementation(libs.maps.compose)
+    implementation(libs.play.services.maps)
+
+    // JSON Serialization
+    implementation(libs.kotlinx.serialization.json)
+
+    // Permissions
+    implementation(libs.accompanist.permissions)
+
+    // Project modules
     implementation(project(":shared:concurrent"))
     implementation(project(":shared:location"))
 
@@ -77,11 +74,5 @@ dependencies {
     testImplementation(libs.turbine)
     testImplementation(libs.koin.test)
 
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
-    androidTestImplementation(platform(libs.androidx.compose.bom))
-    androidTestImplementation(libs.androidx.ui.test.junit4)
-
     debugImplementation(libs.androidx.ui.tooling)
-    debugImplementation(libs.androidx.ui.test.manifest)
 }
