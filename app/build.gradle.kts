@@ -31,7 +31,7 @@ android {
         manifestPlaceholders["MAPS_API_KEY"] = secretsProperties.getProperty("MAPS_API_KEY", "")
 
         ksp {
-            arg("room.schemaLocation", "$projectDir/schemas")
+            arg("room.schemaLocation", "${rootProject.projectDir}/schemas/app")
         }
     }
 
