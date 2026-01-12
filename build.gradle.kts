@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 plugins {
     alias(libs.plugins.android.application) apply false
@@ -23,5 +25,38 @@ tasks.register("detektRun", io.gitlab.arturbosch.detekt.Detekt::class) {
         xml.required.set(true)
         html.required.set(false)
         txt.required.set(false)
+    }
+}
+
+subprojects {
+    afterEvaluate {
+        extensions.findByType<com.android.build.gradle.BaseExtension>()?.apply {
+            compileSdkVersion(36)
+
+            defaultConfig {
+                minSdk = 24
+                testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+                consumerProguardFiles("consumer-rules.pro")
+            }
+
+            buildTypes {
+                getByName("release") {
+                    isMinifyEnabled = false
+                    proguardFiles(
+                        getDefaultProguardFile("proguard-android-optimize.txt"),
+                        "proguard-rules.pro",
+                    )
+                }
+            }
+
+            compileOptions {
+                sourceCompatibility = JavaVersion.VERSION_11
+                targetCompatibility = JavaVersion.VERSION_11
+            }
+        }
+
+        extensions.findByType<org.jetbrains.kotlin.gradle.dsl.KotlinAndroidProjectExtension>()?.apply {
+            compilerOptions.jvmTarget.set(JvmTarget.JVM_11)
+        }
     }
 }

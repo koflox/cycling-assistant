@@ -1,4 +1,3 @@
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.util.Properties
 
 plugins {
@@ -11,16 +10,12 @@ plugins {
 
 android {
     namespace = "com.koflox.cyclingassistant"
-    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.koflox.cyclingassistant"
-        minSdk = 24
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
-
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         val secretsProperties = Properties()
         val secretsPropertiesFile = rootProject.file("secrets.properties")
@@ -35,22 +30,6 @@ android {
         }
     }
 
-    buildTypes {
-        release {
-            isMinifyEnabled = false
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
-        }
-    }
-    kotlin {
-        compilerOptions.jvmTarget.set(JvmTarget.JVM_11)
-    }
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
-    }
     buildFeatures {
         compose = true
         buildConfig = true
