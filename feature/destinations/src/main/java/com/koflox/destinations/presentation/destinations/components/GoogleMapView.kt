@@ -22,6 +22,7 @@ import com.google.maps.android.compose.rememberUpdatedMarkerState
 import com.koflox.destinations.R
 import com.koflox.destinations.presentation.destinations.model.DestinationUiModel
 import com.koflox.location.model.Location
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import java.util.Locale
 import kotlin.math.max
@@ -62,6 +63,27 @@ internal fun GoogleMapView(
             }
         }
     }
+    Map(
+        modifier = modifier,
+        cameraPositionState = cameraPositionState,
+        coroutineScope = coroutineScope,
+        userLocation = userLocation,
+        selectedDestination = selectedDestination,
+        context = context,
+        otherDestinations = otherDestinations
+    )
+}
+
+@Composable
+private fun Map(
+    modifier: Modifier,
+    cameraPositionState: CameraPositionState,
+    coroutineScope: CoroutineScope,
+    userLocation: Location?,
+    selectedDestination: DestinationUiModel?,
+    context: Context,
+    otherDestinations: List<DestinationUiModel>,
+) {
     GoogleMap(
         modifier = modifier,
         cameraPositionState = cameraPositionState,
