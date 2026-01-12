@@ -1,0 +1,61 @@
+[
+  { "id": "tokyo-001", "title": "Imperial Palace Loop (皇居周回)", "lat": 35.6840, "long": 139.7528 },
+  { "id": "tokyo-002", "title": "Yoyogi Park", "lat": 35.6728, "long": 139.6949 },
+  { "id": "tokyo-003", "title": "Meiji Shrine Outer Garden", "lat": 35.6764, "long": 139.6993 },
+  { "id": "tokyo-004", "title": "Shinjuku Gyoen", "lat": 35.6852, "long": 139.7100 },
+  { "id": "tokyo-005", "title": "Akasaka Palace (迎賓館)", "lat": 35.6814, "long": 139.7311 },
+
+  { "id": "tokyo-006", "title": "Roppongi Hills Mori Tower", "lat": 35.6605, "long": 139.7292 },
+  { "id": "tokyo-007", "title": "Tokyo Tower", "lat": 35.6586, "long": 139.7454 },
+  { "id": "tokyo-008", "title": "Shiba Park", "lat": 35.6545, "long": 139.7486 },
+  { "id": "tokyo-009", "title": "Rainbow Bridge (Odaiba side)", "lat": 35.6369, "long": 139.7634 },
+  { "id": "tokyo-010", "title": "Odaiba Seaside Park", "lat": 35.6295, "long": 139.7766 },
+
+  { "id": "tokyo-011", "title": "Toyosu Gururi Park", "lat": 35.6432, "long": 139.7920 },
+  { "id": "tokyo-012", "title": "Tsukiji Outer Market", "lat": 35.6655, "long": 139.7708 },
+  { "id": "tokyo-013", "title": "Hamarikyu Gardens", "lat": 35.6591, "long": 139.7632 },
+  { "id": "tokyo-014", "title": "Sumida River Terrace (Asakusa)", "lat": 35.7148, "long": 139.7967 },
+  { "id": "tokyo-015", "title": "Tokyo Skytree", "lat": 35.7101, "long": 139.8107 },
+
+  { "id": "tokyo-016", "title": "Ueno Park", "lat": 35.7167, "long": 139.7740 },
+  { "id": "tokyo-017", "title": "Yanaka Cemetery", "lat": 35.7256, "long": 139.7701 },
+  { "id": "tokyo-018", "title": "Nezu Shrine", "lat": 35.7188, "long": 139.7655 },
+  { "id": "tokyo-019", "title": "Rikugien Gardens", "lat": 35.7334, "long": 139.7460 },
+  { "id": "tokyo-020", "title": "Komagome Area Loop", "lat": 35.7360, "long": 139.7480 },
+
+  { "id": "tokyo-021", "title": "Ikebukuro Sunshine City", "lat": 35.7289, "long": 139.7196 },
+  { "id": "tokyo-022", "title": "Mejiro Garden", "lat": 35.7200, "long": 139.7084 },
+  { "id": "tokyo-023", "title": "Kagurazaka Streets", "lat": 35.7036, "long": 139.7355 },
+  { "id": "tokyo-024", "title": "Waseda University Area", "lat": 35.7081, "long": 139.7223 },
+  { "id": "tokyo-025", "title": "Tokyo Dome City", "lat": 35.7056, "long": 139.7519 },
+
+  { "id": "tokyo-026", "title": "Shinagawa Seaside", "lat": 35.6095, "long": 139.7496 },
+  { "id": "tokyo-027", "title": "Oi Wharf Central Seaside Park", "lat": 35.5999, "long": 139.7538 },
+  { "id": "tokyo-028", "title": "Tennozu Isle", "lat": 35.6232, "long": 139.7489 },
+  { "id": "tokyo-029", "title": "Meguro River (Nakameguro)", "lat": 35.6419, "long": 139.6983 },
+  { "id": "tokyo-030", "title": "Ebisu Garden Place", "lat": 35.6422, "long": 139.7133 },
+
+  { "id": "tokyo-031", "title": "Daikanyama T-Site", "lat": 35.6481, "long": 139.6994 },
+  { "id": "tokyo-032", "title": "Shibuya Scramble Crossing", "lat": 35.6595, "long": 139.7005 },
+  { "id": "tokyo-033", "title": "Aoyama Cemetery", "lat": 35.6641, "long": 139.7206 },
+  { "id": "tokyo-034", "title": "Gaien Nishi-dori", "lat": 35.6749, "long": 139.7176 },
+  { "id": "tokyo-035", "title": "Shinjuku Central Park", "lat": 35.6896, "long": 139.6895 },
+
+  { "id": "tokyo-036", "title": "Nakano Central Park", "lat": 35.7074, "long": 139.6636 },
+  { "id": "tokyo-037", "title": "Koenji Streets", "lat": 35.7057, "long": 139.6497 },
+  { "id": "tokyo-038", "title": "Suginami Animation Museum Area", "lat": 35.6995, "long": 139.6355 },
+  { "id": "tokyo-039", "title": "Arakawa River Cycling Road (South)", "lat": 35.6890, "long": 139.8000 },
+  { "id": "tokyo-040", "title": "Kita Ward Riverside (Arakawa)", "lat": 35.7520, "long": 139.7890 },
+
+  { "id": "tokyo-041", "title": "Adachi Riverside Park", "lat": 35.7685, "long": 139.8073 },
+  { "id": "tokyo-042", "title": "Kameari Area", "lat": 35.7660, "long": 139.8486 },
+  { "id": "tokyo-043", "title": "Kasai Rinkai Park", "lat": 35.6400, "long": 139.8615 },
+  { "id": "tokyo-044", "title": "Edogawa River Cycling Road", "lat": 35.6895, "long": 139.8730 },
+  { "id": "tokyo-045", "title": "Ryogoku Kokugikan Area", "lat": 35.6962, "long": 139.7932 },
+
+  { "id": "tokyo-046", "title": "Kiyosumi Gardens", "lat": 35.6815, "long": 139.7997 },
+  { "id": "tokyo-047", "title": "Monzen-Nakacho Streets", "lat": 35.6718, "long": 139.7966 },
+  { "id": "tokyo-048", "title": "Shibaura Canal", "lat": 35.6458, "long": 139.7576 },
+  { "id": "tokyo-049", "title": "Takeshiba Pier", "lat": 35.6556, "long": 139.7624 },
+  { "id": "tokyo-050", "title": "Hamamatsucho Bay Area", "lat": 35.6550, "long": 139.7570 }
+]
