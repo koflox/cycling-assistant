@@ -65,6 +65,7 @@ dependencies {
 
     // Project modules
     implementation(project(":shared:concurrent"))
+    implementation(project(":shared:graphics"))
     implementation(project(":shared:location"))
 
     // Testing
