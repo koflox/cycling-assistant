@@ -21,3 +21,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "CyclingAssistant"
 include(":app")
+include(":shared:concurrent")
+include(":shared:di")
