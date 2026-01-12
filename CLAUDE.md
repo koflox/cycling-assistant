@@ -54,6 +54,7 @@ CyclingAssistant/
 ├── shared/
 │   ├── di/                     # Shared DI utilities (Koin qualifiers)
 │   ├── concurrent/             # Shared coroutine dispatchers module
+│   ├── graphics/               # Shared graphics utilities (bitmap creation)
 │   └── location/               # Location services module
 ```
 
@@ -61,6 +62,7 @@ CyclingAssistant/
 ```
 app
 ├── feature:destinations
+│   ├── shared:graphics
 │   ├── shared:location
 │   │   ├── shared:concurrent
 │   │   │   └── shared:di
@@ -90,6 +92,21 @@ sealed class DispatchersQualifier : ClassNameQualifier() {
 
 // Usage in constructors:
 get<CoroutineDispatcher>(DispatchersQualifier.Io)
+```
+
+#### shared:graphics
+Provides graphics utilities for creating bitmaps:
+- `createCircleBitmap()` - Creates a circle bitmap with fill and stroke colors
+
+```kotlin
+// Usage example
+val bitmap = createCircleBitmap(
+    sizeDp = 24,
+    strokeWidthDp = 3,
+    fillColor = Color.BLUE,
+    strokeColor = Color.WHITE,
+    density = resources.displayMetrics.density,
+)
 ```
 
 #### shared:location
@@ -505,9 +522,10 @@ class FeatureViewModel(
 ### Source Code Structure
 - **App Module**: `app/src/main/java/com/koflox/cyclingassistant/` - Shell, navigation, theme
 - **Feature Module**: `feature/destinations/src/main/java/com/koflox/destinations/` - Full feature
-- **Shared Location**: `shared/location/src/main/java/com/koflox/location/` - Location services
 - **Shared Concurrent**: `shared/concurrent/src/main/java/com/koflox/concurrent/` - Dispatchers
 - **Shared DI**: `shared/di/src/main/java/com/koflox/di/` - DI qualifiers
+- **Shared Graphics**: `shared/graphics/src/main/java/com/koflox/graphics/` - Bitmap utilities
+- **Shared Location**: `shared/location/src/main/java/com/koflox/location/` - Location services
 
 ### Database Schemas
 - **Destinations**: `schemas/destinations/` - Room database JSON schemas (project root)

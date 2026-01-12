@@ -2,14 +2,19 @@ package com.koflox.destinations.presentation.destinations.components
 
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color as AndroidColor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.core.net.toUri
 import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
 import com.google.android.gms.maps.model.Marker
@@ -21,15 +26,17 @@ import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberUpdatedMarkerState
 import com.koflox.destinations.R
 import com.koflox.destinations.presentation.destinations.model.DestinationUiModel
+import com.koflox.graphics.figures.createCircleBitmap
 import com.koflox.location.model.Location
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
 import java.util.Locale
 import kotlin.math.max
 import kotlin.math.min
 
 private const val DEFAULT_ZOOM_LEVEL = 12f
 private const val DEFAULT_BOUNDS_PADDING = 150
+private const val USER_LOCATION_DOT_SIZE_DP = 24
+private const val USER_LOCATION_STROKE_WIDTH_DP = 3
+private val UserLocationBlue = Color(0xFF4285F4)
 
 @Composable
 internal fun GoogleMapView(
@@ -39,7 +46,6 @@ internal fun GoogleMapView(
     userLocation: Location?,
 ) {
     val cameraPositionState = rememberCameraPositionState()
-    val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
     LaunchedEffect(selectedDestination) {
         selectedDestination?.let { destination ->
@@ -66,7 +72,6 @@ internal fun GoogleMapView(
     Map(
         modifier = modifier,
         cameraPositionState = cameraPositionState,
-        coroutineScope = coroutineScope,
         userLocation = userLocation,
         selectedDestination = selectedDestination,
         context = context,
@@ -78,27 +83,33 @@ internal fun GoogleMapView(
 private fun Map(
     modifier: Modifier,
     cameraPositionState: CameraPositionState,
-    coroutineScope: CoroutineScope,
     userLocation: Location?,
     selectedDestination: DestinationUiModel?,
     context: Context,
     otherDestinations: List<DestinationUiModel>,
 ) {
+    val density = context.resources.displayMetrics.density
+    val userLocationBitmap = remember(density) {
+        createCircleBitmap(
+            sizeDp = USER_LOCATION_DOT_SIZE_DP,
+            strokeWidthDp = USER_LOCATION_STROKE_WIDTH_DP,
+            fillColor = UserLocationBlue.toArgb(),
+            strokeColor = AndroidColor.WHITE,
+            density = density,
+        )
+    }
     GoogleMap(
         modifier = modifier,
         cameraPositionState = cameraPositionState,
-        onMapLoaded = {
-            coroutineScope.launch {
-                userLocation?.let { destination ->
-                    moveCameraWithNewLatLngZoom(cameraPositionState, destination)
-                }
-            }
-        }
     ) {
         userLocation?.let {
+            val userLocationIcon = remember(userLocationBitmap) {
+                BitmapDescriptorFactory.fromBitmap(userLocationBitmap)
+            }
             Marker(
                 state = MarkerState(position = LatLng(it.latitude, it.longitude)),
-                title = "You are here",
+                icon = userLocationIcon,
+                anchor = Offset(0.5f, 0.5f),
             )
         }
         selectedDestination?.let { destination ->
