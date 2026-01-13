@@ -18,7 +18,7 @@ internal class DestinationMapperImpl(
         )
     }
 
-    override suspend fun toEntity(json: DestinationAsset): DestinationLocal = withContext(dispatcherDefault) {
+    override suspend fun toLocal(json: DestinationAsset): DestinationLocal = withContext(dispatcherDefault) {
         DestinationLocal(
             id = json.id,
             title = json.title,
@@ -27,9 +27,9 @@ internal class DestinationMapperImpl(
         )
     }
 
-    override suspend fun toEntityList(jsonList: List<DestinationAsset>): List<DestinationLocal> = withContext(dispatcherDefault) {
+    override suspend fun toLocalList(jsonList: List<DestinationAsset>): List<DestinationLocal> = withContext(dispatcherDefault) {
         jsonList.map {
-            toEntity(it)
+            toLocal(it)
         }
     }
 }
