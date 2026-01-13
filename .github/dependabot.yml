@@ -1,0 +1,47 @@
+version: 2
+updates:
+  - package-ecosystem: "gradle"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "saturday"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "gradle"
+    commit-message:
+      prefix: "deps"
+    groups:
+      kotlin:
+        patterns:
+          - "org.jetbrains.kotlin*"
+          - "org.jetbrains.kotlinx*"
+        update-types:
+          - "minor"
+          - "patch"
+      androidx:
+        patterns:
+          - "androidx.*"
+        update-types:
+          - "minor"
+          - "patch"
+      testing:
+        patterns:
+          - "io.mockk*"
+          - "app.cash.turbine*"
+          - "junit*"
+        update-types:
+          - "minor"
+          - "patch"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "saturday"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "github-actions"
+    commit-message:
+      prefix: "ci"
