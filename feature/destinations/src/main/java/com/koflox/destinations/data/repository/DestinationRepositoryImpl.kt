@@ -25,7 +25,7 @@ internal class DestinationRepositoryImpl(
         runCatching {
             if (!preferencesDataSource.isDatabaseInitialized()) {
                 val jsonData = poiAssetDataSource.readDestinationsJson()
-                val entities = mapper.toEntityList(jsonData)
+                val entities = mapper.toLocalList(jsonData)
                 dao.insertAll(entities)
                 preferencesDataSource.setDatabaseInitialized(true)
             }

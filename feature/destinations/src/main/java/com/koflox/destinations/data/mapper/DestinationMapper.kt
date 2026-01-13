@@ -6,6 +6,6 @@ import com.koflox.destinations.domain.model.Destination
 
 internal interface DestinationMapper {
     suspend fun toDomain(entity: DestinationLocal): Destination
-    suspend fun toEntity(json: DestinationAsset): DestinationLocal
-    suspend fun toEntityList(jsonList: List<DestinationAsset>): List<DestinationLocal>
+    suspend fun toLocal(json: DestinationAsset): DestinationLocal
+    suspend fun toLocalList(jsonList: List<DestinationAsset>): List<DestinationLocal>
 }
