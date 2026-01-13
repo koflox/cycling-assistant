@@ -1,5 +1,6 @@
 package com.koflox.destinations.di
 
+import com.koflox.concurrent.DispatchersQualifier
 import com.koflox.destinations.presentation.destinations.DestinationsViewModel
 import com.koflox.destinations.presentation.mapper.DestinationUiMapper
 import com.koflox.destinations.presentation.mapper.DestinationUiMapperImpl
@@ -10,6 +11,7 @@ internal val presentationModule = module {
     viewModelOf(::DestinationsViewModel)
     single<DestinationUiMapper> {
         DestinationUiMapperImpl(
+            dispatcherDefault = get(DispatchersQualifier.Default),
             distanceCalculator = get(),
         )
     }

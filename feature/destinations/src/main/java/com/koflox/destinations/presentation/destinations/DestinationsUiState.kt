@@ -8,6 +8,7 @@ internal data class DestinationsUiState(
     val selectedDestination: DestinationUiModel? = null,
     val otherValidDestinations: List<DestinationUiModel> = emptyList(),
     val userLocation: Location? = null,
+    val cameraFocusLocation: Location? = null,
     val routeDistanceKm: Double = DEFAULT_ROUTE_DISTANCE_KM,
     val error: String? = null,
     val isPermissionGranted: Boolean = false,

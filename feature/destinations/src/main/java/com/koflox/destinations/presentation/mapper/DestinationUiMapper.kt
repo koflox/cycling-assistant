@@ -5,7 +5,7 @@ import com.koflox.destinations.presentation.destinations.model.DestinationsUiMod
 import com.koflox.location.model.Location
 
 internal interface DestinationUiMapper {
-    fun toUiModel(
+    suspend fun toUiModel(
         destinations: Destinations,
         userLocation: Location,
     ): DestinationsUiModel
