@@ -3,7 +3,7 @@ package com.koflox.destinations.data.repository
 import com.koflox.destinations.data.mapper.DestinationMapper
 import com.koflox.destinations.data.source.asset.PoiAssetDataSource
 import com.koflox.destinations.data.source.asset.model.DestinationAsset
-import com.koflox.destinations.data.source.local.database.dao.DestinationDao
+import com.koflox.destinations.data.source.local.PoiLocalDataSource
 import com.koflox.destinations.data.source.local.entity.DestinationLocal
 import com.koflox.destinations.data.source.prefs.PreferencesDataSource
 import com.koflox.destinations.domain.model.Destination
@@ -11,6 +11,7 @@ import com.koflox.location.LocationDataSource
 import com.koflox.location.model.Location
 import com.koflox.testing.coroutine.MainDispatcherRule
 import io.mockk.coEvery
+import io.mockk.coJustRun
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
@@ -35,10 +36,10 @@ class DestinationRepositoryImplTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private val dao: DestinationDao = mockk(relaxed = true)
+    private val poiLocalDataSource: PoiLocalDataSource = mockk()
     private val poiAssetDataSource: PoiAssetDataSource = mockk()
     private val locationDataSource: LocationDataSource = mockk()
-    private val preferencesDataSource: PreferencesDataSource = mockk(relaxed = true)
+    private val preferencesDataSource: PreferencesDataSource = mockk()
     private val mapper: DestinationMapper = mockk()
     private lateinit var repository: DestinationRepositoryImpl
 
@@ -46,7 +47,7 @@ class DestinationRepositoryImplTest {
     fun setup() {
         repository = DestinationRepositoryImpl(
             dispatcherDefault = mainDispatcherRule.testDispatcher,
-            dao = dao,
+            poiLocalDataSource = poiLocalDataSource,
             poiAssetDataSource = poiAssetDataSource,
             locationDataSource = locationDataSource,
             preferencesDataSource = preferencesDataSource,
@@ -70,7 +71,7 @@ class DestinationRepositoryImplTest {
         repository.initializeDatabase()
 
         coVerify(exactly = 0) { poiAssetDataSource.readDestinationsJson() }
-        coVerify(exactly = 0) { dao.insertAll(any()) }
+        coVerify(exactly = 0) { poiLocalDataSource.insertAll(any()) }
     }
 
     @Test
@@ -105,7 +106,7 @@ class DestinationRepositoryImplTest {
 
         repository.initializeDatabase()
 
-        coVerify { dao.insertAll(entities) }
+        coVerify { poiLocalDataSource.insertAll(entities) }
     }
 
     @Test
@@ -113,6 +114,7 @@ class DestinationRepositoryImplTest {
         coEvery { preferencesDataSource.isDatabaseInitialized() } returns false
         coEvery { poiAssetDataSource.readDestinationsJson() } returns emptyList()
         coEvery { mapper.toLocalList(any()) } returns emptyList()
+        coJustRun { poiLocalDataSource.insertAll(any()) }
 
         repository.initializeDatabase()
 
@@ -133,6 +135,9 @@ class DestinationRepositoryImplTest {
         coEvery { preferencesDataSource.isDatabaseInitialized() } returns false
         coEvery { poiAssetDataSource.readDestinationsJson() } returns emptyList()
         coEvery { mapper.toLocalList(any()) } returns emptyList()
+        coJustRun { poiLocalDataSource.insertAll(any()) }
+        coJustRun { preferencesDataSource.setDatabaseInitialized(any()) }
+
 
         val result = repository.initializeDatabase()
 
@@ -152,19 +157,19 @@ class DestinationRepositoryImplTest {
     }
 
     @Test
-    fun `getAllDestinations fetches from dao`() = runTest {
-        coEvery { dao.getAllDestinations() } returns emptyList()
+    fun `getAllDestinations fetches from poiLocalDataSource`() = runTest {
+        coEvery { poiLocalDataSource.getAllDestinations() } returns emptyList()
 
         repository.getAllDestinations()
 
-        coVerify { dao.getAllDestinations() }
+        coVerify { poiLocalDataSource.getAllDestinations() }
     }
 
     @Test
     fun `getAllDestinations maps entities to domain`() = runTest {
         val entity = createEntity()
         val domain = createDomain()
-        coEvery { dao.getAllDestinations() } returns listOf(entity)
+        coEvery { poiLocalDataSource.getAllDestinations() } returns listOf(entity)
         coEvery { mapper.toDomain(entity) } returns domain
 
         repository.getAllDestinations()
@@ -176,7 +181,7 @@ class DestinationRepositoryImplTest {
     fun `getAllDestinations returns mapped destinations`() = runTest {
         val entity = createEntity()
         val domain = createDomain()
-        coEvery { dao.getAllDestinations() } returns listOf(entity)
+        coEvery { poiLocalDataSource.getAllDestinations() } returns listOf(entity)
         coEvery { mapper.toDomain(entity) } returns domain
 
         val result = repository.getAllDestinations()
@@ -188,7 +193,7 @@ class DestinationRepositoryImplTest {
 
     @Test
     fun `getAllDestinations returns empty list when no destinations`() = runTest {
-        coEvery { dao.getAllDestinations() } returns emptyList()
+        coEvery { poiLocalDataSource.getAllDestinations() } returns emptyList()
 
         val result = repository.getAllDestinations()
 
@@ -199,7 +204,7 @@ class DestinationRepositoryImplTest {
     @Test
     fun `getAllDestinations returns failure on error`() = runTest {
         val exception = RuntimeException("Database error")
-        coEvery { dao.getAllDestinations() } throws exception
+        coEvery { poiLocalDataSource.getAllDestinations() } throws exception
 
         val result = repository.getAllDestinations()
 
