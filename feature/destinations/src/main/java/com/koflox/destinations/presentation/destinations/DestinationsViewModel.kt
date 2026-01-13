@@ -1,7 +1,6 @@
 package com.koflox.destinations.presentation.destinations
 
 import android.app.Application
-import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.koflox.destinations.R
