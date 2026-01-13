@@ -7,7 +7,7 @@
       "Bash(./gradlew detektRun:*)",
       "Bash(./gradlew *compileDebugKotlin:*)",
       "Bash(./gradlew build:*)",
-      "Bash(./gradlew test:*)"
+      "Bash(./gradlew :*test:*)",
     ]
   }
 }
