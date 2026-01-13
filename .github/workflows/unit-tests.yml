@@ -34,7 +34,7 @@ jobs:
           cache-read-only: true
 
       - name: Restore Android build cache
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           path: |
             ~/.android/build-cache
