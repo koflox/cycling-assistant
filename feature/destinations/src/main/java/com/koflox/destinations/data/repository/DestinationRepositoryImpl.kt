@@ -2,7 +2,7 @@ package com.koflox.destinations.data.repository
 
 import com.koflox.destinations.data.mapper.DestinationMapper
 import com.koflox.destinations.data.source.asset.PoiAssetDataSource
-import com.koflox.destinations.data.source.local.database.dao.DestinationDao
+import com.koflox.destinations.data.source.local.PoiLocalDataSource
 import com.koflox.destinations.data.source.prefs.PreferencesDataSource
 import com.koflox.destinations.domain.model.Destination
 import com.koflox.destinations.domain.repository.DestinationRepository
@@ -14,7 +14,7 @@ import kotlinx.coroutines.withContext
 
 internal class DestinationRepositoryImpl(
     private val dispatcherDefault: CoroutineDispatcher,
-    private val dao: DestinationDao,
+    private val poiLocalDataSource: PoiLocalDataSource,
     private val poiAssetDataSource: PoiAssetDataSource,
     private val locationDataSource: LocationDataSource,
     private val preferencesDataSource: PreferencesDataSource,
@@ -26,7 +26,7 @@ internal class DestinationRepositoryImpl(
             if (!preferencesDataSource.isDatabaseInitialized()) {
                 val jsonData = poiAssetDataSource.readDestinationsJson()
                 val entities = mapper.toLocalList(jsonData)
-                dao.insertAll(entities)
+                poiLocalDataSource.insertAll(entities)
                 preferencesDataSource.setDatabaseInitialized(true)
             }
         }
@@ -34,7 +34,7 @@ internal class DestinationRepositoryImpl(
 
     override suspend fun getAllDestinations(): Result<List<Destination>> = withContext(dispatcherDefault) {
         runCatching {
-            dao.getAllDestinations().map {
+            poiLocalDataSource.getAllDestinations().map {
                 mapper.toDomain(it)
             }
         }

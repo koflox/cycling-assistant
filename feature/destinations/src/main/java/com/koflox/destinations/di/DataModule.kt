@@ -8,6 +8,8 @@ import com.koflox.destinations.data.mapper.DestinationMapperImpl
 import com.koflox.destinations.data.repository.DestinationRepositoryImpl
 import com.koflox.destinations.data.source.asset.PoiAssetDataSource
 import com.koflox.destinations.data.source.asset.PoiAssetDataSourceImpl
+import com.koflox.destinations.data.source.local.PoiLocalDataSource
+import com.koflox.destinations.data.source.local.PoiLocalDataSourceImpl
 import com.koflox.destinations.data.source.local.database.AppDatabase
 import com.koflox.destinations.data.source.prefs.PreferencesDataSource
 import com.koflox.destinations.data.source.prefs.PreferencesDataSourceImpl
@@ -36,6 +38,12 @@ private val dataSourceModule = module {
     single {
         get<AppDatabase>().destinationDao()
     }
+    single<PoiLocalDataSource> {
+        PoiLocalDataSourceImpl(
+            dispatcherIo = get<CoroutineDispatcher>(DispatchersQualifier.Io),
+            dao = get(),
+        )
+    }
     single<PoiAssetDataSource> {
         PoiAssetDataSourceImpl(
             dispatcherIo = get<CoroutineDispatcher>(DispatchersQualifier.Io),
@@ -54,7 +62,7 @@ private val repoModule = module {
     single<DestinationRepository> {
         DestinationRepositoryImpl(
             dispatcherDefault = get<CoroutineDispatcher>(DispatchersQualifier.Default),
-            dao = get(),
+            poiLocalDataSource = get(),
             poiAssetDataSource = get(),
             locationDataSource = get(),
             preferencesDataSource = get(),
