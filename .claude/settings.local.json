@@ -5,7 +5,8 @@
       "Bash(./gradlew clean:*)",
       "Bash(./gradlew --stop)",
       "Bash(./gradlew detektRun:*)",
-      "Bash(./gradlew *compileDebugKotlin:*)"
+      "Bash(./gradlew *compileDebugKotlin:*)",
+      "Bash(./gradlew build:*)"
     ]
   }
 }
