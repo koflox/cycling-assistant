@@ -138,7 +138,6 @@ class DestinationRepositoryImplTest {
         coJustRun { poiLocalDataSource.insertAll(any()) }
         coJustRun { preferencesDataSource.setDatabaseInitialized(any()) }
 
-
         val result = repository.initializeDatabase()
 
         assertTrue(result.isSuccess)
