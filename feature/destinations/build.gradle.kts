@@ -74,6 +74,7 @@ dependencies {
     testImplementation(libs.mockk)
     testImplementation(libs.turbine)
     testImplementation(libs.koin.test)
+    testImplementation(project(":shared:testing"))
 
     debugImplementation(libs.androidx.ui.tooling)
 }
