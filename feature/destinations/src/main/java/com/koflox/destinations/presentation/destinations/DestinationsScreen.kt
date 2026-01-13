@@ -1,5 +1,7 @@
 package com.koflox.destinations.presentation.destinations
 
+import android.content.Context
+import android.content.Intent
 import android.widget.Toast
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,58 +24,84 @@ import com.koflox.destinations.presentation.destinations.components.RouteSlider
 import com.koflox.destinations.presentation.permission.LocationPermissionHandler
 import org.koin.androidx.compose.koinViewModel
 
+private const val GOOGLE_MAPS_PACKAGE = "com.google.android.apps.maps"
+
 @Composable
-internal fun DestinationsScreen(
-    viewModel: DestinationsViewModel = koinViewModel(),
-) {
+internal fun DestinationsScreen(viewModel: DestinationsViewModel = koinViewModel()) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    ScreenLifecycleEffects(viewModel)
+    ErrorEffect(uiState.error, context, viewModel)
+    NavigationEffect(uiState.navigationAction, context, viewModel)
+    LocationPermissionHandler(
+        onPermissionGranted = { viewModel.onEvent(DestinationsUiEvent.PermissionGranted) },
+        onPermissionDenied = { viewModel.onEvent(DestinationsUiEvent.PermissionDenied) },
+    ) {
+        DestinationsContent(uiState, viewModel)
+    }
+}
+
+@Composable
+private fun ScreenLifecycleEffects(viewModel: DestinationsViewModel) {
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
         viewModel.onEvent(DestinationsUiEvent.ScreenResumed)
     }
     LifecycleEventEffect(Lifecycle.Event.ON_PAUSE) {
         viewModel.onEvent(DestinationsUiEvent.ScreenPaused)
     }
-    LaunchedEffect(uiState.error) {
-        uiState.error?.let { error ->
-            Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
+}
+
+@Composable
+private fun ErrorEffect(error: String?, context: Context, viewModel: DestinationsViewModel) {
+    LaunchedEffect(error) {
+        error?.let {
+            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
             viewModel.onEvent(DestinationsUiEvent.ErrorDismissed)
         }
     }
-    LocationPermissionHandler(
-        onPermissionGranted = { viewModel.onEvent(DestinationsUiEvent.PermissionGranted) },
-        onPermissionDenied = { viewModel.onEvent(DestinationsUiEvent.PermissionDenied) },
-    ) {
-        Box(modifier = Modifier.fillMaxSize()) {
-            GoogleMapView(
-                modifier = Modifier.fillMaxSize(),
-                selectedDestination = uiState.selectedDestination,
-                otherDestinations = uiState.otherValidDestinations,
-                userLocation = uiState.userLocation,
-                cameraFocusLocation = uiState.cameraFocusLocation,
-            )
-            Column(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                RouteSlider(
-                    distanceKm = uiState.routeDistanceKm,
-                    onDistanceChanged = {
-                        viewModel.onEvent(DestinationsUiEvent.RouteDistanceChanged(it))
-                    },
-                    modifier = Modifier.padding(bottom = 16.dp),
-                )
+}
 
-                LetsGoButton(
-                    onClick = { viewModel.onEvent(DestinationsUiEvent.LetsGoClicked) },
-                    enabled = !uiState.isLoading && uiState.isPermissionGranted,
-                )
+@Composable
+private fun NavigationEffect(action: NavigationAction?, context: Context, viewModel: DestinationsViewModel) {
+    LaunchedEffect(action) {
+        when (action) {
+            is NavigationAction.OpenGoogleMaps -> {
+                val intent = Intent(Intent.ACTION_VIEW, action.uri).apply { setPackage(GOOGLE_MAPS_PACKAGE) }
+                context.startActivity(intent)
+                viewModel.onEvent(DestinationsUiEvent.NavigationActionHandled)
             }
-            if (uiState.isLoading) {
-                LoadingOverlay()
-            }
+            null -> Unit
+        }
+    }
+}
+
+@Composable
+private fun DestinationsContent(uiState: DestinationsUiState, viewModel: DestinationsViewModel) {
+    Box(modifier = Modifier.fillMaxSize()) {
+        GoogleMapView(
+            modifier = Modifier.fillMaxSize(),
+            selectedDestination = uiState.selectedDestination,
+            otherDestinations = uiState.otherValidDestinations,
+            userLocation = uiState.userLocation,
+            cameraFocusLocation = uiState.cameraFocusLocation,
+            onOpenInGoogleMaps = { viewModel.onEvent(DestinationsUiEvent.OpenDestinationInGoogleMaps(it)) },
+        )
+        Column(
+            modifier = Modifier.align(Alignment.BottomCenter).padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            RouteSlider(
+                distanceKm = uiState.routeDistanceKm,
+                onDistanceChanged = { viewModel.onEvent(DestinationsUiEvent.RouteDistanceChanged(it)) },
+                modifier = Modifier.padding(bottom = 16.dp),
+            )
+            LetsGoButton(
+                onClick = { viewModel.onEvent(DestinationsUiEvent.LetsGoClicked) },
+                enabled = !uiState.isLoading && uiState.isPermissionGranted,
+            )
+        }
+        if (uiState.isLoading) {
+            LoadingOverlay()
         }
     }
 }

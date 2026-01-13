@@ -1,6 +1,8 @@
 package com.koflox.destinations.presentation.destinations
 
 import android.app.Application
+import android.content.pm.PackageManager
+import androidx.core.net.toUri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.koflox.destinations.R
@@ -11,6 +13,7 @@ import com.koflox.destinations.domain.usecase.InitializeDatabaseUseCase
 import com.koflox.destinations.domain.usecase.NoSuitableDestinationException
 import com.koflox.destinations.domain.usecase.ObserveUserLocationUseCase
 import com.koflox.destinations.domain.util.DistanceCalculator
+import com.koflox.destinations.presentation.destinations.model.DestinationUiModel
 import com.koflox.destinations.presentation.mapper.DestinationUiMapper
 import com.koflox.location.model.Location
 import kotlinx.coroutines.Job
@@ -33,6 +36,7 @@ internal class DestinationsViewModel(
     companion object {
         private const val CAMERA_MOVEMENT_THRESHOLD_METERS = 50.0
         private const val METERS_IN_KILOMETER = 1000.0
+        private const val GOOGLE_MAPS_PACKAGE = "com.google.android.apps.maps"
     }
 
     private val _uiState = MutableStateFlow(DestinationsUiState())
@@ -56,6 +60,8 @@ internal class DestinationsViewModel(
             DestinationsUiEvent.ErrorDismissed -> dismissError()
             DestinationsUiEvent.ScreenResumed -> onScreenResumed()
             DestinationsUiEvent.ScreenPaused -> onScreenPaused()
+            is DestinationsUiEvent.OpenDestinationInGoogleMaps -> openInGoogleMaps(event.destination)
+            DestinationsUiEvent.NavigationActionHandled -> clearNavigationAction()
         }
     }
 
@@ -184,6 +190,28 @@ internal class DestinationsViewModel(
 
     private fun dismissError() {
         _uiState.update { it.copy(error = null) }
+    }
+
+    private fun openInGoogleMaps(destination: DestinationUiModel) {
+        if (isGoogleMapsInstalled()) {
+            val uri = "google.navigation:q=${destination.location.latitude},${destination.location.longitude}&mode=b".toUri()
+            _uiState.update { it.copy(navigationAction = NavigationAction.OpenGoogleMaps(uri)) }
+        } else {
+            _uiState.update { it.copy(error = application.getString(R.string.error_google_maps_not_installed)) }
+        }
+    }
+
+    private fun isGoogleMapsInstalled(): Boolean {
+        return try {
+            application.packageManager.getPackageInfo(GOOGLE_MAPS_PACKAGE, 0)
+            true
+        } catch (_: PackageManager.NameNotFoundException) {
+            false
+        }
+    }
+
+    private fun clearNavigationAction() {
+        _uiState.update { it.copy(navigationAction = null) }
     }
 
 }

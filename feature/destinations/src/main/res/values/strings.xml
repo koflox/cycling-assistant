@@ -2,6 +2,7 @@
     <string name="error_too_far_from_supported_area">This area is not supported yet</string>
     <string name="error_not_handled">Something went wrong</string>
     <string name="error_location_permission_denied">Location permission denied</string>
+    <string name="error_google_maps_not_installed">Please install Google Maps to show the location details</string>
     <string name="distance_to_dest_desc">%.1f km away</string>
     <string name="get_route_hint_for_google_maps">Tap to open in Google Maps</string>
     <string name="failed_to_get_location">Failed to get location: %1$s</string>

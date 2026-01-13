@@ -1,7 +1,6 @@
 package com.koflox.destinations.presentation.destinations.components
 
 import android.content.Context
-import android.content.Intent
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -11,7 +10,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.core.net.toUri
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
@@ -44,6 +42,7 @@ internal fun GoogleMapView(
     otherDestinations: List<DestinationUiModel>,
     userLocation: Location?,
     cameraFocusLocation: Location?,
+    onOpenInGoogleMaps: (DestinationUiModel) -> Unit,
 ) {
     val cameraPositionState = rememberCameraPositionState()
     val context = LocalContext.current
@@ -68,6 +67,7 @@ internal fun GoogleMapView(
         selectedDestination = selectedDestination,
         context = context,
         otherDestinations = otherDestinations,
+        onOpenInGoogleMaps = onOpenInGoogleMaps,
     )
 }
 
@@ -79,6 +79,7 @@ private fun Map(
     selectedDestination: DestinationUiModel?,
     context: Context,
     otherDestinations: List<DestinationUiModel>,
+    onOpenInGoogleMaps: (DestinationUiModel) -> Unit,
 ) {
     val density = context.resources.displayMetrics.density
     val userLocationBitmap = remember(density) {
@@ -108,7 +109,7 @@ private fun Map(
             )
         }
         selectedDestination?.let { destination ->
-            Destinations(context, destination, otherDestinations)
+            Destinations(destination, otherDestinations, onOpenInGoogleMaps)
         }
         if (userLocation != null && selectedDestination != null) {
             val curvePoints = createCurvePoints(
@@ -126,46 +127,46 @@ private fun Map(
 
 @Composable
 private fun Destinations(
-    context: Context,
     destination: DestinationUiModel,
     otherDestinations: List<DestinationUiModel>,
+    onOpenInGoogleMaps: (DestinationUiModel) -> Unit,
 ) {
-    val setMarker: @Composable (DestinationUiModel) -> Unit = { destination ->
-        val snippet = if (destination.isMain) {
+    val setMarker: @Composable (DestinationUiModel) -> Unit = { dest ->
+        val snippet = if (dest.isMain) {
             String.format(
                 Locale.getDefault(),
                 "${stringResource(R.string.distance_to_dest_desc)} - ${stringResource(R.string.get_route_hint_for_google_maps)}",
-                destination.distanceKm,
+                dest.distanceKm,
             )
         } else {
             String.format(
                 Locale.getDefault(),
                 stringResource(R.string.distance_to_dest_desc),
-                destination.distanceKm,
+                dest.distanceKm,
             )
         }
-        val alpha = if (destination.isMain) 1F else 0.5F
+        val alpha = if (dest.isMain) 1F else 0.5F
         val onInfoWindowClick: (Marker) -> Unit = {
-            if (destination.isMain) openInGoogleMaps(context, destination) else Unit
+            if (dest.isMain) onOpenInGoogleMaps(dest)
         }
         val markerState = rememberUpdatedMarkerState(
             position = LatLng(
-                destination.location.latitude,
-                destination.location.longitude,
+                dest.location.latitude,
+                dest.location.longitude,
             ),
         )
         Marker(
             state = markerState,
-            title = destination.title,
+            title = dest.title,
             snippet = snippet,
             alpha = alpha,
             onInfoWindowClick = onInfoWindowClick,
         )
-        if (destination.isMain) markerState.showInfoWindow()
+        if (dest.isMain) markerState.showInfoWindow()
     }
     setMarker(destination)
-    otherDestinations.forEach { destination ->
-        setMarker(destination)
+    otherDestinations.forEach { otherDest ->
+        setMarker(otherDest)
     }
 }
 
@@ -179,13 +180,4 @@ private suspend fun moveCameraToLocation(
             DEFAULT_ZOOM_LEVEL,
         ),
     )
-}
-
-// TODO: move to VM and check the package presence before starting the activity
-private fun openInGoogleMaps(context: Context, destination: DestinationUiModel) {
-    val uri = "google.navigation:q=${destination.location.latitude},${destination.location.longitude}&mode=b".toUri()
-    val intent = Intent(Intent.ACTION_VIEW, uri).apply {
-        setPackage("com.google.android.apps.maps")
-    }
-    context.startActivity(intent)
 }

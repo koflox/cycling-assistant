@@ -1,5 +1,6 @@
 package com.koflox.destinations.presentation.destinations
 
+import android.net.Uri
 import com.koflox.destinations.presentation.destinations.model.DestinationUiModel
 import com.koflox.location.model.Location
 
@@ -12,8 +13,13 @@ internal data class DestinationsUiState(
     val routeDistanceKm: Double = DEFAULT_ROUTE_DISTANCE_KM,
     val error: String? = null,
     val isPermissionGranted: Boolean = false,
+    val navigationAction: NavigationAction? = null,
 ) {
     companion object {
         const val DEFAULT_ROUTE_DISTANCE_KM = 15.0
     }
+}
+
+internal sealed interface NavigationAction {
+    data class OpenGoogleMaps(val uri: Uri) : NavigationAction
 }
