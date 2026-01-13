@@ -1,5 +1,6 @@
 package com.koflox.destinations.data.repository
 
+import com.koflox.concurrent.suspendRunCatching
 import com.koflox.destinations.data.mapper.DestinationMapper
 import com.koflox.destinations.data.source.asset.PoiAssetDataSource
 import com.koflox.destinations.data.source.local.PoiLocalDataSource
@@ -22,7 +23,7 @@ internal class DestinationRepositoryImpl(
 ) : DestinationRepository {
 
     override suspend fun initializeDatabase(): Result<Unit> = withContext(dispatcherDefault) {
-        runCatching {
+        suspendRunCatching {
             if (!preferencesDataSource.isDatabaseInitialized()) {
                 val jsonData = poiAssetDataSource.readDestinationsJson()
                 val entities = mapper.toLocalList(jsonData)
@@ -33,7 +34,7 @@ internal class DestinationRepositoryImpl(
     }
 
     override suspend fun getAllDestinations(): Result<List<Destination>> = withContext(dispatcherDefault) {
-        runCatching {
+        suspendRunCatching {
             poiLocalDataSource.getAllDestinations().map {
                 mapper.toDomain(it)
             }
