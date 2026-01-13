@@ -13,15 +13,21 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.BaselineShift
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 
 private const val MIN_DISTANCE = 5f
 private const val MAX_DISTANCE = 30f
+private const val TOLERANCE_FONT_SIZE_RATIO = 0.7f
 
 @Composable
 internal fun RouteSlider(
     distanceKm: Double,
+    toleranceKm: Double,
     onDistanceChanged: (Double) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -39,15 +45,30 @@ internal fun RouteSlider(
                 text = "One way route length",
                 style = MaterialTheme.typography.labelMedium,
             )
-
             Spacer(modifier = Modifier.height(4.dp))
 
+            val headlineStyle = MaterialTheme.typography.headlineSmall
+            val toleranceFontSize = headlineStyle.fontSize * TOLERANCE_FONT_SIZE_RATIO
             Text(
-                text = "${distanceKm.toInt()} km",
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold,
+                text = buildAnnotatedString {
+                    withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
+                        append("${distanceKm.toInt()} ")
+                    }
+                    withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
+                        append("km")
+                    }
+                    withStyle(
+                        SpanStyle(
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                            fontSize = toleranceFontSize,
+                            baselineShift = BaselineShift((1 - TOLERANCE_FONT_SIZE_RATIO) / 2),
+                        ),
+                    ) {
+                        append(" (±$toleranceKm)")
+                    }
+                },
+                style = headlineStyle,
             )
-
             Slider(
                 value = distanceKm.toFloat(),
                 onValueChange = { onDistanceChanged(it.toDouble()) },

@@ -7,7 +7,6 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.koflox.destinations.R
 import com.koflox.destinations.domain.usecase.GetRandomDestinationUseCase
-import com.koflox.destinations.domain.usecase.GetRandomDestinationUseCaseImpl.Companion.DEFAULT_TOLERANCE_KM
 import com.koflox.destinations.domain.usecase.GetUserLocationUseCase
 import com.koflox.destinations.domain.usecase.InitializeDatabaseUseCase
 import com.koflox.destinations.domain.usecase.NoSuitableDestinationException
@@ -92,12 +91,11 @@ internal class DestinationsViewModel(
     }
 
     private suspend fun selectDestination(location: Location) {
-        val targetDistance = _uiState.value.routeDistanceKm
-
+        val currentState = _uiState.value
         getRandomDestinationUseCase.getDestinations(
             userLocation = location,
-            targetDistanceKm = targetDistance,
-            toleranceKm = DEFAULT_TOLERANCE_KM,
+            targetDistanceKm = currentState.routeDistanceKm,
+            toleranceKm = currentState.toleranceKm,
             areAllValidDestinationsIncluded = true,
         ).onSuccess { destinations ->
             val uiModel = uiMapper.toUiModel(destinations, location)
