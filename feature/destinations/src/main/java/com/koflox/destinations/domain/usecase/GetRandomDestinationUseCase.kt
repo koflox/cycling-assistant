@@ -47,9 +47,6 @@ internal class GetRandomDestinationUseCaseImpl(
             }
     }
 
-    companion object {
-        const val DEFAULT_TOLERANCE_KM = 4.0
-    }
 }
 
 class NoSuitableDestinationException : Exception("No suitable destination found")

@@ -92,6 +92,7 @@ private fun DestinationsContent(uiState: DestinationsUiState, viewModel: Destina
         ) {
             RouteSlider(
                 distanceKm = uiState.routeDistanceKm,
+                toleranceKm = uiState.toleranceKm,
                 onDistanceChanged = { viewModel.onEvent(DestinationsUiEvent.RouteDistanceChanged(it)) },
                 modifier = Modifier.padding(bottom = 16.dp),
             )
