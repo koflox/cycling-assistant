@@ -15,24 +15,24 @@ import androidx.core.net.toUri
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.LatLngBounds
 import com.google.android.gms.maps.model.Marker
 import com.google.maps.android.compose.CameraPositionState
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.Marker
+import com.google.maps.android.compose.Polyline
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberUpdatedMarkerState
 import com.koflox.destinations.R
 import com.koflox.destinations.presentation.destinations.model.DestinationUiModel
+import com.koflox.graphics.curves.createCurvePoints
 import com.koflox.graphics.figures.createCircleBitmap
+import com.koflox.graphics.primitives.Point
 import com.koflox.location.model.Location
 import java.util.Locale
-import kotlin.math.max
-import kotlin.math.min
 import android.graphics.Color as AndroidColor
 
 private const val DEFAULT_ZOOM_LEVEL = 12f
-private const val DEFAULT_BOUNDS_PADDING = 150
+private const val DEFAULT_ROUTE_LINE_WIDTH = 8f
 private const val USER_LOCATION_DOT_SIZE_DP = 24
 private const val USER_LOCATION_STROKE_WIDTH_DP = 3
 private val UserLocationBlue = Color(0xFF4285F4)
@@ -50,22 +50,10 @@ internal fun GoogleMapView(
 
     LaunchedEffect(selectedDestination) {
         selectedDestination?.let { destination ->
-            if (userLocation != null) {
-                val southWest = LatLng(
-                    min(userLocation.latitude, destination.location.latitude),
-                    min(userLocation.longitude, destination.location.longitude),
-                )
-                val northEast = LatLng(
-                    max(userLocation.latitude, destination.location.latitude),
-                    max(userLocation.longitude, destination.location.longitude),
-                )
-                cameraPositionState.animate(
-                    update = CameraUpdateFactory.newLatLngBounds(
-                        LatLngBounds(southWest, northEast),
-                        DEFAULT_BOUNDS_PADDING,
-                    ),
-                )
-            }
+            moveCameraToLocation(
+                cameraPositionState = cameraPositionState,
+                location = destination.location,
+            )
         }
     }
     LaunchedEffect(cameraFocusLocation) {
@@ -121,6 +109,17 @@ private fun Map(
         }
         selectedDestination?.let { destination ->
             Destinations(context, destination, otherDestinations)
+        }
+        if (userLocation != null && selectedDestination != null) {
+            val curvePoints = createCurvePoints(
+                start = Point(userLocation.latitude, userLocation.longitude),
+                end = Point(selectedDestination.location.latitude, selectedDestination.location.longitude),
+            ).map { LatLng(it.x, it.y) }
+            Polyline(
+                points = curvePoints,
+                color = UserLocationBlue,
+                width = DEFAULT_ROUTE_LINE_WIDTH,
+            )
         }
     }
 }
