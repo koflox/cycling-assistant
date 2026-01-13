@@ -10,8 +10,11 @@ import com.koflox.destinations.domain.usecase.GetRandomDestinationUseCaseImpl.Co
 import com.koflox.destinations.domain.usecase.GetUserLocationUseCase
 import com.koflox.destinations.domain.usecase.InitializeDatabaseUseCase
 import com.koflox.destinations.domain.usecase.NoSuitableDestinationException
+import com.koflox.destinations.domain.usecase.ObserveUserLocationUseCase
+import com.koflox.destinations.domain.util.DistanceCalculator
 import com.koflox.destinations.presentation.mapper.DestinationUiMapper
 import com.koflox.location.model.Location
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -21,24 +24,27 @@ import kotlinx.coroutines.launch
 internal class DestinationsViewModel(
     private val getRandomDestinationUseCase: GetRandomDestinationUseCase,
     private val getUserLocationUseCase: GetUserLocationUseCase,
+    private val observeUserLocationUseCase: ObserveUserLocationUseCase,
     private val initializeDatabaseUseCase: InitializeDatabaseUseCase,
+    private val distanceCalculator: DistanceCalculator,
     private val uiMapper: DestinationUiMapper,
     private val application: Application,
 ) : AndroidViewModel(application) {
 
+    companion object {
+        private const val CAMERA_MOVEMENT_THRESHOLD_METERS = 50.0
+        private const val METERS_IN_KILOMETER = 1000.0
+    }
+
     private val _uiState = MutableStateFlow(DestinationsUiState())
     val uiState: StateFlow<DestinationsUiState> = _uiState.asStateFlow()
+
+    private var locationObservationJob: Job? = null
+    private var isScreenVisible = false
 
     init {
         viewModelScope.launch {
             initializeDatabaseUseCase.init()
-        }
-        viewModelScope.launch {
-            getUserLocationUseCase.getLocation()
-                .onSuccess { location ->
-                    Log.d("Logos", "location: $location")
-                    _uiState.update { it.copy(userLocation = location) }
-                }
         }
     }
 
@@ -49,6 +55,8 @@ internal class DestinationsViewModel(
             DestinationsUiEvent.PermissionGranted -> onPermissionGranted()
             DestinationsUiEvent.PermissionDenied -> onPermissionDenied()
             DestinationsUiEvent.ErrorDismissed -> dismissError()
+            DestinationsUiEvent.ScreenResumed -> onScreenResumed()
+            DestinationsUiEvent.ScreenPaused -> onScreenPaused()
         }
     }
 
@@ -115,6 +123,60 @@ internal class DestinationsViewModel(
 
     private fun onPermissionGranted() {
         _uiState.update { it.copy(isPermissionGranted = true) }
+        if (isScreenVisible) {
+            startLocationObservation()
+        }
+    }
+
+    private fun onScreenResumed() {
+        isScreenVisible = true
+        if (_uiState.value.isPermissionGranted) {
+            startLocationObservation()
+        }
+    }
+
+    private fun onScreenPaused() {
+        isScreenVisible = false
+        stopLocationObservation()
+    }
+
+    private fun stopLocationObservation() {
+        locationObservationJob?.cancel()
+        locationObservationJob = null
+    }
+
+    private fun startLocationObservation() {
+        locationObservationJob?.cancel()
+        locationObservationJob = viewModelScope.launch {
+            observeUserLocationUseCase.observe().collect { newLocation ->
+                val currentState = _uiState.value
+                val shouldMoveCameraToUserLocation = shouldUpdateCameraFocus(
+                    currentFocus = currentState.cameraFocusLocation,
+                    newLocation = newLocation,
+                )
+                _uiState.update {
+                    it.copy(
+                        userLocation = newLocation,
+                        cameraFocusLocation = if (shouldMoveCameraToUserLocation) {
+                            newLocation
+                        } else {
+                            it.cameraFocusLocation
+                        },
+                    )
+                }
+            }
+        }
+    }
+
+    private suspend fun shouldUpdateCameraFocus(currentFocus: Location?, newLocation: Location): Boolean {
+        if (currentFocus == null) return true
+        val distanceMeters = distanceCalculator.calculate(
+            lat1 = currentFocus.latitude,
+            lon1 = currentFocus.longitude,
+            lat2 = newLocation.latitude,
+            lon2 = newLocation.longitude,
+        ) * METERS_IN_KILOMETER
+        return distanceMeters >= CAMERA_MOVEMENT_THRESHOLD_METERS
     }
 
     private fun onPermissionDenied() {
@@ -124,4 +186,5 @@ internal class DestinationsViewModel(
     private fun dismissError() {
         _uiState.update { it.copy(error = null) }
     }
+
 }

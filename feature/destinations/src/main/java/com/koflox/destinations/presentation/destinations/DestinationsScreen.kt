@@ -12,6 +12,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.koflox.destinations.presentation.destinations.components.GoogleMapView
 import com.koflox.destinations.presentation.destinations.components.LetsGoButton
@@ -26,14 +28,18 @@ internal fun DestinationsScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
-
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        viewModel.onEvent(DestinationsUiEvent.ScreenResumed)
+    }
+    LifecycleEventEffect(Lifecycle.Event.ON_PAUSE) {
+        viewModel.onEvent(DestinationsUiEvent.ScreenPaused)
+    }
     LaunchedEffect(uiState.error) {
         uiState.error?.let { error ->
             Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
             viewModel.onEvent(DestinationsUiEvent.ErrorDismissed)
         }
     }
-
     LocationPermissionHandler(
         onPermissionGranted = { viewModel.onEvent(DestinationsUiEvent.PermissionGranted) },
         onPermissionDenied = { viewModel.onEvent(DestinationsUiEvent.PermissionDenied) },
@@ -44,8 +50,8 @@ internal fun DestinationsScreen(
                 selectedDestination = uiState.selectedDestination,
                 otherDestinations = uiState.otherValidDestinations,
                 userLocation = uiState.userLocation,
+                cameraFocusLocation = uiState.cameraFocusLocation,
             )
-
             Column(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
@@ -65,7 +71,6 @@ internal fun DestinationsScreen(
                     enabled = !uiState.isLoading && uiState.isPermissionGranted,
                 )
             }
-
             if (uiState.isLoading) {
                 LoadingOverlay()
             }

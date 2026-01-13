@@ -6,4 +6,6 @@ sealed interface DestinationsUiEvent {
     data object PermissionGranted : DestinationsUiEvent
     data object PermissionDenied : DestinationsUiEvent
     data object ErrorDismissed : DestinationsUiEvent
+    data object ScreenResumed : DestinationsUiEvent
+    data object ScreenPaused : DestinationsUiEvent
 }

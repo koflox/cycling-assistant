@@ -20,7 +20,6 @@ import com.google.android.gms.maps.model.Marker
 import com.google.maps.android.compose.CameraPositionState
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.Marker
-import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberUpdatedMarkerState
 import com.koflox.destinations.R
@@ -44,9 +43,11 @@ internal fun GoogleMapView(
     selectedDestination: DestinationUiModel?,
     otherDestinations: List<DestinationUiModel>,
     userLocation: Location?,
+    cameraFocusLocation: Location?,
 ) {
     val cameraPositionState = rememberCameraPositionState()
     val context = LocalContext.current
+
     LaunchedEffect(selectedDestination) {
         selectedDestination?.let { destination ->
             if (userLocation != null) {
@@ -64,9 +65,12 @@ internal fun GoogleMapView(
                         DEFAULT_BOUNDS_PADDING,
                     ),
                 )
-            } else {
-                moveCameraWithNewLatLngZoom(cameraPositionState, destination.location)
             }
+        }
+    }
+    LaunchedEffect(cameraFocusLocation) {
+        if (cameraFocusLocation != null && selectedDestination == null) {
+            moveCameraToLocation(cameraPositionState, cameraFocusLocation)
         }
     }
     Map(
@@ -75,7 +79,7 @@ internal fun GoogleMapView(
         userLocation = userLocation,
         selectedDestination = selectedDestination,
         context = context,
-        otherDestinations = otherDestinations
+        otherDestinations = otherDestinations,
     )
 }
 
@@ -106,8 +110,11 @@ private fun Map(
             val userLocationIcon = remember(userLocationBitmap) {
                 BitmapDescriptorFactory.fromBitmap(userLocationBitmap)
             }
+            val userLocationMarkerState = rememberUpdatedMarkerState(
+                position = LatLng(it.latitude, it.longitude),
+            )
             Marker(
-                state = MarkerState(position = LatLng(it.latitude, it.longitude)),
+                state = userLocationMarkerState,
                 icon = userLocationIcon,
                 anchor = Offset(0.5f, 0.5f),
             )
@@ -163,13 +170,13 @@ private fun Destinations(
     }
 }
 
-private suspend fun moveCameraWithNewLatLngZoom(
+private suspend fun moveCameraToLocation(
     cameraPositionState: CameraPositionState,
-    destination: Location,
+    location: Location,
 ) {
     cameraPositionState.animate(
         update = CameraUpdateFactory.newLatLngZoom(
-            LatLng(destination.latitude, destination.longitude),
+            LatLng(location.latitude, location.longitude),
             DEFAULT_ZOOM_LEVEL,
         ),
     )

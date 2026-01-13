@@ -9,6 +9,7 @@ import com.koflox.destinations.domain.repository.DestinationRepository
 import com.koflox.location.LocationDataSource
 import com.koflox.location.model.Location
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 
 internal class DestinationRepositoryImpl(
@@ -42,4 +43,6 @@ internal class DestinationRepositoryImpl(
     override suspend fun getUserLocation(): Result<Location> = withContext(dispatcherDefault) {
         locationDataSource.getCurrentLocation()
     }
+
+    override fun observeUserLocation(): Flow<Location> = locationDataSource.observeLocationUpdates()
 }

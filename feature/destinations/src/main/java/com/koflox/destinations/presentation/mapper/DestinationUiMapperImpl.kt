@@ -6,14 +6,17 @@ import com.koflox.destinations.domain.util.DistanceCalculator
 import com.koflox.destinations.presentation.destinations.model.DestinationUiModel
 import com.koflox.destinations.presentation.destinations.model.DestinationsUiModel
 import com.koflox.location.model.Location
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.withContext
 
 internal class DestinationUiMapperImpl(
+    private val dispatcherDefault: CoroutineDispatcher,
     private val distanceCalculator: DistanceCalculator,
 ) : DestinationUiMapper {
-    override fun toUiModel(
+    override suspend fun toUiModel(
         destinations: Destinations,
         userLocation: Location,
-    ): DestinationsUiModel {
+    ): DestinationsUiModel = withContext(dispatcherDefault) {
         val validDestinationUiModels = destinations.otherValidDestinations.map { d ->
             val distance = getDistance(userLocation, d)
             mapToModel(
@@ -27,7 +30,7 @@ internal class DestinationUiMapperImpl(
             distance = getDistance(userLocation, destinations.randomizedDestination),
             isMain = true,
         )
-        return DestinationsUiModel(
+        DestinationsUiModel(
             selected = targetDestinationUiModel,
             otherValidDestinations = validDestinationUiModels,
         )
@@ -48,7 +51,7 @@ internal class DestinationUiMapperImpl(
         isMain = isMain,
     )
 
-    private fun getDistance(userLocation: Location, destination: Destination): Double =
+    private suspend fun getDistance(userLocation: Location, destination: Destination): Double =
         distanceCalculator.calculate(
             lat1 = userLocation.latitude,
             lon1 = userLocation.longitude,
