@@ -16,7 +16,6 @@ import androidx.compose.ui.unit.dp
 import com.koflox.session.R
 import java.util.Locale
 
-// TODO: fix overlapping of start session and cancel buttons
 @Composable
 fun DestinationConfirmationDialog(
     destinationName: String,
@@ -54,11 +53,13 @@ fun DestinationConfirmationDialog(
                 ) {
                     Text(stringResource(R.string.dialog_button_start_session))
                 }
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.dialog_button_cancel))
+                Spacer(modifier = Modifier.height(8.dp))
+                TextButton(
+                    onClick = onDismiss,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(stringResource(R.string.dialog_button_cancel))
+                }
             }
         },
     )
