@@ -6,4 +6,5 @@
     <string name="distance_to_dest_desc">%.1f km away</string>
     <string name="get_route_hint_for_google_maps">Tap to open in Google Maps</string>
     <string name="failed_to_get_location">Failed to get location: %1$s</string>
+    <string name="info_window_tap_for_options">Tap for options</string>
 </resources>

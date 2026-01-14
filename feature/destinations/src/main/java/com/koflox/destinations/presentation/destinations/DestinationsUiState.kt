@@ -15,7 +15,7 @@ internal data class DestinationsUiState(
     val error: String? = null,
     val isPermissionGranted: Boolean = false,
     val navigationAction: NavigationAction? = null,
-    val showConfirmationDialog: Boolean = false,
+    val showSelectedMarkerOptionsDialog: Boolean = false,
     val isSessionActive: Boolean = false,
 ) {
     companion object {

@@ -12,5 +12,6 @@ internal sealed interface DestinationsUiEvent {
     data object ScreenPaused : DestinationsUiEvent
     data class OpenDestinationInGoogleMaps(val destination: DestinationUiModel) : DestinationsUiEvent
     data object NavigationActionHandled : DestinationsUiEvent
-    data object ConfirmationDialogDismissed : DestinationsUiEvent
+    data object SelectedMarkerInfoClicked : DestinationsUiEvent
+    data object SelectedMarkerOptionsDialogDismissed : DestinationsUiEvent
 }

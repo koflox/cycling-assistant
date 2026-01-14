@@ -68,7 +68,8 @@ internal class DestinationsViewModel(
             DestinationsUiEvent.ScreenPaused -> onScreenPaused()
             is DestinationsUiEvent.OpenDestinationInGoogleMaps -> openInGoogleMaps(event.destination)
             DestinationsUiEvent.NavigationActionHandled -> clearNavigationAction()
-            DestinationsUiEvent.ConfirmationDialogDismissed -> dismissConfirmationDialog()
+            DestinationsUiEvent.SelectedMarkerInfoClicked -> showMarkerOptionsDialog()
+            DestinationsUiEvent.SelectedMarkerOptionsDialogDismissed -> dismissSelectedMarkerOptionsDialog()
         }
     }
 
@@ -112,7 +113,6 @@ internal class DestinationsViewModel(
                     isLoading = false,
                     selectedDestination = uiModel.selected,
                     otherValidDestinations = uiModel.otherValidDestinations,
-                    showConfirmationDialog = true,
                 )
             }
         }.onFailure { error ->
@@ -221,8 +221,12 @@ internal class DestinationsViewModel(
         _uiState.update { it.copy(navigationAction = null) }
     }
 
-    private fun dismissConfirmationDialog() {
-        _uiState.update { it.copy(showConfirmationDialog = false) }
+    private fun showMarkerOptionsDialog() {
+        _uiState.update { it.copy(showSelectedMarkerOptionsDialog = true) }
+    }
+
+    private fun dismissSelectedMarkerOptionsDialog() {
+        _uiState.update { it.copy(showSelectedMarkerOptionsDialog = false) }
     }
 
 }

@@ -94,7 +94,7 @@ private fun DestinationsContent(
             otherDestinations = if (uiState.isSessionActive) emptyList() else uiState.otherValidDestinations,
             userLocation = uiState.userLocation,
             cameraFocusLocation = uiState.cameraFocusLocation,
-            onOpenInGoogleMaps = { viewModel.onEvent(DestinationsUiEvent.OpenDestinationInGoogleMaps(it)) },
+            onSelectedMarkerInfoClick = { viewModel.onEvent(DestinationsUiEvent.SelectedMarkerInfoClicked) },
         )
 
         if (uiState.isSessionActive) {
@@ -131,12 +131,7 @@ private fun DestinationsContent(
         }
     }
 
-    // TODO: the confirmation dialog should be opened on a button click, the button should be displayed in the marker's info window;
-    //  therefore a custom info window is required:
-    //  1. selected destination info window contains: location title, a button for navigating to the
-    //  destination in Google Maps and another one for session start confirmation
-    //  2. other destinations info window contains: location title and destination to it
-    if (uiState.showConfirmationDialog && uiState.selectedDestination != null && uiState.userLocation != null) {
+    if (uiState.showSelectedMarkerOptionsDialog && uiState.selectedDestination != null && uiState.userLocation != null) {
         sessionBridge.ConfirmationDialog(
             destinationId = uiState.selectedDestination.id,
             destinationName = uiState.selectedDestination.title,
@@ -144,10 +139,10 @@ private fun DestinationsContent(
             distanceKm = uiState.selectedDestination.distanceKm,
             userLocation = uiState.userLocation,
             onNavigateClick = {
-                viewModel.onEvent(DestinationsUiEvent.ConfirmationDialogDismissed)
+                viewModel.onEvent(DestinationsUiEvent.SelectedMarkerOptionsDialogDismissed)
                 viewModel.onEvent(DestinationsUiEvent.OpenDestinationInGoogleMaps(uiState.selectedDestination))
             },
-            onDismiss = { viewModel.onEvent(DestinationsUiEvent.ConfirmationDialogDismissed) },
+            onDismiss = { viewModel.onEvent(DestinationsUiEvent.SelectedMarkerOptionsDialogDismissed) },
         )
     }
 }
