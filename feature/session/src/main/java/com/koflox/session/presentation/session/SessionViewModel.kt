@@ -6,6 +6,7 @@ import com.koflox.location.LocationDataSource
 import com.koflox.location.model.Location
 import com.koflox.session.domain.model.Session
 import com.koflox.session.domain.model.SessionStatus
+import com.koflox.session.domain.usecase.ActiveSessionUseCase
 import com.koflox.session.domain.usecase.SessionStartParams
 import com.koflox.session.domain.usecase.SessionTransitionUseCase
 import kotlinx.coroutines.Job
@@ -20,6 +21,7 @@ import java.util.Locale
 
 class SessionViewModel(
     private val sessionTransitionUseCase: SessionTransitionUseCase,
+    private val activeSessionUseCase: ActiveSessionUseCase,
     private val locationDataSource: LocationDataSource,
 ) : ViewModel() {
 
@@ -46,7 +48,6 @@ class SessionViewModel(
         destinationLongitude: Double,
         startLatitude: Double,
         startLongitude: Double,
-        onSessionEnded: () -> Unit,
     ) {
         if (activeSession != null) return
         viewModelScope.launch {
@@ -61,18 +62,17 @@ class SessionViewModel(
                 ),
             ).onSuccess { session ->
                 activeSession = session
+                // TODO: session activation should be a part of sessionTransitionUseCase during session creation
+                activeSessionUseCase.setActive(true)
                 updateUiFromSession(session)
                 startLocationTracking()
                 startTimer()
-                this@SessionViewModel.onSessionEnded = onSessionEnded
             }.onFailure { error ->
                 // TODO: map error into human readable before displaying
                 _uiState.update { it.copy(error = error.message) }
             }
         }
     }
-
-    private var onSessionEnded: (() -> Unit)? = null
 
     private fun pauseSession() {
         val session = activeSession ?: return
@@ -99,7 +99,6 @@ class SessionViewModel(
             sessionTransitionUseCase.stop(session)
                 .onSuccess {
                     cleanup()
-                    onSessionEnded?.invoke()
                 }
                 .onFailure { error ->
                     // TODO: map error into human readable before displaying
@@ -113,7 +112,7 @@ class SessionViewModel(
         stopTimer()
         activeSession = null
         _uiState.value = SessionUiState()
-        onSessionEnded = null
+        activeSessionUseCase.setActive(false)
     }
 
     private fun dismissError() {

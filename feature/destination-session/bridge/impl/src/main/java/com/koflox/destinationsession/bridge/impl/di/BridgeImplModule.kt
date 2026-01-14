@@ -6,6 +6,8 @@ import org.koin.dsl.module
 
 val bridgeImplModule = module {
     single<DestinationSessionBridge> {
-        DestinationSessionBridgeImpl()
+        DestinationSessionBridgeImpl(
+            activeSessionUseCase = get(),
+        )
     }
 }

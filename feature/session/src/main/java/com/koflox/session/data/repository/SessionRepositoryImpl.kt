@@ -7,6 +7,9 @@ import com.koflox.session.domain.model.Session
 import com.koflox.session.domain.repository.SessionRepository
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 
@@ -16,6 +19,13 @@ internal class SessionRepositoryImpl(
     private val sessionDao: SessionDao,
     private val mapper: SessionMapper,
 ) : SessionRepository {
+
+    private val _hasActiveSession = MutableStateFlow(false)
+    override val hasActiveSession: StateFlow<Boolean> = _hasActiveSession.asStateFlow()
+
+    override fun setActiveSession(isActive: Boolean) {
+        _hasActiveSession.value = isActive
+    }
 
     override suspend fun saveSession(session: Session): Result<Unit> = withContext(dispatcherIo) {
         suspendRunCatching {
