@@ -22,6 +22,9 @@ dependencyResolutionManagement {
 rootProject.name = "CyclingAssistant"
 include(":app")
 include(":feature:destinations")
+include(":feature:destination-session:bridge:api")
+include(":feature:destination-session:bridge:impl")
+include(":feature:session")
 include(":shared:concurrent")
 include(":shared:di")
 include(":shared:graphics")

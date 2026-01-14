@@ -7,7 +7,7 @@ import androidx.room.Query
 import com.koflox.destinations.data.source.local.entity.DestinationLocal
 
 @Dao
-internal interface DestinationDao {
+interface DestinationDao {
     @Query("SELECT * FROM destinations")
     suspend fun getAllDestinations(): List<DestinationLocal>
 

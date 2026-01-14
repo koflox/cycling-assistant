@@ -14,6 +14,7 @@ import com.koflox.destinations.domain.usecase.ObserveUserLocationUseCase
 import com.koflox.destinations.domain.util.DistanceCalculator
 import com.koflox.destinations.presentation.destinations.model.DestinationUiModel
 import com.koflox.destinations.presentation.mapper.DestinationUiMapper
+import com.koflox.destinationsession.bridge.DestinationSessionBridge
 import com.koflox.location.model.Location
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -30,6 +31,7 @@ internal class DestinationsViewModel(
     private val distanceCalculator: DistanceCalculator,
     private val uiMapper: DestinationUiMapper,
     private val application: Application,
+    private val sessionBridge: DestinationSessionBridge,
 ) : AndroidViewModel(application) {
 
     companion object {
@@ -48,6 +50,11 @@ internal class DestinationsViewModel(
         viewModelScope.launch {
             initializeDatabaseUseCase.init()
         }
+        viewModelScope.launch {
+            sessionBridge.hasActiveSession.collect { isActive ->
+                _uiState.update { it.copy(isSessionActive = isActive) }
+            }
+        }
     }
 
     fun onEvent(event: DestinationsUiEvent) {
@@ -61,6 +68,7 @@ internal class DestinationsViewModel(
             DestinationsUiEvent.ScreenPaused -> onScreenPaused()
             is DestinationsUiEvent.OpenDestinationInGoogleMaps -> openInGoogleMaps(event.destination)
             DestinationsUiEvent.NavigationActionHandled -> clearNavigationAction()
+            DestinationsUiEvent.ConfirmationDialogDismissed -> dismissConfirmationDialog()
         }
     }
 
@@ -104,6 +112,7 @@ internal class DestinationsViewModel(
                     isLoading = false,
                     selectedDestination = uiModel.selected,
                     otherValidDestinations = uiModel.otherValidDestinations,
+                    showConfirmationDialog = true,
                 )
             }
         }.onFailure { error ->
@@ -210,6 +219,10 @@ internal class DestinationsViewModel(
 
     private fun clearNavigationAction() {
         _uiState.update { it.copy(navigationAction = null) }
+    }
+
+    private fun dismissConfirmationDialog() {
+        _uiState.update { it.copy(showConfirmationDialog = false) }
     }
 
 }

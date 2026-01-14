@@ -5,7 +5,7 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 
 @Entity(tableName = "destinations")
-internal data class DestinationLocal(
+data class DestinationLocal(
     @PrimaryKey
     val id: String,
     @ColumnInfo(name = "title")

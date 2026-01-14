@@ -63,8 +63,15 @@ dependencies {
     implementation(libs.koin.androidx.compose)
     implementation(libs.koin.core)
 
+    // Room - database defined in app module for KSP visibility
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    ksp(libs.androidx.room.compiler)
+
     // Feature modules
     implementation(project(":feature:destinations"))
+    implementation(project(":feature:destination-session:bridge:impl"))
+    implementation(project(":feature:session"))
 
     // Shared modules
     implementation(project(":shared:concurrent"))

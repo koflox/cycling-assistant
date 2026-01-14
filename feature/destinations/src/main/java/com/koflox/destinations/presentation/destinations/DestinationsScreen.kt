@@ -6,6 +6,7 @@ import android.widget.Toast
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -22,12 +23,17 @@ import com.koflox.destinations.presentation.destinations.components.LetsGoButton
 import com.koflox.destinations.presentation.destinations.components.LoadingOverlay
 import com.koflox.destinations.presentation.destinations.components.RouteSlider
 import com.koflox.destinations.presentation.permission.LocationPermissionHandler
+import com.koflox.destinationsession.bridge.DestinationSessionBridge
 import org.koin.androidx.compose.koinViewModel
+import org.koin.compose.koinInject
 
 private const val GOOGLE_MAPS_PACKAGE = "com.google.android.apps.maps"
 
 @Composable
-internal fun DestinationsScreen(viewModel: DestinationsViewModel = koinViewModel()) {
+internal fun DestinationsScreen(
+    viewModel: DestinationsViewModel = koinViewModel(),
+    sessionBridge: DestinationSessionBridge = koinInject(),
+) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     ScreenLifecycleEffects(viewModel)
@@ -37,7 +43,7 @@ internal fun DestinationsScreen(viewModel: DestinationsViewModel = koinViewModel
         onPermissionGranted = { viewModel.onEvent(DestinationsUiEvent.PermissionGranted) },
         onPermissionDenied = { viewModel.onEvent(DestinationsUiEvent.PermissionDenied) },
     ) {
-        DestinationsContent(uiState, viewModel)
+        DestinationsContent(uiState, viewModel, sessionBridge)
     }
 }
 
@@ -76,33 +82,72 @@ private fun NavigationEffect(action: NavigationAction?, context: Context, viewMo
 }
 
 @Composable
-private fun DestinationsContent(uiState: DestinationsUiState, viewModel: DestinationsViewModel) {
+private fun DestinationsContent(
+    uiState: DestinationsUiState,
+    viewModel: DestinationsViewModel,
+    sessionBridge: DestinationSessionBridge,
+) {
     Box(modifier = Modifier.fillMaxSize()) {
         GoogleMapView(
             modifier = Modifier.fillMaxSize(),
             selectedDestination = uiState.selectedDestination,
-            otherDestinations = uiState.otherValidDestinations,
+            otherDestinations = if (uiState.isSessionActive) emptyList() else uiState.otherValidDestinations,
             userLocation = uiState.userLocation,
             cameraFocusLocation = uiState.cameraFocusLocation,
             onOpenInGoogleMaps = { viewModel.onEvent(DestinationsUiEvent.OpenDestinationInGoogleMaps(it)) },
         )
-        Column(
-            modifier = Modifier.align(Alignment.BottomCenter).padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            RouteSlider(
-                distanceKm = uiState.routeDistanceKm,
-                toleranceKm = uiState.toleranceKm,
-                onDistanceChanged = { viewModel.onEvent(DestinationsUiEvent.RouteDistanceChanged(it)) },
-                modifier = Modifier.padding(bottom = 16.dp),
-            )
-            LetsGoButton(
-                onClick = { viewModel.onEvent(DestinationsUiEvent.LetsGoClicked) },
-                enabled = !uiState.isLoading && uiState.isPermissionGranted,
-            )
+
+        if (uiState.isSessionActive) {
+            uiState.selectedDestination?.let { destination ->
+                sessionBridge.SessionScreen(
+                    destinationLocation = destination.location,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.BottomCenter),
+                )
+            }
+        } else {
+            Column(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                RouteSlider(
+                    distanceKm = uiState.routeDistanceKm,
+                    toleranceKm = uiState.toleranceKm,
+                    onDistanceChanged = { viewModel.onEvent(DestinationsUiEvent.RouteDistanceChanged(it)) },
+                    modifier = Modifier.padding(bottom = 16.dp),
+                )
+                LetsGoButton(
+                    onClick = { viewModel.onEvent(DestinationsUiEvent.LetsGoClicked) },
+                    enabled = !uiState.isLoading && uiState.isPermissionGranted,
+                )
+            }
         }
+
         if (uiState.isLoading) {
             LoadingOverlay()
         }
+    }
+
+    // TODO: the confirmation dialog should be opened on a button click, the button should be displayed in the marker's info window;
+    //  therefore a custom info window is required:
+    //  1. selected destination info window contains: location title, a button for navigating to the
+    //  destination in Google Maps and another one for session start confirmation
+    //  2. other destinations info window contains: location title and destination to it
+    if (uiState.showConfirmationDialog && uiState.selectedDestination != null && uiState.userLocation != null) {
+        sessionBridge.ConfirmationDialog(
+            destinationId = uiState.selectedDestination.id,
+            destinationName = uiState.selectedDestination.title,
+            destinationLocation = uiState.selectedDestination.location,
+            distanceKm = uiState.selectedDestination.distanceKm,
+            userLocation = uiState.userLocation,
+            onNavigateClick = {
+                viewModel.onEvent(DestinationsUiEvent.ConfirmationDialogDismissed)
+                viewModel.onEvent(DestinationsUiEvent.OpenDestinationInGoogleMaps(uiState.selectedDestination))
+            },
+            onDismiss = { viewModel.onEvent(DestinationsUiEvent.ConfirmationDialogDismissed) },
+        )
     }
 }

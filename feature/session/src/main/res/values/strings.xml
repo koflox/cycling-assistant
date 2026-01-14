@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Session Stats -->
+    <string name="session_stat_time">Time</string>
+    <string name="session_stat_distance">Distance</string>
+    <string name="session_stat_avg_speed">Avg</string>
+    <string name="session_stat_top_speed">Top</string>
+
+    <!-- Session Buttons -->
+    <string name="session_button_pause">Pause</string>
+    <string name="session_button_continue">Continue</string>
+    <string name="session_button_stop">Stop</string>
+
+    <!-- Confirmation Dialog -->
+    <string name="dialog_distance_format">Distance: %.1f km</string>
+    <string name="dialog_button_navigate">Navigate</string>
+    <string name="dialog_button_start_session">Start Session</string>
+    <string name="dialog_button_cancel">Cancel</string>
+</resources>

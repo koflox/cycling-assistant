@@ -64,6 +64,7 @@ dependencies {
     implementation(libs.accompanist.permissions)
 
     // Project modules
+    implementation(project(":feature:destination-session:bridge:api"))
     implementation(project(":shared:concurrent"))
     implementation(project(":shared:graphics"))
     implementation(project(":shared:location"))
