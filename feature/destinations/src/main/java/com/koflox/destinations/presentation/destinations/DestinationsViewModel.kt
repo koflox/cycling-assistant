@@ -11,10 +11,10 @@ import com.koflox.destinations.domain.usecase.GetUserLocationUseCase
 import com.koflox.destinations.domain.usecase.InitializeDatabaseUseCase
 import com.koflox.destinations.domain.usecase.NoSuitableDestinationException
 import com.koflox.destinations.domain.usecase.ObserveUserLocationUseCase
-import com.koflox.destinations.domain.util.DistanceCalculator
 import com.koflox.destinations.presentation.destinations.model.DestinationUiModel
 import com.koflox.destinations.presentation.mapper.DestinationUiMapper
 import com.koflox.destinationsession.bridge.DestinationSessionBridge
+import com.koflox.distance.DistanceCalculator
 import com.koflox.location.model.Location
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -180,9 +180,9 @@ internal class DestinationsViewModel(
         }
     }
 
-    private suspend fun shouldUpdateCameraFocus(currentFocus: Location?, newLocation: Location): Boolean {
+    private fun shouldUpdateCameraFocus(currentFocus: Location?, newLocation: Location): Boolean {
         if (currentFocus == null) return true
-        val distanceMeters = distanceCalculator.calculate(
+        val distanceMeters = distanceCalculator.calculateKm(
             lat1 = currentFocus.latitude,
             lon1 = currentFocus.longitude,
             lat2 = newLocation.latitude,

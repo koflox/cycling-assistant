@@ -15,6 +15,7 @@ internal val domainModule = module {
     factory<SessionTransitionUseCase> {
         SessionTransitionUseCaseImpl(
             sessionRepository = get(),
+            distanceCalculator = get(),
         )
     }
 }
