@@ -2,21 +2,17 @@ package com.koflox.session.data.repository
 
 import com.koflox.concurrent.suspendRunCatching
 import com.koflox.session.data.mapper.SessionMapper
-import com.koflox.session.data.source.local.dao.SessionDao
+import com.koflox.session.data.source.local.SessionLocalDataSource
 import com.koflox.session.domain.model.Session
 import com.koflox.session.domain.repository.SessionRepository
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.withContext
 
 internal class SessionRepositoryImpl(
-    private val dispatcherIo: CoroutineDispatcher,
-    // TODO: create DS layer abstraction
-    private val sessionDao: SessionDao,
+    private val localDataSource: SessionLocalDataSource,
     private val mapper: SessionMapper,
 ) : SessionRepository {
 
@@ -27,29 +23,24 @@ internal class SessionRepositoryImpl(
         _hasActiveSession.value = isActive
     }
 
-    override suspend fun saveSession(session: Session): Result<Unit> = withContext(dispatcherIo) {
-        suspendRunCatching {
-            val sessionEntity = mapper.toEntity(session)
-            val trackPointEntities = mapper.toTrackPointEntities(session.id, session.trackPoints)
+    override suspend fun saveSession(session: Session): Result<Unit> = suspendRunCatching {
+        val sessionEntity = mapper.toEntity(session)
+        val trackPointEntities = mapper.toTrackPointEntities(session.id, session.trackPoints)
 
-            // TODO: insert via transaction
-            sessionDao.insertSession(sessionEntity)
-            if (trackPointEntities.isNotEmpty()) {
-                sessionDao.insertTrackPoints(trackPointEntities)
-            }
+        // TODO: insert via transaction
+        localDataSource.insertSession(sessionEntity)
+        if (trackPointEntities.isNotEmpty()) {
+            localDataSource.insertTrackPoints(trackPointEntities)
         }
     }
 
-    override suspend fun getSession(sessionId: String): Result<Session?> = withContext(dispatcherIo) {
-        suspendRunCatching {
-            val sessionEntity = sessionDao.getSession(sessionId) ?: return@suspendRunCatching null
-            val trackPoints = sessionDao.getTrackPoints(sessionId)
-            mapper.toDomain(sessionEntity, trackPoints)
-        }
+    override suspend fun getSession(sessionId: String): Result<Session?> = suspendRunCatching {
+        val sessionEntity = localDataSource.getSession(sessionId) ?: return@suspendRunCatching null
+        val trackPoints = localDataSource.getTrackPoints(sessionId)
+        mapper.toDomain(sessionEntity, trackPoints)
     }
 
-    override fun observeCompletedSessions(): Flow<List<Session>> = sessionDao.observeCompletedSessions().map { entities ->
+    override fun observeCompletedSessions(): Flow<List<Session>> = localDataSource.observeCompletedSessions().map { entities ->
         mapper.toDomainList(entities)
     }
-
 }
