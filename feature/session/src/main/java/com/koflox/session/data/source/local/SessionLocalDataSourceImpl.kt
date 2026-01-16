@@ -12,8 +12,11 @@ internal class SessionLocalDataSourceImpl(
     private val dao: SessionDao,
 ) : SessionLocalDataSource {
 
-    override suspend fun insertSession(session: SessionEntity) = withContext(dispatcherIo) {
-        dao.insertSession(session)
+    override suspend fun insertSessionWithTrackPoints(
+        session: SessionEntity,
+        trackPoints: List<TrackPointEntity>,
+    ) = withContext(dispatcherIo) {
+        dao.insertSessionWithTrackPoints(session, trackPoints)
     }
 
     override suspend fun updateSession(session: SessionEntity) = withContext(dispatcherIo) {
@@ -29,10 +32,6 @@ internal class SessionLocalDataSourceImpl(
     }
 
     override fun observeCompletedSessions(): Flow<List<SessionEntity>> = dao.observeCompletedSessions()
-
-    override suspend fun insertTrackPoints(trackPoints: List<TrackPointEntity>) = withContext(dispatcherIo) {
-        dao.insertTrackPoints(trackPoints)
-    }
 
     override suspend fun getTrackPoints(sessionId: String): List<TrackPointEntity> = withContext(dispatcherIo) {
         dao.getTrackPoints(sessionId)

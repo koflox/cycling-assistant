@@ -4,17 +4,30 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
 import androidx.room.Update
 import com.koflox.session.data.source.local.entity.SessionEntity
 import com.koflox.session.data.source.local.entity.TrackPointEntity
 import kotlinx.coroutines.flow.Flow
 
 // TODO: cleanup unused generated methods
+@Suppress("ComplexInterface")
 @Dao
 interface SessionDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertSession(session: SessionEntity)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertTrackPoints(trackPoints: List<TrackPointEntity>)
+
+    @Transaction
+    suspend fun insertSessionWithTrackPoints(session: SessionEntity, trackPoints: List<TrackPointEntity>) {
+        insertSession(session)
+        if (trackPoints.isNotEmpty()) {
+            insertTrackPoints(trackPoints)
+        }
+    }
 
     @Update
     suspend fun updateSession(session: SessionEntity)
@@ -30,9 +43,6 @@ interface SessionDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertTrackPoint(trackPoint: TrackPointEntity)
-
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertTrackPoints(trackPoints: List<TrackPointEntity>)
 
     @Query("SELECT * FROM track_points WHERE sessionId = :sessionId ORDER BY timestampMs ASC")
     suspend fun getTrackPoints(sessionId: String): List<TrackPointEntity>

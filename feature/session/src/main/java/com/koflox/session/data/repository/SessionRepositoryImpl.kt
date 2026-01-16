@@ -26,12 +26,7 @@ internal class SessionRepositoryImpl(
     override suspend fun saveSession(session: Session): Result<Unit> = suspendRunCatching {
         val sessionEntity = mapper.toEntity(session)
         val trackPointEntities = mapper.toTrackPointEntities(session.id, session.trackPoints)
-
-        // TODO: insert via transaction
-        localDataSource.insertSession(sessionEntity)
-        if (trackPointEntities.isNotEmpty()) {
-            localDataSource.insertTrackPoints(trackPointEntities)
-        }
+        localDataSource.insertSessionWithTrackPoints(sessionEntity, trackPointEntities)
     }
 
     override suspend fun getSession(sessionId: String): Result<Session?> = suspendRunCatching {
