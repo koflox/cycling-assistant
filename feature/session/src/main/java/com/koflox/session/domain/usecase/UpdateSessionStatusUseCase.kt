@@ -17,21 +17,38 @@ internal class UpdateSessionStatusUseCaseImpl(
 
     override suspend fun pause(): Result<Unit> = suspendRunCatching {
         val session = activeSessionUseCase.getActiveSession()
-        val pausedSession = session.copy(status = SessionStatus.PAUSED)
+        val currentTimeMs = System.currentTimeMillis()
+        val elapsedSinceLastResume = currentTimeMs - session.lastResumedTimeMs
+        val totalElapsedTimeMs = session.elapsedTimeMs + elapsedSinceLastResume
+        val pausedSession = session.copy(
+            status = SessionStatus.PAUSED,
+            elapsedTimeMs = totalElapsedTimeMs,
+        )
         sessionRepository.saveSession(pausedSession).getOrThrow()
     }
 
     override suspend fun resume(): Result<Unit> = suspendRunCatching {
         val session = activeSessionUseCase.getActiveSession()
-        val resumedSession = session.copy(status = SessionStatus.RUNNING)
+        val currentTimeMs = System.currentTimeMillis()
+        val resumedSession = session.copy(
+            status = SessionStatus.RUNNING,
+            lastResumedTimeMs = currentTimeMs,
+        )
         sessionRepository.saveSession(resumedSession).getOrThrow()
     }
 
     override suspend fun stop(): Result<Unit> = suspendRunCatching {
         val session = activeSessionUseCase.getActiveSession()
+        val currentTimeMs = System.currentTimeMillis()
+        val finalElapsedTimeMs = if (session.status == SessionStatus.RUNNING) {
+            session.elapsedTimeMs + (currentTimeMs - session.lastResumedTimeMs)
+        } else {
+            session.elapsedTimeMs
+        }
         val completedSession = session.copy(
             status = SessionStatus.COMPLETED,
-            endTimeMs = System.currentTimeMillis(),
+            endTimeMs = currentTimeMs,
+            elapsedTimeMs = finalElapsedTimeMs,
         )
         sessionRepository.saveSession(completedSession).getOrThrow()
     }

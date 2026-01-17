@@ -36,6 +36,7 @@ internal class CreateSessionUseCaseImpl(
             startLatitude = params.startLatitude,
             startLongitude = params.startLongitude,
             startTimeMs = currentTimeMs,
+            lastResumedTimeMs = currentTimeMs,
             endTimeMs = null,
             elapsedTimeMs = 0L,
             traveledDistanceKm = 0.0,

@@ -54,7 +54,8 @@ internal class UpdateSessionLocationUseCaseImpl(
         val updatedTrackPoints = session.trackPoints + newTrackPoint
         val totalDistanceKm = session.traveledDistanceKm + distanceKm
         val newTopSpeedKmh = maxOf(session.topSpeedKmh, speedKmh)
-        val elapsedTimeMs = timestampMs - session.startTimeMs
+        val elapsedSinceLastResume = timestampMs - session.lastResumedTimeMs
+        val elapsedTimeMs = session.elapsedTimeMs + elapsedSinceLastResume
         val averageSpeedKmh = if (elapsedTimeMs > 0) {
             (totalDistanceKm / elapsedTimeMs) * MILLISECONDS_PER_HOUR
         } else {
@@ -62,6 +63,7 @@ internal class UpdateSessionLocationUseCaseImpl(
         }
         val updatedSession = session.copy(
             elapsedTimeMs = elapsedTimeMs,
+            lastResumedTimeMs = timestampMs,
             traveledDistanceKm = totalDistanceKm,
             averageSpeedKmh = averageSpeedKmh,
             topSpeedKmh = newTopSpeedKmh,

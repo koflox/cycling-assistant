@@ -159,9 +159,10 @@ class SessionViewModel(
             while (isActive) {
                 delay(TIMER_UPDATE_INTERVAL_MS)
                 if (session.status == SessionStatus.RUNNING) {
-                    val elapsedMs = System.currentTimeMillis() - session.startTimeMs
+                    val elapsedSinceLastResume = System.currentTimeMillis() - session.lastResumedTimeMs
+                    val totalElapsedMs = session.elapsedTimeMs + elapsedSinceLastResume
                     _uiState.update {
-                        it.copy(elapsedTimeFormatted = formatElapsedTime(elapsedMs))
+                        it.copy(elapsedTimeFormatted = formatElapsedTime(totalElapsedMs))
                     }
                 }
             }

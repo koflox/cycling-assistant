@@ -14,6 +14,7 @@ data class SessionEntity(
     val startLatitude: Double,
     val startLongitude: Double,
     val startTimeMs: Long,
+    val lastResumedTimeMs: Long,
     val endTimeMs: Long?,
     val elapsedTimeMs: Long,
     val traveledDistanceKm: Double,

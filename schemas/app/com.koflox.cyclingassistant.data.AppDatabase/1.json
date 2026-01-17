@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "0949053023abc2e13bcff88e41fbac38",
+    "identityHash": "55b9ed81acba9e6502b179f1d6a07485",
     "entities": [
       {
         "tableName": "destinations",
@@ -42,7 +42,7 @@
       },
       {
         "tableName": "sessions",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `destinationId` TEXT NOT NULL, `destinationName` TEXT NOT NULL, `destinationLatitude` REAL NOT NULL, `destinationLongitude` REAL NOT NULL, `startLatitude` REAL NOT NULL, `startLongitude` REAL NOT NULL, `startTimeMs` INTEGER NOT NULL, `endTimeMs` INTEGER, `elapsedTimeMs` INTEGER NOT NULL, `traveledDistanceKm` REAL NOT NULL, `averageSpeedKmh` REAL NOT NULL, `topSpeedKmh` REAL NOT NULL, `status` TEXT NOT NULL, PRIMARY KEY(`id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `destinationId` TEXT NOT NULL, `destinationName` TEXT NOT NULL, `destinationLatitude` REAL NOT NULL, `destinationLongitude` REAL NOT NULL, `startLatitude` REAL NOT NULL, `startLongitude` REAL NOT NULL, `startTimeMs` INTEGER NOT NULL, `lastResumedTimeMs` INTEGER NOT NULL, `endTimeMs` INTEGER, `elapsedTimeMs` INTEGER NOT NULL, `traveledDistanceKm` REAL NOT NULL, `averageSpeedKmh` REAL NOT NULL, `topSpeedKmh` REAL NOT NULL, `status` TEXT NOT NULL, PRIMARY KEY(`id`))",
         "fields": [
           {
             "fieldPath": "id",
@@ -89,6 +89,12 @@
           {
             "fieldPath": "startTimeMs",
             "columnName": "startTimeMs",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lastResumedTimeMs",
+            "columnName": "lastResumedTimeMs",
             "affinity": "INTEGER",
             "notNull": true
           },
@@ -210,7 +216,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '0949053023abc2e13bcff88e41fbac38')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '55b9ed81acba9e6502b179f1d6a07485')"
     ]
   }
 }
