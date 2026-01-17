@@ -22,6 +22,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.koflox.destinations.R
 
+// TODO: distance values should come from VM
 private const val MIN_DISTANCE = 5f
 private const val MAX_DISTANCE = 30f
 private const val TOLERANCE_FONT_SIZE_RATIO = 0.7f
