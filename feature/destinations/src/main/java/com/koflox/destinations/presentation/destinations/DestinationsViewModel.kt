@@ -14,7 +14,7 @@ import com.koflox.destinations.domain.usecase.NoSuitableDestinationException
 import com.koflox.destinations.domain.usecase.ObserveUserLocationUseCase
 import com.koflox.destinations.presentation.destinations.model.DestinationUiModel
 import com.koflox.destinations.presentation.mapper.DestinationUiMapper
-import com.koflox.destinationsession.bridge.CyclingSessionUseCase
+import com.koflox.destinationsession.bridge.usecase.CyclingSessionUseCase
 import com.koflox.distance.DistanceCalculator
 import com.koflox.location.model.Location
 import kotlinx.coroutines.Job

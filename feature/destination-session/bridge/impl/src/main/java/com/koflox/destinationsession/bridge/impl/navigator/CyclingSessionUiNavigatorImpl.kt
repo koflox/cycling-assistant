@@ -1,4 +1,5 @@
-package com.koflox.destinationsession.bridge.impl
+package com.koflox.destinationsession.bridge.impl.navigator
+
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -7,32 +8,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import com.koflox.destinationsession.bridge.ActiveSessionDestination
-import com.koflox.destinationsession.bridge.DestinationSessionBridge
+import com.koflox.destinationsession.bridge.navigator.CyclingSessionUiNavigator
 import com.koflox.location.model.Location
-import com.koflox.session.domain.usecase.ActiveSessionUseCase
-import com.koflox.session.domain.usecase.NoActiveSessionException
 import com.koflox.session.presentation.dialog.DestinationConfirmationDialog
 import com.koflox.session.presentation.permission.NotificationPermissionHandler
-import com.koflox.session.presentation.session.SessionScreen
 import com.koflox.session.presentation.session.SessionViewModel
-import kotlinx.coroutines.flow.Flow
 import org.koin.androidx.compose.koinViewModel
 
-internal class DestinationSessionBridgeImpl(
-    private val activeSessionUseCase: ActiveSessionUseCase,
-) : DestinationSessionBridge {
-
-    override fun observeHasActiveSession(): Flow<Boolean> = activeSessionUseCase.hasActiveSession()
-
-    override suspend fun getActiveSessionDestination(): ActiveSessionDestination? = try {
-        ActiveSessionDestination(
-            id = activeSessionUseCase.getActiveSession().destinationId,
-        )
-    } catch (_: NoActiveSessionException) {
-        null
-    }
-
+internal class CyclingSessionUiNavigatorImpl : CyclingSessionUiNavigator {
     @Composable
     override fun SessionScreen(
         destinationLocation: Location,
@@ -42,7 +25,7 @@ internal class DestinationSessionBridgeImpl(
         val state by viewModel.uiState.collectAsState()
 
         if (state.isActive) {
-            SessionScreen(
+            com.koflox.session.presentation.session.SessionScreen(
                 viewModel = viewModel,
                 modifier = modifier,
             )
@@ -89,4 +72,5 @@ internal class DestinationSessionBridgeImpl(
             onDismiss = onDismiss,
         )
     }
+
 }

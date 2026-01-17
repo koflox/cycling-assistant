@@ -1,20 +1,18 @@
 package com.koflox.destinationsession.bridge.impl.di
 
-import com.koflox.destinationsession.bridge.CyclingSessionUiNavigator
-import com.koflox.destinationsession.bridge.CyclingSessionUseCase
-import com.koflox.destinationsession.bridge.DestinationSessionBridge
-import com.koflox.destinationsession.bridge.impl.DestinationSessionBridgeImpl
-import org.koin.dsl.binds
+import com.koflox.destinationsession.bridge.impl.navigator.CyclingSessionUiNavigatorImpl
+import com.koflox.destinationsession.bridge.impl.usecase.CyclingSessionUseCaseImpl
+import com.koflox.destinationsession.bridge.navigator.CyclingSessionUiNavigator
+import com.koflox.destinationsession.bridge.usecase.CyclingSessionUseCase
 import org.koin.dsl.module
 
 val bridgeImplModule = module {
-    single {
-        DestinationSessionBridgeImpl(
+    factory<CyclingSessionUiNavigator> {
+        CyclingSessionUiNavigatorImpl()
+    }
+    factory<CyclingSessionUseCase> {
+        CyclingSessionUseCaseImpl(
             activeSessionUseCase = get(),
         )
-    } binds arrayOf(
-        DestinationSessionBridge::class,
-        CyclingSessionUseCase::class,
-        CyclingSessionUiNavigator::class,
-    )
+    }
 }
