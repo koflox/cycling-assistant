@@ -2,6 +2,7 @@ package com.koflox.session.data.source.local
 
 import com.koflox.session.data.source.local.dao.SessionDao
 import com.koflox.session.data.source.local.entity.SessionEntity
+import com.koflox.session.data.source.local.entity.SessionWithTrackPoints
 import com.koflox.session.data.source.local.entity.TrackPointEntity
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
@@ -19,21 +20,12 @@ internal class SessionLocalDataSourceImpl(
         dao.insertSessionWithTrackPoints(session, trackPoints)
     }
 
-    override suspend fun updateSession(session: SessionEntity) = withContext(dispatcherIo) {
-        dao.updateSession(session)
+    override suspend fun getSessionWithTrackPoints(sessionId: String): SessionWithTrackPoints? = withContext(dispatcherIo) {
+        dao.getSessionWithTrackPoints(sessionId)
     }
 
-    override suspend fun getSession(sessionId: String): SessionEntity? = withContext(dispatcherIo) {
-        dao.getSession(sessionId)
-    }
+    override fun observeSessionsByStatuses(statuses: List<String>): Flow<List<SessionWithTrackPoints>> = dao.observeSessionsByStatuses(statuses)
 
-    override suspend fun deleteSession(sessionId: String) = withContext(dispatcherIo) {
-        dao.deleteSession(sessionId)
-    }
+    override fun observeFirstSessionByStatuses(statuses: List<String>): Flow<SessionWithTrackPoints?> = dao.observeFirstSessionByStatuses(statuses)
 
-    override fun observeCompletedSessions(): Flow<List<SessionEntity>> = dao.observeCompletedSessions()
-
-    override suspend fun getTrackPoints(sessionId: String): List<TrackPointEntity> = withContext(dispatcherIo) {
-        dao.getTrackPoints(sessionId)
-    }
 }

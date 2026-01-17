@@ -51,7 +51,7 @@ internal class DestinationsViewModel(
             initializeDatabaseUseCase.init()
         }
         viewModelScope.launch {
-            cyclingSessionUseCase.hasActiveSession.collect { isActive ->
+            cyclingSessionUseCase.observeHasActiveSession().collect { isActive ->
                 _uiState.update { it.copy(isSessionActive = isActive) }
             }
         }

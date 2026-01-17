@@ -10,15 +10,14 @@ import com.koflox.session.domain.usecase.ActiveSessionUseCase
 import com.koflox.session.presentation.dialog.DestinationConfirmationDialog
 import com.koflox.session.presentation.session.SessionScreen
 import com.koflox.session.presentation.session.SessionViewModel
-import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.Flow
 import org.koin.androidx.compose.koinViewModel
 
 internal class DestinationSessionBridgeImpl(
     private val activeSessionUseCase: ActiveSessionUseCase,
 ) : DestinationSessionBridge {
 
-    override val hasActiveSession: StateFlow<Boolean>
-        get() = activeSessionUseCase.hasActiveSession
+    override fun observeHasActiveSession(): Flow<Boolean> = activeSessionUseCase.hasActiveSession()
 
     @Composable
     override fun SessionScreen(

@@ -4,11 +4,9 @@ import com.koflox.concurrent.suspendRunCatching
 import com.koflox.session.data.mapper.SessionMapper
 import com.koflox.session.data.source.local.SessionLocalDataSource
 import com.koflox.session.domain.model.Session
+import com.koflox.session.domain.model.SessionStatus
 import com.koflox.session.domain.repository.SessionRepository
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 
 internal class SessionRepositoryImpl(
@@ -16,11 +14,12 @@ internal class SessionRepositoryImpl(
     private val mapper: SessionMapper,
 ) : SessionRepository {
 
-    private val _hasActiveSession = MutableStateFlow(false)
-    override val hasActiveSession: StateFlow<Boolean> = _hasActiveSession.asStateFlow()
-
-    override fun setActiveSession(isActive: Boolean) {
-        _hasActiveSession.value = isActive
+    override fun observeActiveSession(): Flow<Session?> {
+        return localDataSource.observeFirstSessionByStatuses(
+            statuses = listOf(SessionStatus.RUNNING.name, SessionStatus.PAUSED.name),
+        ).map { sessionWithTrackPoints ->
+            sessionWithTrackPoints?.let { mapper.toDomain(it) }
+        }
     }
 
     override suspend fun saveSession(session: Session): Result<Unit> = suspendRunCatching {
@@ -30,12 +29,9 @@ internal class SessionRepositoryImpl(
     }
 
     override suspend fun getSession(sessionId: String): Result<Session?> = suspendRunCatching {
-        val sessionEntity = localDataSource.getSession(sessionId) ?: return@suspendRunCatching null
-        val trackPoints = localDataSource.getTrackPoints(sessionId)
-        mapper.toDomain(sessionEntity, trackPoints)
+        localDataSource.getSessionWithTrackPoints(sessionId)?.let {
+            mapper.toDomain(it)
+        }
     }
 
-    override fun observeCompletedSessions(): Flow<List<Session>> = localDataSource.observeCompletedSessions().map { entities ->
-        mapper.toDomainList(entities)
-    }
 }

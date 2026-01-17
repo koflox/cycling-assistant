@@ -7,20 +7,25 @@ import com.koflox.location.model.Location
 import com.koflox.session.domain.model.Session
 import com.koflox.session.domain.model.SessionStatus
 import com.koflox.session.domain.usecase.ActiveSessionUseCase
-import com.koflox.session.domain.usecase.SessionStartParams
-import com.koflox.session.domain.usecase.SessionTransitionUseCase
+import com.koflox.session.domain.usecase.CreateSessionParams
+import com.koflox.session.domain.usecase.CreateSessionUseCase
+import com.koflox.session.domain.usecase.UpdateSessionLocationUseCase
+import com.koflox.session.domain.usecase.UpdateSessionStatusUseCase
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.util.Locale
 
 class SessionViewModel(
-    private val sessionTransitionUseCase: SessionTransitionUseCase,
+    private val createSessionUseCase: CreateSessionUseCase,
+    private val updateSessionStatusUseCase: UpdateSessionStatusUseCase,
+    private val updateSessionLocationUseCase: UpdateSessionLocationUseCase,
     private val activeSessionUseCase: ActiveSessionUseCase,
     private val locationDataSource: LocationDataSource,
 ) : ViewModel() {
@@ -28,9 +33,33 @@ class SessionViewModel(
     private val _uiState = MutableStateFlow(SessionUiState())
     val uiState: StateFlow<SessionUiState> = _uiState.asStateFlow()
 
-    private var activeSession: Session? = null
     private var locationTrackingJob: Job? = null
     private var timerJob: Job? = null
+
+    init {
+        observeActiveSession()
+    }
+
+    private fun observeActiveSession() {
+        viewModelScope.launch {
+            activeSessionUseCase.observeActiveSession().collect { session ->
+                if (session != null) {
+                    updateUiFromSession(session)
+                    if (session.status == SessionStatus.RUNNING) {
+                        startLocationTracking(session)
+                        startTimer(session)
+                    } else {
+                        stopLocationTracking()
+                        stopTimer()
+                    }
+                } else {
+                    stopLocationTracking()
+                    stopTimer()
+                    _uiState.value = SessionUiState()
+                }
+            }
+        }
+    }
 
     fun onEvent(event: SessionUiEvent) {
         when (event) {
@@ -49,10 +78,12 @@ class SessionViewModel(
         startLatitude: Double,
         startLongitude: Double,
     ) {
-        if (activeSession != null) return
         viewModelScope.launch {
-            sessionTransitionUseCase.start(
-                SessionStartParams(
+            val hasActiveSession = activeSessionUseCase.observeActiveSession().first() != null
+            if (hasActiveSession) return@launch
+
+            createSessionUseCase.create(
+                CreateSessionParams(
                     destinationId = destinationId,
                     destinationName = destinationName,
                     destinationLatitude = destinationLatitude,
@@ -60,74 +91,56 @@ class SessionViewModel(
                     startLatitude = startLatitude,
                     startLongitude = startLongitude,
                 ),
-            ).onSuccess { session ->
-                activeSession = session
-                // TODO: session activation should be a part of sessionTransitionUseCase during session creation
-                activeSessionUseCase.setActive(true)
-                updateUiFromSession(session)
-                startLocationTracking()
-                startTimer()
-            }.onFailure { error ->
-                // TODO: map error into human readable before displaying
+            ).onFailure { error ->
                 _uiState.update { it.copy(error = error.message) }
             }
         }
     }
 
     private fun pauseSession() {
-        val session = activeSession ?: return
-        val pausedSession = sessionTransitionUseCase.pause(session)
-        activeSession = pausedSession
-        updateUiFromSession(pausedSession)
-        stopLocationTracking()
-        stopTimer()
-    }
-
-    // TODO: fix time resuming after pausing, idle time shouldn't be included
-    private fun resumeSession() {
-        val session = activeSession ?: return
-        val resumedSession = sessionTransitionUseCase.resume(session)
-        activeSession = resumedSession
-        updateUiFromSession(resumedSession)
-        startLocationTracking()
-        startTimer()
-    }
-
-    private fun stopSession() {
-        val session = activeSession ?: return
         viewModelScope.launch {
-            sessionTransitionUseCase.stop(session)
-                .onSuccess {
-                    cleanup()
-                }
+            updateSessionStatusUseCase.pause()
                 .onFailure { error ->
-                    // TODO: map error into human readable before displaying
                     _uiState.update { it.copy(error = error.message) }
                 }
         }
     }
 
-    private fun cleanup() {
-        stopLocationTracking()
-        stopTimer()
-        activeSession = null
-        _uiState.value = SessionUiState()
-        activeSessionUseCase.setActive(false)
+    private fun resumeSession() {
+        viewModelScope.launch {
+            updateSessionStatusUseCase.resume()
+                .onFailure { error ->
+                    _uiState.update { it.copy(error = error.message) }
+                }
+        }
+    }
+
+    private fun stopSession() {
+        viewModelScope.launch {
+            updateSessionStatusUseCase.stop()
+                .onFailure { error ->
+                    _uiState.update { it.copy(error = error.message) }
+                }
+        }
     }
 
     private fun dismissError() {
         _uiState.update { it.copy(error = null) }
     }
 
-    private fun startLocationTracking() {
+    private fun startLocationTracking(session: Session) {
         locationTrackingJob?.cancel()
         locationTrackingJob = viewModelScope.launch {
             while (isActive) {
                 delay(LOCATION_TRACKING_INTERVAL_MS)
-                if (activeSession?.status == SessionStatus.RUNNING) {
+                if (session.status == SessionStatus.RUNNING) {
                     locationDataSource.getCurrentLocation()
                         .onSuccess { location ->
-                            updateLocation(location)
+                            updateSessionLocationUseCase.update(
+                                latitude = location.latitude,
+                                longitude = location.longitude,
+                                timestampMs = System.currentTimeMillis(),
+                            )
                         }
                 }
             }
@@ -139,29 +152,15 @@ class SessionViewModel(
         locationTrackingJob = null
     }
 
-    private fun updateLocation(location: Location) {
-        val session = activeSession ?: return
-        val updatedSession = sessionTransitionUseCase.updateLocation(
-            session = session,
-            latitude = location.latitude,
-            longitude = location.longitude,
-            timestampMs = System.currentTimeMillis(),
-        )
-        activeSession = updatedSession
-        updateUiFromSession(updatedSession)
-    }
-
-    private fun startTimer() {
+    private fun startTimer(session: Session) {
         timerJob?.cancel()
         timerJob = viewModelScope.launch {
             while (isActive) {
                 delay(TIMER_UPDATE_INTERVAL_MS)
-                activeSession?.let { session ->
-                    if (session.status == SessionStatus.RUNNING) {
-                        val elapsedMs = System.currentTimeMillis() - session.startTimeMs
-                        _uiState.update {
-                            it.copy(elapsedTimeFormatted = formatElapsedTime(elapsedMs))
-                        }
+                if (session.status == SessionStatus.RUNNING) {
+                    val elapsedMs = System.currentTimeMillis() - session.startTimeMs
+                    _uiState.update {
+                        it.copy(elapsedTimeFormatted = formatElapsedTime(elapsedMs))
                     }
                 }
             }
@@ -210,7 +209,8 @@ class SessionViewModel(
 
     override fun onCleared() {
         super.onCleared()
-        cleanup()
+        stopLocationTracking()
+        stopTimer()
     }
 
     companion object {

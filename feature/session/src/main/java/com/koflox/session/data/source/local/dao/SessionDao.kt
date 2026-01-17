@@ -7,10 +7,10 @@ import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
 import com.koflox.session.data.source.local.entity.SessionEntity
+import com.koflox.session.data.source.local.entity.SessionWithTrackPoints
 import com.koflox.session.data.source.local.entity.TrackPointEntity
 import kotlinx.coroutines.flow.Flow
 
-// TODO: cleanup unused generated methods
 @Suppress("ComplexInterface")
 @Dao
 interface SessionDao {
@@ -29,24 +29,18 @@ interface SessionDao {
         }
     }
 
+    @Transaction
+    @Query("SELECT * FROM sessions WHERE id = :sessionId")
+    suspend fun getSessionWithTrackPoints(sessionId: String): SessionWithTrackPoints?
+
     @Update
     suspend fun updateSession(session: SessionEntity)
 
-    @Query("SELECT * FROM sessions WHERE id = :sessionId")
-    suspend fun getSession(sessionId: String): SessionEntity?
+    @Transaction
+    @Query("SELECT * FROM sessions WHERE status IN (:statuses) ORDER BY startTimeMs DESC")
+    fun observeSessionsByStatuses(statuses: List<String>): Flow<List<SessionWithTrackPoints>>
 
-    @Query("SELECT * FROM sessions WHERE status = 'COMPLETED' ORDER BY startTimeMs DESC")
-    fun observeCompletedSessions(): Flow<List<SessionEntity>>
-
-    @Query("SELECT * FROM sessions ORDER BY startTimeMs DESC")
-    suspend fun getAllSessions(): List<SessionEntity>
-
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertTrackPoint(trackPoint: TrackPointEntity)
-
-    @Query("SELECT * FROM track_points WHERE sessionId = :sessionId ORDER BY timestampMs ASC")
-    suspend fun getTrackPoints(sessionId: String): List<TrackPointEntity>
-
-    @Query("DELETE FROM sessions WHERE id = :sessionId")
-    suspend fun deleteSession(sessionId: String)
+    @Transaction
+    @Query("SELECT * FROM sessions WHERE status IN (:statuses) ORDER BY startTimeMs DESC LIMIT 1")
+    fun observeFirstSessionByStatuses(statuses: List<String>): Flow<SessionWithTrackPoints?>
 }

@@ -1,6 +1,7 @@
 package com.koflox.session.data.mapper
 
 import com.koflox.session.data.source.local.entity.SessionEntity
+import com.koflox.session.data.source.local.entity.SessionWithTrackPoints
 import com.koflox.session.data.source.local.entity.TrackPointEntity
 import com.koflox.session.domain.model.Session
 import com.koflox.session.domain.model.SessionStatus
@@ -46,10 +47,9 @@ internal class SessionMapperImpl(
         }
     }
 
-    override suspend fun toDomain(
-        entity: SessionEntity,
-        trackPoints: List<TrackPointEntity>,
-    ): Session = withContext(dispatcherDefault) {
+    override suspend fun toDomain(sessionWithTrackPoints: SessionWithTrackPoints): Session = withContext(dispatcherDefault) {
+        val entity = sessionWithTrackPoints.session
+        val trackPoints = sessionWithTrackPoints.trackPoints
         Session(
             id = entity.id,
             destinationId = entity.destinationId,
@@ -76,9 +76,11 @@ internal class SessionMapperImpl(
         )
     }
 
-    override suspend fun toDomainList(entities: List<SessionEntity>): List<Session> =
-        withContext(dispatcherDefault) {
-            entities.map { entity ->
+    override suspend fun toDomainList(sessionsWithTrackPoints: List<SessionWithTrackPoints>): List<Session> {
+        return withContext(dispatcherDefault) {
+            sessionsWithTrackPoints.map { sessionWithTrackPoints ->
+                val entity = sessionWithTrackPoints.session
+                val trackPoints = sessionWithTrackPoints.trackPoints
                 Session(
                     id = entity.id,
                     destinationId = entity.destinationId,
@@ -94,8 +96,17 @@ internal class SessionMapperImpl(
                     averageSpeedKmh = entity.averageSpeedKmh,
                     topSpeedKmh = entity.topSpeedKmh,
                     status = SessionStatus.valueOf(entity.status),
-                    trackPoints = emptyList(),
+                    trackPoints = trackPoints.map { trackPointEntity ->
+                        TrackPoint(
+                            latitude = trackPointEntity.latitude,
+                            longitude = trackPointEntity.longitude,
+                            timestampMs = trackPointEntity.timestampMs,
+                            speedKmh = trackPointEntity.speedKmh,
+                        )
+                    },
                 )
             }
         }
+    }
+
 }

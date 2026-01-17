@@ -1,6 +1,6 @@
 package com.koflox.destinationsession.bridge
 
-import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.Flow
 
 /**
  * Domain-level interface for cycling session state.
@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.StateFlow
 interface CyclingSessionUseCase {
 
     /**
-     * Whether a session is currently active (running or paused).
+     * Observe whether a session is currently active (running or paused).
      */
-    val hasActiveSession: StateFlow<Boolean>
+    fun observeHasActiveSession(): Flow<Boolean>
 }
