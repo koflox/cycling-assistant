@@ -7,4 +7,7 @@
     <string name="get_route_hint_for_google_maps">Tap to open in Google Maps</string>
     <string name="failed_to_get_location">Failed to get location: %1$s</string>
     <string name="info_window_tap_for_options">Tap for options</string>
+    <string name="find_destination">Let\'s go!</string>
+    <string name="one_way_distance_title">One way distance</string>
+    <string name="km_unit">km</string>
 </resources>
