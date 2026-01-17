@@ -23,7 +23,7 @@ import com.koflox.destinations.presentation.destinations.components.LetsGoButton
 import com.koflox.destinations.presentation.destinations.components.LoadingOverlay
 import com.koflox.destinations.presentation.destinations.components.RouteSlider
 import com.koflox.destinations.presentation.permission.LocationPermissionHandler
-import com.koflox.destinationsession.bridge.CyclingSessionUiNavigator
+import com.koflox.destinationsession.bridge.navigator.CyclingSessionUiNavigator
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 

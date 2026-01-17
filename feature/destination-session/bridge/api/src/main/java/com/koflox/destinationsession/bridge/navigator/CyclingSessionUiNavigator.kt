@@ -1,4 +1,4 @@
-package com.koflox.destinationsession.bridge
+package com.koflox.destinationsession.bridge.navigator
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier

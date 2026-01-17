@@ -1,5 +1,6 @@
-package com.koflox.destinationsession.bridge
+package com.koflox.destinationsession.bridge.usecase
 
+import com.koflox.destinationsession.bridge.usecase.ActiveSessionDestination
 import kotlinx.coroutines.flow.Flow
 
 /**
