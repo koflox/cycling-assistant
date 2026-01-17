@@ -27,8 +27,9 @@ internal class DefaultDistanceCalculator : DistanceCalculator {
 
         val sinHalfDLat = sin(dLat / 2)
         val sinHalfDLon = sin(dLon / 2)
-        val a = sinHalfDLat * sinHalfDLat +
-                cos(Math.toRadians(lat1)) * cos(Math.toRadians(lat2)) * sinHalfDLon * sinHalfDLon
+        val cosLat1 = cos(Math.toRadians(lat1))
+        val cosLat2 = cos(Math.toRadians(lat2))
+        val a = sinHalfDLat * sinHalfDLat + cosLat1 * cosLat2 * sinHalfDLon * sinHalfDLon
 
         val c = 2 * atan2(sqrt(a), sqrt(1 - a))
 
