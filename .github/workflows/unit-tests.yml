@@ -46,7 +46,7 @@ jobs:
             android-build-${{ runner.os }}-
 
       - name: Run unit tests
-        run: gradle test --build-cache
+        run: gradle testDebug --build-cache
 
       - name: Upload test results
         if: always()

@@ -45,4 +45,4 @@ jobs:
             android-build-${{ runner.os }}-
 
       - name: Build project
-        run: gradle build --build-cache -x test
+        run: gradle buildDebug --build-cache -x test
