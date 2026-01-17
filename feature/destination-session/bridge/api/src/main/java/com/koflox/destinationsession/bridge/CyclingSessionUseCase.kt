@@ -11,4 +11,11 @@ interface CyclingSessionUseCase {
      * Observe whether a session is currently active (running or paused).
      */
     fun observeHasActiveSession(): Flow<Boolean>
+
+    /**
+     * Get the destination of the active session.
+     * Returns null when there's no active session.
+     */
+    suspend fun getActiveSessionDestination(): ActiveSessionDestination?
+
 }

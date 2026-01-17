@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -37,6 +38,7 @@ class SessionViewModel(
     private var timerJob: Job? = null
 
     init {
+        showNotificationForStartedSession()
         observeActiveSession()
     }
 
@@ -55,6 +57,15 @@ class SessionViewModel(
                     _uiState.value = SessionUiState()
                 }
             }
+        }
+    }
+
+    private fun showNotificationForStartedSession() {
+        viewModelScope.launch {
+            activeSessionUseCase.observeActiveSession()
+                .firstOrNull()?.run {
+                    sessionServiceController.startSessionTracking()
+                }
         }
     }
 
