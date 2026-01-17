@@ -8,7 +8,9 @@
       "Bash(./gradlew *compileDebugKotlin:*)",
       "Bash(./gradlew build:*)",
       "Bash(./gradlew :*test:*)",
-      "Bash(./gradlew:*)"
+      "Bash(./gradlew:*)",
+      "Bash(dir:*)",
+      "Bash(taskkill:*)"
     ]
   }
 }
