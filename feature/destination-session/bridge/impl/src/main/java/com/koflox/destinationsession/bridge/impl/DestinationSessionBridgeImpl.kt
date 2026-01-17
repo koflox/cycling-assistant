@@ -3,11 +3,15 @@ package com.koflox.destinationsession.bridge.impl
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import com.koflox.destinationsession.bridge.DestinationSessionBridge
 import com.koflox.location.model.Location
 import com.koflox.session.domain.usecase.ActiveSessionUseCase
 import com.koflox.session.presentation.dialog.DestinationConfirmationDialog
+import com.koflox.session.presentation.permission.NotificationPermissionHandler
 import com.koflox.session.presentation.session.SessionScreen
 import com.koflox.session.presentation.session.SessionViewModel
 import kotlinx.coroutines.flow.Flow
@@ -46,21 +50,31 @@ internal class DestinationSessionBridgeImpl(
         onDismiss: () -> Unit,
     ) {
         val viewModel: SessionViewModel = koinViewModel()
-
+        var shouldRequestPermission by remember { mutableStateOf(false) }
+        if (shouldRequestPermission) {
+            NotificationPermissionHandler { isGranted ->
+                if (isGranted) {
+                    viewModel.startSession(
+                        destinationId = destinationId,
+                        destinationName = destinationName,
+                        destinationLatitude = destinationLocation.latitude,
+                        destinationLongitude = destinationLocation.longitude,
+                        startLatitude = userLocation.latitude,
+                        startLongitude = userLocation.longitude,
+                    )
+                    onDismiss()
+                }
+                @Suppress("AssignedValueIsNeverRead")
+                shouldRequestPermission = false
+            }
+        }
         DestinationConfirmationDialog(
             destinationName = destinationName,
             distanceKm = distanceKm,
             onNavigateClick = onNavigateClick,
             onStartSessionClick = {
-                viewModel.startSession(
-                    destinationId = destinationId,
-                    destinationName = destinationName,
-                    destinationLatitude = destinationLocation.latitude,
-                    destinationLongitude = destinationLocation.longitude,
-                    startLatitude = userLocation.latitude,
-                    startLongitude = userLocation.longitude,
-                )
-                onDismiss()
+                @Suppress("AssignedValueIsNeverRead")
+                shouldRequestPermission = true
             },
             onDismiss = onDismiss,
         )

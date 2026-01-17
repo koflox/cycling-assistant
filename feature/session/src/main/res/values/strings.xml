@@ -19,4 +19,30 @@
     <string name="dialog_button_navigate">Navigate</string>
     <string name="dialog_button_start_session">Start Session</string>
     <string name="dialog_button_cancel">Cancel</string>
+
+    <!-- Notification Channel -->
+    <string name="notification_channel_name">Session Tracking</string>
+    <string name="notification_channel_description">Shows cycling session progress</string>
+
+    <!-- Notification Content -->
+    <string name="notification_title_session_active">Cycling Session Active</string>
+    <string name="notification_text_starting">Starting session…</string>
+    <string name="notification_destination">Destination</string>
+    <string name="notification_time">Time</string>
+    <string name="notification_distance">Distance</string>
+
+    <!-- Notification Status -->
+    <string name="notification_status_running">Running</string>
+    <string name="notification_status_paused">Paused</string>
+
+    <!-- Notification Actions -->
+    <string name="notification_action_pause">Pause</string>
+    <string name="notification_action_resume">Resume</string>
+    <string name="notification_action_stop">Stop</string>
+
+    <!-- Notification Permission Dialog -->
+    <string name="permission_notification_title">Notification Permission</string>
+    <string name="permission_notification_rationale">This permission would allow the app to run cycling sessions safely during your rides</string>
+    <string name="permission_button_grant">Grant</string>
+    <string name="permission_button_skip">Skip</string>
 </resources>

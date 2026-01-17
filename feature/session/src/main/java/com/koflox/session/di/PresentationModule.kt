@@ -4,10 +4,12 @@ import com.koflox.concurrent.DispatchersQualifier
 import com.koflox.di.ClassNameQualifier
 import com.koflox.error.mapper.ErrorMessageMapper
 import com.koflox.session.presentation.error.SessionErrorMessageMapper
+import com.koflox.session.presentation.mapper.SessionUiMapper
+import com.koflox.session.presentation.mapper.SessionUiMapperImpl
 import com.koflox.session.presentation.session.SessionViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import org.koin.android.ext.koin.androidContext
-import org.koin.core.module.dsl.viewModelOf
+import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 
 internal sealed class PresentationModuleQualifier : ClassNameQualifier() {
@@ -22,5 +24,17 @@ internal val presentationModule = module {
             defaultMapper = get(),
         )
     }
-    viewModelOf(::SessionViewModel)
+    single<SessionUiMapper> {
+        SessionUiMapperImpl()
+    }
+    viewModel {
+        SessionViewModel(
+            createSessionUseCase = get(),
+            updateSessionStatusUseCase = get(),
+            activeSessionUseCase = get(),
+            sessionServiceController = get(),
+            sessionUiMapper = get(),
+            errorMessageMapper = get(PresentationModuleQualifier.SessionErrorMessageMapper),
+        )
+    }
 }

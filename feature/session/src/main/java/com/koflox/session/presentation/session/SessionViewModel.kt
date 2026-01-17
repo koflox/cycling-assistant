@@ -3,15 +3,15 @@ package com.koflox.session.presentation.session
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.koflox.error.mapper.ErrorMessageMapper
-import com.koflox.location.LocationDataSource
 import com.koflox.location.model.Location
 import com.koflox.session.domain.model.Session
 import com.koflox.session.domain.model.SessionStatus
 import com.koflox.session.domain.usecase.ActiveSessionUseCase
 import com.koflox.session.domain.usecase.CreateSessionParams
 import com.koflox.session.domain.usecase.CreateSessionUseCase
-import com.koflox.session.domain.usecase.UpdateSessionLocationUseCase
 import com.koflox.session.domain.usecase.UpdateSessionStatusUseCase
+import com.koflox.session.presentation.mapper.SessionUiMapper
+import com.koflox.session.service.SessionServiceController
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,21 +21,19 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import java.util.Locale
 
 class SessionViewModel(
     private val createSessionUseCase: CreateSessionUseCase,
     private val updateSessionStatusUseCase: UpdateSessionStatusUseCase,
-    private val updateSessionLocationUseCase: UpdateSessionLocationUseCase,
     private val activeSessionUseCase: ActiveSessionUseCase,
-    private val locationDataSource: LocationDataSource,
+    private val sessionServiceController: SessionServiceController,
+    private val sessionUiMapper: SessionUiMapper,
     private val errorMessageMapper: ErrorMessageMapper,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SessionUiState())
     val uiState: StateFlow<SessionUiState> = _uiState.asStateFlow()
 
-    private var locationTrackingJob: Job? = null
     private var timerJob: Job? = null
 
     init {
@@ -48,14 +46,11 @@ class SessionViewModel(
                 if (session != null) {
                     updateUiFromSession(session)
                     if (session.status == SessionStatus.RUNNING) {
-                        startLocationTracking(session)
                         startTimer(session)
                     } else {
-                        stopLocationTracking()
                         stopTimer()
                     }
                 } else {
-                    stopLocationTracking()
                     stopTimer()
                     _uiState.value = SessionUiState()
                 }
@@ -93,7 +88,9 @@ class SessionViewModel(
                     startLatitude = startLatitude,
                     startLongitude = startLongitude,
                 ),
-            ).onFailure(::showError)
+            )
+                .onSuccess { sessionServiceController.startSessionTracking() }
+                .onFailure(::showError)
         }
     }
 
@@ -129,30 +126,6 @@ class SessionViewModel(
         _uiState.update { it.copy(error = null) }
     }
 
-    private fun startLocationTracking(session: Session) {
-        locationTrackingJob?.cancel()
-        locationTrackingJob = viewModelScope.launch {
-            while (isActive) {
-                delay(LOCATION_TRACKING_INTERVAL_MS)
-                if (session.status == SessionStatus.RUNNING) {
-                    locationDataSource.getCurrentLocation()
-                        .onSuccess { location ->
-                            updateSessionLocationUseCase.update(
-                                latitude = location.latitude,
-                                longitude = location.longitude,
-                                timestampMs = System.currentTimeMillis(),
-                            )
-                        }
-                }
-            }
-        }
-    }
-
-    private fun stopLocationTracking() {
-        locationTrackingJob?.cancel()
-        locationTrackingJob = null
-    }
-
     private fun startTimer(session: Session) {
         timerJob?.cancel()
         timerJob = viewModelScope.launch {
@@ -162,7 +135,7 @@ class SessionViewModel(
                     val elapsedSinceLastResume = System.currentTimeMillis() - session.lastResumedTimeMs
                     val totalElapsedMs = session.elapsedTimeMs + elapsedSinceLastResume
                     _uiState.update {
-                        it.copy(elapsedTimeFormatted = formatElapsedTime(totalElapsedMs))
+                        it.copy(elapsedTimeFormatted = sessionUiMapper.formatElapsedTime(totalElapsedMs))
                     }
                 }
             }
@@ -175,6 +148,7 @@ class SessionViewModel(
     }
 
     private fun updateUiFromSession(session: Session) {
+        val formattedData = sessionUiMapper.toSessionUiModel(session)
         _uiState.update { currentState ->
             currentState.copy(
                 isActive = true,
@@ -184,10 +158,10 @@ class SessionViewModel(
                     longitude = session.destinationLongitude,
                 ),
                 status = session.status,
-                elapsedTimeFormatted = formatElapsedTime(session.elapsedTimeMs),
-                traveledDistanceKm = formatDistance(session.traveledDistanceKm),
-                averageSpeedKmh = formatSpeed(session.averageSpeedKmh),
-                topSpeedKmh = formatSpeed(session.topSpeedKmh),
+                elapsedTimeFormatted = formattedData.elapsedTimeFormatted,
+                traveledDistanceKm = formattedData.traveledDistanceFormatted,
+                averageSpeedKmh = formattedData.averageSpeedFormatted,
+                topSpeedKmh = formattedData.topSpeedFormatted,
                 currentLocation = session.trackPoints.lastOrNull()?.let {
                     Location(it.latitude, it.longitude)
                 },
@@ -195,28 +169,12 @@ class SessionViewModel(
         }
     }
 
-    private fun formatElapsedTime(elapsedMs: Long): String {
-        val totalSeconds = elapsedMs / 1000
-        val hours = totalSeconds / 3600
-        val minutes = (totalSeconds % 3600) / 60
-        val seconds = totalSeconds % 60
-        return String.format(Locale.getDefault(), "%02d:%02d:%02d", hours, minutes, seconds)
-    }
-
-    private fun formatDistance(distanceKm: Double): String =
-        String.format(Locale.getDefault(), "%.2f", distanceKm)
-
-    private fun formatSpeed(speedKmh: Double): String =
-        String.format(Locale.getDefault(), "%.1f", speedKmh)
-
     override fun onCleared() {
         super.onCleared()
-        stopLocationTracking()
         stopTimer()
     }
 
     companion object {
-        private const val LOCATION_TRACKING_INTERVAL_MS = 3000L
         private const val TIMER_UPDATE_INTERVAL_MS = 1000L
     }
 }
