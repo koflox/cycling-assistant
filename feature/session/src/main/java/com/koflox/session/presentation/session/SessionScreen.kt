@@ -1,17 +1,16 @@
 package com.koflox.session.presentation.session
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import com.koflox.session.presentation.session.components.SessionControlsOverlay
 import org.koin.androidx.compose.koinViewModel
 
@@ -21,12 +20,11 @@ fun SessionScreen(
     modifier: Modifier = Modifier,
 ) {
     val state by viewModel.uiState.collectAsState()
-    val snackbarHostState = remember { SnackbarHostState() }
+    val context = LocalContext.current
 
-    // TODO: show error in Toasts
     LaunchedEffect(state.error) {
         state.error?.let { error ->
-            snackbarHostState.showSnackbar(error)
+            Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
             viewModel.onEvent(SessionUiEvent.ErrorDismissed)
         }
     }
@@ -44,9 +42,5 @@ fun SessionScreen(
                     .align(Alignment.BottomCenter),
             )
         }
-        SnackbarHost(
-            hostState = snackbarHostState,
-            modifier = Modifier.align(Alignment.BottomCenter),
-        )
     }
 }
