@@ -13,7 +13,7 @@ import com.koflox.destinations.domain.usecase.NoSuitableDestinationException
 import com.koflox.destinations.domain.usecase.ObserveUserLocationUseCase
 import com.koflox.destinations.presentation.destinations.model.DestinationUiModel
 import com.koflox.destinations.presentation.mapper.DestinationUiMapper
-import com.koflox.destinationsession.bridge.DestinationSessionBridge
+import com.koflox.destinationsession.bridge.CyclingSessionUseCase
 import com.koflox.distance.DistanceCalculator
 import com.koflox.location.model.Location
 import kotlinx.coroutines.Job
@@ -31,7 +31,7 @@ internal class DestinationsViewModel(
     private val distanceCalculator: DistanceCalculator,
     private val uiMapper: DestinationUiMapper,
     private val application: Application,
-    private val sessionBridge: DestinationSessionBridge,
+    private val cyclingSessionUseCase: CyclingSessionUseCase,
 ) : AndroidViewModel(application) {
 
     companion object {
@@ -51,7 +51,7 @@ internal class DestinationsViewModel(
             initializeDatabaseUseCase.init()
         }
         viewModelScope.launch {
-            sessionBridge.hasActiveSession.collect { isActive ->
+            cyclingSessionUseCase.hasActiveSession.collect { isActive ->
                 _uiState.update { it.copy(isSessionActive = isActive) }
             }
         }

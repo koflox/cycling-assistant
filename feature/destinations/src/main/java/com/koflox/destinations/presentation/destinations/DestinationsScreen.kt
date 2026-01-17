@@ -23,7 +23,7 @@ import com.koflox.destinations.presentation.destinations.components.LetsGoButton
 import com.koflox.destinations.presentation.destinations.components.LoadingOverlay
 import com.koflox.destinations.presentation.destinations.components.RouteSlider
 import com.koflox.destinations.presentation.permission.LocationPermissionHandler
-import com.koflox.destinationsession.bridge.DestinationSessionBridge
+import com.koflox.destinationsession.bridge.CyclingSessionUiNavigator
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 
@@ -32,7 +32,7 @@ private const val GOOGLE_MAPS_PACKAGE = "com.google.android.apps.maps"
 @Composable
 internal fun DestinationsScreen(
     viewModel: DestinationsViewModel = koinViewModel(),
-    sessionBridge: DestinationSessionBridge = koinInject(),
+    sessionUiNavigator: CyclingSessionUiNavigator = koinInject(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
@@ -43,7 +43,7 @@ internal fun DestinationsScreen(
         onPermissionGranted = { viewModel.onEvent(DestinationsUiEvent.PermissionGranted) },
         onPermissionDenied = { viewModel.onEvent(DestinationsUiEvent.PermissionDenied) },
     ) {
-        DestinationsContent(uiState, viewModel, sessionBridge)
+        DestinationsContent(uiState, viewModel, sessionUiNavigator)
     }
 }
 
@@ -85,7 +85,7 @@ private fun NavigationEffect(action: NavigationAction?, context: Context, viewMo
 private fun DestinationsContent(
     uiState: DestinationsUiState,
     viewModel: DestinationsViewModel,
-    sessionBridge: DestinationSessionBridge,
+    sessionUiNavigator: CyclingSessionUiNavigator,
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
         GoogleMapView(
@@ -99,7 +99,7 @@ private fun DestinationsContent(
 
         if (uiState.isSessionActive) {
             uiState.selectedDestination?.let { destination ->
-                sessionBridge.SessionScreen(
+                sessionUiNavigator.SessionScreen(
                     destinationLocation = destination.location,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -132,7 +132,7 @@ private fun DestinationsContent(
     }
 
     if (uiState.showSelectedMarkerOptionsDialog && uiState.selectedDestination != null && uiState.userLocation != null) {
-        sessionBridge.ConfirmationDialog(
+        sessionUiNavigator.DestinationOptions(
             destinationId = uiState.selectedDestination.id,
             destinationName = uiState.selectedDestination.title,
             destinationLocation = uiState.selectedDestination.location,

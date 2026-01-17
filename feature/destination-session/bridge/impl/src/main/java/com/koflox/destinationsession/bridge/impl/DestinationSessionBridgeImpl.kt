@@ -37,7 +37,7 @@ internal class DestinationSessionBridgeImpl(
     }
 
     @Composable
-    override fun ConfirmationDialog(
+    override fun DestinationOptions(
         destinationId: String,
         destinationName: String,
         destinationLocation: Location,
