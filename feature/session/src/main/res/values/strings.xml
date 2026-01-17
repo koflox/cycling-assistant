@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Errors -->
+    <string name="error_no_active_session">No active cycling session</string>
+
     <!-- Session Stats -->
     <string name="session_stat_time">Time</string>
     <string name="session_stat_distance">Distance</string>

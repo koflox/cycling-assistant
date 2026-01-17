@@ -56,6 +56,7 @@ dependencies {
     implementation(project(":shared:concurrent"))
     implementation(project(":shared:di"))
     implementation(project(":shared:distance"))
+    implementation(project(":shared:error"))
     implementation(project(":shared:id"))
     implementation(project(":shared:location"))
 

@@ -78,6 +78,7 @@ dependencies {
     implementation(project(":shared:distance"))
     implementation(project(":shared:id"))
     implementation(project(":shared:location"))
+    implementation(project(":shared:error"))
 
     // Testing
     testImplementation(libs.junit)

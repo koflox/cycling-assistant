@@ -6,6 +6,7 @@ import com.koflox.cyclingassistant.data.AppDatabase
 import com.koflox.destinations.di.destinationsModule
 import com.koflox.destinationsession.bridge.impl.di.bridgeImplModule
 import com.koflox.distance.di.distanceModule
+import com.koflox.error.di.errorMapperModule
 import com.koflox.id.di.idModule
 import com.koflox.location.locationModule
 import com.koflox.session.di.sessionModule
@@ -28,13 +29,15 @@ private val databaseModule = module {
 
 internal val appModule = module {
     includes(
+        // alphabetically sorted
+        bridgeImplModule,
         concurrentModule,
+        databaseModule,
+        destinationsModule,
         distanceModule,
+        errorMapperModule,
         idModule,
         locationModule,
-        databaseModule,
         sessionModule,
-        bridgeImplModule,
-        destinationsModule,
     )
 }

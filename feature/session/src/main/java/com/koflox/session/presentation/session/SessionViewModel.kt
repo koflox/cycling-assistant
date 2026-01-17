@@ -2,6 +2,7 @@ package com.koflox.session.presentation.session
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.koflox.error.mapper.ErrorMessageMapper
 import com.koflox.location.LocationDataSource
 import com.koflox.location.model.Location
 import com.koflox.session.domain.model.Session
@@ -28,6 +29,7 @@ class SessionViewModel(
     private val updateSessionLocationUseCase: UpdateSessionLocationUseCase,
     private val activeSessionUseCase: ActiveSessionUseCase,
     private val locationDataSource: LocationDataSource,
+    private val errorMessageMapper: ErrorMessageMapper,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SessionUiState())
@@ -91,36 +93,35 @@ class SessionViewModel(
                     startLatitude = startLatitude,
                     startLongitude = startLongitude,
                 ),
-            ).onFailure { error ->
-                _uiState.update { it.copy(error = error.message) }
-            }
+            ).onFailure(::showError)
         }
     }
 
     private fun pauseSession() {
         viewModelScope.launch {
             updateSessionStatusUseCase.pause()
-                .onFailure { error ->
-                    _uiState.update { it.copy(error = error.message) }
-                }
+                .onFailure(::showError)
         }
     }
 
     private fun resumeSession() {
         viewModelScope.launch {
             updateSessionStatusUseCase.resume()
-                .onFailure { error ->
-                    _uiState.update { it.copy(error = error.message) }
-                }
+                .onFailure(::showError)
         }
     }
 
     private fun stopSession() {
         viewModelScope.launch {
             updateSessionStatusUseCase.stop()
-                .onFailure { error ->
-                    _uiState.update { it.copy(error = error.message) }
-                }
+                .onFailure(::showError)
+        }
+    }
+
+    private fun showError(error: Throwable) {
+        viewModelScope.launch {
+            val message = errorMessageMapper.map(error)
+            _uiState.update { it.copy(error = message) }
         }
     }
 
