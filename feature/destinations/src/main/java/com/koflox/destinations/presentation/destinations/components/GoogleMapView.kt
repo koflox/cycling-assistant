@@ -50,6 +50,7 @@ internal fun GoogleMapView(
     otherDestinations: List<DestinationUiModel>,
     userLocation: Location?,
     cameraFocusLocation: Location?,
+    isSessionActive: Boolean,
     onSelectedMarkerInfoClick: () -> Unit,
 ) {
     val cameraPositionState = rememberCameraPositionState()
@@ -75,6 +76,7 @@ internal fun GoogleMapView(
         selectedDestination = selectedDestination,
         context = context,
         otherDestinations = otherDestinations,
+        isSessionActive = isSessionActive,
         onSelectedMarkerInfoClick = onSelectedMarkerInfoClick,
     )
 }
@@ -87,6 +89,7 @@ private fun Map(
     selectedDestination: DestinationUiModel?,
     context: Context,
     otherDestinations: List<DestinationUiModel>,
+    isSessionActive: Boolean,
     onSelectedMarkerInfoClick: () -> Unit,
 ) {
     val density = context.resources.displayMetrics.density
@@ -117,7 +120,7 @@ private fun Map(
             )
         }
         selectedDestination?.let { destination ->
-            Destinations(destination, otherDestinations, onSelectedMarkerInfoClick)
+            Destinations(destination, otherDestinations, isSessionActive, onSelectedMarkerInfoClick)
         }
         if (userLocation != null && selectedDestination != null) {
             val curvePoints = createCurvePoints(
@@ -137,9 +140,10 @@ private fun Map(
 private fun Destinations(
     destination: DestinationUiModel,
     otherDestinations: List<DestinationUiModel>,
+    isSessionActive: Boolean,
     onSelectedMarkerInfoClick: () -> Unit,
 ) {
-    SelectedDestinationMarker(destination, onSelectedMarkerInfoClick)
+    SelectedDestinationMarker(destination, isSessionActive, onSelectedMarkerInfoClick)
     otherDestinations.forEach { otherDest ->
         OtherDestinationMarker(otherDest)
     }
@@ -148,20 +152,24 @@ private fun Destinations(
 @Composable
 private fun SelectedDestinationMarker(
     destination: DestinationUiModel,
+    isSessionActive: Boolean,
     onSelectedMarkerInfoClick: () -> Unit,
 ) {
     val markerState = rememberUpdatedMarkerState(
         position = LatLng(destination.location.latitude, destination.location.longitude),
     )
-    LaunchedEffect(destination.id) {
+    LaunchedEffect(destination.id, isSessionActive) {
+        markerState.hideInfoWindow() // need to force the info window to refresh when isSessionActive changes
         markerState.showInfoWindow()
     }
     MarkerInfoWindow(
         state = markerState,
         alpha = 1F,
-        onInfoWindowClick = { onSelectedMarkerInfoClick() },
+        onInfoWindowClick = {
+            if (!isSessionActive) onSelectedMarkerInfoClick()
+        },
     ) {
-        SelectedDestinationInfoWindow(destination)
+        SelectedDestinationInfoWindow(destination, isSessionActive)
     }
 }
 
@@ -179,7 +187,10 @@ private fun OtherDestinationMarker(destination: DestinationUiModel) {
 }
 
 @Composable
-private fun SelectedDestinationInfoWindow(destination: DestinationUiModel) {
+private fun SelectedDestinationInfoWindow(
+    destination: DestinationUiModel,
+    isSessionActive: Boolean,
+) {
     Column(
         modifier = Modifier
             .background(
@@ -205,7 +216,9 @@ private fun SelectedDestinationInfoWindow(destination: DestinationUiModel) {
             modifier = Modifier.padding(top = 4.dp),
         )
         Text(
-            text = stringResource(R.string.info_window_tap_for_options),
+            text = stringResource(
+                if (isSessionActive) R.string.info_window_heading_here else R.string.info_window_tap_for_options,
+            ),
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.padding(top = 8.dp),
