@@ -2,11 +2,11 @@ package com.koflox.session.domain.usecase
 
 import com.koflox.concurrent.suspendRunCatching
 import com.koflox.distance.DistanceCalculator
+import com.koflox.id.IdGenerator
 import com.koflox.session.domain.model.Session
 import com.koflox.session.domain.model.SessionStatus
 import com.koflox.session.domain.model.TrackPoint
 import com.koflox.session.domain.repository.SessionRepository
-import java.util.UUID
 
 interface SessionTransitionUseCase {
 
@@ -41,13 +41,13 @@ data class SessionStartParams(
 internal class SessionTransitionUseCaseImpl(
     private val sessionRepository: SessionRepository,
     private val distanceCalculator: DistanceCalculator,
+    private val idGenerator: IdGenerator,
 ) : SessionTransitionUseCase {
 
     override suspend fun start(params: SessionStartParams): Result<Session> = suspendRunCatching {
         val currentTimeMs = System.currentTimeMillis()
         Session(
-            // TODO: make an abstraction for ID generator
-            id = UUID.randomUUID().toString(),
+            id = idGenerator.generate(),
             destinationId = params.destinationId,
             destinationName = params.destinationName,
             destinationLatitude = params.destinationLatitude,

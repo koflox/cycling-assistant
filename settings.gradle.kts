@@ -20,14 +20,16 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "CyclingAssistant"
+// alphabetically sorted
 include(":app")
-include(":feature:destinations")
 include(":feature:destination-session:bridge:api")
 include(":feature:destination-session:bridge:impl")
+include(":feature:destinations")
 include(":feature:session")
 include(":shared:concurrent")
 include(":shared:di")
 include(":shared:distance")
 include(":shared:graphics")
+include(":shared:id")
 include(":shared:location")
 include(":shared:testing")
