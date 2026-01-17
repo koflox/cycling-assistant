@@ -15,6 +15,8 @@ internal data class DestinationsUiState(
     val error: String? = null,
     val isPermissionGranted: Boolean = false,
     val navigationAction: NavigationAction? = null,
+    val showSelectedMarkerOptionsDialog: Boolean = false,
+    val isSessionActive: Boolean = false,
 ) {
     companion object {
         const val DEFAULT_ROUTE_DISTANCE_KM = 15.0

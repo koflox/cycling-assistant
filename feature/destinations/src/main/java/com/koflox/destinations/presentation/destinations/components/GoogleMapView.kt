@@ -1,22 +1,30 @@
 package com.koflox.destinations.presentation.destinations.components
 
 import android.content.Context
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.Marker
 import com.google.maps.android.compose.CameraPositionState
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.Marker
+import com.google.maps.android.compose.MarkerInfoWindow
 import com.google.maps.android.compose.Polyline
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberUpdatedMarkerState
@@ -42,7 +50,7 @@ internal fun GoogleMapView(
     otherDestinations: List<DestinationUiModel>,
     userLocation: Location?,
     cameraFocusLocation: Location?,
-    onOpenInGoogleMaps: (DestinationUiModel) -> Unit,
+    onSelectedMarkerInfoClick: () -> Unit,
 ) {
     val cameraPositionState = rememberCameraPositionState()
     val context = LocalContext.current
@@ -67,7 +75,7 @@ internal fun GoogleMapView(
         selectedDestination = selectedDestination,
         context = context,
         otherDestinations = otherDestinations,
-        onOpenInGoogleMaps = onOpenInGoogleMaps,
+        onSelectedMarkerInfoClick = onSelectedMarkerInfoClick,
     )
 }
 
@@ -79,7 +87,7 @@ private fun Map(
     selectedDestination: DestinationUiModel?,
     context: Context,
     otherDestinations: List<DestinationUiModel>,
-    onOpenInGoogleMaps: (DestinationUiModel) -> Unit,
+    onSelectedMarkerInfoClick: () -> Unit,
 ) {
     val density = context.resources.displayMetrics.density
     val userLocationBitmap = remember(density) {
@@ -109,7 +117,7 @@ private fun Map(
             )
         }
         selectedDestination?.let { destination ->
-            Destinations(destination, otherDestinations, onOpenInGoogleMaps)
+            Destinations(destination, otherDestinations, onSelectedMarkerInfoClick)
         }
         if (userLocation != null && selectedDestination != null) {
             val curvePoints = createCurvePoints(
@@ -129,44 +137,108 @@ private fun Map(
 private fun Destinations(
     destination: DestinationUiModel,
     otherDestinations: List<DestinationUiModel>,
-    onOpenInGoogleMaps: (DestinationUiModel) -> Unit,
+    onSelectedMarkerInfoClick: () -> Unit,
 ) {
-    val setMarker: @Composable (DestinationUiModel) -> Unit = { dest ->
-        val snippet = if (dest.isMain) {
-            String.format(
-                Locale.getDefault(),
-                "${stringResource(R.string.distance_to_dest_desc)} - ${stringResource(R.string.get_route_hint_for_google_maps)}",
-                dest.distanceKm,
+    SelectedDestinationMarker(destination, onSelectedMarkerInfoClick)
+    otherDestinations.forEach { otherDest ->
+        OtherDestinationMarker(otherDest)
+    }
+}
+
+@Composable
+private fun SelectedDestinationMarker(
+    destination: DestinationUiModel,
+    onSelectedMarkerInfoClick: () -> Unit,
+) {
+    val markerState = rememberUpdatedMarkerState(
+        position = LatLng(destination.location.latitude, destination.location.longitude),
+    )
+    LaunchedEffect(destination.id) {
+        markerState.showInfoWindow()
+    }
+    MarkerInfoWindow(
+        state = markerState,
+        alpha = 1F,
+        onInfoWindowClick = { onSelectedMarkerInfoClick() },
+    ) {
+        SelectedDestinationInfoWindow(destination)
+    }
+}
+
+@Composable
+private fun OtherDestinationMarker(destination: DestinationUiModel) {
+    val markerState = rememberUpdatedMarkerState(
+        position = LatLng(destination.location.latitude, destination.location.longitude),
+    )
+    MarkerInfoWindow(
+        state = markerState,
+        alpha = 0.5F,
+    ) {
+        OtherDestinationInfoWindow(destination)
+    }
+}
+
+@Composable
+private fun SelectedDestinationInfoWindow(destination: DestinationUiModel) {
+    Column(
+        modifier = Modifier
+            .background(
+                color = MaterialTheme.colorScheme.surface,
+                shape = RoundedCornerShape(8.dp),
             )
-        } else {
-            String.format(
+            .padding(12.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Text(
+            text = destination.title,
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+        Text(
+            text = String.format(
                 Locale.getDefault(),
                 stringResource(R.string.distance_to_dest_desc),
-                dest.distanceKm,
-            )
-        }
-        val alpha = if (dest.isMain) 1F else 0.5F
-        val onInfoWindowClick: (Marker) -> Unit = {
-            if (dest.isMain) onOpenInGoogleMaps(dest)
-        }
-        val markerState = rememberUpdatedMarkerState(
-            position = LatLng(
-                dest.location.latitude,
-                dest.location.longitude,
+                destination.distanceKm,
             ),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(top = 4.dp),
         )
-        Marker(
-            state = markerState,
-            title = dest.title,
-            snippet = snippet,
-            alpha = alpha,
-            onInfoWindowClick = onInfoWindowClick,
+        Text(
+            text = stringResource(R.string.info_window_tap_for_options),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(top = 8.dp),
         )
-        if (dest.isMain) markerState.showInfoWindow()
     }
-    setMarker(destination)
-    otherDestinations.forEach { otherDest ->
-        setMarker(otherDest)
+}
+
+@Composable
+private fun OtherDestinationInfoWindow(destination: DestinationUiModel) {
+    Column(
+        modifier = Modifier
+            .background(
+                color = MaterialTheme.colorScheme.surface,
+                shape = RoundedCornerShape(8.dp),
+            )
+            .padding(12.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Text(
+            text = destination.title,
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+        Text(
+            text = String.format(
+                Locale.getDefault(),
+                stringResource(R.string.distance_to_dest_desc),
+                destination.distanceKm,
+            ),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(top = 4.dp),
+        )
     }
 }
 

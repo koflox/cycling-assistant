@@ -1,21 +1,15 @@
-package com.koflox.destinations.domain.util
+package com.koflox.distance
 
-import com.koflox.testing.coroutine.MainDispatcherRule
-import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
-import org.junit.Rule
 import org.junit.Test
 
-class DistanceCalculatorTest {
+class DefaultDistanceCalculatorTest {
 
-    @get:Rule
-    val mainDispatcherRule = MainDispatcherRule()
-
-    private val calculator = DistanceCalculator(mainDispatcherRule.testDispatcher)
+    private val calculator = DefaultDistanceCalculator()
 
     @Test
-    fun `calculate returns zero for same coordinates`() = runTest {
-        val distance = calculator.calculate(
+    fun `calculateKm returns zero for same coordinates`() {
+        val distance = calculator.calculateKm(
             lat1 = 52.52,
             lon1 = 13.405,
             lat2 = 52.52,
@@ -25,11 +19,11 @@ class DistanceCalculatorTest {
     }
 
     @Test
-    fun `calculate returns correct distance between Berlin and Munich`() = runTest {
+    fun `calculateKm returns correct distance between Berlin and Munich`() {
         // Berlin: 52.52, 13.405
         // Munich: 48.1351, 11.5820
         // Expected distance: ~504 km
-        val distance = calculator.calculate(
+        val distance = calculator.calculateKm(
             lat1 = 52.52,
             lon1 = 13.405,
             lat2 = 48.1351,
@@ -39,11 +33,11 @@ class DistanceCalculatorTest {
     }
 
     @Test
-    fun `calculate returns correct distance between New York and Los Angeles`() = runTest {
+    fun `calculateKm returns correct distance between New York and Los Angeles`() {
         // New York: 40.7128, -74.0060
         // Los Angeles: 34.0522, -118.2437
         // Expected distance: ~3940 km
-        val distance = calculator.calculate(
+        val distance = calculator.calculateKm(
             lat1 = 40.7128,
             lon1 = -74.0060,
             lat2 = 34.0522,
@@ -53,11 +47,11 @@ class DistanceCalculatorTest {
     }
 
     @Test
-    fun `calculate returns correct short distance`() = runTest {
+    fun `calculateKm returns correct short distance`() {
         // Two points approximately 10km apart in Berlin area
         // Start: 52.52, 13.405
         // End: 52.61, 13.405 (roughly 10km north)
-        val distance = calculator.calculate(
+        val distance = calculator.calculateKm(
             lat1 = 52.52,
             lon1 = 13.405,
             lat2 = 52.61,
@@ -67,11 +61,11 @@ class DistanceCalculatorTest {
     }
 
     @Test
-    fun `calculate handles negative coordinates`() = runTest {
+    fun `calculateKm handles negative coordinates`() {
         // Sydney: -33.8688, 151.2093
         // Auckland: -36.8509, 174.7645
         // Expected distance: ~2155 km
-        val distance = calculator.calculate(
+        val distance = calculator.calculateKm(
             lat1 = -33.8688,
             lon1 = 151.2093,
             lat2 = -36.8509,
@@ -81,14 +75,14 @@ class DistanceCalculatorTest {
     }
 
     @Test
-    fun `calculate is symmetric`() = runTest {
-        val distance1 = calculator.calculate(
+    fun `calculateKm is symmetric`() {
+        val distance1 = calculator.calculateKm(
             lat1 = 52.52,
             lon1 = 13.405,
             lat2 = 48.1351,
             lon2 = 11.5820,
         )
-        val distance2 = calculator.calculate(
+        val distance2 = calculator.calculateKm(
             lat1 = 48.1351,
             lon1 = 11.5820,
             lat2 = 52.52,

@@ -2,7 +2,7 @@ package com.koflox.destinations.domain.usecase
 
 import com.koflox.destinations.domain.model.Destinations
 import com.koflox.destinations.domain.repository.DestinationRepository
-import com.koflox.destinations.domain.util.DistanceCalculator
+import com.koflox.distance.DistanceCalculator
 import com.koflox.location.model.Location
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
@@ -30,7 +30,7 @@ internal class GetRandomDestinationUseCaseImpl(
         repository.getAllDestinations()
             .mapCatching { destinations ->
                 val validDestinations = destinations.filter { destination ->
-                    val distance = distanceCalculator.calculate(
+                    val distance = distanceCalculator.calculateKm(
                         lat1 = userLocation.latitude,
                         lon1 = userLocation.longitude,
                         lat2 = destination.latitude,
@@ -46,7 +46,6 @@ internal class GetRandomDestinationUseCaseImpl(
                 )
             }
     }
-
 }
 
 class NoSuitableDestinationException : Exception("No suitable destination found")

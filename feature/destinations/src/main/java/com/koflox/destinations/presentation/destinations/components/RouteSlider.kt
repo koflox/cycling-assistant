@@ -13,13 +13,16 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.BaselineShift
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import com.koflox.destinations.R
 
+// TODO: distance values should come from VM
 private const val MIN_DISTANCE = 5f
 private const val MAX_DISTANCE = 30f
 private const val TOLERANCE_FONT_SIZE_RATIO = 0.7f
@@ -42,7 +45,7 @@ internal fun RouteSlider(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
-                text = "One way route length",
+                text = stringResource(R.string.one_way_distance_title),
                 style = MaterialTheme.typography.labelMedium,
             )
             Spacer(modifier = Modifier.height(4.dp))
@@ -55,7 +58,7 @@ internal fun RouteSlider(
                         append("${distanceKm.toInt()} ")
                     }
                     withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
-                        append("km")
+                        append(stringResource(R.string.km_unit))
                     }
                     withStyle(
                         SpanStyle(
