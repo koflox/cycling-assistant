@@ -41,6 +41,12 @@ internal class DestinationRepositoryImpl(
         }
     }
 
+    override suspend fun getDestinationById(id: String): Result<Destination?> = withContext(dispatcherDefault) {
+        suspendRunCatching {
+            poiLocalDataSource.getDestinationById(id)?.let { mapper.toDomain(it) }
+        }
+    }
+
     override suspend fun getUserLocation(): Result<Location> = withContext(dispatcherDefault) {
         locationDataSource.getCurrentLocation()
     }

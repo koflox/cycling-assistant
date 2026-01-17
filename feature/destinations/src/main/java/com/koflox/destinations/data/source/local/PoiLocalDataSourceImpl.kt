@@ -14,6 +14,10 @@ internal class PoiLocalDataSourceImpl(
         dao.getAllDestinations()
     }
 
+    override suspend fun getDestinationById(id: String): DestinationLocal? = withContext(dispatcherIo) {
+        dao.getDestinationById(id)
+    }
+
     override suspend fun insertAll(destinations: List<DestinationLocal>) = withContext(dispatcherIo) {
         dao.insertAll(destinations)
     }

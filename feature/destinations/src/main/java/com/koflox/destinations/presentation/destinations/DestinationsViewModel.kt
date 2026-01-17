@@ -6,7 +6,8 @@ import androidx.core.net.toUri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.koflox.destinations.R
-import com.koflox.destinations.domain.usecase.GetRandomDestinationUseCase
+import com.koflox.destinations.domain.model.Destinations
+import com.koflox.destinations.domain.usecase.GetDestinationInfoUseCase
 import com.koflox.destinations.domain.usecase.GetUserLocationUseCase
 import com.koflox.destinations.domain.usecase.InitializeDatabaseUseCase
 import com.koflox.destinations.domain.usecase.NoSuitableDestinationException
@@ -22,12 +23,13 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 
 internal class DestinationsViewModel(
-    private val getRandomDestinationUseCase: GetRandomDestinationUseCase,
     private val getUserLocationUseCase: GetUserLocationUseCase,
     private val observeUserLocationUseCase: ObserveUserLocationUseCase,
     private val initializeDatabaseUseCase: InitializeDatabaseUseCase,
+    private val getDestinationInfoUseCase: GetDestinationInfoUseCase,
     private val distanceCalculator: DistanceCalculator,
     private val uiMapper: DestinationUiMapper,
     private val application: Application,
@@ -47,9 +49,26 @@ internal class DestinationsViewModel(
     private var isScreenVisible = false
 
     init {
+        initDestinations()
+        listenToActiveSession()
+        checkSelectedDestination()
+    }
+
+    private fun initDestinations() {
         viewModelScope.launch {
             initializeDatabaseUseCase.init()
         }
+    }
+
+    private fun checkSelectedDestination() {
+        viewModelScope.launch {
+            cyclingSessionUseCase.getActiveSessionDestination()?.let { activeDestination ->
+                findDestination(destinationId = activeDestination.id)
+            }
+        }
+    }
+
+    private fun listenToActiveSession() {
         viewModelScope.launch {
             cyclingSessionUseCase.observeHasActiveSession().collect { isActive ->
                 _uiState.update { it.copy(isSessionActive = isActive) }
@@ -60,7 +79,7 @@ internal class DestinationsViewModel(
     fun onEvent(event: DestinationsUiEvent) {
         when (event) {
             is DestinationsUiEvent.RouteDistanceChanged -> updateRouteDistance(event.distanceKm)
-            DestinationsUiEvent.LetsGoClicked -> findRandomDestination()
+            DestinationsUiEvent.LetsGoClicked -> findDestination()
             DestinationsUiEvent.PermissionGranted -> onPermissionGranted()
             DestinationsUiEvent.PermissionDenied -> onPermissionDenied()
             DestinationsUiEvent.ErrorDismissed -> dismissError()
@@ -73,8 +92,10 @@ internal class DestinationsViewModel(
         }
     }
 
-    private fun findRandomDestination() {
+    private fun findDestination(destinationId: String? = null) {
         viewModelScope.launch {
+            val isRecovery = destinationId != null
+            val isSessionActive = isRecovery || _uiState.value.isSessionActive
             _uiState.update {
                 it.copy(
                     isLoading = true,
@@ -82,50 +103,99 @@ internal class DestinationsViewModel(
                     otherValidDestinations = emptyList(),
                 )
             }
-
             getUserLocationUseCase.getLocation()
                 .onSuccess { location ->
                     _uiState.update { it.copy(userLocation = location) }
-                    selectDestination(location)
+                    if (isRecovery) {
+                        getSelectedDestination(
+                            location = location,
+                            destinationId = destinationId,
+                            isSessionActive = true,
+                            isSessionRecovery = true,
+                        )
+                    } else {
+                        selectRandomDestination(location)
+                    }
                 }
                 .onFailure { error ->
                     _uiState.update {
                         it.copy(
                             isLoading = false,
-                            error = application.getString(R.string.failed_to_get_location, error.message),
+                            isSessionActive = isSessionActive,
+                            error = if (isRecovery) null else application.getString(
+                                R.string.failed_to_get_location,
+                                error.message,
+                            ),
                         )
                     }
                 }
         }
     }
 
-    private suspend fun selectDestination(location: Location) {
+    private suspend fun selectRandomDestination(location: Location) {
         val currentState = _uiState.value
-        getRandomDestinationUseCase.getDestinations(
-            userLocation = location,
-            targetDistanceKm = currentState.routeDistanceKm,
-            toleranceKm = currentState.toleranceKm,
-            areAllValidDestinationsIncluded = true,
-        ).onSuccess { destinations ->
+        handleDestinationsResult(
+            result = getDestinationInfoUseCase.getRandomDestinations(
+                userLocation = location,
+                targetDistanceKm = currentState.routeDistanceKm,
+                toleranceKm = currentState.toleranceKm,
+            ),
+            location = location,
+            isSessionActive = false,
+            isSessionRecovery = false,
+        )
+    }
+
+    private suspend fun getSelectedDestination(
+        location: Location,
+        destinationId: String,
+        isSessionActive: Boolean,
+        isSessionRecovery: Boolean,
+    ) {
+        handleDestinationsResult(
+            result = getDestinationInfoUseCase.getDestinations(
+                userLocation = location,
+                toleranceKm = _uiState.value.toleranceKm,
+                destinationId = destinationId
+            ),
+            location = location,
+            isSessionActive = isSessionActive,
+            isSessionRecovery = isSessionRecovery,
+        )
+    }
+
+    private suspend fun handleDestinationsResult(
+        result: Result<Destinations>,
+        location: Location,
+        isSessionActive: Boolean,
+        isSessionRecovery: Boolean,
+    ) {
+        result.onSuccess { destinations ->
             val uiModel = uiMapper.toUiModel(destinations, location)
             _uiState.update {
                 it.copy(
                     isLoading = false,
                     selectedDestination = uiModel.selected,
                     otherValidDestinations = uiModel.otherValidDestinations,
+                    isSessionActive = isSessionActive,
+                    routeDistanceKm = if (isSessionRecovery) uiModel.selected.distanceKm.roundToInt().toDouble() else it.routeDistanceKm,
                 )
             }
         }.onFailure { error ->
-            val message = when (error) {
-                is NoSuitableDestinationException -> application.getString(R.string.error_too_far_from_supported_area)
-                else -> application.getString(R.string.error_not_handled)
-            }
-            _uiState.update {
-                it.copy(
-                    isLoading = false,
-                    error = message,
-                )
-            }
+            handleDestinationError(error)
+        }
+    }
+
+    private fun handleDestinationError(error: Throwable) {
+        val message = when (error) {
+            is NoSuitableDestinationException -> application.getString(R.string.error_too_far_from_supported_area)
+            else -> application.getString(R.string.error_not_handled)
+        }
+        _uiState.update {
+            it.copy(
+                isLoading = false,
+                error = message,
+            )
         }
     }
 

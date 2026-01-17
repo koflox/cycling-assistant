@@ -11,6 +11,9 @@ interface DestinationDao {
     @Query("SELECT * FROM destinations")
     suspend fun getAllDestinations(): List<DestinationLocal>
 
+    @Query("SELECT * FROM destinations WHERE id = :id")
+    suspend fun getDestinationById(id: String): DestinationLocal?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(destinations: List<DestinationLocal>)
 }

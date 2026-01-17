@@ -7,9 +7,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import com.koflox.destinationsession.bridge.ActiveSessionDestination
 import com.koflox.destinationsession.bridge.DestinationSessionBridge
 import com.koflox.location.model.Location
 import com.koflox.session.domain.usecase.ActiveSessionUseCase
+import com.koflox.session.domain.usecase.NoActiveSessionException
 import com.koflox.session.presentation.dialog.DestinationConfirmationDialog
 import com.koflox.session.presentation.permission.NotificationPermissionHandler
 import com.koflox.session.presentation.session.SessionScreen
@@ -22,6 +24,14 @@ internal class DestinationSessionBridgeImpl(
 ) : DestinationSessionBridge {
 
     override fun observeHasActiveSession(): Flow<Boolean> = activeSessionUseCase.hasActiveSession()
+
+    override suspend fun getActiveSessionDestination(): ActiveSessionDestination? = try {
+        ActiveSessionDestination(
+            id = activeSessionUseCase.getActiveSession().destinationId,
+        )
+    } catch (_: NoActiveSessionException) {
+        null
+    }
 
     @Composable
     override fun SessionScreen(

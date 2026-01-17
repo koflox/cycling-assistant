@@ -1,8 +1,8 @@
 package com.koflox.destinations.di
 
 import com.koflox.concurrent.DispatchersQualifier
-import com.koflox.destinations.domain.usecase.GetRandomDestinationUseCase
-import com.koflox.destinations.domain.usecase.GetRandomDestinationUseCaseImpl
+import com.koflox.destinations.domain.usecase.GetDestinationInfoUseCase
+import com.koflox.destinations.domain.usecase.GetDestinationInfoUseCaseImpl
 import com.koflox.destinations.domain.usecase.GetUserLocationUseCase
 import com.koflox.destinations.domain.usecase.GetUserLocationUseCaseImpl
 import com.koflox.destinations.domain.usecase.InitializeDatabaseUseCase
@@ -12,8 +12,8 @@ import com.koflox.destinations.domain.usecase.ObserveUserLocationUseCaseImpl
 import org.koin.dsl.module
 
 internal val domainModule = module {
-    factory<GetRandomDestinationUseCase> {
-        GetRandomDestinationUseCaseImpl(
+    factory<GetDestinationInfoUseCase> {
+        GetDestinationInfoUseCaseImpl(
             dispatcherDefault = get(DispatchersQualifier.Default),
             repository = get(),
             distanceCalculator = get(),

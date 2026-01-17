@@ -26,8 +26,8 @@ internal class DestinationUiMapperImpl(
             )
         }
         val targetDestinationUiModel = mapToModel(
-            d = destinations.randomizedDestination,
-            distance = getDistance(userLocation, destinations.randomizedDestination),
+            d = destinations.mainDestination,
+            distance = getDistance(userLocation, destinations.mainDestination),
             isMain = true,
         )
         DestinationsUiModel(
