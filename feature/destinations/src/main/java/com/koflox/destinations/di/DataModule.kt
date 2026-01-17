@@ -1,7 +1,6 @@
 package com.koflox.destinations.di
 
 import android.content.Context
-import androidx.room.Room
 import com.koflox.concurrent.DispatchersQualifier
 import com.koflox.destinations.data.mapper.DestinationMapper
 import com.koflox.destinations.data.mapper.DestinationMapperImpl
@@ -10,7 +9,6 @@ import com.koflox.destinations.data.source.asset.PoiAssetDataSource
 import com.koflox.destinations.data.source.asset.PoiAssetDataSourceImpl
 import com.koflox.destinations.data.source.local.PoiLocalDataSource
 import com.koflox.destinations.data.source.local.PoiLocalDataSourceImpl
-import com.koflox.destinations.data.source.local.database.AppDatabase
 import com.koflox.destinations.data.source.prefs.PreferencesDataSource
 import com.koflox.destinations.data.source.prefs.PreferencesDataSourceImpl
 import com.koflox.destinations.domain.repository.DestinationRepository
@@ -28,16 +26,7 @@ private val dataModule = module {
 }
 
 private val dataSourceModule = module {
-    single {
-        Room.databaseBuilder(
-            androidContext(),
-            AppDatabase::class.java,
-            AppDatabase.DATABASE_NAME,
-        ).build()
-    }
-    single {
-        get<AppDatabase>().destinationDao()
-    }
+    // DestinationDao is provided by :feature:database module
     single<PoiLocalDataSource> {
         PoiLocalDataSourceImpl(
             dispatcherIo = get<CoroutineDispatcher>(DispatchersQualifier.Io),

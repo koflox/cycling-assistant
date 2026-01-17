@@ -11,9 +11,10 @@ import com.koflox.destinations.domain.usecase.GetUserLocationUseCase
 import com.koflox.destinations.domain.usecase.InitializeDatabaseUseCase
 import com.koflox.destinations.domain.usecase.NoSuitableDestinationException
 import com.koflox.destinations.domain.usecase.ObserveUserLocationUseCase
-import com.koflox.destinations.domain.util.DistanceCalculator
 import com.koflox.destinations.presentation.destinations.model.DestinationUiModel
 import com.koflox.destinations.presentation.mapper.DestinationUiMapper
+import com.koflox.destinationsession.bridge.CyclingSessionUseCase
+import com.koflox.distance.DistanceCalculator
 import com.koflox.location.model.Location
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -30,6 +31,7 @@ internal class DestinationsViewModel(
     private val distanceCalculator: DistanceCalculator,
     private val uiMapper: DestinationUiMapper,
     private val application: Application,
+    private val cyclingSessionUseCase: CyclingSessionUseCase,
 ) : AndroidViewModel(application) {
 
     companion object {
@@ -48,6 +50,11 @@ internal class DestinationsViewModel(
         viewModelScope.launch {
             initializeDatabaseUseCase.init()
         }
+        viewModelScope.launch {
+            cyclingSessionUseCase.observeHasActiveSession().collect { isActive ->
+                _uiState.update { it.copy(isSessionActive = isActive) }
+            }
+        }
     }
 
     fun onEvent(event: DestinationsUiEvent) {
@@ -61,6 +68,8 @@ internal class DestinationsViewModel(
             DestinationsUiEvent.ScreenPaused -> onScreenPaused()
             is DestinationsUiEvent.OpenDestinationInGoogleMaps -> openInGoogleMaps(event.destination)
             DestinationsUiEvent.NavigationActionHandled -> clearNavigationAction()
+            DestinationsUiEvent.SelectedMarkerInfoClicked -> showMarkerOptionsDialog()
+            DestinationsUiEvent.SelectedMarkerOptionsDialogDismissed -> dismissSelectedMarkerOptionsDialog()
         }
     }
 
@@ -171,9 +180,9 @@ internal class DestinationsViewModel(
         }
     }
 
-    private suspend fun shouldUpdateCameraFocus(currentFocus: Location?, newLocation: Location): Boolean {
+    private fun shouldUpdateCameraFocus(currentFocus: Location?, newLocation: Location): Boolean {
         if (currentFocus == null) return true
-        val distanceMeters = distanceCalculator.calculate(
+        val distanceMeters = distanceCalculator.calculateKm(
             lat1 = currentFocus.latitude,
             lon1 = currentFocus.longitude,
             lat2 = newLocation.latitude,
@@ -210,6 +219,14 @@ internal class DestinationsViewModel(
 
     private fun clearNavigationAction() {
         _uiState.update { it.copy(navigationAction = null) }
+    }
+
+    private fun showMarkerOptionsDialog() {
+        _uiState.update { it.copy(showSelectedMarkerOptionsDialog = true) }
+    }
+
+    private fun dismissSelectedMarkerOptionsDialog() {
+        _uiState.update { it.copy(showSelectedMarkerOptionsDialog = false) }
     }
 
 }

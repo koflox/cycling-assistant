@@ -9,7 +9,6 @@ import com.koflox.destinations.domain.usecase.InitializeDatabaseUseCase
 import com.koflox.destinations.domain.usecase.InitializeDatabaseUseCaseImpl
 import com.koflox.destinations.domain.usecase.ObserveUserLocationUseCase
 import com.koflox.destinations.domain.usecase.ObserveUserLocationUseCaseImpl
-import com.koflox.destinations.domain.util.DistanceCalculator
 import org.koin.dsl.module
 
 internal val domainModule = module {
@@ -33,11 +32,6 @@ internal val domainModule = module {
     factory<ObserveUserLocationUseCase> {
         ObserveUserLocationUseCaseImpl(
             repository = get(),
-        )
-    }
-    single {
-        DistanceCalculator(
-            dispatcherDefault = get(DispatchersQualifier.Default),
         )
     }
 }
