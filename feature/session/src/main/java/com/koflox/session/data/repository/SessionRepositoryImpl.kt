@@ -34,10 +34,9 @@ internal class SessionRepositoryImpl(
         localDataSource.insertSessionWithTrackPoints(sessionEntity, trackPointEntities)
     }
 
-    override suspend fun getSession(sessionId: String): Result<Session?> = suspendRunCatching {
-        localDataSource.getSessionWithTrackPoints(sessionId)?.let {
-            mapper.toDomain(it)
-        }
+    override suspend fun getSession(sessionId: String): Result<Session> = suspendRunCatching {
+        val session = localDataSource.getSessionWithTrackPoints(sessionId) ?: throw NoSuchElementException("Session not found")
+        mapper.toDomain(session)
     }
 
 }

@@ -16,10 +16,12 @@ import com.koflox.destinations.presentation.destinations.DestinationsScreen
 @Composable
 fun DashboardScreen(
     onNavigateToSessionsList: () -> Unit,
+    onNavigateToSessionCompletion: (sessionId: String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Box(modifier = modifier.fillMaxSize()) {
         DestinationsScreen(
+            onNavigateToSessionCompletion = onNavigateToSessionCompletion,
             modifier = Modifier.fillMaxSize(),
         )
         SessionsListButton(

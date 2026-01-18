@@ -5,6 +5,7 @@ import com.koflox.session.domain.model.SessionStatus
 
 data class SessionUiState(
     val isActive: Boolean = false,
+    val sessionId: String? = null,
     val destinationName: String = "",
     val destinationLocation: Location? = null,
     val status: SessionStatus = SessionStatus.RUNNING,
@@ -14,6 +15,8 @@ data class SessionUiState(
     val topSpeedKmh: String = DEFAULT_SPEED,
     val currentLocation: Location? = null,
     val error: String? = null,
+    val showStopConfirmationDialog: Boolean = false,
+    val completedSessionId: String? = null,
 ) {
     val isPaused: Boolean get() = status == SessionStatus.PAUSED
 

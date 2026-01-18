@@ -9,8 +9,9 @@
       "Bash(./gradlew build:*)",
       "Bash(./gradlew :*test:*)",
       "Bash(./gradlew:*)",
-      "Bash(dir:*)",
-      "Bash(taskkill:*)"
+      "Bash(taskkill:*)",
+      "Bash(.gradlew detektRun:*)",
+      "Bash(cd:*)"
     ]
   }
 }

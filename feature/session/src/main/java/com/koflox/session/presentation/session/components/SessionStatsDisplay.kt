@@ -14,7 +14,7 @@ import androidx.compose.ui.text.font.FontWeight
 import com.koflox.session.R
 
 @Composable
-internal fun SessionStatsDisplay(
+fun SessionStatsDisplay(
     elapsedTime: String,
     distance: String,
     averageSpeed: String,

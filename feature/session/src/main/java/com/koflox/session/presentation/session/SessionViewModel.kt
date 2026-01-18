@@ -54,7 +54,9 @@ class SessionViewModel(
                     }
                 } else {
                     stopTimer()
-                    _uiState.value = SessionUiState()
+                    _uiState.update { currentState ->
+                        SessionUiState(completedSessionId = currentState.completedSessionId)
+                    }
                 }
             }
         }
@@ -73,9 +75,30 @@ class SessionViewModel(
         when (event) {
             SessionUiEvent.PauseClicked -> pauseSession()
             SessionUiEvent.ResumeClicked -> resumeSession()
-            SessionUiEvent.StopClicked -> stopSession()
+            SessionUiEvent.StopClicked -> showStopConfirmation()
+            SessionUiEvent.StopConfirmationDismissed -> dismissStopConfirmation()
+            SessionUiEvent.StopConfirmed -> confirmStop()
+            SessionUiEvent.CompletedSessionNavigated -> clearCompletedSession()
             SessionUiEvent.ErrorDismissed -> dismissError()
         }
+    }
+
+    private fun showStopConfirmation() {
+        _uiState.update { it.copy(showStopConfirmationDialog = true) }
+    }
+
+    private fun dismissStopConfirmation() {
+        _uiState.update { it.copy(showStopConfirmationDialog = false) }
+    }
+
+    private fun confirmStop() {
+        val sessionId = _uiState.value.sessionId
+        _uiState.update { it.copy(showStopConfirmationDialog = false) }
+        stopSession(sessionId)
+    }
+
+    private fun clearCompletedSession() {
+        _uiState.update { it.copy(completedSessionId = null) }
     }
 
     fun startSession(
@@ -119,10 +142,16 @@ class SessionViewModel(
         }
     }
 
-    private fun stopSession() {
+    private fun stopSession(sessionId: String?) {
         viewModelScope.launch {
+            sessionId?.let { id ->
+                _uiState.update { it.copy(completedSessionId = id) }
+            }
             updateSessionStatusUseCase.stop()
-                .onFailure(::showError)
+                .onFailure { error ->
+                    _uiState.update { it.copy(completedSessionId = null) }
+                    showError(error)
+                }
         }
     }
 
@@ -163,6 +192,7 @@ class SessionViewModel(
         _uiState.update { currentState ->
             currentState.copy(
                 isActive = true,
+                sessionId = session.id,
                 destinationName = session.destinationName,
                 destinationLocation = Location(
                     latitude = session.destinationLatitude,

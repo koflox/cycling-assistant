@@ -11,6 +11,6 @@ interface SessionRepository {
 
     suspend fun saveSession(session: Session): Result<Unit>
 
-    suspend fun getSession(sessionId: String): Result<Session?>
+    suspend fun getSession(sessionId: String): Result<Session>
 
 }

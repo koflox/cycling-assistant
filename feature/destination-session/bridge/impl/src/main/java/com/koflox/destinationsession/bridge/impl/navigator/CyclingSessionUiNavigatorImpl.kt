@@ -9,16 +9,18 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import com.koflox.destinationsession.bridge.navigator.CyclingSessionUiNavigator
 import com.koflox.location.model.Location
+import com.koflox.session.presentation.completion.SessionCompletionRoute
 import com.koflox.session.presentation.dialog.DestinationConfirmationDialog
 import com.koflox.session.presentation.permission.NotificationPermissionHandler
 import com.koflox.session.presentation.session.SessionViewModel
-import com.koflox.session.presentation.sessionslist.SessionsListScreen
+import com.koflox.session.presentation.sessionslist.SessionsListRoute
 import org.koin.androidx.compose.koinViewModel
 
 internal class CyclingSessionUiNavigatorImpl : CyclingSessionUiNavigator {
     @Composable
     override fun SessionScreen(
         destinationLocation: Location,
+        onNavigateToCompletion: (sessionId: String) -> Unit,
         modifier: Modifier,
     ) {
         val viewModel: SessionViewModel = koinViewModel()
@@ -26,6 +28,7 @@ internal class CyclingSessionUiNavigatorImpl : CyclingSessionUiNavigator {
 
         if (state.isActive) {
             com.koflox.session.presentation.session.SessionScreen(
+                onNavigateToCompletion = onNavigateToCompletion,
                 viewModel = viewModel,
                 modifier = modifier,
             )
@@ -76,10 +79,25 @@ internal class CyclingSessionUiNavigatorImpl : CyclingSessionUiNavigator {
     @Composable
     override fun SessionsScreen(
         onBackClick: () -> Unit,
+        onSessionClick: (sessionId: String) -> Unit,
         modifier: Modifier,
     ) {
-        SessionsListScreen(
+        SessionsListRoute(
             onBackClick = onBackClick,
+            onSessionClick = onSessionClick,
+            modifier = modifier,
+        )
+    }
+
+    @Composable
+    override fun SessionCompletionScreen(
+        onBackClick: () -> Unit,
+        onNavigateToDashboard: () -> Unit,
+        modifier: Modifier,
+    ) {
+        SessionCompletionRoute(
+            onBackClick = onBackClick,
+            onNavigateToDashboard = onNavigateToDashboard,
             modifier = modifier,
         )
     }

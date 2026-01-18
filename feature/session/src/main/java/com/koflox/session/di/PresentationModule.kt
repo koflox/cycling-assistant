@@ -3,6 +3,7 @@ package com.koflox.session.di
 import com.koflox.concurrent.DispatchersQualifier
 import com.koflox.di.ClassNameQualifier
 import com.koflox.error.mapper.ErrorMessageMapper
+import com.koflox.session.presentation.completion.SessionCompletionViewModel
 import com.koflox.session.presentation.error.SessionErrorMessageMapper
 import com.koflox.session.presentation.mapper.SessionUiMapper
 import com.koflox.session.presentation.mapper.SessionUiMapperImpl
@@ -47,6 +48,14 @@ internal val presentationModule = module {
         SessionsListViewModel(
             getAllSessionsUseCase = get(),
             mapper = get(),
+        )
+    }
+    viewModel {
+        SessionCompletionViewModel(
+            getSessionByIdUseCase = get(),
+            sessionUiMapper = get(),
+            errorMessageMapper = get(PresentationModuleQualifier.SessionErrorMessageMapper),
+            savedStateHandle = get(),
         )
     }
 }

@@ -31,13 +31,18 @@ private const val GOOGLE_MAPS_PACKAGE = "com.google.android.apps.maps"
 
 @Composable
 fun DestinationsScreen(
+    onNavigateToSessionCompletion: (sessionId: String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    DestinationsScreenInternal(modifier = modifier)
+    DestinationsScreenInternal(
+        onNavigateToSessionCompletion = onNavigateToSessionCompletion,
+        modifier = modifier,
+    )
 }
 
 @Composable
 internal fun DestinationsScreenInternal(
+    onNavigateToSessionCompletion: (sessionId: String) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: DestinationsViewModel = koinViewModel(),
     sessionUiNavigator: CyclingSessionUiNavigator = koinInject(),
@@ -51,7 +56,13 @@ internal fun DestinationsScreenInternal(
         onPermissionGranted = { viewModel.onEvent(DestinationsUiEvent.PermissionGranted) },
         onPermissionDenied = { viewModel.onEvent(DestinationsUiEvent.PermissionDenied) },
     ) {
-        DestinationsContent(uiState, viewModel, sessionUiNavigator, modifier)
+        DestinationsContent(
+            uiState = uiState,
+            viewModel = viewModel,
+            sessionUiNavigator = sessionUiNavigator,
+            onNavigateToSessionCompletion = onNavigateToSessionCompletion,
+            modifier = modifier,
+        )
     }
 }
 
@@ -94,6 +105,7 @@ private fun DestinationsContent(
     uiState: DestinationsUiState,
     viewModel: DestinationsViewModel,
     sessionUiNavigator: CyclingSessionUiNavigator,
+    onNavigateToSessionCompletion: (sessionId: String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Box(modifier = modifier.fillMaxSize()) {
@@ -111,6 +123,7 @@ private fun DestinationsContent(
             uiState.selectedDestination?.let { destination ->
                 sessionUiNavigator.SessionScreen(
                     destinationLocation = destination.location,
+                    onNavigateToCompletion = onNavigateToSessionCompletion,
                     modifier = Modifier
                         .fillMaxWidth()
                         .align(Alignment.BottomCenter),

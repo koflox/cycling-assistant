@@ -179,6 +179,24 @@ class FeatureViewModel(
 - **Boolean Props**: Prefix with `is`, `has`, `are`
 - **Trailing Commas**: Required on declarations
 - **Max Line Length**: 150 characters
+- **Companion Object**: Place at the top of the class body
+
+### Composable Screen Naming
+
+To avoid infinite call loops when bridge implementations delegate to feature module composables:
+
+| Location                   | Naming Pattern  | Example                                         |
+|----------------------------|-----------------|-------------------------------------------------|
+| Feature module entry point | `<Name>Route`   | `SessionCompletionRoute`, `SessionsListRoute`   |
+| Bridge interface method    | `<Name>Screen`  | `SessionCompletionScreen`, `SessionsListScreen` |
+| Internal screen content    | `<Name>Content` | `SessionCompletionContent`                      |
+
+```kotlin
+// Bridge implementation - safe, no naming conflict
+override fun SessionCompletionScreen(onBackClick: () -> Unit, modifier: Modifier) {
+    SessionCompletionRoute(onBackClick = onBackClick, modifier = modifier)
+}
+```
 
 ## Adding New Features
 

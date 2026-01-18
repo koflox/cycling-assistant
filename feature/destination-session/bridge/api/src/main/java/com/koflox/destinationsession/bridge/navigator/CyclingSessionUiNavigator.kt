@@ -17,6 +17,7 @@ interface CyclingSessionUiNavigator {
     @Composable
     fun SessionScreen(
         destinationLocation: Location,
+        onNavigateToCompletion: (sessionId: String) -> Unit,
         modifier: Modifier,
     )
 
@@ -40,6 +41,17 @@ interface CyclingSessionUiNavigator {
     @Composable
     fun SessionsScreen(
         onBackClick: () -> Unit,
+        onSessionClick: (sessionId: String) -> Unit,
+        modifier: Modifier,
+    )
+
+    /**
+     * Returns the session completion screen Composable.
+     */
+    @Composable
+    fun SessionCompletionScreen(
+        onBackClick: () -> Unit,
+        onNavigateToDashboard: () -> Unit,
         modifier: Modifier,
     )
 }

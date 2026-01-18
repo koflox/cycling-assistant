@@ -56,6 +56,10 @@ dependencies {
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
 
+    // Google Maps
+    implementation(libs.maps.compose)
+    implementation(libs.play.services.maps)
+
     // Shared modules
     implementation(project(":shared:concurrent"))
     implementation(project(":shared:di"))
