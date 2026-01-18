@@ -53,4 +53,14 @@
     <string name="sessions_list_status_running">Running</string>
     <string name="sessions_list_status_paused">Paused</string>
     <string name="sessions_list_status_completed">Completed</string>
+
+    <!-- Stop Confirmation Dialog -->
+    <string name="stop_confirmation_title">Stop Session?</string>
+    <string name="stop_confirmation_message">Are you sure you want to stop the current cycling session?</string>
+    <string name="stop_confirmation_stop">Stop</string>
+    <string name="stop_confirmation_cancel">Cancel</string>
+
+    <!-- Session Completion -->
+    <string name="session_completion_title">Session Complete</string>
+    <string name="session_completion_back">Back</string>
 </resources>

@@ -35,8 +35,9 @@ import com.koflox.session.R
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun SessionsListScreen(
+fun SessionsListRoute(
     onBackClick: () -> Unit,
+    onSessionClick: (sessionId: String) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: SessionsListViewModel = koinViewModel(),
 ) {
@@ -45,6 +46,7 @@ fun SessionsListScreen(
     SessionsListContent(
         uiState = uiState,
         onBackClick = onBackClick,
+        onSessionClick = onSessionClick,
         modifier = modifier,
     )
 }
@@ -54,6 +56,7 @@ fun SessionsListScreen(
 private fun SessionsListContent(
     uiState: SessionsListUiState,
     onBackClick: () -> Unit,
+    onSessionClick: (sessionId: String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
@@ -91,7 +94,10 @@ private fun SessionsListContent(
                     items = uiState.sessions,
                     key = { it.id },
                 ) { session ->
-                    SessionListItem(session = session)
+                    SessionListItem(
+                        session = session,
+                        onClick = { onSessionClick(session.id) },
+                    )
                 }
                 item { Spacer(modifier = Modifier.height(4.dp)) }
             }
@@ -118,9 +124,11 @@ private fun EmptyState(modifier: Modifier = Modifier) {
 @Composable
 private fun SessionListItem(
     session: SessionListItemUiModel,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Card(
+        onClick = onClick,
         modifier = modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
     ) {
