@@ -1,7 +1,9 @@
 package com.koflox.cyclingassistant.navigation
 
-import com.koflox.destinations.navigation.DESTINATIONS_ROUTE
+import com.koflox.dashboard.navigation.DASHBOARD_ROUTE
+import com.koflox.session.navigation.SESSIONS_LIST_ROUTE
 
 object NavRoutes {
-    const val DESTINATIONS = DESTINATIONS_ROUTE
+    const val DASHBOARD = DASHBOARD_ROUTE
+    const val SESSIONS_LIST = SESSIONS_LIST_ROUTE
 }

@@ -43,4 +43,8 @@ interface SessionDao {
     @Transaction
     @Query("SELECT * FROM sessions WHERE status IN (:statuses) ORDER BY startTimeMs DESC LIMIT 1")
     fun observeFirstSessionByStatuses(statuses: List<String>): Flow<SessionWithTrackPoints?>
+
+    @Transaction
+    @Query("SELECT * FROM sessions ORDER BY startTimeMs DESC")
+    fun observeAllSessions(): Flow<List<SessionWithTrackPoints>>
 }

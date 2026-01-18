@@ -22,6 +22,12 @@ internal class SessionRepositoryImpl(
         }
     }
 
+    override fun observeAllSessions(): Flow<List<Session>> {
+        return localDataSource.observeAllSessions().map { sessions ->
+            sessions.map { mapper.toDomain(it) }
+        }
+    }
+
     override suspend fun saveSession(session: Session): Result<Unit> = suspendRunCatching {
         val sessionEntity = mapper.toEntity(session)
         val trackPointEntities = mapper.toTrackPointEntities(session.id, session.trackPoints)

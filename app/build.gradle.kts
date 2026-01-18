@@ -69,7 +69,9 @@ dependencies {
     ksp(libs.androidx.room.compiler)
 
     // Feature modules
+    implementation(project(":feature:dashboard"))
     implementation(project(":feature:destinations"))
+    implementation(project(":feature:destination-session:bridge:api"))
     implementation(project(":feature:destination-session:bridge:impl"))
     implementation(project(":feature:session"))
 

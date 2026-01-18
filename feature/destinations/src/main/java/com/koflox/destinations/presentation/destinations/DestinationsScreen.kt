@@ -30,7 +30,15 @@ import org.koin.compose.koinInject
 private const val GOOGLE_MAPS_PACKAGE = "com.google.android.apps.maps"
 
 @Composable
-internal fun DestinationsScreen(
+fun DestinationsScreen(
+    modifier: Modifier = Modifier,
+) {
+    DestinationsScreenInternal(modifier = modifier)
+}
+
+@Composable
+internal fun DestinationsScreenInternal(
+    modifier: Modifier = Modifier,
     viewModel: DestinationsViewModel = koinViewModel(),
     sessionUiNavigator: CyclingSessionUiNavigator = koinInject(),
 ) {
@@ -43,7 +51,7 @@ internal fun DestinationsScreen(
         onPermissionGranted = { viewModel.onEvent(DestinationsUiEvent.PermissionGranted) },
         onPermissionDenied = { viewModel.onEvent(DestinationsUiEvent.PermissionDenied) },
     ) {
-        DestinationsContent(uiState, viewModel, sessionUiNavigator)
+        DestinationsContent(uiState, viewModel, sessionUiNavigator, modifier)
     }
 }
 
@@ -86,8 +94,9 @@ private fun DestinationsContent(
     uiState: DestinationsUiState,
     viewModel: DestinationsViewModel,
     sessionUiNavigator: CyclingSessionUiNavigator,
+    modifier: Modifier = Modifier,
 ) {
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = modifier.fillMaxSize()) {
         GoogleMapView(
             modifier = Modifier.fillMaxSize(),
             selectedDestination = uiState.selectedDestination,
@@ -108,23 +117,13 @@ private fun DestinationsContent(
                 )
             }
         } else {
-            Column(
+            DestinationSelectionControls(
+                uiState = uiState,
+                viewModel = viewModel,
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                RouteSlider(
-                    distanceKm = uiState.routeDistanceKm,
-                    toleranceKm = uiState.toleranceKm,
-                    onDistanceChanged = { viewModel.onEvent(DestinationsUiEvent.RouteDistanceChanged(it)) },
-                    modifier = Modifier.padding(bottom = 16.dp),
-                )
-                LetsGoButton(
-                    onClick = { viewModel.onEvent(DestinationsUiEvent.LetsGoClicked) },
-                    enabled = !uiState.isLoading && uiState.isPermissionGranted,
-                )
-            }
+            )
         }
 
         if (uiState.isLoading) {
@@ -144,6 +143,29 @@ private fun DestinationsContent(
                 viewModel.onEvent(DestinationsUiEvent.OpenDestinationInGoogleMaps(uiState.selectedDestination))
             },
             onDismiss = { viewModel.onEvent(DestinationsUiEvent.SelectedMarkerOptionsDialogDismissed) },
+        )
+    }
+}
+
+@Composable
+private fun DestinationSelectionControls(
+    uiState: DestinationsUiState,
+    viewModel: DestinationsViewModel,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        RouteSlider(
+            distanceKm = uiState.routeDistanceKm,
+            toleranceKm = uiState.toleranceKm,
+            onDistanceChanged = { viewModel.onEvent(DestinationsUiEvent.RouteDistanceChanged(it)) },
+            modifier = Modifier.padding(bottom = 16.dp),
+        )
+        LetsGoButton(
+            onClick = { viewModel.onEvent(DestinationsUiEvent.LetsGoClicked) },
+            enabled = !uiState.isLoading && uiState.isPermissionGranted,
         )
     }
 }

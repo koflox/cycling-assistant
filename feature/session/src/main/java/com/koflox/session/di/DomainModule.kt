@@ -4,6 +4,8 @@ import com.koflox.session.domain.usecase.ActiveSessionUseCase
 import com.koflox.session.domain.usecase.ActiveSessionUseCaseImpl
 import com.koflox.session.domain.usecase.CreateSessionUseCase
 import com.koflox.session.domain.usecase.CreateSessionUseCaseImpl
+import com.koflox.session.domain.usecase.GetAllSessionsUseCase
+import com.koflox.session.domain.usecase.GetAllSessionsUseCaseImpl
 import com.koflox.session.domain.usecase.UpdateSessionLocationUseCase
 import com.koflox.session.domain.usecase.UpdateSessionLocationUseCaseImpl
 import com.koflox.session.domain.usecase.UpdateSessionStatusUseCase
@@ -33,6 +35,11 @@ internal val domainModule = module {
             activeSessionUseCase = get(),
             sessionRepository = get(),
             distanceCalculator = get(),
+        )
+    }
+    factory<GetAllSessionsUseCase> {
+        GetAllSessionsUseCaseImpl(
+            sessionRepository = get(),
         )
     }
 }

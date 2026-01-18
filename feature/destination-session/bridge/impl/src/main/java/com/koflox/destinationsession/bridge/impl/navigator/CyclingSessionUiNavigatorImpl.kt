@@ -1,6 +1,5 @@
 package com.koflox.destinationsession.bridge.impl.navigator
 
-
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -13,6 +12,7 @@ import com.koflox.location.model.Location
 import com.koflox.session.presentation.dialog.DestinationConfirmationDialog
 import com.koflox.session.presentation.permission.NotificationPermissionHandler
 import com.koflox.session.presentation.session.SessionViewModel
+import com.koflox.session.presentation.sessionslist.SessionsListScreen
 import org.koin.androidx.compose.koinViewModel
 
 internal class CyclingSessionUiNavigatorImpl : CyclingSessionUiNavigator {
@@ -73,4 +73,14 @@ internal class CyclingSessionUiNavigatorImpl : CyclingSessionUiNavigator {
         )
     }
 
+    @Composable
+    override fun SessionsScreen(
+        onBackClick: () -> Unit,
+        modifier: Modifier,
+    ) {
+        SessionsListScreen(
+            onBackClick = onBackClick,
+            modifier = modifier,
+        )
+    }
 }
