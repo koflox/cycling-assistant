@@ -25,6 +25,7 @@ import androidx.compose.ui.res.stringResource
 import com.koflox.session.R
 import com.koflox.session.presentation.completion.components.RouteMapView
 import com.koflox.session.presentation.completion.components.SessionSummaryCard
+import com.koflox.session.presentation.completion.components.calculateCardAlignment
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -108,6 +109,7 @@ private fun SessionCompletionBody(
             }
 
             else -> {
+                val cardAlignment = calculateCardAlignment(uiState.routePoints)
                 RouteMapView(routePoints = uiState.routePoints, modifier = Modifier.fillMaxSize())
                 SessionSummaryCard(
                     startDate = uiState.startDateFormatted,
@@ -115,9 +117,7 @@ private fun SessionCompletionBody(
                     distance = uiState.traveledDistanceFormatted,
                     averageSpeed = uiState.averageSpeedFormatted,
                     topSpeed = uiState.topSpeedFormatted,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .align(Alignment.BottomCenter),
+                    modifier = Modifier.align(cardAlignment),
                 )
             }
         }
