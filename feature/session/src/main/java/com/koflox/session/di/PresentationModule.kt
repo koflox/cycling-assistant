@@ -7,6 +7,9 @@ import com.koflox.session.presentation.error.SessionErrorMessageMapper
 import com.koflox.session.presentation.mapper.SessionUiMapper
 import com.koflox.session.presentation.mapper.SessionUiMapperImpl
 import com.koflox.session.presentation.session.SessionViewModel
+import com.koflox.session.presentation.sessionslist.SessionsListUiMapper
+import com.koflox.session.presentation.sessionslist.SessionsListUiMapperImpl
+import com.koflox.session.presentation.sessionslist.SessionsListViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModel
@@ -35,6 +38,15 @@ internal val presentationModule = module {
             sessionServiceController = get(),
             sessionUiMapper = get(),
             errorMessageMapper = get(PresentationModuleQualifier.SessionErrorMessageMapper),
+        )
+    }
+    single<SessionsListUiMapper> {
+        SessionsListUiMapperImpl()
+    }
+    viewModel {
+        SessionsListViewModel(
+            getAllSessionsUseCase = get(),
+            mapper = get(),
         )
     }
 }

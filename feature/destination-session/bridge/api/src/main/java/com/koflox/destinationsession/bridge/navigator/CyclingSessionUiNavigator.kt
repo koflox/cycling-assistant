@@ -33,4 +33,13 @@ interface CyclingSessionUiNavigator {
         onNavigateClick: () -> Unit,
         onDismiss: () -> Unit,
     )
+
+    /**
+     * Returns the sessions list screen Composable.
+     */
+    @Composable
+    fun SessionsScreen(
+        onBackClick: () -> Unit,
+        modifier: Modifier,
+    )
 }

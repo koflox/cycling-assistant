@@ -28,4 +28,5 @@ internal class SessionLocalDataSourceImpl(
 
     override fun observeFirstSessionByStatuses(statuses: List<String>): Flow<SessionWithTrackPoints?> = dao.observeFirstSessionByStatuses(statuses)
 
+    override fun observeAllSessions(): Flow<List<SessionWithTrackPoints>> = dao.observeAllSessions()
 }
