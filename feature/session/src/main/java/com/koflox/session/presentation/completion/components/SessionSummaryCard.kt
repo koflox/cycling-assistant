@@ -33,7 +33,7 @@ internal fun SessionSummaryCard(
     Card(
         modifier = modifier.padding(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f),
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
     ) {

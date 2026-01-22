@@ -21,13 +21,16 @@ import androidx.compose.ui.unit.dp
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.MapStyleOptions
 import com.google.maps.android.compose.CameraPositionState
 import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerInfoWindow
 import com.google.maps.android.compose.Polyline
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberUpdatedMarkerState
+import com.koflox.designsystem.theme.LocalDarkTheme
 import com.koflox.destinations.R
 import com.koflox.destinations.presentation.destinations.model.DestinationUiModel
 import com.koflox.graphics.curves.createCurvePoints
@@ -53,6 +56,7 @@ internal fun GoogleMapView(
     isSessionActive: Boolean,
     onSelectedMarkerInfoClick: () -> Unit,
 ) {
+    val isDarkTheme = LocalDarkTheme.current
     val cameraPositionState = rememberCameraPositionState()
     val context = LocalContext.current
 
@@ -78,6 +82,7 @@ internal fun GoogleMapView(
         otherDestinations = otherDestinations,
         isSessionActive = isSessionActive,
         onSelectedMarkerInfoClick = onSelectedMarkerInfoClick,
+        isDarkTheme = isDarkTheme,
     )
 }
 
@@ -91,6 +96,7 @@ private fun Map(
     otherDestinations: List<DestinationUiModel>,
     isSessionActive: Boolean,
     onSelectedMarkerInfoClick: () -> Unit,
+    isDarkTheme: Boolean,
 ) {
     val density = context.resources.displayMetrics.density
     val userLocationBitmap = remember(density) {
@@ -102,9 +108,19 @@ private fun Map(
             density = density,
         )
     }
+    val mapProperties = remember(isDarkTheme) {
+        MapProperties(
+            mapStyleOptions = if (isDarkTheme) {
+                MapStyleOptions.loadRawResourceStyle(context, R.raw.map_style_dark)
+            } else {
+                null
+            },
+        )
+    }
     GoogleMap(
         modifier = modifier,
         cameraPositionState = cameraPositionState,
+        properties = mapProperties,
     ) {
         userLocation?.let {
             val userLocationIcon = remember(userLocationBitmap) {
@@ -127,6 +143,7 @@ private fun Map(
                 start = Point(userLocation.latitude, userLocation.longitude),
                 end = Point(selectedDestination.location.latitude, selectedDestination.location.longitude),
             ).map { LatLng(it.x, it.y) }
+            @Suppress("COMPOSE_APPLIER_CALL_MISMATCH")
             Polyline(
                 points = curvePoints,
                 color = UserLocationBlue,

@@ -1,37 +1,39 @@
-package com.koflox.dashboard.presentation.components
+package com.koflox.designsystem.component
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.koflox.dashboard.R
 
 @Composable
-internal fun SessionsListButton(
+fun FloatingMenuButton(
+    icon: ImageVector,
+    contentDescription: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    size: Dp = 48.dp,
+    iconPadding: Dp = 12.dp,
 ) {
     Surface(
         onClick = onClick,
-        modifier = modifier.size(48.dp),
+        modifier = modifier.size(size),
         shape = RoundedCornerShape(12.dp),
-        color = Color.White,
+        color = MaterialTheme.colorScheme.surface,
         contentColor = MaterialTheme.colorScheme.onSurface,
         shadowElevation = 4.dp,
+        tonalElevation = 2.dp,
     ) {
         Icon(
-            imageVector = Icons.AutoMirrored.Filled.List,
-            contentDescription = stringResource(R.string.sessions_list_button),
-            modifier = Modifier.padding(12.dp),
+            imageVector = icon,
+            contentDescription = contentDescription,
+            modifier = Modifier.padding(iconPadding),
         )
     }
 }
