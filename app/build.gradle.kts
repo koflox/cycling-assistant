@@ -74,6 +74,7 @@ dependencies {
     implementation(project(":feature:destination-session:bridge:api"))
     implementation(project(":feature:destination-session:bridge:impl"))
     implementation(project(":feature:session"))
+    implementation(project(":feature:settings"))
 
     // Shared modules
     implementation(project(":shared:concurrent"))

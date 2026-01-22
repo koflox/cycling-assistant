@@ -11,6 +11,8 @@ import com.koflox.session.navigation.SESSIONS_LIST_ROUTE
 import com.koflox.session.navigation.sessionCompletionRoute
 import com.koflox.session.navigation.sessionCompletionScreen
 import com.koflox.session.navigation.sessionsListScreen
+import com.koflox.settings.navigation.SETTINGS_ROUTE
+import com.koflox.settings.navigation.settingsScreen
 
 @Composable
 fun AppNavHost(
@@ -25,6 +27,7 @@ fun AppNavHost(
     ) {
         dashboardScreen(
             onNavigateToSessionsList = { navController.navigate(SESSIONS_LIST_ROUTE) },
+            onNavigateToSettings = { navController.navigate(SETTINGS_ROUTE) },
             onNavigateToSessionCompletion = { sessionId ->
                 navController.navigate(sessionCompletionRoute(sessionId))
             },
@@ -40,6 +43,9 @@ fun AppNavHost(
             onNavigateToDashboard = {
                 navController.popBackStack(DASHBOARD_ROUTE, inclusive = false)
             },
+        )
+        settingsScreen(
+            onBackClick = { navController.popBackStack() },
         )
     }
 }
