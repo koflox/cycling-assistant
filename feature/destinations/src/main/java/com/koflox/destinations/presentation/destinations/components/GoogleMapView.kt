@@ -17,7 +17,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
@@ -30,7 +29,9 @@ import com.google.maps.android.compose.MarkerInfoWindow
 import com.google.maps.android.compose.Polyline
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberUpdatedMarkerState
+import com.koflox.designsystem.theme.CornerRadius
 import com.koflox.designsystem.theme.LocalDarkTheme
+import com.koflox.designsystem.theme.Spacing
 import com.koflox.destinations.R
 import com.koflox.destinations.presentation.destinations.model.DestinationUiModel
 import com.koflox.graphics.curves.createCurvePoints
@@ -212,9 +213,9 @@ private fun SelectedDestinationInfoWindow(
         modifier = Modifier
             .background(
                 color = MaterialTheme.colorScheme.surface,
-                shape = RoundedCornerShape(8.dp),
+                shape = RoundedCornerShape(CornerRadius.Small),
             )
-            .padding(12.dp),
+            .padding(Spacing.Medium),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
@@ -230,7 +231,7 @@ private fun SelectedDestinationInfoWindow(
             ),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(top = 4.dp),
+            modifier = Modifier.padding(top = Spacing.Tiny),
         )
         Text(
             text = stringResource(
@@ -238,7 +239,7 @@ private fun SelectedDestinationInfoWindow(
             ),
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(top = 8.dp),
+            modifier = Modifier.padding(top = Spacing.Small),
         )
     }
 }
@@ -249,9 +250,9 @@ private fun OtherDestinationInfoWindow(destination: DestinationUiModel) {
         modifier = Modifier
             .background(
                 color = MaterialTheme.colorScheme.surface,
-                shape = RoundedCornerShape(8.dp),
+                shape = RoundedCornerShape(CornerRadius.Small),
             )
-            .padding(12.dp),
+            .padding(Spacing.Medium),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
@@ -267,7 +268,7 @@ private fun OtherDestinationInfoWindow(destination: DestinationUiModel) {
             ),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(top = 4.dp),
+            modifier = Modifier.padding(top = Spacing.Tiny),
         )
     }
 }

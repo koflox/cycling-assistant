@@ -26,7 +26,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
+import com.koflox.designsystem.theme.Spacing
 import com.koflox.settings.R
 import com.koflox.settings.domain.model.AppTheme
 import org.koin.androidx.compose.koinViewModel
@@ -74,8 +74,8 @@ private fun SettingsContent(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(24.dp),
+                .padding(Spacing.Large),
+            verticalArrangement = Arrangement.spacedBy(Spacing.ExtraLarge),
         ) {
             SettingDropdown(
                 label = stringResource(R.string.settings_theme),
@@ -134,7 +134,7 @@ private fun <T> SettingDropdown(
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(Spacing.Small))
         ExposedDropdownMenuBox(
             expanded = isExpanded,
             onExpandedChange = { onExpandToggle() },

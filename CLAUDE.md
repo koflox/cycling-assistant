@@ -25,13 +25,16 @@ real-time location updates.
 CyclingAssistant/
 ├── app/                              # Shell - navigation, theme, Koin bootstrap, Room DB
 ├── feature/
+│   ├── dashboard/                    # Main dashboard with expandable menu
 │   ├── destinations/                 # Destination selection feature
 │   ├── session/                      # Session tracking with foreground service
+│   ├── settings/                     # App settings (theme, language)
 │   └── destination-session/          # Bridge for cross-feature communication
 │       ├── bridge/api/               # Interfaces exposed to destinations
 │       └── bridge/impl/              # Implementations using session internals
 └── shared/
     ├── concurrent/                   # Coroutine dispatchers
+    ├── design-system/                # UI theme, colors, spacing, components
     ├── di/                           # Koin qualifiers
     ├── distance/                     # Distance calculator
     ├── error/                        # Error mapping utilities
@@ -117,14 +120,85 @@ SessionTrackingService (foreground, type=location)
 
 ### Shared Modules
 
-| Module       | Purpose                                                |
-|--------------|--------------------------------------------------------|
-| `concurrent` | `DispatchersQualifier.{Io, Main, Default, Unconfined}` |
-| `distance`   | `DistanceCalculator` for haversine distance            |
-| `error`      | `ErrorMapper` interface for error handling             |
-| `graphics`   | `createCircleBitmap()` for map markers                 |
-| `id`         | `IdGenerator` for unique IDs                           |
-| `location`   | `LocationDataSource` via Play Services                 |
+| Module          | Purpose                                                |
+|-----------------|--------------------------------------------------------|
+| `concurrent`    | `DispatchersQualifier.{Io, Main, Default, Unconfined}` |
+| `design-system` | Theme, colors, spacing constants, reusable components  |
+| `distance`      | `DistanceCalculator` for haversine distance            |
+| `error`         | `ErrorMapper` interface for error handling             |
+| `graphics`      | `createCircleBitmap()` for map markers                 |
+| `id`            | `IdGenerator` for unique IDs                           |
+| `location`      | `LocationDataSource` via Play Services                 |
+
+### Design System (`shared/design-system`)
+
+Centralized UI theming and components for consistent styling across the app.
+
+**Structure:**
+
+```
+shared/design-system/
+├── component/
+│   └── FloatingMenuButton.kt    # Reusable floating action button
+└── theme/
+    ├── Color.kt                 # Color palette (light/dark schemes)
+    ├── Spacing.kt               # Spacing, elevation, corner radius constants
+    └── Theme.kt                 # Color schemes, LocalDarkTheme
+```
+
+**Spacing Constants (`Spacing`):**
+
+| Constant     | Value | Usage                                         |
+|--------------|-------|-----------------------------------------------|
+| `Tiny`       | 4.dp  | Fine spacing between closely related elements |
+| `Small`      | 8.dp  | Button gaps, minor padding                    |
+| `Medium`     | 12.dp | Internal card/component padding               |
+| `Large`      | 16.dp | Screen edges, cards, containers               |
+| `ExtraLarge` | 24.dp | Horizontal dividers, stat item gaps           |
+| `Huge`       | 32.dp | Empty/loading states                          |
+
+**Elevation Constants (`Elevation`):**
+
+| Constant    | Value | Usage              |
+|-------------|-------|--------------------|
+| `Subtle`    | 2.dp  | List items         |
+| `Prominent` | 4.dp  | Cards and overlays |
+
+**Corner Radius (`CornerRadius`):**
+
+| Constant | Value | Usage               |
+|----------|-------|---------------------|
+| `Small`  | 8.dp  | Info windows, chips |
+| `Medium` | 12.dp | Buttons, cards      |
+
+**Surface Alpha (`SurfaceAlpha`):**
+
+| Constant   | Value | Usage                      |
+|------------|-------|----------------------------|
+| `Light`    | 0.9f  | Light overlay transparency |
+| `Standard` | 0.95f | Standard overlay           |
+
+**Theme Integration:**
+
+- `LocalDarkTheme`: CompositionLocal providing current dark theme state
+- `CyclingLightColorScheme` / `CyclingDarkColorScheme`: Material 3 color schemes
+- Access via `LocalDarkTheme.current` in any composable
+
+**Usage Example:**
+
+```kotlin
+import com.koflox.designsystem.theme.Spacing
+import com.koflox.designsystem.theme.Elevation
+import com.koflox.designsystem.theme.LocalDarkTheme
+
+Card(
+    modifier = Modifier.padding(Spacing.Large),
+    elevation = CardDefaults.cardElevation(defaultElevation = Elevation.Prominent),
+) {
+    val isDark = LocalDarkTheme.current
+    // ...
+}
+```
 
 ### DI Hierarchy (Koin)
 
@@ -138,11 +212,14 @@ appModule
 ├── errorMapperModule     # Error handling
 ├── idModule              # ID generation
 ├── locationModule        # Location services
-└── sessionModule         # Session feature
-    ├── domainModule
-    ├── presentationModule
-    ├── serviceModule
-    └── dataModules
+├── sessionModule         # Session feature
+│   ├── domainModule
+│   ├── presentationModule
+│   ├── serviceModule
+│   └── dataModules
+└── settingsModule        # Settings feature (theme, language)
+    ├── dataModule
+    └── presentationModule
 ```
 
 ### Database
@@ -338,17 +415,23 @@ override fun SessionScreen(
 
 ## Key Files
 
-| Path                                                                      | Purpose                    |
-|---------------------------------------------------------------------------|----------------------------|
-| `app/navigation/AppNavHost.kt`                                            | Central navigation wiring  |
-| `app/Modules.kt`                                                          | Root DI configuration      |
-| `app/data/AppDatabase.kt`                                                 | Room database              |
-| `feature/destinations/di/DestinationsModule.kt`                           | Destinations DI            |
-| `feature/session/di/SessionModule.kt`                                     | Session DI                 |
-| `feature/session/navigation/SessionsNavigation.kt`                        | Session routes & functions |
-| `feature/session/service/SessionTrackingService.kt`                       | Foreground service         |
-| `feature/destination-session/bridge/api/.../CyclingSessionUseCase.kt`     | Bridge data interface      |
-| `feature/destination-session/bridge/api/.../CyclingSessionUiNavigator.kt` | Bridge UI interface        |
+| Path                                                                      | Purpose                       |
+|---------------------------------------------------------------------------|-------------------------------|
+| `app/navigation/AppNavHost.kt`                                            | Central navigation wiring     |
+| `app/Modules.kt`                                                          | Root DI configuration         |
+| `app/data/AppDatabase.kt`                                                 | Room database                 |
+| `app/ui/theme/Theme.kt`                                                   | App theme with LocalDarkTheme |
+| `feature/destinations/di/DestinationsModule.kt`                           | Destinations DI               |
+| `feature/session/di/SessionModule.kt`                                     | Session DI                    |
+| `feature/session/navigation/SessionsNavigation.kt`                        | Session routes & functions    |
+| `feature/session/service/SessionTrackingService.kt`                       | Foreground service            |
+| `feature/settings/di/SettingsModule.kt`                                   | Settings DI                   |
+| `feature/settings/api/ThemeProvider.kt`                                   | Theme observation interface   |
+| `feature/destination-session/bridge/api/.../CyclingSessionUseCase.kt`     | Bridge data interface         |
+| `feature/destination-session/bridge/api/.../CyclingSessionUiNavigator.kt` | Bridge UI interface           |
+| `shared/design-system/theme/Color.kt`                                     | Color palette definitions     |
+| `shared/design-system/theme/Spacing.kt`                                   | Spacing & dimension constants |
+| `shared/design-system/theme/Theme.kt`                                     | Color schemes, LocalDarkTheme |
 
 ## API Keys
 

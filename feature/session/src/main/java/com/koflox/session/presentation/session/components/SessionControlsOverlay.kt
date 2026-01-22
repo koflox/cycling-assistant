@@ -18,7 +18,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
+import com.koflox.designsystem.theme.Elevation
+import com.koflox.designsystem.theme.Spacing
+import com.koflox.designsystem.theme.SurfaceAlpha
 import com.koflox.session.R
 import com.koflox.session.presentation.session.SessionUiState
 
@@ -31,16 +33,16 @@ internal fun SessionControlsOverlay(
     modifier: Modifier = Modifier,
 ) {
     Card(
-        modifier = modifier.padding(16.dp),
+        modifier = modifier.padding(Spacing.Large),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f),
+            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = SurfaceAlpha.Standard),
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = Elevation.Prominent),
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(Spacing.Large),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
@@ -48,7 +50,7 @@ internal fun SessionControlsOverlay(
                 style = MaterialTheme.typography.titleMedium,
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(Spacing.Medium))
 
             SessionStatsDisplay(
                 elapsedTime = state.elapsedTimeFormatted,
@@ -57,10 +59,10 @@ internal fun SessionControlsOverlay(
                 topSpeed = state.topSpeedKmh,
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(Spacing.Large))
 
             Row(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalArrangement = Arrangement.spacedBy(Spacing.Medium),
             ) {
                 if (state.isPaused) {
                     Button(

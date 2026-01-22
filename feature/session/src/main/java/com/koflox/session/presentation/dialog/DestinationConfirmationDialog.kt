@@ -16,7 +16,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
+import com.koflox.designsystem.theme.Spacing
 import com.koflox.location.model.Location
 import com.koflox.session.R
 import com.koflox.session.presentation.permission.NotificationPermissionHandler
@@ -95,14 +95,14 @@ fun DestinationConfirmationDialog(
                 ) {
                     Text(stringResource(R.string.dialog_button_navigate))
                 }
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(Spacing.Small))
                 OutlinedButton(
                     onClick = onStartSessionClick,
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Text(stringResource(R.string.dialog_button_start_session))
                 }
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(Spacing.Small))
                 TextButton(
                     onClick = onDismiss,
                     modifier = Modifier.fillMaxWidth(),

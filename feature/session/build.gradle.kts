@@ -62,6 +62,7 @@ dependencies {
 
     // Shared modules
     implementation(project(":shared:concurrent"))
+    implementation(project(":shared:design-system"))
     implementation(project(":shared:di"))
     implementation(project(":shared:distance"))
     implementation(project(":shared:error"))

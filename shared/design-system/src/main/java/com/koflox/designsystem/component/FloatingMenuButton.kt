@@ -11,6 +11,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.koflox.designsystem.theme.CornerRadius
+import com.koflox.designsystem.theme.Elevation
+import com.koflox.designsystem.theme.Spacing
 
 @Composable
 fun FloatingMenuButton(
@@ -19,16 +22,16 @@ fun FloatingMenuButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     size: Dp = 48.dp,
-    iconPadding: Dp = 12.dp,
+    iconPadding: Dp = Spacing.Medium,
 ) {
     Surface(
         onClick = onClick,
         modifier = modifier.size(size),
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(CornerRadius.Medium),
         color = MaterialTheme.colorScheme.surface,
         contentColor = MaterialTheme.colorScheme.onSurface,
-        shadowElevation = 4.dp,
-        tonalElevation = 2.dp,
+        shadowElevation = Elevation.Prominent,
+        tonalElevation = Elevation.Subtle,
     ) {
         Icon(
             imageVector = icon,
