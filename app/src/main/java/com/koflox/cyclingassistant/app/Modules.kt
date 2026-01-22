@@ -10,6 +10,7 @@ import com.koflox.error.di.errorMapperModule
 import com.koflox.id.di.idModule
 import com.koflox.location.locationModule
 import com.koflox.session.di.sessionModule
+import com.koflox.settings.di.settingsModule
 import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
 
@@ -39,5 +40,6 @@ internal val appModule = module {
         idModule,
         locationModule,
         sessionModule,
+        settingsModule,
     )
 }

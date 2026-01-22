@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="sessions_list_button">View sessions</string>
+    <string name="menu_button">Menu</string>
+    <string name="menu_sessions">Sessions</string>
+    <string name="menu_settings">Settings</string>
 </resources>
