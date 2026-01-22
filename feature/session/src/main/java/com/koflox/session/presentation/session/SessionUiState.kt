@@ -16,7 +16,6 @@ data class SessionUiState(
     val currentLocation: Location? = null,
     val error: String? = null,
     val showStopConfirmationDialog: Boolean = false,
-    val completedSessionId: String? = null,
 ) {
     val isPaused: Boolean get() = status == SessionStatus.PAUSED
 

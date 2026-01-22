@@ -12,13 +12,16 @@ import com.koflox.session.domain.usecase.CreateSessionUseCase
 import com.koflox.session.domain.usecase.UpdateSessionStatusUseCase
 import com.koflox.session.presentation.mapper.SessionUiMapper
 import com.koflox.session.service.SessionServiceController
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -30,20 +33,28 @@ internal class SessionViewModel(
     private val sessionServiceController: SessionServiceController,
     private val sessionUiMapper: SessionUiMapper,
     private val errorMessageMapper: ErrorMessageMapper,
+    private val dispatcherDefault: CoroutineDispatcher,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SessionUiState())
     val uiState: StateFlow<SessionUiState> = _uiState.asStateFlow()
 
+    private val _navigation = Channel<SessionNavigation>()
+    val navigation = _navigation.receiveAsFlow()
+
     private var timerJob: Job? = null
 
     init {
+        initialize()
+    }
+
+    private fun initialize() {
         showNotificationForStartedSession()
         observeActiveSession()
     }
 
     private fun observeActiveSession() {
-        viewModelScope.launch {
+        viewModelScope.launch(dispatcherDefault) {
             activeSessionUseCase.observeActiveSession().collect { session ->
                 if (session != null) {
                     updateUiFromSession(session)
@@ -54,16 +65,14 @@ internal class SessionViewModel(
                     }
                 } else {
                     stopTimer()
-                    _uiState.update { currentState ->
-                        SessionUiState(completedSessionId = currentState.completedSessionId)
-                    }
+                    _uiState.value = SessionUiState()
                 }
             }
         }
     }
 
     private fun showNotificationForStartedSession() {
-        viewModelScope.launch {
+        viewModelScope.launch(dispatcherDefault) {
             activeSessionUseCase.observeActiveSession()
                 .firstOrNull()?.run {
                     sessionServiceController.startSessionTracking()
@@ -72,14 +81,15 @@ internal class SessionViewModel(
     }
 
     fun onEvent(event: SessionUiEvent) {
-        when (event) {
-            SessionUiEvent.PauseClicked -> pauseSession()
-            SessionUiEvent.ResumeClicked -> resumeSession()
-            SessionUiEvent.StopClicked -> showStopConfirmation()
-            SessionUiEvent.StopConfirmationDismissed -> dismissStopConfirmation()
-            SessionUiEvent.StopConfirmed -> confirmStop()
-            SessionUiEvent.CompletedSessionNavigated -> clearCompletedSession()
-            SessionUiEvent.ErrorDismissed -> dismissError()
+        viewModelScope.launch(dispatcherDefault) {
+            when (event) {
+                SessionUiEvent.PauseClicked -> pauseSession()
+                SessionUiEvent.ResumeClicked -> resumeSession()
+                SessionUiEvent.StopClicked -> showStopConfirmation()
+                SessionUiEvent.StopConfirmationDismissed -> dismissStopConfirmation()
+                SessionUiEvent.StopConfirmed -> confirmStop()
+                SessionUiEvent.ErrorDismissed -> dismissError()
+            }
         }
     }
 
@@ -91,14 +101,13 @@ internal class SessionViewModel(
         _uiState.update { it.copy(showStopConfirmationDialog = false) }
     }
 
-    private fun confirmStop() {
+    private suspend fun confirmStop() {
         val sessionId = _uiState.value.sessionId
         _uiState.update { it.copy(showStopConfirmationDialog = false) }
-        stopSession(sessionId)
-    }
-
-    private fun clearCompletedSession() {
-        _uiState.update { it.copy(completedSessionId = null) }
+        stopSession()
+        sessionId?.let { id ->
+            _navigation.send(SessionNavigation.ToCompletion(id))
+        }
     }
 
     fun startSession(
@@ -109,7 +118,7 @@ internal class SessionViewModel(
         startLatitude: Double,
         startLongitude: Double,
     ) {
-        viewModelScope.launch {
+        viewModelScope.launch(dispatcherDefault) {
             val hasActiveSession = activeSessionUseCase.observeActiveSession().first() != null
             if (hasActiveSession) return@launch
 
@@ -124,42 +133,28 @@ internal class SessionViewModel(
                 ),
             )
                 .onSuccess { sessionServiceController.startSessionTracking() }
-                .onFailure(::showError)
+                .onFailure { showError(it) }
         }
     }
 
-    private fun pauseSession() {
-        viewModelScope.launch {
-            updateSessionStatusUseCase.pause()
-                .onFailure(::showError)
-        }
+    private suspend fun pauseSession() {
+        updateSessionStatusUseCase.pause()
+            .onFailure { showError(it) }
     }
 
-    private fun resumeSession() {
-        viewModelScope.launch {
-            updateSessionStatusUseCase.resume()
-                .onFailure(::showError)
-        }
+    private suspend fun resumeSession() {
+        updateSessionStatusUseCase.resume()
+            .onFailure { showError(it) }
     }
 
-    private fun stopSession(sessionId: String?) {
-        viewModelScope.launch {
-            sessionId?.let { id ->
-                _uiState.update { it.copy(completedSessionId = id) }
-            }
-            updateSessionStatusUseCase.stop()
-                .onFailure { error ->
-                    _uiState.update { it.copy(completedSessionId = null) }
-                    showError(error)
-                }
-        }
+    private suspend fun stopSession() {
+        updateSessionStatusUseCase.stop()
+            .onFailure { showError(it) }
     }
 
-    private fun showError(error: Throwable) {
-        viewModelScope.launch {
-            val message = errorMessageMapper.map(error)
-            _uiState.update { it.copy(error = message) }
-        }
+    private suspend fun showError(error: Throwable) {
+        val message = errorMessageMapper.map(error)
+        _uiState.update { it.copy(error = message) }
     }
 
     private fun dismissError() {

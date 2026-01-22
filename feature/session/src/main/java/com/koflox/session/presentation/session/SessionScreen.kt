@@ -23,16 +23,17 @@ fun SessionScreenRoute(
     val viewModel: SessionViewModel = koinViewModel()
     val state by viewModel.uiState.collectAsState()
     val context = LocalContext.current
+    LaunchedEffect(Unit) {
+        viewModel.navigation.collect { event ->
+            when (event) {
+                is SessionNavigation.ToCompletion -> onNavigateToCompletion(event.sessionId)
+            }
+        }
+    }
     LaunchedEffect(state.error) {
         state.error?.let { error ->
             Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
             viewModel.onEvent(SessionUiEvent.ErrorDismissed)
-        }
-    }
-    LaunchedEffect(state.completedSessionId) {
-        state.completedSessionId?.let { sessionId ->
-            onNavigateToCompletion(sessionId)
-            viewModel.onEvent(SessionUiEvent.CompletedSessionNavigated)
         }
     }
     Box(
