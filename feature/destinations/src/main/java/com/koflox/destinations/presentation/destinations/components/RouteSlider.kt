@@ -20,6 +20,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.BaselineShift
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import com.koflox.designsystem.theme.Spacing
+import com.koflox.designsystem.theme.SurfaceAlpha
 import com.koflox.destinations.R
 
 // TODO: distance values should come from VM
@@ -37,11 +39,11 @@ internal fun RouteSlider(
     Card(
         modifier = modifier,
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
+            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = SurfaceAlpha.Light),
         ),
     ) {
         Column(
-            modifier = Modifier.padding(12.dp),
+            modifier = Modifier.padding(Spacing.Medium),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
@@ -49,7 +51,7 @@ internal fun RouteSlider(
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(Spacing.Tiny))
 
             val headlineStyle = MaterialTheme.typography.headlineSmall
             val toleranceFontSize = headlineStyle.fontSize * TOLERANCE_FONT_SIZE_RATIO

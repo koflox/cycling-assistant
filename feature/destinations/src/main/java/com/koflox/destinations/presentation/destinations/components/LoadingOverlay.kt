@@ -10,7 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
+import com.koflox.designsystem.theme.Spacing
 
 @Composable
 fun LoadingOverlay(modifier: Modifier = Modifier) {
@@ -22,7 +22,7 @@ fun LoadingOverlay(modifier: Modifier = Modifier) {
     ) {
         Card {
             CircularProgressIndicator(
-                modifier = Modifier.padding(24.dp),
+                modifier = Modifier.padding(Spacing.ExtraLarge),
             )
         }
     }

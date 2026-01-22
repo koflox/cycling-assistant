@@ -17,7 +17,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
+import com.koflox.designsystem.theme.Elevation
+import com.koflox.designsystem.theme.Spacing
 import com.koflox.session.R
 
 @Composable
@@ -31,16 +32,16 @@ internal fun SessionSummaryCard(
     destinationName: String? = null,
 ) {
     Card(
-        modifier = modifier.padding(16.dp),
+        modifier = modifier.padding(Spacing.Large),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = Elevation.Prominent),
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(Spacing.Large),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             if (destinationName != null) {
@@ -49,29 +50,29 @@ internal fun SessionSummaryCard(
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                 )
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(Spacing.Tiny))
             }
             Text(
                 text = startDate,
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(Spacing.Medium))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center,
             ) {
                 StatItem(label = stringResource(R.string.session_stat_time), value = elapsedTime)
-                Spacer(modifier = Modifier.width(24.dp))
+                Spacer(modifier = Modifier.width(Spacing.ExtraLarge))
                 StatItem(label = stringResource(R.string.session_stat_distance), value = "$distance km")
             }
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(Spacing.Small))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center,
             ) {
                 StatItem(label = stringResource(R.string.session_stat_avg_speed), value = "$averageSpeed km/h")
-                Spacer(modifier = Modifier.width(24.dp))
+                Spacer(modifier = Modifier.width(Spacing.ExtraLarge))
                 StatItem(label = stringResource(R.string.session_stat_top_speed), value = "$topSpeed km/h")
             }
         }

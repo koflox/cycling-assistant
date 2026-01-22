@@ -14,10 +14,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.koflox.designsystem.theme.Spacing
 import com.koflox.destinations.presentation.destinations.components.GoogleMapView
 import com.koflox.destinations.presentation.destinations.components.LetsGoButton
 import com.koflox.destinations.presentation.destinations.components.LoadingOverlay
@@ -136,7 +136,7 @@ private fun DestinationsContent(
                     viewModel = viewModel,
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
-                        .padding(16.dp),
+                        .padding(Spacing.Large),
                 )
             }
         }
@@ -176,7 +176,7 @@ private fun DestinationSelectionControls(
             distanceKm = uiState.routeDistanceKm,
             toleranceKm = uiState.toleranceKm,
             onDistanceChanged = { viewModel.onEvent(DestinationsUiEvent.RouteDistanceChanged(it)) },
-            modifier = Modifier.padding(bottom = 16.dp),
+            modifier = Modifier.padding(bottom = Spacing.Large),
         )
         LetsGoButton(
             onClick = { viewModel.onEvent(DestinationsUiEvent.LetsGoClicked) },

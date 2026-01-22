@@ -35,7 +35,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
+import com.koflox.designsystem.theme.Elevation
+import com.koflox.designsystem.theme.Spacing
 import com.koflox.session.R
 import com.koflox.session.presentation.share.SharePreviewDialog
 import org.koin.androidx.compose.koinViewModel
@@ -127,10 +128,10 @@ private fun SessionsListContent(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(paddingValues)
-                        .padding(horizontal = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                        .padding(horizontal = Spacing.Large),
+                    verticalArrangement = Arrangement.spacedBy(Spacing.Medium),
                 ) {
-                    item { Spacer(modifier = Modifier.height(4.dp)) }
+                    item { Spacer(modifier = Modifier.height(Spacing.Tiny)) }
                     items(
                         items = uiState.sessions,
                         key = { it.id },
@@ -141,7 +142,7 @@ private fun SessionsListContent(
                             onShareClick = { onShareClick(session.id) },
                         )
                     }
-                    item { Spacer(modifier = Modifier.height(4.dp)) }
+                    item { Spacer(modifier = Modifier.height(Spacing.Tiny)) }
                 }
             }
         }
@@ -169,7 +170,7 @@ private fun EmptyState(modifier: Modifier = Modifier) {
             style = MaterialTheme.typography.bodyLarge,
             textAlign = TextAlign.Center,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(32.dp),
+            modifier = Modifier.padding(Spacing.Huge),
         )
     }
 }
@@ -184,12 +185,12 @@ private fun SessionListItem(
     Card(
         onClick = onClick,
         modifier = modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = Elevation.Subtle),
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(Spacing.Large),
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -212,7 +213,7 @@ private fun SessionListItem(
                 }
                 StatusChip(status = session.status)
             }
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(Spacing.Small))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -258,7 +259,7 @@ private fun StatusChip(
         Text(
             text = statusText,
             style = MaterialTheme.typography.labelSmall,
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+            modifier = Modifier.padding(horizontal = Spacing.Small, vertical = Spacing.Tiny),
         )
     }
 }

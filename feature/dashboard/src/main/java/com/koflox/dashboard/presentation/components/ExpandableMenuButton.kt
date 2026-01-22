@@ -15,9 +15,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import com.koflox.dashboard.R
 import com.koflox.designsystem.component.FloatingMenuButton
+import com.koflox.designsystem.theme.Spacing
 
 @Composable
 internal fun ExpandableMenuButton(
@@ -30,7 +30,7 @@ internal fun ExpandableMenuButton(
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.End,
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(Spacing.Small),
     ) {
         FloatingMenuButton(
             icon = Icons.Default.Menu,
@@ -44,7 +44,7 @@ internal fun ExpandableMenuButton(
         ) {
             Column(
                 horizontalAlignment = Alignment.End,
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(Spacing.Small),
             ) {
                 FloatingMenuButton(
                     icon = Icons.Default.Route,
