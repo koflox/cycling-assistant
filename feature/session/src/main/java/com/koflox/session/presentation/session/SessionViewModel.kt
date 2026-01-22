@@ -23,7 +23,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
-class SessionViewModel(
+internal class SessionViewModel(
     private val createSessionUseCase: CreateSessionUseCase,
     private val updateSessionStatusUseCase: UpdateSessionStatusUseCase,
     private val activeSessionUseCase: ActiveSessionUseCase,

@@ -19,7 +19,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class SessionCompletionViewModel(
+internal class SessionCompletionViewModel(
     private val getSessionByIdUseCase: GetSessionByIdUseCase,
     private val sessionUiMapper: SessionUiMapper,
     private val errorMessageMapper: ErrorMessageMapper,

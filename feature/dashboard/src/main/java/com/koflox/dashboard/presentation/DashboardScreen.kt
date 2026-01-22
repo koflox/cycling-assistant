@@ -14,7 +14,7 @@ import com.koflox.dashboard.presentation.components.SessionsListButton
 import com.koflox.destinations.presentation.destinations.DestinationsScreen
 
 @Composable
-fun DashboardScreen(
+internal fun DashboardScreen(
     onNavigateToSessionsList: () -> Unit,
     onNavigateToSessionCompletion: (sessionId: String) -> Unit,
     modifier: Modifier = Modifier,

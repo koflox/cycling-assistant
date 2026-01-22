@@ -18,9 +18,9 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun SessionScreenRoute(
     onNavigateToCompletion: (sessionId: String) -> Unit,
-    viewModel: SessionViewModel = koinViewModel(),
     modifier: Modifier = Modifier,
 ) {
+    val viewModel: SessionViewModel = koinViewModel()
     val state by viewModel.uiState.collectAsState()
     val context = LocalContext.current
     LaunchedEffect(state.error) {

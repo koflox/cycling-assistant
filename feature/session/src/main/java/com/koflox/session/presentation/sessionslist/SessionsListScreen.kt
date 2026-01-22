@@ -40,7 +40,7 @@ import com.koflox.session.presentation.share.SharePreviewDialog
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun SessionsListRoute(
+internal fun SessionsListRoute(
     onBackClick: () -> Unit,
     onSessionClick: (sessionId: String) -> Unit,
     modifier: Modifier = Modifier,
@@ -48,21 +48,18 @@ fun SessionsListRoute(
     val viewModel: SessionsListViewModel = koinViewModel()
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
-
     LaunchedEffect(uiState.shareIntent) {
         uiState.shareIntent?.let { intent ->
             context.startActivity(intent)
             viewModel.onEvent(SessionsListUiEvent.ShareIntentLaunched)
         }
     }
-
     LaunchedEffect(uiState.shareError) {
         uiState.shareError?.let { errorMessage ->
             Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
             viewModel.onEvent(SessionsListUiEvent.ShareErrorDismissed)
         }
     }
-
     uiState.sharePreviewData?.let { data ->
         SharePreviewDialog(
             data = data,

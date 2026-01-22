@@ -12,8 +12,8 @@ android {
 }
 
 dependencies {
+    implementation(project(":shared:location"))
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.ui)
     implementation(libs.kotlinx.coroutines.core)
-    implementation(project(":shared:location"))
 }

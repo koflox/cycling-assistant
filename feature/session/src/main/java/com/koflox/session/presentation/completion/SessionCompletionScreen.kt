@@ -33,7 +33,7 @@ import com.koflox.session.presentation.share.SharePreviewDialog
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun SessionCompletionRoute(
+internal fun SessionCompletionRoute(
     onBackClick: () -> Unit,
     onNavigateToDashboard: () -> Unit,
     modifier: Modifier = Modifier,
