@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Errors -->
+    <string name="error_no_active_session">Нет активной велосессии</string>
+
+    <!-- Session Stats -->
+    <string name="session_stat_time">Время</string>
+    <string name="session_stat_distance">Расстояние</string>
+    <string name="session_stat_avg_speed">Сред</string>
+    <string name="session_stat_top_speed">Макс</string>
+
+    <!-- Session Buttons -->
+    <string name="session_button_pause">Пауза</string>
+    <string name="session_button_continue">Продолжить</string>
+    <string name="session_button_stop">Стоп</string>
+
+    <!-- Confirmation Dialog -->
+    <string name="dialog_distance_format">Расстояние: %.1f км</string>
+    <string name="dialog_button_navigate">Навигация</string>
+    <string name="dialog_button_start_session">Начать сессию</string>
+    <string name="dialog_button_cancel">Отмена</string>
+
+    <!-- Notification Channel -->
+    <string name="notification_channel_name">Отслеживание сессии</string>
+    <string name="notification_channel_description">Отображает прогресс велосессии</string>
+
+    <!-- Notification Content -->
+    <string name="notification_title_session_active">Велосессия активна</string>
+    <string name="notification_text_starting">Запуск сессии…</string>
+    <string name="notification_time">Время</string>
+    <string name="notification_distance">Расстояние</string>
+
+    <!-- Notification Status -->
+    <string name="notification_status_running">В процессе</string>
+    <string name="notification_status_paused">На паузе</string>
+
+    <!-- Notification Actions -->
+    <string name="notification_action_pause">Пауза</string>
+    <string name="notification_action_resume">Продолжить</string>
+    <string name="notification_action_stop">Стоп</string>
+
+    <!-- Notification Permission Dialog -->
+    <string name="permission_notification_title">Разрешение на уведомления</string>
+    <string name="permission_notification_rationale">Это разрешение позволит приложению безопасно вести велосессии во время ваших поездок</string>
+    <string name="permission_button_grant">Разрешить</string>
+    <string name="permission_button_skip">Пропустить</string>
+
+    <!-- Sessions List -->
+    <string name="sessions_list_title">Сессии</string>
+    <string name="sessions_list_back">Назад</string>
+    <string name="sessions_list_empty_hint">Вы можете начать сессию, выбрав пункт назначения!</string>
+    <string name="sessions_list_status_running">В процессе</string>
+    <string name="sessions_list_status_paused">На паузе</string>
+    <string name="sessions_list_status_completed">Завершено</string>
+
+    <!-- Stop Confirmation Dialog -->
+    <string name="stop_confirmation_title">Остановить сессию?</string>
+    <string name="stop_confirmation_message">Вы уверены, что хотите остановить текущую велосессию?</string>
+    <string name="stop_confirmation_stop">Остановить</string>
+    <string name="stop_confirmation_cancel">Отмена</string>
+
+    <!-- Session Completion -->
+    <string name="session_completion_title">Сессия завершена</string>
+    <string name="session_completion_back">Назад</string>
+
+    <!-- Share -->
+    <string name="share_image_processing_error">Ошибка обработки изображения. Попробуйте ещё раз.</string>
+    <string name="share_preview_title">Поделиться сессией</string>
+    <string name="share_button">Поделиться</string>
+    <string name="share_text">Посмотрите мою велосессию до %1$s!</string>
+    <string name="share_chooser_title">Поделиться сессией</string>
+    <string name="share_content_description">Поделиться</string>
+    <string name="share_no_app_available">Нет приложения для отправки</string>
+</resources>

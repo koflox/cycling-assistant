@@ -1,0 +1,14 @@
+<resources>
+    <string name="error_too_far_from_supported_area">Эта область пока не поддерживается</string>
+    <string name="error_not_handled">Что-то пошло не так</string>
+    <string name="error_location_permission_denied">Разрешение на доступ к местоположению отклонено</string>
+    <string name="error_google_maps_not_installed">Установите Google Карты для просмотра информации о местоположении</string>
+    <string name="distance_to_dest_desc">%.1f км</string>
+    <string name="get_route_hint_for_google_maps">Нажмите, чтобы открыть в Google Картах</string>
+    <string name="failed_to_get_location">Не удалось получить местоположение: %1$s</string>
+    <string name="info_window_tap_for_options">Нажмите для выбора</string>
+    <string name="info_window_heading_here">Направляюсь сюда</string>
+    <string name="find_destination">Поехали!</string>
+    <string name="one_way_distance_title">Расстояние в одну сторону</string>
+    <string name="km_unit">км</string>
+</resources>

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="sessions_list_button">セッションを見る</string>
+    <string name="menu_button">メニュー</string>
+    <string name="menu_sessions">セッション</string>
+    <string name="menu_settings">設定</string>
+</resources>
