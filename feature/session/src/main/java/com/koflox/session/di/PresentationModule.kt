@@ -11,6 +11,10 @@ import com.koflox.session.presentation.session.SessionViewModel
 import com.koflox.session.presentation.sessionslist.SessionsListUiMapper
 import com.koflox.session.presentation.sessionslist.SessionsListUiMapperImpl
 import com.koflox.session.presentation.sessionslist.SessionsListViewModel
+import com.koflox.session.presentation.share.SessionImageSharer
+import com.koflox.session.presentation.share.SessionImageSharerImpl
+import com.koflox.session.presentation.share.ShareErrorMapper
+import com.koflox.session.presentation.share.ShareErrorMapperImpl
 import kotlinx.coroutines.CoroutineDispatcher
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModel
@@ -44,10 +48,23 @@ internal val presentationModule = module {
     single<SessionsListUiMapper> {
         SessionsListUiMapperImpl()
     }
+    single<SessionImageSharer> {
+        SessionImageSharerImpl(
+            context = androidContext(),
+            dispatcherIo = get<CoroutineDispatcher>(DispatchersQualifier.Io),
+        )
+    }
+    single<ShareErrorMapper> {
+        ShareErrorMapperImpl(context = androidContext())
+    }
     viewModel {
         SessionsListViewModel(
             getAllSessionsUseCase = get(),
+            getSessionByIdUseCase = get(),
             mapper = get(),
+            sessionUiMapper = get(),
+            imageSharer = get(),
+            shareErrorMapper = get(),
         )
     }
     viewModel {
@@ -55,6 +72,8 @@ internal val presentationModule = module {
             getSessionByIdUseCase = get(),
             sessionUiMapper = get(),
             errorMessageMapper = get(PresentationModuleQualifier.SessionErrorMessageMapper),
+            imageSharer = get(),
+            shareErrorMapper = get(),
             savedStateHandle = get(),
         )
     }

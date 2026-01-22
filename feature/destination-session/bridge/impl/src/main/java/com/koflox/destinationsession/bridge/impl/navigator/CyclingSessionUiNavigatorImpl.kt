@@ -12,10 +12,16 @@ import com.koflox.location.model.Location
 import com.koflox.session.presentation.completion.SessionCompletionRoute
 import com.koflox.session.presentation.dialog.DestinationConfirmationDialog
 import com.koflox.session.presentation.permission.NotificationPermissionHandler
+import com.koflox.session.presentation.session.SessionScreenRoute
 import com.koflox.session.presentation.session.SessionViewModel
 import com.koflox.session.presentation.sessionslist.SessionsListRoute
 import org.koin.androidx.compose.koinViewModel
 
+// TODO: organize as a convention
+//  1. Route level Composables do not have ViewModel as a parameters and obtain it internally, therefore VMs are always marked as `internal`
+//  2. Only publicly required params are declared, e.g. onBackClick
+//  3. Content level Composables always have a preview for all their states
+//  4. Composable bodies do not have new lines between elements
 internal class CyclingSessionUiNavigatorImpl : CyclingSessionUiNavigator {
     @Composable
     override fun SessionScreen(
@@ -25,9 +31,8 @@ internal class CyclingSessionUiNavigatorImpl : CyclingSessionUiNavigator {
     ) {
         val viewModel: SessionViewModel = koinViewModel()
         val state by viewModel.uiState.collectAsState()
-
         if (state.isActive) {
-            com.koflox.session.presentation.session.SessionScreen(
+            SessionScreenRoute(
                 onNavigateToCompletion = onNavigateToCompletion,
                 viewModel = viewModel,
                 modifier = modifier,

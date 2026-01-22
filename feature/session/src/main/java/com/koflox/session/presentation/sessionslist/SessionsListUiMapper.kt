@@ -28,6 +28,7 @@ internal class SessionsListUiMapperImpl : SessionsListUiMapper {
                 SessionStatus.PAUSED -> SessionListItemStatus.PAUSED
                 SessionStatus.COMPLETED -> SessionListItemStatus.COMPLETED
             },
+            isShareButtonVisible = session.status == SessionStatus.COMPLETED,
         )
     }
 }

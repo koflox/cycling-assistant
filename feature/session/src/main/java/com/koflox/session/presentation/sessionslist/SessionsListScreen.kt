@@ -1,5 +1,6 @@
 package com.koflox.session.presentation.sessionslist
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,6 +14,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -24,14 +26,17 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.koflox.session.R
+import com.koflox.session.presentation.share.SharePreviewDialog
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -39,14 +44,40 @@ fun SessionsListRoute(
     onBackClick: () -> Unit,
     onSessionClick: (sessionId: String) -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: SessionsListViewModel = koinViewModel(),
 ) {
+    val viewModel: SessionsListViewModel = koinViewModel()
     val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
 
+    LaunchedEffect(uiState.shareIntent) {
+        uiState.shareIntent?.let { intent ->
+            context.startActivity(intent)
+            viewModel.onEvent(SessionsListUiEvent.ShareIntentLaunched)
+        }
+    }
+
+    LaunchedEffect(uiState.shareError) {
+        uiState.shareError?.let { errorMessage ->
+            Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
+            viewModel.onEvent(SessionsListUiEvent.ShareErrorDismissed)
+        }
+    }
+
+    uiState.sharePreviewData?.let { data ->
+        SharePreviewDialog(
+            data = data,
+            isSharing = uiState.isSharing,
+            onShareClick = { bitmap, destinationName ->
+                viewModel.onEvent(SessionsListUiEvent.ShareConfirmed(bitmap, destinationName))
+            },
+            onDismiss = { viewModel.onEvent(SessionsListUiEvent.ShareDialogDismissed) },
+        )
+    }
     SessionsListContent(
         uiState = uiState,
         onBackClick = onBackClick,
         onSessionClick = onSessionClick,
+        onShareClick = { viewModel.onEvent(SessionsListUiEvent.ShareClicked(it)) },
         modifier = modifier,
     )
 }
@@ -57,6 +88,7 @@ private fun SessionsListContent(
     uiState: SessionsListUiState,
     onBackClick: () -> Unit,
     onSessionClick: (sessionId: String) -> Unit,
+    onShareClick: (sessionId: String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
@@ -97,6 +129,7 @@ private fun SessionsListContent(
                     SessionListItem(
                         session = session,
                         onClick = { onSessionClick(session.id) },
+                        onShareClick = { onShareClick(session.id) },
                     )
                 }
                 item { Spacer(modifier = Modifier.height(4.dp)) }
@@ -125,6 +158,7 @@ private fun EmptyState(modifier: Modifier = Modifier) {
 private fun SessionListItem(
     session: SessionListItemUiModel,
     onClick: () -> Unit,
+    onShareClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Card(
@@ -147,11 +181,18 @@ private fun SessionListItem(
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.weight(1f),
                 )
+                if (session.isShareButtonVisible) {
+                    IconButton(onClick = onShareClick) {
+                        Icon(
+                            imageVector = Icons.Default.Share,
+                            contentDescription = stringResource(R.string.share_content_description),
+                            tint = MaterialTheme.colorScheme.primary,
+                        )
+                    }
+                }
                 StatusChip(status = session.status)
             }
-
             Spacer(modifier = Modifier.height(8.dp))
-
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
