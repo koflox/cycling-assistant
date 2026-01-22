@@ -103,6 +103,7 @@ internal class SessionsListViewModel(
                 val uiModels = sessions.map { mapper.toUiModel(it) }
                 _uiState.update {
                     it.copy(
+                        isLoading = false,
                         sessions = uiModels,
                         isEmpty = uiModels.isEmpty(),
                     )
