@@ -170,6 +170,47 @@ class FeatureViewModel(
 }
 ```
 
+### ViewModel Event Pattern
+
+ViewModels expose a single `onEvent(event: UiEvent)` method instead of multiple public methods.
+This ensures consistent API and clear separation between UI actions and ViewModel logic.
+
+**Structure:**
+
+```kotlin
+// FeatureUiEvent.kt - sealed interface for all UI events
+sealed interface FeatureUiEvent {
+    data object ButtonClicked : FeatureUiEvent
+    data class ItemSelected(val id: String) : FeatureUiEvent
+    data object DialogDismissed : FeatureUiEvent
+}
+
+// FeatureViewModel.kt - single entry point for events
+class FeatureViewModel(...) : ViewModel() {
+    fun onEvent(event: FeatureUiEvent) {
+        when (event) {
+            FeatureUiEvent.ButtonClicked -> handleButtonClick()
+            is FeatureUiEvent.ItemSelected -> handleItemSelected(event.id)
+            FeatureUiEvent.DialogDismissed -> dismissDialog()
+        }
+    }
+
+    private fun handleButtonClick() { /* ... */ }
+    private fun handleItemSelected(id: String) { /* ... */ }
+    private fun dismissDialog() { /* ... */ }
+}
+
+// FeatureScreen.kt - usage in Composable
+Button(onClick = { viewModel.onEvent(FeatureUiEvent.ButtonClicked) })
+```
+
+**Rules:**
+
+- One `UiEvent` sealed interface per screen/feature
+- Use `data object` for events without parameters
+- Use `data class` for events with parameters
+- Keep event handler methods private in ViewModel
+
 ## Code Conventions
 
 - **Detekt**: Zero issues tolerance, auto-correct enabled

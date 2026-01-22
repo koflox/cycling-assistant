@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -27,6 +28,7 @@ internal fun SessionSummaryCard(
     averageSpeed: String,
     topSpeed: String,
     modifier: Modifier = Modifier,
+    destinationName: String? = null,
 ) {
     Card(
         modifier = modifier.padding(16.dp),
@@ -36,37 +38,41 @@ internal fun SessionSummaryCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
     ) {
         Column(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
+            if (destinationName != null) {
+                Text(
+                    text = destinationName,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+            }
             Text(
                 text = startDate,
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Spacer(modifier = Modifier.height(12.dp))
-            Row(horizontalArrangement = Arrangement.Center) {
-                StatItem(
-                    label = stringResource(R.string.session_stat_time),
-                    value = elapsedTime,
-                )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+            ) {
+                StatItem(label = stringResource(R.string.session_stat_time), value = elapsedTime)
                 Spacer(modifier = Modifier.width(24.dp))
-                StatItem(
-                    label = stringResource(R.string.session_stat_distance),
-                    value = "$distance km",
-                )
+                StatItem(label = stringResource(R.string.session_stat_distance), value = "$distance km")
             }
             Spacer(modifier = Modifier.height(8.dp))
-            Row(horizontalArrangement = Arrangement.Center) {
-                StatItem(
-                    label = stringResource(R.string.session_stat_avg_speed),
-                    value = "$averageSpeed km/h",
-                )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+            ) {
+                StatItem(label = stringResource(R.string.session_stat_avg_speed), value = "$averageSpeed km/h")
                 Spacer(modifier = Modifier.width(24.dp))
-                StatItem(
-                    label = stringResource(R.string.session_stat_top_speed),
-                    value = "$topSpeed km/h",
-                )
+                StatItem(label = stringResource(R.string.session_stat_top_speed), value = "$topSpeed km/h")
             }
         }
     }

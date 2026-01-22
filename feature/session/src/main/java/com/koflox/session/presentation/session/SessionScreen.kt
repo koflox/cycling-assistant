@@ -16,7 +16,7 @@ import com.koflox.session.presentation.session.components.SessionControlsOverlay
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun SessionScreen(
+fun SessionScreenRoute(
     onNavigateToCompletion: (sessionId: String) -> Unit,
     viewModel: SessionViewModel = koinViewModel(),
     modifier: Modifier = Modifier,
