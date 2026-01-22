@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">CyclingAssistant</string>
+    <string name="error_too_far_from_supported_area">Эта область пока не поддерживается</string>
+    <string name="error_not_handled">Что-то пошло не так</string>
+    <string name="error_location_permission_denied">Разрешение на доступ к местоположению отклонено</string>
+    <string name="distance_to_dest_desc">%.1f км</string>
+    <string name="get_route_hint_for_google_maps">Нажмите, чтобы открыть в Google Картах</string>
+    <string name="failed_to_get_location">Не удалось получить местоположение: %1$s</string>
+</resources>

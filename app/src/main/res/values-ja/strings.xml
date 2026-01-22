@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">Cycling Assistant</string>
+    <string name="error_too_far_from_supported_area">このエリアはまだサポートされていません</string>
+    <string name="error_not_handled">エラーが発生しました</string>
+    <string name="error_location_permission_denied">位置情報の許可が拒否されました</string>
+    <string name="distance_to_dest_desc">%.1f km先</string>
+    <string name="get_route_hint_for_google_maps">タップしてGoogleマップで開く</string>
+    <string name="failed_to_get_location">位置情報の取得に失敗しました: %1$s</string>
+</resources>
