@@ -41,5 +41,8 @@ dependencies {
     implementation(project(":feature:destinations"))
     implementation(project(":feature:destination-session:bridge:api"))
 
+    // Shared modules
+    implementation(project(":shared:design-system"))
+
     debugImplementation(libs.androidx.ui.tooling)
 }

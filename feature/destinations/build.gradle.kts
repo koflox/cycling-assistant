@@ -66,6 +66,7 @@ dependencies {
     // Project modules
     implementation(project(":feature:destination-session:bridge:api"))
     implementation(project(":shared:concurrent"))
+    implementation(project(":shared:design-system"))
     implementation(project(":shared:distance"))
     implementation(project(":shared:graphics"))
     implementation(project(":shared:location"))

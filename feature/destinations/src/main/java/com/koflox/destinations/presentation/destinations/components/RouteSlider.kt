@@ -47,22 +47,24 @@ internal fun RouteSlider(
             Text(
                 text = stringResource(R.string.one_way_distance_title),
                 style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Spacer(modifier = Modifier.height(4.dp))
 
             val headlineStyle = MaterialTheme.typography.headlineSmall
             val toleranceFontSize = headlineStyle.fontSize * TOLERANCE_FONT_SIZE_RATIO
+            val onSurfaceColor = MaterialTheme.colorScheme.onSurface
             Text(
                 text = buildAnnotatedString {
-                    withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
+                    withStyle(SpanStyle(fontWeight = FontWeight.Bold, color = onSurfaceColor)) {
                         append("${distanceKm.toInt()} ")
                     }
-                    withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
+                    withStyle(SpanStyle(fontWeight = FontWeight.Bold, color = onSurfaceColor)) {
                         append(stringResource(R.string.km_unit))
                     }
                     withStyle(
                         SpanStyle(
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                            color = onSurfaceColor.copy(alpha = 0.6f),
                             fontSize = toleranceFontSize,
                             baselineShift = BaselineShift((1 - TOLERANCE_FONT_SIZE_RATIO) / 2),
                         ),

@@ -78,6 +78,7 @@ dependencies {
 
     // Shared modules
     implementation(project(":shared:concurrent"))
+    implementation(project(":shared:design-system"))
     implementation(project(":shared:distance"))
     implementation(project(":shared:id"))
     implementation(project(":shared:location"))
