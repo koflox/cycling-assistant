@@ -60,8 +60,8 @@ internal fun DestinationsScreenInternal(
             uiState = uiState,
             viewModel = viewModel,
             sessionUiNavigator = sessionUiNavigator,
-            onNavigateToSessionCompletion = onNavigateToSessionCompletion,
             modifier = modifier,
+            onNavigateToSessionCompletion = onNavigateToSessionCompletion,
         )
     }
 }
@@ -102,11 +102,11 @@ private fun NavigationEffect(action: NavigationAction?, context: Context, viewMo
 
 @Composable
 private fun DestinationsContent(
+    modifier: Modifier = Modifier,
     uiState: DestinationsUiState,
     viewModel: DestinationsViewModel,
     sessionUiNavigator: CyclingSessionUiNavigator,
     onNavigateToSessionCompletion: (sessionId: String) -> Unit,
-    modifier: Modifier = Modifier,
 ) {
     Box(modifier = modifier.fillMaxSize()) {
         GoogleMapView(
@@ -123,10 +123,10 @@ private fun DestinationsContent(
             uiState.selectedDestination?.let { destination ->
                 sessionUiNavigator.SessionScreen(
                     destinationLocation = destination.location,
-                    onNavigateToCompletion = onNavigateToSessionCompletion,
                     modifier = Modifier
                         .fillMaxWidth()
                         .align(Alignment.BottomCenter),
+                    onNavigateToCompletion = onNavigateToSessionCompletion,
                 )
             }
         } else {

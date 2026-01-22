@@ -222,20 +222,104 @@ Button(onClick = { viewModel.onEvent(FeatureUiEvent.ButtonClicked) })
 - **Max Line Length**: 150 characters
 - **Companion Object**: Place at the top of the class body
 
-### Composable Screen Naming
+### Composable Conventions
 
-To avoid infinite call loops when bridge implementations delegate to feature module composables:
+**Structure:**
 
-| Location                   | Naming Pattern  | Example                                         |
-|----------------------------|-----------------|-------------------------------------------------|
-| Feature module entry point | `<Name>Route`   | `SessionCompletionRoute`, `SessionsListRoute`   |
-| Bridge interface method    | `<Name>Screen`  | `SessionCompletionScreen`, `SessionsListScreen` |
-| Internal screen content    | `<Name>Content` | `SessionCompletionContent`                      |
+| Layer          | Naming Pattern  | Visibility | ViewModel        | Example                    |
+|----------------|-----------------|------------|------------------|----------------------------|
+| Entry point    | `<Name>Route`   | internal   | Obtained via DI  | `SessionCompletionRoute`   |
+| Screen content | `<Name>Content` | private    | Passed as params | `SessionCompletionContent` |
+
+**Rules:**
+
+- ViewModels are always marked `internal` since they're obtained within Route composables
+- Only expose publicly required params (e.g., `onBackClick`, `onNavigateTo...`)
+- Content-level composables should have previews for all their states
+- No blank lines between composable body elements
+
+**Navigation:**
+
+Navigation follows a callback-based pattern where composables are navigation-agnostic. Only
+`AppNavHost` knows about `NavController`.
+
+**Rules:**
+
+- Never pass `NavController` to composables - use lambda callbacks instead
+- Feature modules expose `NavGraphBuilder` extension functions with callback parameters
+- Each screen gets its own extension function (one function per composable route)
+- Route constants are defined in feature navigation files and used directly in `AppNavHost`
+
+**Feature navigation structure:**
 
 ```kotlin
-// Bridge implementation - safe, no naming conflict
-override fun SessionCompletionScreen(onBackClick: () -> Unit, modifier: Modifier) {
-    SessionCompletionRoute(onBackClick = onBackClick, modifier = modifier)
+// In feature/session/navigation/SessionsNavigation.kt
+const val SESSIONS_LIST_ROUTE = "sessions_list"
+
+fun NavGraphBuilder.sessionsListScreen(
+    onBackClick: () -> Unit,
+    onSessionClick: (sessionId: String) -> Unit,
+) {
+    composable(route = SESSIONS_LIST_ROUTE) {
+        SessionsListRoute(
+            onBackClick = onBackClick,
+            onSessionClick = onSessionClick,
+        )
+    }
+}
+```
+
+**AppNavHost wiring:**
+
+```kotlin
+// In app/navigation/AppNavHost.kt
+NavHost(navController = navController, startDestination = DASHBOARD_ROUTE) {
+    dashboardScreen(
+        onNavigateToSessionsList = { navController.navigate(SESSIONS_LIST_ROUTE) },
+        onNavigateToSessionCompletion = { sessionId ->
+            navController.navigate(sessionCompletionRoute(sessionId))
+        },
+    )
+    sessionsListScreen(
+        onBackClick = { navController.popBackStack() },
+        onSessionClick = { sessionId ->
+            navController.navigate(sessionCompletionRoute(sessionId))
+        },
+    )
+}
+```
+
+**Bridge Pattern (for cross-feature UI):**
+
+When feature A needs to display UI from feature B without direct dependency, use callback-based
+bridge interfaces (no `NavController` in bridge APIs):
+
+| Location               | Naming Pattern | Example         |
+|------------------------|----------------|-----------------|
+| Bridge interface       | `<Name>Screen` | `SessionScreen` |
+| Feature implementation | `<Name>Route`  | `SessionRoute`  |
+
+```kotlin
+// Bridge API - uses callbacks, not NavController
+interface CyclingSessionUiNavigator {
+    @Composable
+    fun SessionScreen(
+        destinationLocation: Location,
+        modifier: Modifier,
+        onNavigateToCompletion: (sessionId: String) -> Unit,
+    )
+}
+
+// Bridge implementation delegates to feature's internal Route
+override fun SessionScreen(
+    destinationLocation: Location,
+    modifier: Modifier,
+    onNavigateToCompletion: (sessionId: String) -> Unit,
+) {
+    SessionScreenRoute(
+        onNavigateToCompletion = onNavigateToCompletion,
+        modifier = modifier,
+    )
 }
 ```
 
@@ -254,14 +338,17 @@ override fun SessionCompletionScreen(onBackClick: () -> Unit, modifier: Modifier
 
 ## Key Files
 
-| Path                                                                  | Purpose               |
-|-----------------------------------------------------------------------|-----------------------|
-| `app/Modules.kt`                                                      | Root DI configuration |
-| `app/data/AppDatabase.kt`                                             | Room database         |
-| `feature/destinations/di/DestinationsModule.kt`                       | Destinations DI       |
-| `feature/session/di/SessionModule.kt`                                 | Session DI            |
-| `feature/session/service/SessionTrackingService.kt`                   | Foreground service    |
-| `feature/destination-session/bridge/api/.../CyclingSessionUseCase.kt` | Bridge interface      |
+| Path                                                                      | Purpose                    |
+|---------------------------------------------------------------------------|----------------------------|
+| `app/navigation/AppNavHost.kt`                                            | Central navigation wiring  |
+| `app/Modules.kt`                                                          | Root DI configuration      |
+| `app/data/AppDatabase.kt`                                                 | Room database              |
+| `feature/destinations/di/DestinationsModule.kt`                           | Destinations DI            |
+| `feature/session/di/SessionModule.kt`                                     | Session DI                 |
+| `feature/session/navigation/SessionsNavigation.kt`                        | Session routes & functions |
+| `feature/session/service/SessionTrackingService.kt`                       | Foreground service         |
+| `feature/destination-session/bridge/api/.../CyclingSessionUseCase.kt`     | Bridge data interface      |
+| `feature/destination-session/bridge/api/.../CyclingSessionUiNavigator.kt` | Bridge UI interface        |
 
 ## API Keys
 
