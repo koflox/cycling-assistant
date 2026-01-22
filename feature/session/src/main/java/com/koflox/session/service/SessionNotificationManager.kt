@@ -70,7 +70,6 @@ internal class SessionNotificationManagerImpl(
 
         val contentText = "$statusText | $elapsedTimeFormatted"
         val expandedText = buildString {
-            appendLine("${context.getString(R.string.notification_destination)}: ${session.destinationName}")
             appendLine("${context.getString(R.string.notification_time)}: $elapsedTimeFormatted")
             append("${context.getString(R.string.notification_distance)}: $distanceFormatted km")
         }

@@ -27,7 +27,6 @@
     <!-- Notification Content -->
     <string name="notification_title_session_active">Cycling Session Active</string>
     <string name="notification_text_starting">Starting session…</string>
-    <string name="notification_destination">Destination</string>
     <string name="notification_time">Time</string>
     <string name="notification_distance">Distance</string>
 

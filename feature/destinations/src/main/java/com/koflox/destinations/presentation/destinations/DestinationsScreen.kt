@@ -119,27 +119,29 @@ private fun DestinationsContent(
             onSelectedMarkerInfoClick = { viewModel.onEvent(DestinationsUiEvent.SelectedMarkerInfoClicked) },
         )
 
-        if (uiState.isSessionActive) {
-            uiState.selectedDestination?.let { destination ->
-                sessionUiNavigator.SessionScreen(
-                    destinationLocation = destination.location,
+        if (uiState.isReady) {
+            if (uiState.isSessionActive) {
+                uiState.selectedDestination?.let { destination ->
+                    sessionUiNavigator.SessionScreen(
+                        destinationLocation = destination.location,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .align(Alignment.BottomCenter),
+                        onNavigateToCompletion = onNavigateToSessionCompletion,
+                    )
+                }
+            } else {
+                DestinationSelectionControls(
+                    uiState = uiState,
+                    viewModel = viewModel,
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .align(Alignment.BottomCenter),
-                    onNavigateToCompletion = onNavigateToSessionCompletion,
+                        .align(Alignment.BottomCenter)
+                        .padding(16.dp),
                 )
             }
-        } else {
-            DestinationSelectionControls(
-                uiState = uiState,
-                viewModel = viewModel,
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(16.dp),
-            )
         }
 
-        if (uiState.isLoading) {
+        if (uiState.isInitializing || uiState.isLoading) {
             LoadingOverlay()
         }
     }

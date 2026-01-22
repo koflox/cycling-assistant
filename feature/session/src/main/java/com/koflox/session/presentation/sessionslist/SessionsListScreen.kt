@@ -17,6 +17,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -104,34 +105,56 @@ private fun SessionsListContent(
             )
         },
     ) { paddingValues ->
-        if (uiState.isEmpty) {
-            EmptyState(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues),
-            )
-        } else {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-                    .padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                item { Spacer(modifier = Modifier.height(4.dp)) }
-                items(
-                    items = uiState.sessions,
-                    key = { it.id },
-                ) { session ->
-                    SessionListItem(
-                        session = session,
-                        onClick = { onSessionClick(session.id) },
-                        onShareClick = { onShareClick(session.id) },
-                    )
+        when {
+            uiState.isLoading -> {
+                LoadingState(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
+                )
+            }
+
+            uiState.isEmpty -> {
+                EmptyState(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
+                )
+            }
+
+            else -> {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues)
+                        .padding(horizontal = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    item { Spacer(modifier = Modifier.height(4.dp)) }
+                    items(
+                        items = uiState.sessions,
+                        key = { it.id },
+                    ) { session ->
+                        SessionListItem(
+                            session = session,
+                            onClick = { onSessionClick(session.id) },
+                            onShareClick = { onShareClick(session.id) },
+                        )
+                    }
+                    item { Spacer(modifier = Modifier.height(4.dp)) }
                 }
-                item { Spacer(modifier = Modifier.height(4.dp)) }
             }
         }
+    }
+}
+
+@Composable
+private fun LoadingState(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier,
+        contentAlignment = Alignment.Center,
+    ) {
+        CircularProgressIndicator()
     }
 }
 

@@ -5,6 +5,7 @@ import com.koflox.destinations.presentation.destinations.model.DestinationUiMode
 import com.koflox.location.model.Location
 
 internal data class DestinationsUiState(
+    val isInitializing: Boolean = true,
     val isLoading: Boolean = false,
     val selectedDestination: DestinationUiModel? = null,
     val otherValidDestinations: List<DestinationUiModel> = emptyList(),
@@ -17,11 +18,15 @@ internal data class DestinationsUiState(
     val navigationAction: NavigationAction? = null,
     val showSelectedMarkerOptionsDialog: Boolean = false,
     val isSessionActive: Boolean = false,
+    val isActiveSessionChecked: Boolean = false,
 ) {
     companion object {
         const val DEFAULT_ROUTE_DISTANCE_KM = 15.0
         const val DEFAULT_TOLERANCE_KM = 2.5
     }
+
+    val isReady: Boolean
+        get() = !isInitializing && isActiveSessionChecked && isPermissionGranted
 }
 
 internal sealed interface NavigationAction {

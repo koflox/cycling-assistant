@@ -49,23 +49,28 @@ internal class DestinationsViewModel(
     private var isScreenVisible = false
 
     init {
-        initDestinations()
-        listenToActiveSession()
-        checkSelectedDestination()
+        initialize()
     }
 
-    private fun initDestinations() {
+    private fun initialize() {
         viewModelScope.launch {
+            _uiState.update { it.copy(isInitializing = true) }
             initializeDatabaseUseCase.init()
+            checkActiveSession()
+            _uiState.update { it.copy(isInitializing = false) }
+            listenToActiveSession()
         }
     }
 
-    private fun checkSelectedDestination() {
-        viewModelScope.launch {
-            cyclingSessionUseCase.getActiveSessionDestination()?.let { activeDestination ->
-                findDestination(destinationId = activeDestination.id)
-            }
+    private suspend fun checkActiveSession() {
+        val activeDestination = cyclingSessionUseCase.getActiveSessionDestination()
+        _uiState.update {
+            it.copy(
+                isActiveSessionChecked = true,
+                isSessionActive = activeDestination != null,
+            )
         }
+        activeDestination?.let { findDestination(destinationId = it.id) }
     }
 
     private fun listenToActiveSession() {
@@ -205,8 +210,22 @@ internal class DestinationsViewModel(
 
     private fun onPermissionGranted() {
         _uiState.update { it.copy(isPermissionGranted = true) }
+        fetchInitialLocation()
         if (isScreenVisible) {
             startLocationObservation()
+        }
+    }
+
+    private fun fetchInitialLocation() {
+        viewModelScope.launch {
+            getUserLocationUseCase.getLocation().onSuccess { location ->
+                _uiState.update {
+                    it.copy(
+                        userLocation = location,
+                        cameraFocusLocation = it.cameraFocusLocation ?: location,
+                    )
+                }
+            }
         }
     }
 

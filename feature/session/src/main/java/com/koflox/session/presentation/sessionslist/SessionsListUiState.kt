@@ -4,8 +4,9 @@ import android.content.Intent
 import com.koflox.session.presentation.share.SharePreviewData
 
 data class SessionsListUiState(
+    val isLoading: Boolean = true,
     val sessions: List<SessionListItemUiModel> = emptyList(),
-    val isEmpty: Boolean = true,
+    val isEmpty: Boolean = false,
     val sharePreviewData: SharePreviewData? = null,
     val isSharing: Boolean = false,
     val shareIntent: Intent? = null,
