@@ -2,6 +2,7 @@ package com.koflox.session.presentation.completion
 
 import android.widget.Toast
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -42,21 +43,27 @@ internal fun SessionCompletionRoute(
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
 
-    LaunchedEffect(uiState.shouldNavigateToDashboard) {
-        if (uiState.shouldNavigateToDashboard) {
-            onNavigateToDashboard()
+    LaunchedEffect(Unit) {
+        viewModel.navigation.collect { event ->
+            when (event) {
+                SessionCompletionNavigation.ToDashboard -> onNavigateToDashboard()
+            }
         }
     }
-    LaunchedEffect(uiState.shareIntent) {
-        uiState.shareIntent?.let { intent ->
-            context.startActivity(intent)
-            viewModel.onEvent(SessionCompletionUiEvent.ShareIntentLaunched)
-        }
-    }
-    LaunchedEffect(uiState.error, uiState.showShareDialog) {
-        if (uiState.showShareDialog && uiState.error != null) {
-            Toast.makeText(context, uiState.error, Toast.LENGTH_SHORT).show()
-            viewModel.onEvent(SessionCompletionUiEvent.ErrorDismissed)
+    LaunchedEffect(uiState) {
+        val content = uiState as? SessionCompletionUiState.Content ?: return@LaunchedEffect
+        when (val overlay = content.overlay) {
+            is Overlay.ShareReady -> {
+                context.startActivity(overlay.intent)
+                viewModel.onEvent(SessionCompletionUiEvent.ShareIntentLaunched)
+            }
+
+            is Overlay.ShareError -> {
+                Toast.makeText(context, overlay.message, Toast.LENGTH_SHORT).show()
+                viewModel.onEvent(SessionCompletionUiEvent.ErrorDismissed)
+            }
+
+            else -> Unit
         }
     }
     SessionCompletionContent(
@@ -74,19 +81,20 @@ private fun SessionCompletionContent(
     onEvent: (SessionCompletionUiEvent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    if (uiState.showShareDialog && uiState.sessionId.isNotEmpty()) {
+    val content = uiState as? SessionCompletionUiState.Content
+    if (content != null && content.overlay != null && content.overlay !is Overlay.ShareReady) {
         SharePreviewDialog(
             data = SharePreviewData(
-                sessionId = uiState.sessionId,
-                destinationName = uiState.destinationName,
-                startDateFormatted = uiState.startDateFormatted,
-                elapsedTimeFormatted = uiState.elapsedTimeFormatted,
-                traveledDistanceFormatted = uiState.traveledDistanceFormatted,
-                averageSpeedFormatted = uiState.averageSpeedFormatted,
-                topSpeedFormatted = uiState.topSpeedFormatted,
-                routePoints = uiState.routePoints,
+                sessionId = content.sessionId,
+                destinationName = content.destinationName,
+                startDateFormatted = content.startDateFormatted,
+                elapsedTimeFormatted = content.elapsedTimeFormatted,
+                traveledDistanceFormatted = content.traveledDistanceFormatted,
+                averageSpeedFormatted = content.averageSpeedFormatted,
+                topSpeedFormatted = content.topSpeedFormatted,
+                routePoints = content.routePoints,
             ),
-            isSharing = uiState.isSharing,
+            isSharing = content.overlay is Overlay.Sharing,
             onShareClick = { bitmap, destinationName ->
                 onEvent(SessionCompletionUiEvent.ShareConfirmed(bitmap, destinationName))
             },
@@ -114,15 +122,19 @@ private fun SessionCompletionTopBar(
     onBackClick: () -> Unit,
     onShareClick: () -> Unit,
 ) {
+    val title = when (uiState) {
+        is SessionCompletionUiState.Content -> uiState.destinationName
+        else -> stringResource(R.string.session_completion_title)
+    }
     TopAppBar(
-        title = { Text(text = uiState.destinationName.ifEmpty { stringResource(R.string.session_completion_title) }) },
+        title = { Text(text = title) },
         navigationIcon = {
             IconButton(onClick = onBackClick) {
                 Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.session_completion_back))
             }
         },
         actions = {
-            if (!uiState.isLoading && uiState.error == null) {
+            if (uiState is SessionCompletionUiState.Content) {
                 IconButton(onClick = onShareClick) {
                     Icon(imageVector = Icons.Default.Share, contentDescription = stringResource(R.string.share_content_description))
                 }
@@ -135,26 +147,26 @@ private fun SessionCompletionTopBar(
 @Composable
 private fun SessionCompletionBody(
     uiState: SessionCompletionUiState,
-    paddingValues: androidx.compose.foundation.layout.PaddingValues,
+    paddingValues: PaddingValues,
 ) {
     Box(
         modifier = Modifier
             .fillMaxSize()
             .padding(paddingValues),
     ) {
-        when {
-            uiState.isLoading -> {
+        when (uiState) {
+            SessionCompletionUiState.Loading -> {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
             }
 
-            uiState.error != null -> {
+            is SessionCompletionUiState.Error -> {
                 Text(
-                    text = uiState.error.orEmpty(),
+                    text = uiState.message,
                     modifier = Modifier.align(Alignment.Center),
                 )
             }
 
-            else -> {
+            is SessionCompletionUiState.Content -> {
                 val cardAlignment = calculateCardAlignment(uiState.routePoints)
                 RouteMapView(routePoints = uiState.routePoints, modifier = Modifier.fillMaxSize())
                 SessionSummaryCard(
