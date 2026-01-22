@@ -43,6 +43,7 @@ internal val presentationModule = module {
             sessionServiceController = get(),
             sessionUiMapper = get(),
             errorMessageMapper = get(PresentationModuleQualifier.SessionErrorMessageMapper),
+            dispatcherDefault = get(DispatchersQualifier.Default),
         )
     }
     single<SessionsListUiMapper> {
@@ -74,6 +75,7 @@ internal val presentationModule = module {
             errorMessageMapper = get(PresentationModuleQualifier.SessionErrorMessageMapper),
             imageSharer = get(),
             shareErrorMapper = get(),
+            dispatcherDefault = get(DispatchersQualifier.Default),
             savedStateHandle = get(),
         )
     }

@@ -231,21 +231,171 @@ Centralized Room database in app module (`AppDatabase`):
 
 ### State Management (MVVM)
 
+ViewModels follow conventions where all work runs on background dispatcher, UI state uses
+sealed interfaces for explicit state representation, and navigation is separated into a dedicated
+Channel for one-time events.
+
+**Two-Flow Pattern:**
+
 ```kotlin
-class FeatureViewModel(
+// ViewModel exposes two flows:
+// 1. StateFlow<UiState> - persistent UI state
+// 2. Flow<Navigation> - one-time navigation events (via Channel)
+
+private val _uiState = MutableStateFlow<FeatureUiState>(FeatureUiState.Loading)
+val uiState: StateFlow<FeatureUiState> = _uiState.asStateFlow()
+
+private val _navigation = Channel<FeatureNavigation>()
+val navigation = _navigation.receiveAsFlow()
+```
+
+**UiState Convention (Sealed Interface):**
+
+```kotlin
+// FeatureUiState.kt - explicit states with no meaningless defaults
+internal sealed interface FeatureUiState {
+    data object Loading : FeatureUiState
+
+    data class Content(
+        val data: DataType,
+        val overlay: Overlay? = null,  // For dialogs, toasts, etc.
+    ) : FeatureUiState
+
+    data class Error(val message: String) : FeatureUiState
+}
+
+// Overlay states for Content (dialogs, sharing, etc.)
+internal sealed interface Overlay {
+    data object Dialog : Overlay
+    data object Processing : Overlay
+    data class Ready(val result: ResultType) : Overlay
+    data class Error(val message: String) : Overlay
+}
+```
+
+**Navigation Convention (Sealed Interface + Channel):**
+
+```kotlin
+// FeatureNavigation.kt - one-time navigation events
+internal sealed interface FeatureNavigation {
+    data object ToDashboard : FeatureNavigation
+    data class ToDetails(val id: String) : FeatureNavigation
+}
+
+// In ViewModel - emit navigation event (consumed once, no reset needed)
+_navigation.send(FeatureNavigation.ToDashboard)
+```
+
+**ViewModel Structure:**
+
+```kotlin
+internal class FeatureViewModel(
     private val useCase: UseCaseType,
-    application: Application,
-) : AndroidViewModel(application) {
-    private val _uiState = MutableStateFlow(FeatureUiState())
+    private val dispatcherDefault: CoroutineDispatcher,
+) : ViewModel() {
+
+    private val _uiState = MutableStateFlow<FeatureUiState>(FeatureUiState.Loading)
     val uiState: StateFlow<FeatureUiState> = _uiState.asStateFlow()
 
+    private val _navigation = Channel<FeatureNavigation>()
+    val navigation = _navigation.receiveAsFlow()
+
+    init {
+        initialize()
+    }
+
+    private fun initialize() {
+        viewModelScope.launch(dispatcherDefault) {
+            loadData()
+        }
+    }
+
     fun onEvent(event: FeatureUiEvent) {
-        when (event) {
-            is FeatureUiEvent.Action -> handleAction()
+        viewModelScope.launch(dispatcherDefault) {
+            when (event) {
+                is FeatureUiEvent.Action -> handleAction()
+            }
+        }
+    }
+
+    private suspend fun loadData() {
+        useCase.getData()
+            .onSuccess { data ->
+                _uiState.value = FeatureUiState.Content(data = data)
+            }
+            .onFailure { error ->
+                _uiState.value = FeatureUiState.Error(message = error.message)
+            }
+    }
+
+    private suspend fun navigateToDashboard() {
+        _navigation.send(FeatureNavigation.ToDashboard)
+    }
+
+    private inline fun updateContent(transform: (FeatureUiState.Content) -> FeatureUiState.Content) {
+        val current = _uiState.value
+        if (current is FeatureUiState.Content) {
+            _uiState.value = transform(current)
         }
     }
 }
 ```
+
+**Screen Pattern:**
+
+```kotlin
+@Composable
+internal fun FeatureRoute(
+    onNavigateToDashboard: () -> Unit,
+    viewModel: FeatureViewModel = koinViewModel(),
+) {
+    val uiState by viewModel.uiState.collectAsState()
+
+    // Collect navigation events (one-time, auto-consumed)
+    LaunchedEffect(Unit) {
+        viewModel.navigation.collect { event ->
+            when (event) {
+                FeatureNavigation.ToDashboard -> onNavigateToDashboard()
+                is FeatureNavigation.ToDetails -> { /* ... */ }
+            }
+        }
+    }
+
+    FeatureContent(uiState = uiState, onEvent = viewModel::onEvent)
+}
+
+@Composable
+private fun FeatureBody(uiState: FeatureUiState) {
+    when (uiState) {
+        FeatureUiState.Loading -> {
+            CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+        }
+        is FeatureUiState.Error -> {
+            Text(text = uiState.message, modifier = Modifier.align(Alignment.Center))
+        }
+        is FeatureUiState.Content -> {
+            ContentView(data = uiState.data)
+        }
+    }
+}
+```
+
+**Key Rules:**
+
+- **Two flows:** `StateFlow<UiState>` for persistent state, `Channel<Navigation>` for one-time
+  events
+- Use sealed interface for UiState with explicit states (`Loading`, `Content`, `Error`)
+- Use sealed interface for Navigation events (consumed once, no reset needed)
+- Each state contains only relevant data - no meaningless defaults
+- Use `Overlay` sealed interface for dialogs/toasts within `Content` state
+- Inject `dispatcherDefault: CoroutineDispatcher` via DI (`DispatchersQualifier.Default`)
+- `init` calls `initialize()` which uses `launch(dispatcherDefault)`
+- `onEvent` always wraps handling in `launch(dispatcherDefault)`
+- Use `updateContent` helper for partial updates within Content state
+- Screen collects navigation with `LaunchedEffect(Unit)` for lifecycle-aware collection
+
+**Reference Implementation:** `SessionCompletionViewModel`, `SessionCompletionUiState`,
+`SessionCompletionNavigation`
 
 ### ViewModel Event Pattern
 
@@ -263,18 +413,23 @@ sealed interface FeatureUiEvent {
 }
 
 // FeatureViewModel.kt - single entry point for events
-class FeatureViewModel(...) : ViewModel() {
+internal class FeatureViewModel(
+    private val dispatcherDefault: CoroutineDispatcher,
+) : ViewModel() {
+
     fun onEvent(event: FeatureUiEvent) {
-        when (event) {
-            FeatureUiEvent.ButtonClicked -> handleButtonClick()
-            is FeatureUiEvent.ItemSelected -> handleItemSelected(event.id)
-            FeatureUiEvent.DialogDismissed -> dismissDialog()
+        viewModelScope.launch(dispatcherDefault) {
+            when (event) {
+                FeatureUiEvent.ButtonClicked -> handleButtonClick()
+                is FeatureUiEvent.ItemSelected -> handleItemSelected(event.id)
+                FeatureUiEvent.DialogDismissed -> dismissDialog()
+            }
         }
     }
 
-    private fun handleButtonClick() { /* ... */ }
-    private fun handleItemSelected(id: String) { /* ... */ }
-    private fun dismissDialog() { /* ... */ }
+    private suspend fun handleButtonClick() { /* ... */ }
+    private suspend fun handleItemSelected(id: String) { /* ... */ }
+    private fun dismissDialog() { updateContent { it.copy(overlay = null) } }
 }
 
 // FeatureScreen.kt - usage in Composable
@@ -287,6 +442,7 @@ Button(onClick = { viewModel.onEvent(FeatureUiEvent.ButtonClicked) })
 - Use `data object` for events without parameters
 - Use `data class` for events with parameters
 - Keep event handler methods private in ViewModel
+- `onEvent` always launches with `dispatcherDefault`
 
 ## Code Conventions
 
@@ -399,6 +555,156 @@ override fun SessionScreen(
     )
 }
 ```
+
+## Unit Testing
+
+### Test Structure
+
+Tests are located in `src/test/java` within each module. Test file naming follows the pattern
+`<ClassName>Test.kt`.
+
+**Test Dependencies:**
+
+- JUnit 4 - Test framework
+- MockK - Mocking library
+- Turbine - Flow testing
+- kotlinx-coroutines-test - Coroutine testing
+- `shared:testing` - Common test utilities
+
+### ViewModel Test Pattern
+
+```kotlin
+class FeatureViewModelTest {
+
+    companion object {
+        private const val TEST_ID = "test-123"
+        private const val ERROR_MESSAGE = "Something went wrong"
+    }
+
+    @get:Rule
+    val mainDispatcherRule = MainDispatcherRule()
+
+    private val useCase: FeatureUseCase = mockk()
+    private val errorMapper: ErrorMessageMapper = mockk()
+    private lateinit var viewModel: FeatureViewModel
+
+    @Before
+    fun setup() {
+        setupDefaultMocks()
+    }
+
+    private fun setupDefaultMocks() {
+        coEvery { errorMapper.map(any()) } returns ERROR_MESSAGE
+    }
+
+    private fun createViewModel(): FeatureViewModel {
+        return FeatureViewModel(
+            useCase = useCase,
+            errorMapper = errorMapper,
+            dispatcherDefault = mainDispatcherRule.testDispatcher,
+        )
+    }
+
+    @Test
+    fun `initial state is Loading`() = runTest {
+        coEvery { useCase.getData() } returns Result.success(createData())
+
+        viewModel = createViewModel()
+
+        viewModel.uiState.test {
+            assertTrue(awaitItem() is FeatureUiState.Loading)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    private fun createData() = Data(id = TEST_ID)
+}
+```
+
+### Testing Conventions
+
+**Structure:**
+
+- Use `companion object` for test constants at the top
+- Use `@get:Rule` for `MainDispatcherRule` (replaces Main dispatcher)
+- Declare mocks as class properties
+- Use `@Before` for common mock setup
+- Create `createViewModel()` factory method for consistent initialization
+- No region comments or unnecessary comments between methods - test names should be self-documenting
+
+**Flow Testing with Turbine:**
+
+```kotlin
+@Test
+fun `loads data and shows Content state`() = runTest {
+    val data = createData()
+    coEvery { useCase.getData() } returns Result.success(data)
+
+    viewModel = createViewModel()
+
+    viewModel.uiState.test {
+        awaitItem() // Loading
+        val content = awaitItem() as FeatureUiState.Content
+        assertEquals(data, content.data)
+    }
+}
+```
+
+**Navigation Channel Testing:**
+
+```kotlin
+@Test
+fun `navigates to dashboard on action`() = runTest {
+    coEvery { useCase.getData() } returns Result.success(createData())
+
+    viewModel = createViewModel()
+
+    viewModel.navigation.test {
+        viewModel.onEvent(FeatureUiEvent.ActionClicked)
+        assertEquals(FeatureNavigation.ToDashboard, awaitItem())
+    }
+}
+```
+
+**Testing State Transitions:**
+
+```kotlin
+@Test
+fun `ShareClicked shows share dialog`() = runTest {
+    coEvery { useCase.getData() } returns Result.success(createData())
+
+    viewModel = createViewModel()
+
+    viewModel.uiState.test {
+        awaitItem() // Loading
+        awaitItem() // Content
+
+        viewModel.onEvent(FeatureUiEvent.ShareClicked)
+
+        val updatedContent = awaitItem() as FeatureUiState.Content
+        assertEquals(Overlay.ShareDialog, updatedContent.overlay)
+    }
+}
+```
+
+**Test Naming:**
+
+- Use backticks with descriptive names: `` `loads data and shows Content state` ``
+- Format: `<action/condition> <expected result>`
+
+**Common Patterns:**
+
+| Pattern                            | Usage                                      |
+|------------------------------------|--------------------------------------------|
+| `coEvery { ... }`                  | Mock suspend functions                     |
+| `every { ... }`                    | Mock regular functions                     |
+| `coVerify { ... }`                 | Verify suspend function calls              |
+| `slot<T>()`                        | Capture arguments for verification         |
+| `awaitItem()`                      | Wait for next Flow emission (Turbine)      |
+| `expectNoEvents()`                 | Assert no more emissions (Turbine)         |
+| `cancelAndIgnoreRemainingEvents()` | End test without consuming remaining items |
+
+**Reference Implementation:** `SessionCompletionViewModelTest`
 
 ## Adding New Features
 
