@@ -30,4 +30,11 @@ dependencies {
     implementation(project(":feature:destination-session:bridge:api"))
     implementation(project(":feature:session"))
     implementation(project(":shared:location"))
+
+    // Testing
+    testImplementation(libs.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.mockk)
+    testImplementation(libs.turbine)
+    testImplementation(project(":shared:testing"))
 }

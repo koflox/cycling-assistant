@@ -1,0 +1,307 @@
+package com.koflox.session.domain.usecase
+
+import com.koflox.session.domain.model.Session
+import com.koflox.session.domain.model.SessionStatus
+import com.koflox.session.domain.model.TrackPoint
+import com.koflox.session.domain.repository.SessionRepository
+import com.koflox.testing.coroutine.MainDispatcherRule
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.mockk
+import io.mockk.slot
+import kotlinx.coroutines.test.runTest
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
+import org.junit.Before
+import org.junit.Rule
+import org.junit.Test
+
+class UpdateSessionStatusUseCaseImplTest {
+
+    companion object {
+        private const val SESSION_ID = "session-123"
+        private const val START_TIME_MS = 1000000L
+        private const val LAST_RESUMED_TIME_MS = 1500000L
+        private const val ELAPSED_TIME_MS = 300000L
+    }
+
+    @get:Rule
+    val mainDispatcherRule = MainDispatcherRule()
+
+    private val activeSessionUseCase: ActiveSessionUseCase = mockk()
+    private val sessionRepository: SessionRepository = mockk()
+    private lateinit var useCase: UpdateSessionStatusUseCaseImpl
+
+    @Before
+    fun setup() {
+        useCase = UpdateSessionStatusUseCaseImpl(activeSessionUseCase, sessionRepository)
+    }
+
+    @Test
+    fun `pause gets active session`() = runTest {
+        val session = createSession(status = SessionStatus.RUNNING)
+        coEvery { activeSessionUseCase.getActiveSession() } returns session
+        coEvery { sessionRepository.saveSession(any()) } returns Result.success(Unit)
+
+        useCase.pause()
+
+        coVerify { activeSessionUseCase.getActiveSession() }
+    }
+
+    @Test
+    fun `pause updates status to paused`() = runTest {
+        val session = createSession(status = SessionStatus.RUNNING)
+        val sessionSlot = slot<Session>()
+        coEvery { activeSessionUseCase.getActiveSession() } returns session
+        coEvery { sessionRepository.saveSession(capture(sessionSlot)) } returns Result.success(Unit)
+
+        useCase.pause()
+
+        assertEquals(SessionStatus.PAUSED, sessionSlot.captured.status)
+    }
+
+    @Test
+    fun `pause updates elapsed time`() = runTest {
+        val session = createSession(
+            status = SessionStatus.RUNNING,
+            elapsedTimeMs = ELAPSED_TIME_MS,
+            lastResumedTimeMs = LAST_RESUMED_TIME_MS,
+        )
+        val sessionSlot = slot<Session>()
+        coEvery { activeSessionUseCase.getActiveSession() } returns session
+        coEvery { sessionRepository.saveSession(capture(sessionSlot)) } returns Result.success(Unit)
+
+        useCase.pause()
+
+        assertTrue(sessionSlot.captured.elapsedTimeMs > ELAPSED_TIME_MS)
+    }
+
+    @Test
+    fun `pause saves session to repository`() = runTest {
+        val session = createSession(status = SessionStatus.RUNNING)
+        coEvery { activeSessionUseCase.getActiveSession() } returns session
+        coEvery { sessionRepository.saveSession(any()) } returns Result.success(Unit)
+
+        useCase.pause()
+
+        coVerify { sessionRepository.saveSession(any()) }
+    }
+
+    @Test
+    fun `pause returns success on successful save`() = runTest {
+        val session = createSession(status = SessionStatus.RUNNING)
+        coEvery { activeSessionUseCase.getActiveSession() } returns session
+        coEvery { sessionRepository.saveSession(any()) } returns Result.success(Unit)
+
+        val result = useCase.pause()
+
+        assertTrue(result.isSuccess)
+    }
+
+    @Test
+    fun `pause returns failure when no active session`() = runTest {
+        coEvery { activeSessionUseCase.getActiveSession() } throws NoActiveSessionException()
+
+        val result = useCase.pause()
+
+        assertTrue(result.isFailure)
+    }
+
+    @Test
+    fun `resume gets active session`() = runTest {
+        val session = createSession(status = SessionStatus.PAUSED)
+        coEvery { activeSessionUseCase.getActiveSession() } returns session
+        coEvery { sessionRepository.saveSession(any()) } returns Result.success(Unit)
+
+        useCase.resume()
+
+        coVerify { activeSessionUseCase.getActiveSession() }
+    }
+
+    @Test
+    fun `resume updates status to running`() = runTest {
+        val session = createSession(status = SessionStatus.PAUSED)
+        val sessionSlot = slot<Session>()
+        coEvery { activeSessionUseCase.getActiveSession() } returns session
+        coEvery { sessionRepository.saveSession(capture(sessionSlot)) } returns Result.success(Unit)
+
+        useCase.resume()
+
+        assertEquals(SessionStatus.RUNNING, sessionSlot.captured.status)
+    }
+
+    @Test
+    fun `resume updates lastResumedTimeMs`() = runTest {
+        val session = createSession(
+            status = SessionStatus.PAUSED,
+            lastResumedTimeMs = LAST_RESUMED_TIME_MS,
+        )
+        val sessionSlot = slot<Session>()
+        coEvery { activeSessionUseCase.getActiveSession() } returns session
+        coEvery { sessionRepository.saveSession(capture(sessionSlot)) } returns Result.success(Unit)
+
+        useCase.resume()
+
+        assertTrue(sessionSlot.captured.lastResumedTimeMs > LAST_RESUMED_TIME_MS)
+    }
+
+    @Test
+    fun `resume saves session to repository`() = runTest {
+        val session = createSession(status = SessionStatus.PAUSED)
+        coEvery { activeSessionUseCase.getActiveSession() } returns session
+        coEvery { sessionRepository.saveSession(any()) } returns Result.success(Unit)
+
+        useCase.resume()
+
+        coVerify { sessionRepository.saveSession(any()) }
+    }
+
+    @Test
+    fun `resume returns success on successful save`() = runTest {
+        val session = createSession(status = SessionStatus.PAUSED)
+        coEvery { activeSessionUseCase.getActiveSession() } returns session
+        coEvery { sessionRepository.saveSession(any()) } returns Result.success(Unit)
+
+        val result = useCase.resume()
+
+        assertTrue(result.isSuccess)
+    }
+
+    @Test
+    fun `resume returns failure when no active session`() = runTest {
+        coEvery { activeSessionUseCase.getActiveSession() } throws NoActiveSessionException()
+
+        val result = useCase.resume()
+
+        assertTrue(result.isFailure)
+    }
+
+    @Test
+    fun `stop gets active session`() = runTest {
+        val session = createSession(status = SessionStatus.RUNNING)
+        coEvery { activeSessionUseCase.getActiveSession() } returns session
+        coEvery { sessionRepository.saveSession(any()) } returns Result.success(Unit)
+
+        useCase.stop()
+
+        coVerify { activeSessionUseCase.getActiveSession() }
+    }
+
+    @Test
+    fun `stop updates status to completed`() = runTest {
+        val session = createSession(status = SessionStatus.RUNNING)
+        val sessionSlot = slot<Session>()
+        coEvery { activeSessionUseCase.getActiveSession() } returns session
+        coEvery { sessionRepository.saveSession(capture(sessionSlot)) } returns Result.success(Unit)
+
+        useCase.stop()
+
+        assertEquals(SessionStatus.COMPLETED, sessionSlot.captured.status)
+    }
+
+    @Test
+    fun `stop sets endTimeMs`() = runTest {
+        val session = createSession(status = SessionStatus.RUNNING)
+        val sessionSlot = slot<Session>()
+        coEvery { activeSessionUseCase.getActiveSession() } returns session
+        coEvery { sessionRepository.saveSession(capture(sessionSlot)) } returns Result.success(Unit)
+
+        useCase.stop()
+
+        assertNotNull(sessionSlot.captured.endTimeMs)
+    }
+
+    @Test
+    fun `stop calculates final elapsed time for running session`() = runTest {
+        val session = createSession(
+            status = SessionStatus.RUNNING,
+            elapsedTimeMs = ELAPSED_TIME_MS,
+            lastResumedTimeMs = LAST_RESUMED_TIME_MS,
+        )
+        val sessionSlot = slot<Session>()
+        coEvery { activeSessionUseCase.getActiveSession() } returns session
+        coEvery { sessionRepository.saveSession(capture(sessionSlot)) } returns Result.success(Unit)
+
+        useCase.stop()
+
+        assertTrue(sessionSlot.captured.elapsedTimeMs > ELAPSED_TIME_MS)
+    }
+
+    @Test
+    fun `stop preserves elapsed time for paused session`() = runTest {
+        val session = createSession(
+            status = SessionStatus.PAUSED,
+            elapsedTimeMs = ELAPSED_TIME_MS,
+        )
+        val sessionSlot = slot<Session>()
+        coEvery { activeSessionUseCase.getActiveSession() } returns session
+        coEvery { sessionRepository.saveSession(capture(sessionSlot)) } returns Result.success(Unit)
+
+        useCase.stop()
+
+        assertEquals(ELAPSED_TIME_MS, sessionSlot.captured.elapsedTimeMs)
+    }
+
+    @Test
+    fun `stop saves session to repository`() = runTest {
+        val session = createSession(status = SessionStatus.RUNNING)
+        coEvery { activeSessionUseCase.getActiveSession() } returns session
+        coEvery { sessionRepository.saveSession(any()) } returns Result.success(Unit)
+
+        useCase.stop()
+
+        coVerify { sessionRepository.saveSession(any()) }
+    }
+
+    @Test
+    fun `stop returns success on successful save`() = runTest {
+        val session = createSession(status = SessionStatus.RUNNING)
+        coEvery { activeSessionUseCase.getActiveSession() } returns session
+        coEvery { sessionRepository.saveSession(any()) } returns Result.success(Unit)
+
+        val result = useCase.stop()
+
+        assertTrue(result.isSuccess)
+    }
+
+    @Test
+    fun `stop returns failure when no active session`() = runTest {
+        coEvery { activeSessionUseCase.getActiveSession() } throws NoActiveSessionException()
+
+        val result = useCase.stop()
+
+        assertTrue(result.isFailure)
+    }
+
+    private fun createSession(
+        id: String = SESSION_ID,
+        status: SessionStatus = SessionStatus.RUNNING,
+        elapsedTimeMs: Long = 0L,
+        lastResumedTimeMs: Long = START_TIME_MS,
+    ) = Session(
+        id = id,
+        destinationId = "dest-456",
+        destinationName = "Test Destination",
+        destinationLatitude = 52.52,
+        destinationLongitude = 13.405,
+        startLatitude = 52.50,
+        startLongitude = 13.40,
+        startTimeMs = START_TIME_MS,
+        lastResumedTimeMs = lastResumedTimeMs,
+        endTimeMs = null,
+        elapsedTimeMs = elapsedTimeMs,
+        traveledDistanceKm = 0.0,
+        averageSpeedKmh = 0.0,
+        topSpeedKmh = 0.0,
+        status = status,
+        trackPoints = listOf(
+            TrackPoint(
+                latitude = 52.51,
+                longitude = 13.41,
+                timestampMs = START_TIME_MS,
+                speedKmh = 0.0,
+            ),
+        ),
+    )
+}
