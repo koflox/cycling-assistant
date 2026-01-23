@@ -1,11 +1,11 @@
 package com.koflox.session.data.mapper
 
-import com.koflox.session.data.source.local.entity.SessionEntity
-import com.koflox.session.data.source.local.entity.SessionWithTrackPoints
-import com.koflox.session.data.source.local.entity.TrackPointEntity
-import com.koflox.session.domain.model.Session
 import com.koflox.session.domain.model.SessionStatus
-import com.koflox.session.domain.model.TrackPoint
+import com.koflox.session.testutil.createSession
+import com.koflox.session.testutil.createSessionEntity
+import com.koflox.session.testutil.createSessionWithTrackPoints
+import com.koflox.session.testutil.createTrackPoint
+import com.koflox.session.testutil.createTrackPointEntity
 import com.koflox.testing.coroutine.MainDispatcherRule
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -48,7 +48,7 @@ class SessionMapperImplTest {
 
     @Test
     fun `toEntity maps session id correctly`() = runTest {
-        val session = createSession()
+        val session = createTestSession()
 
         val entity = mapper.toEntity(session)
 
@@ -57,7 +57,7 @@ class SessionMapperImplTest {
 
     @Test
     fun `toEntity maps destination fields correctly`() = runTest {
-        val session = createSession()
+        val session = createTestSession()
 
         val entity = mapper.toEntity(session)
 
@@ -69,7 +69,7 @@ class SessionMapperImplTest {
 
     @Test
     fun `toEntity maps start location correctly`() = runTest {
-        val session = createSession()
+        val session = createTestSession()
 
         val entity = mapper.toEntity(session)
 
@@ -79,7 +79,7 @@ class SessionMapperImplTest {
 
     @Test
     fun `toEntity maps time fields correctly`() = runTest {
-        val session = createSession()
+        val session = createTestSession()
 
         val entity = mapper.toEntity(session)
 
@@ -91,7 +91,7 @@ class SessionMapperImplTest {
 
     @Test
     fun `toEntity maps statistics correctly`() = runTest {
-        val session = createSession()
+        val session = createTestSession()
 
         val entity = mapper.toEntity(session)
 
@@ -102,7 +102,7 @@ class SessionMapperImplTest {
 
     @Test
     fun `toEntity maps status to string`() = runTest {
-        val session = createSession(status = SessionStatus.RUNNING)
+        val session = createTestSession(status = SessionStatus.RUNNING)
 
         val entity = mapper.toEntity(session)
 
@@ -111,7 +111,7 @@ class SessionMapperImplTest {
 
     @Test
     fun `toEntity maps paused status correctly`() = runTest {
-        val session = createSession(status = SessionStatus.PAUSED)
+        val session = createTestSession(status = SessionStatus.PAUSED)
 
         val entity = mapper.toEntity(session)
 
@@ -120,7 +120,7 @@ class SessionMapperImplTest {
 
     @Test
     fun `toEntity maps completed status correctly`() = runTest {
-        val session = createSession(status = SessionStatus.COMPLETED)
+        val session = createTestSession(status = SessionStatus.COMPLETED)
 
         val entity = mapper.toEntity(session)
 
@@ -130,7 +130,7 @@ class SessionMapperImplTest {
     @Test
     fun `toTrackPointEntities maps session id to all entities`() = runTest {
         val trackPoints = listOf(
-            createTrackPoint(),
+            createTestTrackPoint(),
             createTrackPoint(latitude = 52.52, longitude = 13.42),
         )
 
@@ -142,7 +142,7 @@ class SessionMapperImplTest {
 
     @Test
     fun `toTrackPointEntities maps coordinates correctly`() = runTest {
-        val trackPoints = listOf(createTrackPoint())
+        val trackPoints = listOf(createTestTrackPoint())
 
         val entities = mapper.toTrackPointEntities(SESSION_ID, trackPoints)
 
@@ -152,7 +152,7 @@ class SessionMapperImplTest {
 
     @Test
     fun `toTrackPointEntities maps timestamp and speed correctly`() = runTest {
-        val trackPoints = listOf(createTrackPoint())
+        val trackPoints = listOf(createTestTrackPoint())
 
         val entities = mapper.toTrackPointEntities(SESSION_ID, trackPoints)
 
@@ -184,7 +184,7 @@ class SessionMapperImplTest {
 
     @Test
     fun `toDomain maps session id correctly`() = runTest {
-        val sessionWithTrackPoints = createSessionWithTrackPoints()
+        val sessionWithTrackPoints = createTestSessionWithTrackPoints()
 
         val session = mapper.toDomain(sessionWithTrackPoints)
 
@@ -193,7 +193,7 @@ class SessionMapperImplTest {
 
     @Test
     fun `toDomain maps destination fields correctly`() = runTest {
-        val sessionWithTrackPoints = createSessionWithTrackPoints()
+        val sessionWithTrackPoints = createTestSessionWithTrackPoints()
 
         val session = mapper.toDomain(sessionWithTrackPoints)
 
@@ -205,7 +205,7 @@ class SessionMapperImplTest {
 
     @Test
     fun `toDomain maps status from string`() = runTest {
-        val sessionWithTrackPoints = createSessionWithTrackPoints(status = "RUNNING")
+        val sessionWithTrackPoints = createTestSessionWithTrackPoints(status = "RUNNING")
 
         val session = mapper.toDomain(sessionWithTrackPoints)
 
@@ -214,7 +214,7 @@ class SessionMapperImplTest {
 
     @Test
     fun `toDomain maps paused status from string`() = runTest {
-        val sessionWithTrackPoints = createSessionWithTrackPoints(status = "PAUSED")
+        val sessionWithTrackPoints = createTestSessionWithTrackPoints(status = "PAUSED")
 
         val session = mapper.toDomain(sessionWithTrackPoints)
 
@@ -224,10 +224,10 @@ class SessionMapperImplTest {
     @Test
     fun `toDomain maps track points correctly`() = runTest {
         val trackPointEntities = listOf(
-            createTrackPointEntity(),
-            createTrackPointEntity(latitude = 52.52),
+            createTestTrackPointEntity(),
+            createTrackPointEntity(sessionId = SESSION_ID, latitude = 52.52),
         )
-        val sessionWithTrackPoints = createSessionWithTrackPoints(trackPoints = trackPointEntities)
+        val sessionWithTrackPoints = createTestSessionWithTrackPoints(trackPoints = trackPointEntities)
 
         val session = mapper.toDomain(sessionWithTrackPoints)
 
@@ -238,7 +238,7 @@ class SessionMapperImplTest {
 
     @Test
     fun `toDomain maps track point fields correctly`() = runTest {
-        val sessionWithTrackPoints = createSessionWithTrackPoints()
+        val sessionWithTrackPoints = createTestSessionWithTrackPoints()
 
         val session = mapper.toDomain(sessionWithTrackPoints)
 
@@ -252,8 +252,8 @@ class SessionMapperImplTest {
     @Test
     fun `toDomainList maps multiple sessions`() = runTest {
         val sessions = listOf(
-            createSessionWithTrackPoints(sessionId = "session-1"),
-            createSessionWithTrackPoints(sessionId = "session-2"),
+            createTestSessionWithTrackPoints(sessionId = "session-1"),
+            createTestSessionWithTrackPoints(sessionId = "session-2"),
         )
 
         val domainSessions = mapper.toDomainList(sessions)
@@ -273,9 +273,9 @@ class SessionMapperImplTest {
     @Test
     fun `toDomainList preserves order`() = runTest {
         val sessions = listOf(
-            createSessionWithTrackPoints(sessionId = "first"),
-            createSessionWithTrackPoints(sessionId = "second"),
-            createSessionWithTrackPoints(sessionId = "third"),
+            createTestSessionWithTrackPoints(sessionId = "first"),
+            createTestSessionWithTrackPoints(sessionId = "second"),
+            createTestSessionWithTrackPoints(sessionId = "third"),
         )
 
         val domainSessions = mapper.toDomainList(sessions)
@@ -285,10 +285,10 @@ class SessionMapperImplTest {
         assertEquals("third", domainSessions[2].id)
     }
 
-    private fun createSession(
+    private fun createTestSession(
         id: String = SESSION_ID,
         status: SessionStatus = SessionStatus.COMPLETED,
-    ) = Session(
+    ) = createSession(
         id = id,
         destinationId = DESTINATION_ID,
         destinationName = DESTINATION_NAME,
@@ -304,25 +304,25 @@ class SessionMapperImplTest {
         averageSpeedKmh = AVERAGE_SPEED_KMH,
         topSpeedKmh = TOP_SPEED_KMH,
         status = status,
-        trackPoints = listOf(createTrackPoint()),
+        trackPoints = listOf(createTestTrackPoint()),
     )
 
-    private fun createTrackPoint(
+    private fun createTestTrackPoint(
         latitude: Double = TRACK_POINT_LAT,
         longitude: Double = TRACK_POINT_LONG,
         timestampMs: Long = TRACK_POINT_TIMESTAMP,
         speedKmh: Double = TRACK_POINT_SPEED,
-    ) = TrackPoint(
+    ) = createTrackPoint(
         latitude = latitude,
         longitude = longitude,
         timestampMs = timestampMs,
         speedKmh = speedKmh,
     )
 
-    private fun createSessionEntity(
+    private fun createTestSessionEntity(
         id: String = SESSION_ID,
         status: String = "COMPLETED",
-    ) = SessionEntity(
+    ) = createSessionEntity(
         id = id,
         destinationId = DESTINATION_ID,
         destinationName = DESTINATION_NAME,
@@ -340,10 +340,10 @@ class SessionMapperImplTest {
         status = status,
     )
 
-    private fun createTrackPointEntity(
+    private fun createTestTrackPointEntity(
         latitude: Double = TRACK_POINT_LAT,
         longitude: Double = TRACK_POINT_LONG,
-    ) = TrackPointEntity(
+    ) = createTrackPointEntity(
         sessionId = SESSION_ID,
         latitude = latitude,
         longitude = longitude,
@@ -351,12 +351,12 @@ class SessionMapperImplTest {
         speedKmh = TRACK_POINT_SPEED,
     )
 
-    private fun createSessionWithTrackPoints(
+    private fun createTestSessionWithTrackPoints(
         sessionId: String = SESSION_ID,
         status: String = "COMPLETED",
-        trackPoints: List<TrackPointEntity> = listOf(createTrackPointEntity()),
-    ) = SessionWithTrackPoints(
-        session = createSessionEntity(id = sessionId, status = status),
+        trackPoints: List<com.koflox.session.data.source.local.entity.TrackPointEntity> = listOf(createTestTrackPointEntity()),
+    ) = createSessionWithTrackPoints(
+        session = createTestSessionEntity(id = sessionId, status = status),
         trackPoints = trackPoints,
     )
 }

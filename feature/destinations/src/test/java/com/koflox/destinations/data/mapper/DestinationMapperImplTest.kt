@@ -1,7 +1,8 @@
 package com.koflox.destinations.data.mapper
 
 import com.koflox.destinations.data.source.asset.model.DestinationAsset
-import com.koflox.destinations.data.source.local.entity.DestinationLocal
+import com.koflox.destinations.testutil.createDestinationAsset
+import com.koflox.destinations.testutil.createDestinationLocal
 import com.koflox.testing.coroutine.MainDispatcherRule
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -30,7 +31,7 @@ class DestinationMapperImplTest {
 
     @Test
     fun `toDomain maps entity correctly`() = runTest {
-        val entity = createLocal()
+        val entity = createDestinationLocal(id = TEST_ID, title = TEST_TITLE, latitude = TEST_LAT, longitude = TEST_LONG)
 
         val result = mapper.toDomain(entity)
 
@@ -42,7 +43,7 @@ class DestinationMapperImplTest {
 
     @Test
     fun `toEntity maps asset correctly`() = runTest {
-        val asset = createAsset()
+        val asset = createDestinationAsset(id = TEST_ID, title = TEST_TITLE, latitude = TEST_LAT, longitude = TEST_LONG)
 
         val result = mapper.toLocal(asset)
 
@@ -63,7 +64,7 @@ class DestinationMapperImplTest {
 
     @Test
     fun `toEntityList maps single item`() = runTest {
-        val assets = listOf(createAsset())
+        val assets = listOf(createDestinationAsset(id = TEST_ID, title = TEST_TITLE, latitude = TEST_LAT, longitude = TEST_LONG))
 
         val result = mapper.toLocalList(assets)
 
@@ -74,9 +75,9 @@ class DestinationMapperImplTest {
     @Test
     fun `toEntityList maps multiple items`() = runTest {
         val assets = listOf(
-            createAsset(id = "id-1"),
-            createAsset(id = "id-2"),
-            createAsset(id = "id-3"),
+            createDestinationAsset(id = "id-1", title = TEST_TITLE, latitude = TEST_LAT, longitude = TEST_LONG),
+            createDestinationAsset(id = "id-2", title = TEST_TITLE, latitude = TEST_LAT, longitude = TEST_LONG),
+            createDestinationAsset(id = "id-3", title = TEST_TITLE, latitude = TEST_LAT, longitude = TEST_LONG),
         )
 
         val result = mapper.toLocalList(assets)
@@ -90,9 +91,9 @@ class DestinationMapperImplTest {
     @Test
     fun `toEntityList preserves order`() = runTest {
         val assets = listOf(
-            createAsset(id = "z-last"),
-            createAsset(id = "a-first"),
-            createAsset(id = "m-middle"),
+            createDestinationAsset(id = "z-last", title = TEST_TITLE, latitude = TEST_LAT, longitude = TEST_LONG),
+            createDestinationAsset(id = "a-first", title = TEST_TITLE, latitude = TEST_LAT, longitude = TEST_LONG),
+            createDestinationAsset(id = "m-middle", title = TEST_TITLE, latitude = TEST_LAT, longitude = TEST_LONG),
         )
 
         val result = mapper.toLocalList(assets)
@@ -101,28 +102,4 @@ class DestinationMapperImplTest {
         assertEquals("a-first", result[1].id)
         assertEquals("m-middle", result[2].id)
     }
-
-    private fun createLocal(
-        id: String = TEST_ID,
-        title: String = TEST_TITLE,
-        latitude: Double = TEST_LAT,
-        longitude: Double = TEST_LONG,
-    ) = DestinationLocal(
-        id = id,
-        title = title,
-        latitude = latitude,
-        longitude = longitude,
-    )
-
-    private fun createAsset(
-        id: String = TEST_ID,
-        title: String = TEST_TITLE,
-        latitude: Double = TEST_LAT,
-        longitude: Double = TEST_LONG,
-    ) = DestinationAsset(
-        id = id,
-        title = title,
-        latitude = latitude,
-        longitude = longitude,
-    )
 }

@@ -4,15 +4,16 @@ import app.cash.turbine.test
 import com.koflox.error.mapper.ErrorMessageMapper
 import com.koflox.session.domain.model.Session
 import com.koflox.session.domain.model.SessionStatus
-import com.koflox.session.domain.model.TrackPoint
 import com.koflox.session.domain.usecase.ActiveSessionUseCase
 import com.koflox.session.domain.usecase.CreateSessionUseCase
 import com.koflox.session.domain.usecase.UpdateSessionStatusUseCase
 import com.koflox.session.presentation.mapper.SessionUiMapper
-import com.koflox.session.presentation.mapper.SessionUiModel
 import com.koflox.session.presentation.session.timer.SessionTimer
 import com.koflox.session.presentation.session.timer.SessionTimerFactory
 import com.koflox.session.service.SessionServiceController
+import com.koflox.session.testutil.createSession
+import com.koflox.session.testutil.createSessionUiModel
+import com.koflox.session.testutil.createTrackPoint
 import com.koflox.testing.coroutine.MainDispatcherRule
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -67,7 +68,12 @@ class SessionViewModelTest {
     }
 
     private fun setupDefaultMocks() {
-        every { sessionUiMapper.toSessionUiModel(any()) } returns createSessionUiModel()
+        every { sessionUiMapper.toSessionUiModel(any()) } returns createSessionUiModel(
+            elapsedTimeFormatted = FORMATTED_TIME,
+            traveledDistanceFormatted = FORMATTED_DISTANCE,
+            averageSpeedFormatted = FORMATTED_AVG_SPEED,
+            topSpeedFormatted = FORMATTED_TOP_SPEED,
+        )
         every { sessionUiMapper.formatElapsedTime(any()) } returns FORMATTED_TIME
         coEvery { errorMessageMapper.map(any()) } returns ERROR_MESSAGE
         coEvery { activeSessionUseCase.observeActiveSession() } returns activeSessionFlow
@@ -98,7 +104,7 @@ class SessionViewModelTest {
 
     @Test
     fun `active session shows Active state`() = runTest {
-        val session = createSession()
+        val session = createSession(id = SESSION_ID, destinationName = DESTINATION_NAME)
 
         viewModel = createViewModel()
 
@@ -173,7 +179,7 @@ class SessionViewModelTest {
 
     @Test
     fun `StopConfirmed calls stop use case and navigates`() = runTest {
-        val session = createSession()
+        val session = createSession(id = SESSION_ID)
         activeSessionFlow.value = session
         coEvery { updateSessionStatusUseCase.stop() } returns Result.success(Unit)
 
@@ -452,9 +458,9 @@ class SessionViewModelTest {
     @Test
     fun `active session maps currentLocation from last track point`() = runTest {
         val trackPoints = listOf(
-            createTrackPoint(lat = 52.50, lon = 13.40),
-            createTrackPoint(lat = 52.51, lon = 13.41),
-            createTrackPoint(lat = 52.52, lon = 13.42),
+            createTrackPoint(latitude = 52.50, longitude = 13.40),
+            createTrackPoint(latitude = 52.51, longitude = 13.41),
+            createTrackPoint(latitude = 52.52, longitude = 13.42),
         )
         val session = createSession(trackPoints = trackPoints)
         activeSessionFlow.value = session
@@ -485,7 +491,10 @@ class SessionViewModelTest {
 
     @Test
     fun `active session maps destination location`() = runTest {
-        val session = createSession()
+        val session = createSession(
+            destinationLatitude = DESTINATION_LATITUDE,
+            destinationLongitude = DESTINATION_LONGITUDE,
+        )
         activeSessionFlow.value = session
 
         viewModel = createViewModel()
@@ -544,46 +553,4 @@ class SessionViewModelTest {
         }
     }
 
-    private fun createSession(
-        id: String = SESSION_ID,
-        destinationName: String = DESTINATION_NAME,
-        status: SessionStatus = SessionStatus.RUNNING,
-        trackPoints: List<TrackPoint> = listOf(createTrackPoint()),
-    ) = Session(
-        id = id,
-        destinationId = DESTINATION_ID,
-        destinationName = destinationName,
-        destinationLatitude = DESTINATION_LATITUDE,
-        destinationLongitude = DESTINATION_LONGITUDE,
-        startLatitude = START_LATITUDE,
-        startLongitude = START_LONGITUDE,
-        startTimeMs = 1704067200000L,
-        lastResumedTimeMs = 1704067200000L,
-        endTimeMs = null,
-        elapsedTimeMs = 5400000L,
-        traveledDistanceKm = 15.5,
-        averageSpeedKmh = 22.0,
-        topSpeedKmh = 35.0,
-        status = status,
-        trackPoints = trackPoints,
-    )
-
-    private fun createTrackPoint(
-        lat: Double = 52.51,
-        lon: Double = 13.41,
-    ) = TrackPoint(
-        latitude = lat,
-        longitude = lon,
-        timestampMs = 1704068000000L,
-        speedKmh = 25.0,
-    )
-
-    private fun createSessionUiModel(
-        elapsedTimeFormatted: String = FORMATTED_TIME,
-    ) = SessionUiModel(
-        elapsedTimeFormatted = elapsedTimeFormatted,
-        traveledDistanceFormatted = FORMATTED_DISTANCE,
-        averageSpeedFormatted = FORMATTED_AVG_SPEED,
-        topSpeedFormatted = FORMATTED_TOP_SPEED,
-    )
 }

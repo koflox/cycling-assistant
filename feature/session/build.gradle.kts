@@ -7,11 +7,13 @@ plugins {
 
 android {
     namespace = "com.koflox.session"
-
     buildFeatures {
         compose = true
     }
-
+    testFixtures {
+        enable = true
+        androidResources = true
+    }
     defaultConfig {
         ksp {
             arg("room.schemaLocation", "${rootProject.projectDir}/schemas/session")
@@ -76,6 +78,10 @@ dependencies {
     testImplementation(libs.turbine)
     testImplementation(libs.koin.test)
     testImplementation(project(":shared:testing"))
+
+    // Test fixtures dependencies
+    testFixturesImplementation(platform(libs.androidx.compose.bom))
+    testFixturesImplementation(libs.androidx.ui)
 
     debugImplementation(libs.androidx.ui.tooling)
 }

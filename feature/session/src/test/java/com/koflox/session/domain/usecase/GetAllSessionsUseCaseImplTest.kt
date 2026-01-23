@@ -2,9 +2,8 @@ package com.koflox.session.domain.usecase
 
 import app.cash.turbine.test
 import com.koflox.session.domain.model.Session
-import com.koflox.session.domain.model.SessionStatus
-import com.koflox.session.domain.model.TrackPoint
 import com.koflox.session.domain.repository.SessionRepository
+import com.koflox.session.testutil.createSession
 import com.koflox.testing.coroutine.MainDispatcherRule
 import io.mockk.every
 import io.mockk.mockk
@@ -46,7 +45,7 @@ class GetAllSessionsUseCaseImplTest {
 
     @Test
     fun `observeAllSessions returns flow from repository`() = runTest {
-        val sessions = listOf(createSession())
+        val sessions = listOf(createTestSession())
         val flow = flowOf(sessions)
         every { sessionRepository.observeAllSessions() } returns flow
 
@@ -57,7 +56,7 @@ class GetAllSessionsUseCaseImplTest {
 
     @Test
     fun `observeAllSessions emits sessions`() = runTest {
-        val sessions = listOf(createSession())
+        val sessions = listOf(createTestSession())
         every { sessionRepository.observeAllSessions() } returns flowOf(sessions)
 
         useCase.observeAllSessions().test {
@@ -82,9 +81,9 @@ class GetAllSessionsUseCaseImplTest {
     @Test
     fun `observeAllSessions emits multiple sessions`() = runTest {
         val sessions = listOf(
-            createSession(id = "session-1"),
-            createSession(id = "session-2"),
-            createSession(id = "session-3"),
+            createTestSession(id = "session-1"),
+            createTestSession(id = "session-2"),
+            createTestSession(id = "session-3"),
         )
         every { sessionRepository.observeAllSessions() } returns flowOf(sessions)
 
@@ -101,7 +100,7 @@ class GetAllSessionsUseCaseImplTest {
     @Test
     fun `observeAllSessions emits updates`() = runTest {
         val initialSessions = emptyList<Session>()
-        val updatedSessions = listOf(createSession())
+        val updatedSessions = listOf(createTestSession())
         every { sessionRepository.observeAllSessions() } returns flowOf(initialSessions, updatedSessions)
 
         useCase.observeAllSessions().test {
@@ -111,31 +110,9 @@ class GetAllSessionsUseCaseImplTest {
         }
     }
 
-    private fun createSession(
+    private fun createTestSession(
         id: String = SESSION_ID,
-    ) = Session(
+    ) = createSession(
         id = id,
-        destinationId = "dest-456",
-        destinationName = "Test Destination",
-        destinationLatitude = 52.52,
-        destinationLongitude = 13.405,
-        startLatitude = 52.50,
-        startLongitude = 13.40,
-        startTimeMs = 1000000L,
-        lastResumedTimeMs = 1000000L,
-        endTimeMs = 2000000L,
-        elapsedTimeMs = 900000L,
-        traveledDistanceKm = 5.5,
-        averageSpeedKmh = 22.0,
-        topSpeedKmh = 35.0,
-        status = SessionStatus.COMPLETED,
-        trackPoints = listOf(
-            TrackPoint(
-                latitude = 52.51,
-                longitude = 13.41,
-                timestampMs = 1500000L,
-                speedKmh = 25.0,
-            ),
-        ),
     )
 }

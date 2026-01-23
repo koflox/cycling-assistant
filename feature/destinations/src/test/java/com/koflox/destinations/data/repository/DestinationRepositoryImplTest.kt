@@ -2,11 +2,11 @@ package com.koflox.destinations.data.repository
 
 import com.koflox.destinations.data.mapper.DestinationMapper
 import com.koflox.destinations.data.source.asset.PoiAssetDataSource
-import com.koflox.destinations.data.source.asset.model.DestinationAsset
 import com.koflox.destinations.data.source.local.PoiLocalDataSource
-import com.koflox.destinations.data.source.local.entity.DestinationLocal
 import com.koflox.destinations.data.source.prefs.PreferencesDataSource
-import com.koflox.destinations.domain.model.Destination
+import com.koflox.destinations.testutil.createDestination
+import com.koflox.destinations.testutil.createDestinationAsset
+import com.koflox.destinations.testutil.createDestinationLocal
 import com.koflox.location.LocationDataSource
 import com.koflox.location.model.Location
 import com.koflox.testing.coroutine.MainDispatcherRule
@@ -87,10 +87,12 @@ class DestinationRepositoryImplTest {
 
     @Test
     fun `initializeDatabase maps assets to entities`() = runTest {
-        val assets = listOf(createAsset())
+        val assets = listOf(createDestinationAsset(id = TEST_ID, title = TEST_TITLE, latitude = TEST_LAT, longitude = TEST_LONG))
         coEvery { preferencesDataSource.isDatabaseInitialized() } returns false
         coEvery { poiAssetDataSource.readDestinationsJson() } returns assets
-        coEvery { mapper.toLocalList(assets) } returns listOf(createEntity())
+        coEvery {
+            mapper.toLocalList(assets)
+        } returns listOf(createDestinationLocal(id = TEST_ID, title = TEST_TITLE, latitude = TEST_LAT, longitude = TEST_LONG))
 
         repository.initializeDatabase()
 
@@ -99,9 +101,11 @@ class DestinationRepositoryImplTest {
 
     @Test
     fun `initializeDatabase inserts entities into database`() = runTest {
-        val entities = listOf(createEntity())
+        val entities = listOf(createDestinationLocal(id = TEST_ID, title = TEST_TITLE, latitude = TEST_LAT, longitude = TEST_LONG))
         coEvery { preferencesDataSource.isDatabaseInitialized() } returns false
-        coEvery { poiAssetDataSource.readDestinationsJson() } returns listOf(createAsset())
+        coEvery {
+            poiAssetDataSource.readDestinationsJson()
+        } returns listOf(createDestinationAsset(id = TEST_ID, title = TEST_TITLE, latitude = TEST_LAT, longitude = TEST_LONG))
         coEvery { mapper.toLocalList(any()) } returns entities
 
         repository.initializeDatabase()
@@ -166,8 +170,8 @@ class DestinationRepositoryImplTest {
 
     @Test
     fun `getAllDestinations maps entities to domain`() = runTest {
-        val entity = createEntity()
-        val domain = createDomain()
+        val entity = createDestinationLocal(id = TEST_ID, title = TEST_TITLE, latitude = TEST_LAT, longitude = TEST_LONG)
+        val domain = createDestination(id = TEST_ID, title = TEST_TITLE, latitude = TEST_LAT, longitude = TEST_LONG)
         coEvery { poiLocalDataSource.getAllDestinations() } returns listOf(entity)
         coEvery { mapper.toDomain(entity) } returns domain
 
@@ -178,8 +182,8 @@ class DestinationRepositoryImplTest {
 
     @Test
     fun `getAllDestinations returns mapped destinations`() = runTest {
-        val entity = createEntity()
-        val domain = createDomain()
+        val entity = createDestinationLocal(id = TEST_ID, title = TEST_TITLE, latitude = TEST_LAT, longitude = TEST_LONG)
+        val domain = createDestination(id = TEST_ID, title = TEST_TITLE, latitude = TEST_LAT, longitude = TEST_LONG)
         coEvery { poiLocalDataSource.getAllDestinations() } returns listOf(entity)
         coEvery { mapper.toDomain(entity) } returns domain
 
@@ -264,40 +268,4 @@ class DestinationRepositoryImplTest {
 
         assertEquals(flow, result)
     }
-
-    private fun createAsset(
-        id: String = TEST_ID,
-        title: String = TEST_TITLE,
-        latitude: Double = TEST_LAT,
-        longitude: Double = TEST_LONG,
-    ) = DestinationAsset(
-        id = id,
-        title = title,
-        latitude = latitude,
-        longitude = longitude,
-    )
-
-    private fun createEntity(
-        id: String = TEST_ID,
-        title: String = TEST_TITLE,
-        latitude: Double = TEST_LAT,
-        longitude: Double = TEST_LONG,
-    ) = DestinationLocal(
-        id = id,
-        title = title,
-        latitude = latitude,
-        longitude = longitude,
-    )
-
-    private fun createDomain(
-        id: String = TEST_ID,
-        title: String = TEST_TITLE,
-        latitude: Double = TEST_LAT,
-        longitude: Double = TEST_LONG,
-    ) = Destination(
-        id = id,
-        title = title,
-        latitude = latitude,
-        longitude = longitude,
-    )
 }

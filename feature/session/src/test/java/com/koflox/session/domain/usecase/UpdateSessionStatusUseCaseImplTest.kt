@@ -2,8 +2,8 @@ package com.koflox.session.domain.usecase
 
 import com.koflox.session.domain.model.Session
 import com.koflox.session.domain.model.SessionStatus
-import com.koflox.session.domain.model.TrackPoint
 import com.koflox.session.domain.repository.SessionRepository
+import com.koflox.session.testutil.createSession
 import com.koflox.testing.coroutine.MainDispatcherRule
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -40,7 +40,7 @@ class UpdateSessionStatusUseCaseImplTest {
 
     @Test
     fun `pause gets active session`() = runTest {
-        val session = createSession(status = SessionStatus.RUNNING)
+        val session = createTestSession(status = SessionStatus.RUNNING)
         coEvery { activeSessionUseCase.getActiveSession() } returns session
         coEvery { sessionRepository.saveSession(any()) } returns Result.success(Unit)
 
@@ -51,7 +51,7 @@ class UpdateSessionStatusUseCaseImplTest {
 
     @Test
     fun `pause updates status to paused`() = runTest {
-        val session = createSession(status = SessionStatus.RUNNING)
+        val session = createTestSession(status = SessionStatus.RUNNING)
         val sessionSlot = slot<Session>()
         coEvery { activeSessionUseCase.getActiveSession() } returns session
         coEvery { sessionRepository.saveSession(capture(sessionSlot)) } returns Result.success(Unit)
@@ -63,7 +63,7 @@ class UpdateSessionStatusUseCaseImplTest {
 
     @Test
     fun `pause updates elapsed time`() = runTest {
-        val session = createSession(
+        val session = createTestSession(
             status = SessionStatus.RUNNING,
             elapsedTimeMs = ELAPSED_TIME_MS,
             lastResumedTimeMs = LAST_RESUMED_TIME_MS,
@@ -79,7 +79,7 @@ class UpdateSessionStatusUseCaseImplTest {
 
     @Test
     fun `pause saves session to repository`() = runTest {
-        val session = createSession(status = SessionStatus.RUNNING)
+        val session = createTestSession(status = SessionStatus.RUNNING)
         coEvery { activeSessionUseCase.getActiveSession() } returns session
         coEvery { sessionRepository.saveSession(any()) } returns Result.success(Unit)
 
@@ -90,7 +90,7 @@ class UpdateSessionStatusUseCaseImplTest {
 
     @Test
     fun `pause returns success on successful save`() = runTest {
-        val session = createSession(status = SessionStatus.RUNNING)
+        val session = createTestSession(status = SessionStatus.RUNNING)
         coEvery { activeSessionUseCase.getActiveSession() } returns session
         coEvery { sessionRepository.saveSession(any()) } returns Result.success(Unit)
 
@@ -110,7 +110,7 @@ class UpdateSessionStatusUseCaseImplTest {
 
     @Test
     fun `resume gets active session`() = runTest {
-        val session = createSession(status = SessionStatus.PAUSED)
+        val session = createTestSession(status = SessionStatus.PAUSED)
         coEvery { activeSessionUseCase.getActiveSession() } returns session
         coEvery { sessionRepository.saveSession(any()) } returns Result.success(Unit)
 
@@ -121,7 +121,7 @@ class UpdateSessionStatusUseCaseImplTest {
 
     @Test
     fun `resume updates status to running`() = runTest {
-        val session = createSession(status = SessionStatus.PAUSED)
+        val session = createTestSession(status = SessionStatus.PAUSED)
         val sessionSlot = slot<Session>()
         coEvery { activeSessionUseCase.getActiveSession() } returns session
         coEvery { sessionRepository.saveSession(capture(sessionSlot)) } returns Result.success(Unit)
@@ -133,7 +133,7 @@ class UpdateSessionStatusUseCaseImplTest {
 
     @Test
     fun `resume updates lastResumedTimeMs`() = runTest {
-        val session = createSession(
+        val session = createTestSession(
             status = SessionStatus.PAUSED,
             lastResumedTimeMs = LAST_RESUMED_TIME_MS,
         )
@@ -148,7 +148,7 @@ class UpdateSessionStatusUseCaseImplTest {
 
     @Test
     fun `resume saves session to repository`() = runTest {
-        val session = createSession(status = SessionStatus.PAUSED)
+        val session = createTestSession(status = SessionStatus.PAUSED)
         coEvery { activeSessionUseCase.getActiveSession() } returns session
         coEvery { sessionRepository.saveSession(any()) } returns Result.success(Unit)
 
@@ -159,7 +159,7 @@ class UpdateSessionStatusUseCaseImplTest {
 
     @Test
     fun `resume returns success on successful save`() = runTest {
-        val session = createSession(status = SessionStatus.PAUSED)
+        val session = createTestSession(status = SessionStatus.PAUSED)
         coEvery { activeSessionUseCase.getActiveSession() } returns session
         coEvery { sessionRepository.saveSession(any()) } returns Result.success(Unit)
 
@@ -179,7 +179,7 @@ class UpdateSessionStatusUseCaseImplTest {
 
     @Test
     fun `stop gets active session`() = runTest {
-        val session = createSession(status = SessionStatus.RUNNING)
+        val session = createTestSession(status = SessionStatus.RUNNING)
         coEvery { activeSessionUseCase.getActiveSession() } returns session
         coEvery { sessionRepository.saveSession(any()) } returns Result.success(Unit)
 
@@ -190,7 +190,7 @@ class UpdateSessionStatusUseCaseImplTest {
 
     @Test
     fun `stop updates status to completed`() = runTest {
-        val session = createSession(status = SessionStatus.RUNNING)
+        val session = createTestSession(status = SessionStatus.RUNNING)
         val sessionSlot = slot<Session>()
         coEvery { activeSessionUseCase.getActiveSession() } returns session
         coEvery { sessionRepository.saveSession(capture(sessionSlot)) } returns Result.success(Unit)
@@ -202,7 +202,7 @@ class UpdateSessionStatusUseCaseImplTest {
 
     @Test
     fun `stop sets endTimeMs`() = runTest {
-        val session = createSession(status = SessionStatus.RUNNING)
+        val session = createTestSession(status = SessionStatus.RUNNING)
         val sessionSlot = slot<Session>()
         coEvery { activeSessionUseCase.getActiveSession() } returns session
         coEvery { sessionRepository.saveSession(capture(sessionSlot)) } returns Result.success(Unit)
@@ -214,7 +214,7 @@ class UpdateSessionStatusUseCaseImplTest {
 
     @Test
     fun `stop calculates final elapsed time for running session`() = runTest {
-        val session = createSession(
+        val session = createTestSession(
             status = SessionStatus.RUNNING,
             elapsedTimeMs = ELAPSED_TIME_MS,
             lastResumedTimeMs = LAST_RESUMED_TIME_MS,
@@ -230,7 +230,7 @@ class UpdateSessionStatusUseCaseImplTest {
 
     @Test
     fun `stop preserves elapsed time for paused session`() = runTest {
-        val session = createSession(
+        val session = createTestSession(
             status = SessionStatus.PAUSED,
             elapsedTimeMs = ELAPSED_TIME_MS,
         )
@@ -245,7 +245,7 @@ class UpdateSessionStatusUseCaseImplTest {
 
     @Test
     fun `stop saves session to repository`() = runTest {
-        val session = createSession(status = SessionStatus.RUNNING)
+        val session = createTestSession(status = SessionStatus.RUNNING)
         coEvery { activeSessionUseCase.getActiveSession() } returns session
         coEvery { sessionRepository.saveSession(any()) } returns Result.success(Unit)
 
@@ -256,7 +256,7 @@ class UpdateSessionStatusUseCaseImplTest {
 
     @Test
     fun `stop returns success on successful save`() = runTest {
-        val session = createSession(status = SessionStatus.RUNNING)
+        val session = createTestSession(status = SessionStatus.RUNNING)
         coEvery { activeSessionUseCase.getActiveSession() } returns session
         coEvery { sessionRepository.saveSession(any()) } returns Result.success(Unit)
 
@@ -274,34 +274,15 @@ class UpdateSessionStatusUseCaseImplTest {
         assertTrue(result.isFailure)
     }
 
-    private fun createSession(
+    private fun createTestSession(
         id: String = SESSION_ID,
         status: SessionStatus = SessionStatus.RUNNING,
         elapsedTimeMs: Long = 0L,
         lastResumedTimeMs: Long = START_TIME_MS,
-    ) = Session(
+    ) = createSession(
         id = id,
-        destinationId = "dest-456",
-        destinationName = "Test Destination",
-        destinationLatitude = 52.52,
-        destinationLongitude = 13.405,
-        startLatitude = 52.50,
-        startLongitude = 13.40,
-        startTimeMs = START_TIME_MS,
         lastResumedTimeMs = lastResumedTimeMs,
-        endTimeMs = null,
         elapsedTimeMs = elapsedTimeMs,
-        traveledDistanceKm = 0.0,
-        averageSpeedKmh = 0.0,
-        topSpeedKmh = 0.0,
         status = status,
-        trackPoints = listOf(
-            TrackPoint(
-                latitude = 52.51,
-                longitude = 13.41,
-                timestampMs = START_TIME_MS,
-                speedKmh = 0.0,
-            ),
-        ),
     )
 }

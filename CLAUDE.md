@@ -704,6 +704,118 @@ fun `ShareClicked shows share dialog`() = runTest {
 | `expectNoEvents()`                 | Assert no more emissions (Turbine)         |
 | `cancelAndIgnoreRemainingEvents()` | End test without consuming remaining items |
 
+### Test Factory Functions
+
+Factory functions for creating test objects are organized by sharing scope:
+
+**Location Options:**
+
+| Scope        | Location                                | Consumed via                            |
+|--------------|-----------------------------------------|-----------------------------------------|
+| Cross-module | `src/testFixtures/kotlin/.../testutil/` | `testImplementation(testFixtures(...))` |
+| Module-local | `src/test/java/.../testutil/`           | Direct import                           |
+
+**Test Fixtures (Cross-Module Sharing):**
+
+Use Android's test fixtures feature when factories need to be shared across modules:
+
+```kotlin
+// In feature/session/build.gradle.kts
+android {
+    testFixtures {
+        enable = true
+    }
+}
+
+dependencies {
+    // Dependencies needed by testFixtures code
+    testFixturesImplementation(platform(libs.androidx.compose.bom))
+    testFixturesImplementation(libs.androidx.ui)
+}
+
+// In consuming module's build.gradle.kts
+dependencies {
+    testImplementation(testFixtures(project(":feature:session")))
+}
+```
+
+```
+feature/session/
+├── src/main/
+├── src/test/                    # Module's own tests (can access testFixtures)
+└── src/testFixtures/kotlin/     # Shared test utilities
+    └── com/koflox/session/testutil/
+        └── SessionTestFactories.kt
+```
+
+**Convention:**
+
+- All parameters have empty/zero defaults (empty strings, `0`, `0.0`, `emptyList()`, etc.)
+- For test specific values, tests must pass explicit values using constants defined in
+  `companion object`
+- No inline magic values - use constants like `SESSION_ID`, `DESTINATION_NAME`, etc.
+
+**Example Factory:**
+
+```kotlin
+// In testutil/SessionTestFactories.kt
+fun createSession(
+    id: String = "",
+    destinationId: String = "",
+    destinationName: String = "",
+    status: SessionStatus = SessionStatus.RUNNING,
+    elapsedTimeMs: Long = 0L,
+    traveledDistanceKm: Double = 0.0,
+    trackPoints: List<TrackPoint> = emptyList(),
+) = Session(
+    id = id,
+    destinationId = destinationId,
+    destinationName = destinationName,
+    status = status,
+    elapsedTimeMs = elapsedTimeMs,
+    traveledDistanceKm = traveledDistanceKm,
+    trackPoints = trackPoints,
+)
+```
+
+**Usage in Tests:**
+
+```kotlin
+class SessionViewModelTest {
+
+    companion object {
+        private const val SESSION_ID = "session-123"
+        private const val DESTINATION_NAME = "Test Destination"
+    }
+
+    @Test
+    fun `loads session and shows Content state`() = runTest {
+        // Pass explicit values using constants - no magic values
+        val session = createSession(
+            id = SESSION_ID,
+            destinationName = DESTINATION_NAME,
+            status = SessionStatus.COMPLETED,
+        )
+        coEvery { useCase.getSession(SESSION_ID) } returns Result.success(session)
+
+        // ...
+    }
+}
+```
+
+**Rules:**
+
+- Factory functions use empty/zero defaults to avoid hidden assumptions
+- Tests explicitly pass only the values they care about
+- Constants are defined in test class `companion object`
+- Use `testFixtures` when factories are needed by other modules
+- Use `src/test/.../testutil/` when factories are module-local only
+
+**Reference Implementations:**
+
+- `feature/session/src/testFixtures/kotlin/com/koflox/session/testutil/SessionTestFactories.kt`
+- `feature/destinations/src/test/java/com/koflox/destinations/testutil/DestinationTestFactories.kt`
+
 **Reference Implementation:** `SessionCompletionViewModelTest`
 
 ## Adding New Features

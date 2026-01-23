@@ -2,9 +2,8 @@ package com.koflox.session.domain.usecase
 
 import app.cash.turbine.test
 import com.koflox.session.domain.model.Session
-import com.koflox.session.domain.model.SessionStatus
-import com.koflox.session.domain.model.TrackPoint
 import com.koflox.session.domain.repository.SessionRepository
+import com.koflox.session.testutil.createSession
 import com.koflox.testing.coroutine.MainDispatcherRule
 import io.mockk.every
 import io.mockk.mockk
@@ -23,8 +22,6 @@ class ActiveSessionUseCaseImplTest {
 
     companion object {
         private const val SESSION_ID = "session-123"
-        private const val DESTINATION_ID = "dest-456"
-        private const val DESTINATION_NAME = "Test Destination"
     }
 
     @get:Rule
@@ -51,7 +48,7 @@ class ActiveSessionUseCaseImplTest {
 
     @Test
     fun `observeActiveSession returns session when active`() = runTest {
-        val session = createSession()
+        val session = createTestSession()
         every { sessionRepository.observeActiveSession() } returns flowOf(session)
 
         useCase.observeActiveSession().test {
@@ -74,7 +71,7 @@ class ActiveSessionUseCaseImplTest {
 
     @Test
     fun `hasActiveSession returns true when session exists`() = runTest {
-        val session = createSession()
+        val session = createTestSession()
         every { sessionRepository.observeActiveSession() } returns flowOf(session)
 
         useCase.hasActiveSession().test {
@@ -97,7 +94,7 @@ class ActiveSessionUseCaseImplTest {
 
     @Test
     fun `hasActiveSession emits updates when session changes`() = runTest {
-        val session = createSession()
+        val session = createTestSession()
         every { sessionRepository.observeActiveSession() } returns flowOf(null, session, null)
 
         useCase.hasActiveSession().test {
@@ -110,7 +107,7 @@ class ActiveSessionUseCaseImplTest {
 
     @Test
     fun `getActiveSession returns session when exists`() = runTest {
-        val session = createSession()
+        val session = createTestSession()
         every { sessionRepository.observeActiveSession() } returns flowOf(session)
 
         val result = useCase.getActiveSession()
@@ -133,8 +130,8 @@ class ActiveSessionUseCaseImplTest {
 
     @Test
     fun `getActiveSession returns first emission from flow`() = runTest {
-        val session1 = createSession(id = "session-1")
-        val session2 = createSession(id = "session-2")
+        val session1 = createTestSession(id = "session-1")
+        val session2 = createTestSession(id = "session-2")
         every { sessionRepository.observeActiveSession() } returns flowOf(session1, session2)
 
         val result = useCase.getActiveSession()
@@ -142,32 +139,9 @@ class ActiveSessionUseCaseImplTest {
         assertEquals("session-1", result.id)
     }
 
-    private fun createSession(
+    private fun createTestSession(
         id: String = SESSION_ID,
-        status: SessionStatus = SessionStatus.RUNNING,
-    ) = Session(
+    ) = createSession(
         id = id,
-        destinationId = DESTINATION_ID,
-        destinationName = DESTINATION_NAME,
-        destinationLatitude = 52.52,
-        destinationLongitude = 13.405,
-        startLatitude = 52.50,
-        startLongitude = 13.40,
-        startTimeMs = 1000000L,
-        lastResumedTimeMs = 1000000L,
-        endTimeMs = null,
-        elapsedTimeMs = 0L,
-        traveledDistanceKm = 0.0,
-        averageSpeedKmh = 0.0,
-        topSpeedKmh = 0.0,
-        status = status,
-        trackPoints = listOf(
-            TrackPoint(
-                latitude = 52.51,
-                longitude = 13.41,
-                timestampMs = 1500000L,
-                speedKmh = 25.0,
-            ),
-        ),
     )
 }

@@ -3,12 +3,13 @@ package com.koflox.session.data.repository
 import app.cash.turbine.test
 import com.koflox.session.data.mapper.SessionMapper
 import com.koflox.session.data.source.local.SessionLocalDataSource
-import com.koflox.session.data.source.local.entity.SessionEntity
 import com.koflox.session.data.source.local.entity.SessionWithTrackPoints
-import com.koflox.session.data.source.local.entity.TrackPointEntity
 import com.koflox.session.domain.model.Session
 import com.koflox.session.domain.model.SessionStatus
-import com.koflox.session.domain.model.TrackPoint
+import com.koflox.session.testutil.createSession
+import com.koflox.session.testutil.createSessionEntity
+import com.koflox.session.testutil.createSessionWithTrackPoints
+import com.koflox.session.testutil.createTrackPointEntity
 import com.koflox.testing.coroutine.MainDispatcherRule
 import io.mockk.coEvery
 import io.mockk.coJustRun
@@ -28,8 +29,6 @@ class SessionRepositoryImplTest {
 
     companion object {
         private const val SESSION_ID = "session-123"
-        private const val DESTINATION_ID = "dest-456"
-        private const val DESTINATION_NAME = "Test Destination"
     }
 
     @get:Rule
@@ -63,8 +62,8 @@ class SessionRepositoryImplTest {
 
     @Test
     fun `observeActiveSession maps session when found`() = runTest {
-        val sessionWithTrackPoints = createSessionWithTrackPoints()
-        val domainSession = createSession()
+        val sessionWithTrackPoints = createTestSessionWithTrackPoints()
+        val domainSession = createTestSession()
         every {
             localDataSource.observeFirstSessionByStatuses(any())
         } returns flowOf(sessionWithTrackPoints)
@@ -100,8 +99,8 @@ class SessionRepositoryImplTest {
 
     @Test
     fun `observeAllSessions maps sessions`() = runTest {
-        val sessionWithTrackPoints = createSessionWithTrackPoints()
-        val domainSession = createSession()
+        val sessionWithTrackPoints = createTestSessionWithTrackPoints()
+        val domainSession = createTestSession()
         every { localDataSource.observeAllSessions() } returns flowOf(listOf(sessionWithTrackPoints))
         coEvery { mapper.toDomain(sessionWithTrackPoints) } returns domainSession
 
@@ -126,7 +125,7 @@ class SessionRepositoryImplTest {
 
     @Test
     fun `saveSession maps session to entity`() = runTest {
-        val session = createSession()
+        val session = createTestSession()
         val sessionEntity = createSessionEntity()
         val trackPointEntities = listOf(createTrackPointEntity())
         coEvery { mapper.toEntity(session) } returns sessionEntity
@@ -140,7 +139,7 @@ class SessionRepositoryImplTest {
 
     @Test
     fun `saveSession maps track points to entities`() = runTest {
-        val session = createSession()
+        val session = createTestSession()
         val sessionEntity = createSessionEntity()
         val trackPointEntities = listOf(createTrackPointEntity())
         coEvery { mapper.toEntity(session) } returns sessionEntity
@@ -154,7 +153,7 @@ class SessionRepositoryImplTest {
 
     @Test
     fun `saveSession inserts session with track points`() = runTest {
-        val session = createSession()
+        val session = createTestSession()
         val sessionEntity = createSessionEntity()
         val trackPointEntities = listOf(createTrackPointEntity())
         coEvery { mapper.toEntity(session) } returns sessionEntity
@@ -168,7 +167,7 @@ class SessionRepositoryImplTest {
 
     @Test
     fun `saveSession returns success on successful save`() = runTest {
-        val session = createSession()
+        val session = createTestSession()
         coEvery { mapper.toEntity(session) } returns createSessionEntity()
         coEvery { mapper.toTrackPointEntities(any(), any()) } returns emptyList()
         coJustRun { localDataSource.insertSessionWithTrackPoints(any(), any()) }
@@ -180,7 +179,7 @@ class SessionRepositoryImplTest {
 
     @Test
     fun `saveSession returns failure on error`() = runTest {
-        val session = createSession()
+        val session = createTestSession()
         val exception = RuntimeException("Database error")
         coEvery { mapper.toEntity(session) } throws exception
 
@@ -192,8 +191,8 @@ class SessionRepositoryImplTest {
 
     @Test
     fun `getSession fetches session from localDataSource`() = runTest {
-        val sessionWithTrackPoints = createSessionWithTrackPoints()
-        val domainSession = createSession()
+        val sessionWithTrackPoints = createTestSessionWithTrackPoints()
+        val domainSession = createTestSession()
         coEvery { localDataSource.getSessionWithTrackPoints(SESSION_ID) } returns sessionWithTrackPoints
         coEvery { mapper.toDomain(sessionWithTrackPoints) } returns domainSession
 
@@ -204,8 +203,8 @@ class SessionRepositoryImplTest {
 
     @Test
     fun `getSession maps session to domain`() = runTest {
-        val sessionWithTrackPoints = createSessionWithTrackPoints()
-        val domainSession = createSession()
+        val sessionWithTrackPoints = createTestSessionWithTrackPoints()
+        val domainSession = createTestSession()
         coEvery { localDataSource.getSessionWithTrackPoints(SESSION_ID) } returns sessionWithTrackPoints
         coEvery { mapper.toDomain(sessionWithTrackPoints) } returns domainSession
 
@@ -216,8 +215,8 @@ class SessionRepositoryImplTest {
 
     @Test
     fun `getSession returns success with session when found`() = runTest {
-        val sessionWithTrackPoints = createSessionWithTrackPoints()
-        val domainSession = createSession()
+        val sessionWithTrackPoints = createTestSessionWithTrackPoints()
+        val domainSession = createTestSession()
         coEvery { localDataSource.getSessionWithTrackPoints(SESSION_ID) } returns sessionWithTrackPoints
         coEvery { mapper.toDomain(sessionWithTrackPoints) } returns domainSession
 
@@ -249,61 +248,13 @@ class SessionRepositoryImplTest {
         assertEquals(exception, result.exceptionOrNull())
     }
 
-    private fun createSession(
+    private fun createTestSession(
         id: String = SESSION_ID,
-    ) = Session(
+    ): Session = createSession(
         id = id,
-        destinationId = DESTINATION_ID,
-        destinationName = DESTINATION_NAME,
-        destinationLatitude = 52.52,
-        destinationLongitude = 13.405,
-        startLatitude = 52.50,
-        startLongitude = 13.40,
-        startTimeMs = 1000000L,
-        lastResumedTimeMs = 1000000L,
-        endTimeMs = null,
-        elapsedTimeMs = 0L,
-        traveledDistanceKm = 0.0,
-        averageSpeedKmh = 0.0,
-        topSpeedKmh = 0.0,
-        status = SessionStatus.RUNNING,
-        trackPoints = listOf(
-            TrackPoint(
-                latitude = 52.51,
-                longitude = 13.41,
-                timestampMs = 1500000L,
-                speedKmh = 25.0,
-            ),
-        ),
     )
 
-    private fun createSessionEntity() = SessionEntity(
-        id = SESSION_ID,
-        destinationId = DESTINATION_ID,
-        destinationName = DESTINATION_NAME,
-        destinationLatitude = 52.52,
-        destinationLongitude = 13.405,
-        startLatitude = 52.50,
-        startLongitude = 13.40,
-        startTimeMs = 1000000L,
-        lastResumedTimeMs = 1000000L,
-        endTimeMs = null,
-        elapsedTimeMs = 0L,
-        traveledDistanceKm = 0.0,
-        averageSpeedKmh = 0.0,
-        topSpeedKmh = 0.0,
-        status = "RUNNING",
-    )
-
-    private fun createTrackPointEntity() = TrackPointEntity(
-        sessionId = SESSION_ID,
-        latitude = 52.51,
-        longitude = 13.41,
-        timestampMs = 1500000L,
-        speedKmh = 25.0,
-    )
-
-    private fun createSessionWithTrackPoints() = SessionWithTrackPoints(
+    private fun createTestSessionWithTrackPoints(): SessionWithTrackPoints = createSessionWithTrackPoints(
         session = createSessionEntity(),
         trackPoints = listOf(createTrackPointEntity()),
     )

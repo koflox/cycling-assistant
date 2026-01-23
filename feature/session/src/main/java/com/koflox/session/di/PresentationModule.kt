@@ -7,9 +7,9 @@ import com.koflox.session.presentation.completion.SessionCompletionViewModel
 import com.koflox.session.presentation.error.SessionErrorMessageMapper
 import com.koflox.session.presentation.mapper.SessionUiMapper
 import com.koflox.session.presentation.mapper.SessionUiMapperImpl
+import com.koflox.session.presentation.session.SessionViewModel
 import com.koflox.session.presentation.session.timer.SessionTimerFactory
 import com.koflox.session.presentation.session.timer.SessionTimerImpl
-import com.koflox.session.presentation.session.SessionViewModel
 import com.koflox.session.presentation.sessionslist.SessionsListUiMapper
 import com.koflox.session.presentation.sessionslist.SessionsListUiMapperImpl
 import com.koflox.session.presentation.sessionslist.SessionsListViewModel
