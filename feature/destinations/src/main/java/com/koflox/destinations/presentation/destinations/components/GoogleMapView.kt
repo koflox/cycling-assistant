@@ -40,6 +40,7 @@ import com.koflox.graphics.primitives.Point
 import com.koflox.location.model.Location
 import java.util.Locale
 import android.graphics.Color as AndroidColor
+import com.koflox.designsystem.R as DesignSystemR
 
 private const val DEFAULT_ZOOM_LEVEL = 12f
 private const val DEFAULT_ROUTE_LINE_WIDTH = 8f
@@ -112,7 +113,7 @@ private fun Map(
     val mapProperties = remember(isDarkTheme) {
         MapProperties(
             mapStyleOptions = if (isDarkTheme) {
-                MapStyleOptions.loadRawResourceStyle(context, R.raw.map_style_dark)
+                MapStyleOptions.loadRawResourceStyle(context, DesignSystemR.raw.map_style_dark)
             } else {
                 null
             },

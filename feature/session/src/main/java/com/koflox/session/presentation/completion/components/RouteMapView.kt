@@ -31,8 +31,8 @@ import com.google.maps.android.compose.Polyline
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberUpdatedMarkerState
 import com.koflox.designsystem.theme.LocalDarkTheme
-import com.koflox.session.R
 import kotlin.math.atan2
+import com.koflox.designsystem.R as DesignSystemR
 
 private const val MAP_PADDING = 100
 private val ROUTE_COLOR = Color(0xFF2196F3)
@@ -69,7 +69,7 @@ internal fun RouteMapView(
     val mapProperties = remember(isDarkTheme) {
         MapProperties(
             mapStyleOptions = if (isDarkTheme) {
-                MapStyleOptions.loadRawResourceStyle(context, R.raw.map_style_dark)
+                MapStyleOptions.loadRawResourceStyle(context, DesignSystemR.raw.map_style_dark)
             } else {
                 null
             },
