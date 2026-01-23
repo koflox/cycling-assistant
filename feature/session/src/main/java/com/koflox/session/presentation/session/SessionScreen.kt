@@ -21,7 +21,7 @@ fun SessionScreenRoute(
     modifier: Modifier = Modifier,
 ) {
     val viewModel: SessionViewModel = koinViewModel()
-    val state by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
     LaunchedEffect(Unit) {
         viewModel.navigation.collect { event ->
@@ -30,31 +30,46 @@ fun SessionScreenRoute(
             }
         }
     }
-    LaunchedEffect(state.error) {
-        state.error?.let { error ->
-            Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
+    LaunchedEffect(uiState) {
+        val active = uiState as? SessionUiState.Active ?: return@LaunchedEffect
+        if (active.overlay is SessionOverlay.Error) {
+            Toast.makeText(context, active.overlay.message, Toast.LENGTH_SHORT).show()
             viewModel.onEvent(SessionUiEvent.ErrorDismissed)
         }
     }
-    Box(
-        modifier = modifier.fillMaxSize(),
-    ) {
-        if (state.isActive) {
-            SessionControlsOverlay(
-                state = state,
-                onPauseClick = { viewModel.onEvent(SessionUiEvent.PauseClicked) },
-                onResumeClick = { viewModel.onEvent(SessionUiEvent.ResumeClicked) },
-                onStopClick = { viewModel.onEvent(SessionUiEvent.StopClicked) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .align(Alignment.BottomCenter),
-            )
+    SessionContent(
+        uiState = uiState,
+        onEvent = viewModel::onEvent,
+        modifier = modifier,
+    )
+}
+
+@Composable
+private fun SessionContent(
+    uiState: SessionUiState,
+    onEvent: (SessionUiEvent) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Box(modifier = modifier.fillMaxSize()) {
+        when (uiState) {
+            SessionUiState.Idle -> Unit
+            is SessionUiState.Active -> {
+                SessionControlsOverlay(
+                    state = uiState,
+                    onPauseClick = { onEvent(SessionUiEvent.PauseClicked) },
+                    onResumeClick = { onEvent(SessionUiEvent.ResumeClicked) },
+                    onStopClick = { onEvent(SessionUiEvent.StopClicked) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.BottomCenter),
+                )
+                if (uiState.overlay is SessionOverlay.StopConfirmation) {
+                    StopConfirmationDialog(
+                        onConfirm = { onEvent(SessionUiEvent.StopConfirmed) },
+                        onDismiss = { onEvent(SessionUiEvent.StopConfirmationDismissed) },
+                    )
+                }
+            }
         }
-    }
-    if (state.showStopConfirmationDialog) {
-        StopConfirmationDialog(
-            onConfirm = { viewModel.onEvent(SessionUiEvent.StopConfirmed) },
-            onDismiss = { viewModel.onEvent(SessionUiEvent.StopConfirmationDismissed) },
-        )
     }
 }

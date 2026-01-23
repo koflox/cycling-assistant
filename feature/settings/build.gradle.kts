@@ -49,5 +49,12 @@ dependencies {
     implementation(project(":shared:design-system"))
     implementation(project(":shared:di"))
 
+    // Testing
+    testImplementation(libs.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.mockk)
+    testImplementation(libs.turbine)
+    testImplementation(project(":shared:testing"))
+
     debugImplementation(libs.androidx.ui.tooling)
 }

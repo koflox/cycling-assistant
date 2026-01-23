@@ -11,10 +11,10 @@ import com.koflox.session.presentation.share.SessionImageSharer
 import com.koflox.session.presentation.share.ShareErrorMapper
 import com.koflox.session.presentation.share.SharePreviewData
 import com.koflox.session.presentation.share.ShareResult
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 internal class SessionsListViewModel(
@@ -24,91 +24,104 @@ internal class SessionsListViewModel(
     private val sessionUiMapper: SessionUiMapper,
     private val imageSharer: SessionImageSharer,
     private val shareErrorMapper: ShareErrorMapper,
+    private val dispatcherDefault: CoroutineDispatcher,
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(SessionsListUiState())
+    private val _uiState = MutableStateFlow<SessionsListUiState>(SessionsListUiState.Loading)
     val uiState: StateFlow<SessionsListUiState> = _uiState.asStateFlow()
 
     init {
+        initialize()
+    }
+
+    private fun initialize() {
         observeSessions()
     }
 
     fun onEvent(event: SessionsListUiEvent) {
-        when (event) {
-            is SessionsListUiEvent.ShareClicked -> showSharePreview(event.sessionId)
-            is SessionsListUiEvent.ShareConfirmed -> shareImage(event.bitmap, event.destinationName)
-            SessionsListUiEvent.ShareDialogDismissed -> dismissShareDialog()
-            SessionsListUiEvent.ShareIntentLaunched -> clearShareIntent()
-            SessionsListUiEvent.ShareErrorDismissed -> clearShareError()
+        viewModelScope.launch(dispatcherDefault) {
+            when (event) {
+                is SessionsListUiEvent.ShareClicked -> showSharePreview(event.sessionId)
+                is SessionsListUiEvent.ShareConfirmed -> shareImage(event.bitmap, event.destinationName)
+                SessionsListUiEvent.ShareDialogDismissed -> dismissShareDialog()
+                SessionsListUiEvent.ShareIntentLaunched -> dismissShareDialog()
+                SessionsListUiEvent.ShareErrorDismissed -> clearShareError()
+            }
         }
     }
 
-    private fun showSharePreview(sessionId: String) {
-        viewModelScope.launch {
-            getSessionByIdUseCase.getSession(sessionId)
-                .onSuccess { session ->
-                    val formattedData = sessionUiMapper.toSessionUiModel(session)
-                    val routePoints = session.trackPoints.map { trackPoint ->
-                        LatLng(trackPoint.latitude, trackPoint.longitude)
-                    }
-                    _uiState.update {
-                        it.copy(
-                            sharePreviewData = SharePreviewData(
-                                sessionId = session.id,
-                                destinationName = session.destinationName,
-                                startDateFormatted = sessionUiMapper.formatStartDate(session.startTimeMs),
-                                elapsedTimeFormatted = formattedData.elapsedTimeFormatted,
-                                traveledDistanceFormatted = formattedData.traveledDistanceFormatted,
-                                averageSpeedFormatted = formattedData.averageSpeedFormatted,
-                                topSpeedFormatted = formattedData.topSpeedFormatted,
-                                routePoints = routePoints,
-                            ),
-                        )
-                    }
+    private suspend fun showSharePreview(sessionId: String) {
+        getSessionByIdUseCase.getSession(sessionId)
+            .onSuccess { session ->
+                val formattedData = sessionUiMapper.toSessionUiModel(session)
+                val routePoints = session.trackPoints.map { trackPoint ->
+                    LatLng(trackPoint.latitude, trackPoint.longitude)
                 }
-        }
+                val previewData = SharePreviewData(
+                    sessionId = session.id,
+                    destinationName = session.destinationName,
+                    startDateFormatted = sessionUiMapper.formatStartDate(session.startTimeMs),
+                    elapsedTimeFormatted = formattedData.elapsedTimeFormatted,
+                    traveledDistanceFormatted = formattedData.traveledDistanceFormatted,
+                    averageSpeedFormatted = formattedData.averageSpeedFormatted,
+                    topSpeedFormatted = formattedData.topSpeedFormatted,
+                    routePoints = routePoints,
+                )
+                updateContent { it.copy(overlay = SessionsListOverlay.SharePreview(previewData)) }
+            }
     }
 
     private fun dismissShareDialog() {
-        _uiState.update { it.copy(sharePreviewData = null) }
+        updateContent { it.copy(overlay = null) }
     }
 
-    private fun shareImage(bitmap: Bitmap, destinationName: String) {
-        _uiState.update { it.copy(isSharing = true) }
-        viewModelScope.launch {
-            val result = imageSharer.shareImage(bitmap, destinationName)
-            _uiState.update {
-                it.copy(
-                    isSharing = false,
-                    sharePreviewData = if (result is ShareResult.Success) null else it.sharePreviewData,
-                    shareIntent = (result as? ShareResult.Success)?.intent,
-                    shareError = shareErrorMapper.map(result),
-                )
+    private suspend fun shareImage(bitmap: Bitmap, destinationName: String) {
+        val previewData = when (val currentOverlay = (_uiState.value as? SessionsListUiState.Content)?.overlay) {
+            is SessionsListOverlay.SharePreview -> currentOverlay.data
+            is SessionsListOverlay.ShareError -> currentOverlay.data
+            else -> return
+        }
+        updateContent { it.copy(overlay = SessionsListOverlay.Sharing(previewData)) }
+        val result = imageSharer.shareImage(bitmap, destinationName)
+        updateContent { content ->
+            when (result) {
+                is ShareResult.Success -> content.copy(overlay = SessionsListOverlay.ShareReady(result.intent))
+                else -> {
+                    val errorMessage = shareErrorMapper.map(result)
+                    if (errorMessage != null) {
+                        content.copy(overlay = SessionsListOverlay.ShareError(errorMessage, previewData))
+                    } else {
+                        content.copy(overlay = SessionsListOverlay.SharePreview(previewData))
+                    }
+                }
             }
         }
     }
 
-    private fun clearShareIntent() {
-        _uiState.update { it.copy(shareIntent = null) }
-    }
-
     private fun clearShareError() {
-        _uiState.update { it.copy(shareError = null) }
+        val currentOverlay = (_uiState.value as? SessionsListUiState.Content)?.overlay
+        if (currentOverlay is SessionsListOverlay.ShareError) {
+            updateContent { it.copy(overlay = SessionsListOverlay.SharePreview(currentOverlay.data)) }
+        }
     }
 
     private fun observeSessions() {
-        viewModelScope.launch {
-            // TODO: apply pagination
+        viewModelScope.launch(dispatcherDefault) {
             getAllSessionsUseCase.observeAllSessions().collect { sessions ->
                 val uiModels = sessions.map { mapper.toUiModel(it) }
-                _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        sessions = uiModels,
-                        isEmpty = uiModels.isEmpty(),
-                    )
+                _uiState.value = if (uiModels.isEmpty()) {
+                    SessionsListUiState.Empty
+                } else {
+                    SessionsListUiState.Content(sessions = uiModels)
                 }
             }
+        }
+    }
+
+    private inline fun updateContent(transform: (SessionsListUiState.Content) -> SessionsListUiState.Content) {
+        val current = _uiState.value
+        if (current is SessionsListUiState.Content) {
+            _uiState.value = transform(current)
         }
     }
 }

@@ -3,15 +3,23 @@ package com.koflox.session.presentation.sessionslist
 import android.content.Intent
 import com.koflox.session.presentation.share.SharePreviewData
 
-data class SessionsListUiState(
-    val isLoading: Boolean = true,
-    val sessions: List<SessionListItemUiModel> = emptyList(),
-    val isEmpty: Boolean = false,
-    val sharePreviewData: SharePreviewData? = null,
-    val isSharing: Boolean = false,
-    val shareIntent: Intent? = null,
-    val shareError: String? = null,
-)
+internal sealed interface SessionsListUiState {
+    data object Loading : SessionsListUiState
+
+    data class Content(
+        val sessions: List<SessionListItemUiModel>,
+        val overlay: SessionsListOverlay? = null,
+    ) : SessionsListUiState
+
+    data object Empty : SessionsListUiState
+}
+
+internal sealed interface SessionsListOverlay {
+    data class SharePreview(val data: SharePreviewData) : SessionsListOverlay
+    data class Sharing(val data: SharePreviewData) : SessionsListOverlay
+    data class ShareReady(val intent: Intent) : SessionsListOverlay
+    data class ShareError(val message: String, val data: SharePreviewData) : SessionsListOverlay
+}
 
 data class SessionListItemUiModel(
     val id: String,

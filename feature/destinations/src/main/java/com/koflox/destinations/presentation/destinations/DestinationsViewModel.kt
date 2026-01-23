@@ -17,6 +17,7 @@ import com.koflox.destinations.presentation.mapper.DestinationUiMapper
 import com.koflox.destinationsession.bridge.usecase.CyclingSessionUseCase
 import com.koflox.distance.DistanceCalculator
 import com.koflox.location.model.Location
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -34,6 +35,7 @@ internal class DestinationsViewModel(
     private val uiMapper: DestinationUiMapper,
     private val application: Application,
     private val cyclingSessionUseCase: CyclingSessionUseCase,
+    private val dispatcherDefault: CoroutineDispatcher,
 ) : AndroidViewModel(application) {
 
     companion object {
@@ -53,7 +55,7 @@ internal class DestinationsViewModel(
     }
 
     private fun initialize() {
-        viewModelScope.launch {
+        viewModelScope.launch(dispatcherDefault) {
             _uiState.update { it.copy(isInitializing = true) }
             initializeDatabaseUseCase.init()
             checkActiveSession()
@@ -74,7 +76,7 @@ internal class DestinationsViewModel(
     }
 
     private fun listenToActiveSession() {
-        viewModelScope.launch {
+        viewModelScope.launch(dispatcherDefault) {
             cyclingSessionUseCase.observeHasActiveSession().collect { isActive ->
                 _uiState.update { it.copy(isSessionActive = isActive) }
             }
@@ -82,59 +84,59 @@ internal class DestinationsViewModel(
     }
 
     fun onEvent(event: DestinationsUiEvent) {
-        when (event) {
-            is DestinationsUiEvent.RouteDistanceChanged -> updateRouteDistance(event.distanceKm)
-            DestinationsUiEvent.LetsGoClicked -> findDestination()
-            DestinationsUiEvent.PermissionGranted -> onPermissionGranted()
-            DestinationsUiEvent.PermissionDenied -> onPermissionDenied()
-            DestinationsUiEvent.ErrorDismissed -> dismissError()
-            DestinationsUiEvent.ScreenResumed -> onScreenResumed()
-            DestinationsUiEvent.ScreenPaused -> onScreenPaused()
-            is DestinationsUiEvent.OpenDestinationInGoogleMaps -> openInGoogleMaps(event.destination)
-            DestinationsUiEvent.NavigationActionHandled -> clearNavigationAction()
-            DestinationsUiEvent.SelectedMarkerInfoClicked -> showMarkerOptionsDialog()
-            DestinationsUiEvent.SelectedMarkerOptionsDialogDismissed -> dismissSelectedMarkerOptionsDialog()
+        viewModelScope.launch(dispatcherDefault) {
+            when (event) {
+                is DestinationsUiEvent.RouteDistanceChanged -> updateRouteDistance(event.distanceKm)
+                DestinationsUiEvent.LetsGoClicked -> findDestination()
+                DestinationsUiEvent.PermissionGranted -> onPermissionGranted()
+                DestinationsUiEvent.PermissionDenied -> onPermissionDenied()
+                DestinationsUiEvent.ErrorDismissed -> dismissError()
+                DestinationsUiEvent.ScreenResumed -> onScreenResumed()
+                DestinationsUiEvent.ScreenPaused -> onScreenPaused()
+                is DestinationsUiEvent.OpenDestinationInGoogleMaps -> openInGoogleMaps(event.destination)
+                DestinationsUiEvent.NavigationActionHandled -> clearNavigationAction()
+                DestinationsUiEvent.SelectedMarkerInfoClicked -> showMarkerOptionsDialog()
+                DestinationsUiEvent.SelectedMarkerOptionsDialogDismissed -> dismissSelectedMarkerOptionsDialog()
+            }
         }
     }
 
-    private fun findDestination(destinationId: String? = null) {
-        viewModelScope.launch {
-            val isRecovery = destinationId != null
-            val isSessionActive = isRecovery || _uiState.value.isSessionActive
-            _uiState.update {
-                it.copy(
-                    isLoading = true,
-                    selectedDestination = null,
-                    otherValidDestinations = emptyList(),
-                )
-            }
-            getUserLocationUseCase.getLocation()
-                .onSuccess { location ->
-                    _uiState.update { it.copy(userLocation = location) }
-                    if (isRecovery) {
-                        getSelectedDestination(
-                            location = location,
-                            destinationId = destinationId,
-                            isSessionActive = true,
-                            isSessionRecovery = true,
-                        )
-                    } else {
-                        selectRandomDestination(location)
-                    }
-                }
-                .onFailure { error ->
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            isSessionActive = isSessionActive,
-                            error = if (isRecovery) null else application.getString(
-                                R.string.failed_to_get_location,
-                                error.message,
-                            ),
-                        )
-                    }
-                }
+    private suspend fun findDestination(destinationId: String? = null) {
+        val isRecovery = destinationId != null
+        val isSessionActive = isRecovery || _uiState.value.isSessionActive
+        _uiState.update {
+            it.copy(
+                isLoading = true,
+                selectedDestination = null,
+                otherValidDestinations = emptyList(),
+            )
         }
+        getUserLocationUseCase.getLocation()
+            .onSuccess { location ->
+                _uiState.update { it.copy(userLocation = location) }
+                if (isRecovery) {
+                    getSelectedDestination(
+                        location = location,
+                        destinationId = destinationId,
+                        isSessionActive = true,
+                        isSessionRecovery = true,
+                    )
+                } else {
+                    selectRandomDestination(location)
+                }
+            }
+            .onFailure { error ->
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        isSessionActive = isSessionActive,
+                        error = if (isRecovery) null else application.getString(
+                            R.string.failed_to_get_location,
+                            error.message,
+                        ),
+                    )
+                }
+            }
     }
 
     private suspend fun selectRandomDestination(location: Location) {
@@ -217,7 +219,7 @@ internal class DestinationsViewModel(
     }
 
     private fun fetchInitialLocation() {
-        viewModelScope.launch {
+        viewModelScope.launch(dispatcherDefault) {
             getUserLocationUseCase.getLocation().onSuccess { location ->
                 _uiState.update {
                     it.copy(
@@ -248,7 +250,7 @@ internal class DestinationsViewModel(
 
     private fun startLocationObservation() {
         locationObservationJob?.cancel()
-        locationObservationJob = viewModelScope.launch {
+        locationObservationJob = viewModelScope.launch(dispatcherDefault) {
             observeUserLocationUseCase.observe().collect { newLocation ->
                 val currentState = _uiState.value
                 val shouldMoveCameraToUserLocation = shouldUpdateCameraFocus(
@@ -317,5 +319,4 @@ internal class DestinationsViewModel(
     private fun dismissSelectedMarkerOptionsDialog() {
         _uiState.update { it.copy(showSelectedMarkerOptionsDialog = false) }
     }
-
 }

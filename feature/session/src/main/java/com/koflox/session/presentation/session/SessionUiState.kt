@@ -3,25 +3,26 @@ package com.koflox.session.presentation.session
 import com.koflox.location.model.Location
 import com.koflox.session.domain.model.SessionStatus
 
-data class SessionUiState(
-    val isActive: Boolean = false,
-    val sessionId: String? = null,
-    val destinationName: String = "",
-    val destinationLocation: Location? = null,
-    val status: SessionStatus = SessionStatus.RUNNING,
-    val elapsedTimeFormatted: String = DEFAULT_TIME,
-    val traveledDistanceKm: String = DEFAULT_DISTANCE,
-    val averageSpeedKmh: String = DEFAULT_SPEED,
-    val topSpeedKmh: String = DEFAULT_SPEED,
-    val currentLocation: Location? = null,
-    val error: String? = null,
-    val showStopConfirmationDialog: Boolean = false,
-) {
-    val isPaused: Boolean get() = status == SessionStatus.PAUSED
+internal sealed interface SessionUiState {
+    data object Idle : SessionUiState
 
-    companion object {
-        private const val DEFAULT_TIME = "00:00:00"
-        private const val DEFAULT_DISTANCE = "0.00"
-        private const val DEFAULT_SPEED = "0.0"
+    data class Active(
+        val sessionId: String,
+        val destinationName: String,
+        val destinationLocation: Location,
+        val status: SessionStatus,
+        val elapsedTimeFormatted: String,
+        val traveledDistanceFormatted: String,
+        val averageSpeedFormatted: String,
+        val topSpeedFormatted: String,
+        val currentLocation: Location?,
+        val overlay: SessionOverlay? = null,
+    ) : SessionUiState {
+        val isPaused: Boolean get() = status == SessionStatus.PAUSED
     }
+}
+
+internal sealed interface SessionOverlay {
+    data object StopConfirmation : SessionOverlay
+    data class Error(val message: String) : SessionOverlay
 }

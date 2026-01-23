@@ -6,6 +6,7 @@ import com.koflox.settings.domain.model.AppLanguage
 import com.koflox.settings.domain.model.AppTheme
 import com.koflox.settings.domain.usecase.ObserveSettingsUseCase
 import com.koflox.settings.domain.usecase.UpdateSettingsUseCase
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -16,28 +17,35 @@ import kotlinx.coroutines.launch
 internal class SettingsViewModel(
     private val observeSettingsUseCase: ObserveSettingsUseCase,
     private val updateSettingsUseCase: UpdateSettingsUseCase,
+    private val dispatcherDefault: CoroutineDispatcher,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SettingsUiState())
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
 
     init {
+        initialize()
+    }
+
+    private fun initialize() {
         observeSettings()
     }
 
     fun onEvent(event: SettingsUiEvent) {
-        when (event) {
-            is SettingsUiEvent.ThemeSelected -> updateTheme(event.theme)
-            is SettingsUiEvent.LanguageSelected -> updateLanguage(event.language)
-            SettingsUiEvent.ThemeDropdownToggled -> toggleThemeDropdown()
-            SettingsUiEvent.LanguageDropdownToggled -> toggleLanguageDropdown()
-            SettingsUiEvent.DropdownsDismissed -> dismissDropdowns()
-            SettingsUiEvent.RestartHintDismissed -> dismissRestartHint()
+        viewModelScope.launch(dispatcherDefault) {
+            when (event) {
+                is SettingsUiEvent.ThemeSelected -> updateTheme(event.theme)
+                is SettingsUiEvent.LanguageSelected -> updateLanguage(event.language)
+                SettingsUiEvent.ThemeDropdownToggled -> toggleThemeDropdown()
+                SettingsUiEvent.LanguageDropdownToggled -> toggleLanguageDropdown()
+                SettingsUiEvent.DropdownsDismissed -> dismissDropdowns()
+                SettingsUiEvent.RestartHintDismissed -> dismissRestartHint()
+            }
         }
     }
 
     private fun observeSettings() {
-        viewModelScope.launch {
+        viewModelScope.launch(dispatcherDefault) {
             combine(
                 observeSettingsUseCase.observeTheme(),
                 observeSettingsUseCase.observeLanguage(),
@@ -51,18 +59,14 @@ internal class SettingsViewModel(
         }
     }
 
-    private fun updateTheme(theme: AppTheme) {
-        viewModelScope.launch {
-            updateSettingsUseCase.updateTheme(theme)
-        }
+    private suspend fun updateTheme(theme: AppTheme) {
+        updateSettingsUseCase.updateTheme(theme)
         _uiState.update { it.copy(isThemeDropdownExpanded = false) }
     }
 
-    private fun updateLanguage(language: AppLanguage) {
+    private suspend fun updateLanguage(language: AppLanguage) {
         val currentLanguage = _uiState.value.selectedLanguage
-        viewModelScope.launch {
-            updateSettingsUseCase.updateLanguage(language)
-        }
+        updateSettingsUseCase.updateLanguage(language)
         _uiState.update {
             it.copy(
                 isLanguageDropdownExpanded = false,

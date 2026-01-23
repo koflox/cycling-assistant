@@ -1,0 +1,347 @@
+package com.koflox.session.presentation.sessionslist
+
+import android.content.Intent
+import android.graphics.Bitmap
+import app.cash.turbine.test
+import com.koflox.session.domain.model.Session
+import com.koflox.session.domain.model.SessionStatus
+import com.koflox.session.domain.model.TrackPoint
+import com.koflox.session.domain.usecase.GetAllSessionsUseCase
+import com.koflox.session.domain.usecase.GetSessionByIdUseCase
+import com.koflox.session.presentation.mapper.SessionUiMapper
+import com.koflox.session.presentation.mapper.SessionUiModel
+import com.koflox.session.presentation.share.SessionImageSharer
+import com.koflox.session.presentation.share.ShareErrorMapper
+import com.koflox.session.presentation.share.ShareResult
+import com.koflox.testing.coroutine.MainDispatcherRule
+import io.mockk.coEvery
+import io.mockk.every
+import io.mockk.mockk
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.test.runTest
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
+import org.junit.Before
+import org.junit.Rule
+import org.junit.Test
+
+class SessionsListViewModelTest {
+
+    companion object {
+        private const val SESSION_ID = "session-123"
+        private const val DESTINATION_NAME = "Test Destination"
+        private const val SHARE_ERROR_MESSAGE = "Cannot share"
+        private const val FORMATTED_DATE = "Jan 1, 2024"
+        private const val FORMATTED_TIME = "01:30:00"
+        private const val FORMATTED_DISTANCE = "15.5 km"
+        private const val FORMATTED_AVG_SPEED = "22.0 km/h"
+        private const val FORMATTED_TOP_SPEED = "35.0 km/h"
+    }
+
+    @get:Rule
+    val mainDispatcherRule = MainDispatcherRule()
+
+    private val getAllSessionsUseCase: GetAllSessionsUseCase = mockk()
+    private val getSessionByIdUseCase: GetSessionByIdUseCase = mockk()
+    private val mapper: SessionsListUiMapper = mockk()
+    private val sessionUiMapper: SessionUiMapper = mockk()
+    private val imageSharer: SessionImageSharer = mockk()
+    private val shareErrorMapper: ShareErrorMapper = mockk()
+
+    private lateinit var viewModel: SessionsListViewModel
+
+    @Before
+    fun setup() {
+        setupDefaultMocks()
+    }
+
+    private fun setupDefaultMocks() {
+        every { sessionUiMapper.toSessionUiModel(any()) } returns createSessionUiModel()
+        every { sessionUiMapper.formatStartDate(any()) } returns FORMATTED_DATE
+        every { mapper.toUiModel(any()) } returns createSessionListItemUiModel()
+    }
+
+    private fun createViewModel(): SessionsListViewModel {
+        return SessionsListViewModel(
+            getAllSessionsUseCase = getAllSessionsUseCase,
+            getSessionByIdUseCase = getSessionByIdUseCase,
+            mapper = mapper,
+            sessionUiMapper = sessionUiMapper,
+            imageSharer = imageSharer,
+            shareErrorMapper = shareErrorMapper,
+            dispatcherDefault = mainDispatcherRule.testDispatcher,
+        )
+    }
+
+    @Test
+    fun `initial state is Loading`() = runTest {
+        coEvery { getAllSessionsUseCase.observeAllSessions() } returns flowOf(emptyList())
+
+        viewModel = createViewModel()
+
+        viewModel.uiState.test {
+            assertTrue(awaitItem() is SessionsListUiState.Loading)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `empty sessions list shows Empty state`() = runTest {
+        coEvery { getAllSessionsUseCase.observeAllSessions() } returns flowOf(emptyList())
+
+        viewModel = createViewModel()
+
+        viewModel.uiState.test {
+            awaitItem() // Loading
+            assertEquals(SessionsListUiState.Empty, awaitItem())
+        }
+    }
+
+    @Test
+    fun `sessions list shows Content state`() = runTest {
+        val sessions = listOf(createSession())
+        coEvery { getAllSessionsUseCase.observeAllSessions() } returns flowOf(sessions)
+
+        viewModel = createViewModel()
+
+        viewModel.uiState.test {
+            awaitItem() // Loading
+            val content = awaitItem() as SessionsListUiState.Content
+            assertEquals(1, content.sessions.size)
+            assertNull(content.overlay)
+        }
+    }
+
+    @Test
+    fun `ShareClicked shows share preview`() = runTest {
+        val session = createSession()
+        coEvery { getAllSessionsUseCase.observeAllSessions() } returns flowOf(listOf(session))
+        coEvery { getSessionByIdUseCase.getSession(SESSION_ID) } returns Result.success(session)
+
+        viewModel = createViewModel()
+
+        viewModel.uiState.test {
+            awaitItem() // Loading
+            awaitItem() // Content
+
+            viewModel.onEvent(SessionsListUiEvent.ShareClicked(SESSION_ID))
+
+            val updatedContent = awaitItem() as SessionsListUiState.Content
+            assertTrue(updatedContent.overlay is SessionsListOverlay.SharePreview)
+            val preview = updatedContent.overlay as SessionsListOverlay.SharePreview
+            assertEquals(SESSION_ID, preview.data.sessionId)
+            assertEquals(DESTINATION_NAME, preview.data.destinationName)
+        }
+    }
+
+    @Test
+    fun `ShareDialogDismissed clears overlay`() = runTest {
+        val session = createSession()
+        coEvery { getAllSessionsUseCase.observeAllSessions() } returns flowOf(listOf(session))
+        coEvery { getSessionByIdUseCase.getSession(SESSION_ID) } returns Result.success(session)
+
+        viewModel = createViewModel()
+
+        viewModel.uiState.test {
+            awaitItem() // Loading
+            awaitItem() // Content
+
+            viewModel.onEvent(SessionsListUiEvent.ShareClicked(SESSION_ID))
+            awaitItem() // SharePreview
+
+            viewModel.onEvent(SessionsListUiEvent.ShareDialogDismissed)
+
+            val content = awaitItem() as SessionsListUiState.Content
+            assertNull(content.overlay)
+        }
+    }
+
+    @Test
+    fun `ShareConfirmed shows Sharing state first`() = runTest {
+        val session = createSession()
+        val bitmap = mockk<Bitmap>()
+        val intent = mockk<Intent>()
+        coEvery { getAllSessionsUseCase.observeAllSessions() } returns flowOf(listOf(session))
+        coEvery { getSessionByIdUseCase.getSession(SESSION_ID) } returns Result.success(session)
+        coEvery { imageSharer.shareImage(bitmap, DESTINATION_NAME) } returns ShareResult.Success(intent)
+
+        viewModel = createViewModel()
+
+        viewModel.uiState.test {
+            awaitItem() // Loading
+            awaitItem() // Content
+
+            viewModel.onEvent(SessionsListUiEvent.ShareClicked(SESSION_ID))
+            awaitItem() // SharePreview
+
+            viewModel.onEvent(SessionsListUiEvent.ShareConfirmed(bitmap, DESTINATION_NAME))
+
+            val sharingState = awaitItem() as SessionsListUiState.Content
+            assertTrue(sharingState.overlay is SessionsListOverlay.Sharing)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `ShareConfirmed success shows ShareReady`() = runTest {
+        val session = createSession()
+        val bitmap = mockk<Bitmap>()
+        val intent = mockk<Intent>()
+        coEvery { getAllSessionsUseCase.observeAllSessions() } returns flowOf(listOf(session))
+        coEvery { getSessionByIdUseCase.getSession(SESSION_ID) } returns Result.success(session)
+        coEvery { imageSharer.shareImage(bitmap, DESTINATION_NAME) } returns ShareResult.Success(intent)
+
+        viewModel = createViewModel()
+
+        viewModel.uiState.test {
+            awaitItem() // Loading
+            awaitItem() // Content
+
+            viewModel.onEvent(SessionsListUiEvent.ShareClicked(SESSION_ID))
+            awaitItem() // SharePreview
+
+            viewModel.onEvent(SessionsListUiEvent.ShareConfirmed(bitmap, DESTINATION_NAME))
+
+            awaitItem() // Sharing
+            val readyState = awaitItem() as SessionsListUiState.Content
+            assertTrue(readyState.overlay is SessionsListOverlay.ShareReady)
+            assertEquals(intent, (readyState.overlay as SessionsListOverlay.ShareReady).intent)
+        }
+    }
+
+    @Test
+    fun `ShareConfirmed failure shows ShareError`() = runTest {
+        val session = createSession()
+        val bitmap = mockk<Bitmap>()
+        coEvery { getAllSessionsUseCase.observeAllSessions() } returns flowOf(listOf(session))
+        coEvery { getSessionByIdUseCase.getSession(SESSION_ID) } returns Result.success(session)
+        coEvery { imageSharer.shareImage(bitmap, DESTINATION_NAME) } returns ShareResult.CannotProcessTheImage
+        every { shareErrorMapper.map(ShareResult.CannotProcessTheImage) } returns SHARE_ERROR_MESSAGE
+
+        viewModel = createViewModel()
+
+        viewModel.uiState.test {
+            awaitItem() // Loading
+            awaitItem() // Content
+
+            viewModel.onEvent(SessionsListUiEvent.ShareClicked(SESSION_ID))
+            awaitItem() // SharePreview
+
+            viewModel.onEvent(SessionsListUiEvent.ShareConfirmed(bitmap, DESTINATION_NAME))
+
+            awaitItem() // Sharing
+            val errorState = awaitItem() as SessionsListUiState.Content
+            assertTrue(errorState.overlay is SessionsListOverlay.ShareError)
+            assertEquals(SHARE_ERROR_MESSAGE, (errorState.overlay as SessionsListOverlay.ShareError).message)
+        }
+    }
+
+    @Test
+    fun `ShareIntentLaunched clears overlay`() = runTest {
+        val session = createSession()
+        val bitmap = mockk<Bitmap>()
+        val intent = mockk<Intent>()
+        coEvery { getAllSessionsUseCase.observeAllSessions() } returns flowOf(listOf(session))
+        coEvery { getSessionByIdUseCase.getSession(SESSION_ID) } returns Result.success(session)
+        coEvery { imageSharer.shareImage(bitmap, DESTINATION_NAME) } returns ShareResult.Success(intent)
+
+        viewModel = createViewModel()
+
+        viewModel.uiState.test {
+            awaitItem() // Loading
+            awaitItem() // Content
+
+            viewModel.onEvent(SessionsListUiEvent.ShareClicked(SESSION_ID))
+            awaitItem() // SharePreview
+
+            viewModel.onEvent(SessionsListUiEvent.ShareConfirmed(bitmap, DESTINATION_NAME))
+            awaitItem() // Sharing
+            awaitItem() // ShareReady
+
+            viewModel.onEvent(SessionsListUiEvent.ShareIntentLaunched)
+
+            val content = awaitItem() as SessionsListUiState.Content
+            assertNull(content.overlay)
+        }
+    }
+
+    @Test
+    fun `ShareErrorDismissed returns to SharePreview`() = runTest {
+        val session = createSession()
+        val bitmap = mockk<Bitmap>()
+        coEvery { getAllSessionsUseCase.observeAllSessions() } returns flowOf(listOf(session))
+        coEvery { getSessionByIdUseCase.getSession(SESSION_ID) } returns Result.success(session)
+        coEvery { imageSharer.shareImage(bitmap, DESTINATION_NAME) } returns ShareResult.CannotProcessTheImage
+        every { shareErrorMapper.map(ShareResult.CannotProcessTheImage) } returns SHARE_ERROR_MESSAGE
+
+        viewModel = createViewModel()
+
+        viewModel.uiState.test {
+            awaitItem() // Loading
+            awaitItem() // Content
+
+            viewModel.onEvent(SessionsListUiEvent.ShareClicked(SESSION_ID))
+            awaitItem() // SharePreview
+
+            viewModel.onEvent(SessionsListUiEvent.ShareConfirmed(bitmap, DESTINATION_NAME))
+            awaitItem() // Sharing
+            awaitItem() // ShareError
+
+            viewModel.onEvent(SessionsListUiEvent.ShareErrorDismissed)
+
+            val content = awaitItem() as SessionsListUiState.Content
+            assertTrue(content.overlay is SessionsListOverlay.SharePreview)
+        }
+    }
+
+    private fun createSession(
+        id: String = SESSION_ID,
+        destinationName: String = DESTINATION_NAME,
+        status: SessionStatus = SessionStatus.COMPLETED,
+        trackPoints: List<TrackPoint> = listOf(createTrackPoint()),
+    ) = Session(
+        id = id,
+        destinationId = "dest-456",
+        destinationName = destinationName,
+        destinationLatitude = 52.52,
+        destinationLongitude = 13.405,
+        startLatitude = 52.50,
+        startLongitude = 13.40,
+        startTimeMs = 1704067200000L,
+        lastResumedTimeMs = 1704067200000L,
+        endTimeMs = 1704072600000L,
+        elapsedTimeMs = 5400000L,
+        traveledDistanceKm = 15.5,
+        averageSpeedKmh = 22.0,
+        topSpeedKmh = 35.0,
+        status = status,
+        trackPoints = trackPoints,
+    )
+
+    private fun createTrackPoint(
+        lat: Double = 52.51,
+        lon: Double = 13.41,
+    ) = TrackPoint(
+        latitude = lat,
+        longitude = lon,
+        timestampMs = 1704068000000L,
+        speedKmh = 25.0,
+    )
+
+    private fun createSessionUiModel() = SessionUiModel(
+        elapsedTimeFormatted = FORMATTED_TIME,
+        traveledDistanceFormatted = FORMATTED_DISTANCE,
+        averageSpeedFormatted = FORMATTED_AVG_SPEED,
+        topSpeedFormatted = FORMATTED_TOP_SPEED,
+    )
+
+    private fun createSessionListItemUiModel() = SessionListItemUiModel(
+        id = SESSION_ID,
+        destinationName = DESTINATION_NAME,
+        dateFormatted = FORMATTED_DATE,
+        distanceFormatted = FORMATTED_DISTANCE,
+        status = SessionListItemStatus.COMPLETED,
+        isShareButtonVisible = true,
+    )
+}

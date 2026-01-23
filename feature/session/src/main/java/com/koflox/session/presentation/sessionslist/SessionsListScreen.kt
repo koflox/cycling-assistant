@@ -50,33 +50,27 @@ internal fun SessionsListRoute(
     val viewModel: SessionsListViewModel = koinViewModel()
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
-    LaunchedEffect(uiState.shareIntent) {
-        uiState.shareIntent?.let { intent ->
-            context.startActivity(intent)
-            viewModel.onEvent(SessionsListUiEvent.ShareIntentLaunched)
+    LaunchedEffect(uiState) {
+        val content = uiState as? SessionsListUiState.Content ?: return@LaunchedEffect
+        when (val overlay = content.overlay) {
+            is SessionsListOverlay.ShareReady -> {
+                context.startActivity(overlay.intent)
+                viewModel.onEvent(SessionsListUiEvent.ShareIntentLaunched)
+            }
+
+            is SessionsListOverlay.ShareError -> {
+                Toast.makeText(context, overlay.message, Toast.LENGTH_SHORT).show()
+                viewModel.onEvent(SessionsListUiEvent.ShareErrorDismissed)
+            }
+
+            else -> Unit
         }
-    }
-    LaunchedEffect(uiState.shareError) {
-        uiState.shareError?.let { errorMessage ->
-            Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
-            viewModel.onEvent(SessionsListUiEvent.ShareErrorDismissed)
-        }
-    }
-    uiState.sharePreviewData?.let { data ->
-        SharePreviewDialog(
-            data = data,
-            isSharing = uiState.isSharing,
-            onShareClick = { bitmap, destinationName ->
-                viewModel.onEvent(SessionsListUiEvent.ShareConfirmed(bitmap, destinationName))
-            },
-            onDismiss = { viewModel.onEvent(SessionsListUiEvent.ShareDialogDismissed) },
-        )
     }
     SessionsListContent(
         uiState = uiState,
         onBackClick = onBackClick,
         onSessionClick = onSessionClick,
-        onShareClick = { viewModel.onEvent(SessionsListUiEvent.ShareClicked(it)) },
+        onEvent = viewModel::onEvent,
         modifier = modifier,
     )
 }
@@ -87,9 +81,29 @@ private fun SessionsListContent(
     uiState: SessionsListUiState,
     onBackClick: () -> Unit,
     onSessionClick: (sessionId: String) -> Unit,
-    onShareClick: (sessionId: String) -> Unit,
+    onEvent: (SessionsListUiEvent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val content = uiState as? SessionsListUiState.Content
+    val overlay = content?.overlay
+    if (overlay != null && overlay !is SessionsListOverlay.ShareReady) {
+        val previewData = when (overlay) {
+            is SessionsListOverlay.SharePreview -> overlay.data
+            is SessionsListOverlay.Sharing -> overlay.data
+            is SessionsListOverlay.ShareError -> overlay.data
+            is SessionsListOverlay.ShareReady -> null
+        }
+        previewData?.let { data ->
+            SharePreviewDialog(
+                data = data,
+                isSharing = overlay is SessionsListOverlay.Sharing,
+                onShareClick = { bitmap, destinationName ->
+                    onEvent(SessionsListUiEvent.ShareConfirmed(bitmap, destinationName))
+                },
+                onDismiss = { onEvent(SessionsListUiEvent.ShareDialogDismissed) },
+            )
+        }
+    }
     Scaffold(
         modifier = modifier,
         topBar = {
@@ -106,72 +120,62 @@ private fun SessionsListContent(
             )
         },
     ) { paddingValues ->
-        when {
-            uiState.isLoading -> {
-                LoadingState(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues),
-                )
-            }
+        SessionsListBody(
+            uiState = uiState,
+            onSessionClick = onSessionClick,
+            onShareClick = { onEvent(SessionsListUiEvent.ShareClicked(it)) },
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues),
+        )
+    }
+}
 
-            uiState.isEmpty -> {
-                EmptyState(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues),
-                )
-            }
-
-            else -> {
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues)
-                        .padding(horizontal = Spacing.Large),
-                    verticalArrangement = Arrangement.spacedBy(Spacing.Medium),
-                ) {
-                    item { Spacer(modifier = Modifier.height(Spacing.Tiny)) }
-                    items(
-                        items = uiState.sessions,
-                        key = { it.id },
-                    ) { session ->
-                        SessionListItem(
-                            session = session,
-                            onClick = { onSessionClick(session.id) },
-                            onShareClick = { onShareClick(session.id) },
-                        )
-                    }
-                    item { Spacer(modifier = Modifier.height(Spacing.Tiny)) }
-                }
+@Composable
+private fun SessionsListBody(
+    uiState: SessionsListUiState,
+    onSessionClick: (sessionId: String) -> Unit,
+    onShareClick: (sessionId: String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    when (uiState) {
+        SessionsListUiState.Loading -> {
+            Box(modifier = modifier, contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
             }
         }
-    }
-}
 
-@Composable
-private fun LoadingState(modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier,
-        contentAlignment = Alignment.Center,
-    ) {
-        CircularProgressIndicator()
-    }
-}
+        SessionsListUiState.Empty -> {
+            Box(modifier = modifier, contentAlignment = Alignment.Center) {
+                Text(
+                    text = stringResource(R.string.sessions_list_empty_hint),
+                    style = MaterialTheme.typography.bodyLarge,
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(Spacing.Huge),
+                )
+            }
+        }
 
-@Composable
-private fun EmptyState(modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier,
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            text = stringResource(R.string.sessions_list_empty_hint),
-            style = MaterialTheme.typography.bodyLarge,
-            textAlign = TextAlign.Center,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(Spacing.Huge),
-        )
+        is SessionsListUiState.Content -> {
+            LazyColumn(
+                modifier = modifier.padding(horizontal = Spacing.Large),
+                verticalArrangement = Arrangement.spacedBy(Spacing.Medium),
+            ) {
+                item { Spacer(modifier = Modifier.height(Spacing.Tiny)) }
+                items(
+                    items = uiState.sessions,
+                    key = { it.id },
+                ) { session ->
+                    SessionListItem(
+                        session = session,
+                        onClick = { onSessionClick(session.id) },
+                        onShareClick = { onShareClick(session.id) },
+                    )
+                }
+                item { Spacer(modifier = Modifier.height(Spacing.Tiny)) }
+            }
+        }
     }
 }
 
@@ -243,13 +247,11 @@ private fun StatusChip(
         SessionListItemStatus.PAUSED -> MaterialTheme.colorScheme.tertiaryContainer to MaterialTheme.colorScheme.onTertiaryContainer
         SessionListItemStatus.COMPLETED -> MaterialTheme.colorScheme.secondaryContainer to MaterialTheme.colorScheme.onSecondaryContainer
     }
-
     val statusText = when (status) {
         SessionListItemStatus.RUNNING -> stringResource(R.string.sessions_list_status_running)
         SessionListItemStatus.PAUSED -> stringResource(R.string.sessions_list_status_paused)
         SessionListItemStatus.COMPLETED -> stringResource(R.string.sessions_list_status_completed)
     }
-
     Surface(
         modifier = modifier,
         shape = MaterialTheme.shapes.small,
