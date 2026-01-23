@@ -36,6 +36,7 @@ internal fun SessionControlsOverlay(
         modifier = modifier.padding(Spacing.Large),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface.copy(alpha = SurfaceAlpha.Standard),
+            contentColor = MaterialTheme.colorScheme.onSurface,
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = Elevation.Prominent),
     ) {
@@ -48,6 +49,7 @@ internal fun SessionControlsOverlay(
             Text(
                 text = state.destinationName,
                 style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface,
             )
             Spacer(modifier = Modifier.height(Spacing.Medium))
             SessionStatsDisplay(

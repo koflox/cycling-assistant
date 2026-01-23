@@ -1,6 +1,7 @@
 package com.koflox.session.presentation.share
 
 import android.graphics.Bitmap
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
@@ -8,11 +9,16 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -22,6 +28,7 @@ import androidx.compose.ui.graphics.layer.GraphicsLayer
 import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.koflox.designsystem.theme.Spacing
@@ -41,6 +48,7 @@ fun SharePreviewDialog(
 ) {
     val graphicsLayer = rememberGraphicsLayer()
     val scope = rememberCoroutineScope()
+    var isMapLoaded by remember { mutableStateOf(false) }
 
     Dialog(
         onDismissRequest = onDismiss,
@@ -49,7 +57,12 @@ fun SharePreviewDialog(
         SharePreviewDialogContent(
             data = data,
             isSharing = isSharing,
+            isMapLoaded = isMapLoaded,
             graphicsLayer = graphicsLayer,
+            onMapLoaded = {
+                @Suppress("AssignedValueIsNeverRead")
+                isMapLoaded = true
+            },
             onShareClick = {
                 scope.launch {
                     val bitmap = graphicsLayer.toImageBitmap().asAndroidBitmap()
@@ -65,7 +78,9 @@ fun SharePreviewDialog(
 private fun SharePreviewDialogContent(
     data: SharePreviewData,
     isSharing: Boolean,
+    isMapLoaded: Boolean,
     graphicsLayer: GraphicsLayer,
+    onMapLoaded: () -> Unit,
     onShareClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -84,20 +99,37 @@ private fun SharePreviewDialogContent(
                 style = MaterialTheme.typography.titleLarge,
             )
             Spacer(modifier = Modifier.height(Spacing.Large))
-            SharePreviewContent(
-                data = data,
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .aspectRatio(0.75f)
-                    .drawWithCache {
-                        onDrawWithContent {
-                            graphicsLayer.record { this@onDrawWithContent.drawContent() }
-                            drawLayer(graphicsLayer)
-                        }
-                    },
-            )
+                    .aspectRatio(0.75f),
+                contentAlignment = Alignment.Center,
+            ) {
+                SharePreviewContent(
+                    data = data,
+                    onMapLoaded = onMapLoaded,
+                    modifier = Modifier
+                        .matchParentSize()
+                        .drawWithCache {
+                            val recordSize = IntSize(size.width.toInt(), size.height.toInt())
+                            onDrawWithContent {
+                                graphicsLayer.record(size = recordSize) {
+                                    this@onDrawWithContent.drawContent()
+                                }
+                                drawLayer(graphicsLayer)
+                            }
+                        },
+                )
+                if (!isMapLoaded) {
+                    CircularProgressIndicator()
+                }
+            }
             Spacer(modifier = Modifier.height(Spacing.Large))
-            ShareButton(isSharing = isSharing, onShareClick = onShareClick)
+            ShareButton(
+                isSharing = isSharing,
+                isEnabled = isMapLoaded && !isSharing,
+                onShareClick = onShareClick,
+            )
         }
     }
 }
@@ -105,21 +137,31 @@ private fun SharePreviewDialogContent(
 @Composable
 private fun ShareButton(
     isSharing: Boolean,
+    isEnabled: Boolean,
     onShareClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Button(
         onClick = onShareClick,
-        enabled = !isSharing,
+        enabled = isEnabled,
         modifier = modifier.fillMaxWidth(),
     ) {
-        Text(stringResource(R.string.share_button))
+        if (isSharing) {
+            CircularProgressIndicator(
+                modifier = Modifier.height(Spacing.Large),
+                color = MaterialTheme.colorScheme.onPrimary,
+                strokeWidth = Spacing.Tiny / 2,
+            )
+        } else {
+            Text(stringResource(R.string.share_button))
+        }
     }
 }
 
 @Composable
 private fun SharePreviewContent(
     data: SharePreviewData,
+    onMapLoaded: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Surface(
@@ -129,6 +171,7 @@ private fun SharePreviewContent(
         Column {
             RouteMapView(
                 routePoints = data.routePoints,
+                onMapLoaded = onMapLoaded,
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f),
