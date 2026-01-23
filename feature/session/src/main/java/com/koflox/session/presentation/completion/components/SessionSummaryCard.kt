@@ -35,6 +35,7 @@ internal fun SessionSummaryCard(
         modifier = modifier.padding(Spacing.Large),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+            contentColor = MaterialTheme.colorScheme.onSurface,
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = Elevation.Prominent),
     ) {
@@ -49,6 +50,7 @@ internal fun SessionSummaryCard(
                     text = destinationName,
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
                 Spacer(modifier = Modifier.height(Spacing.Tiny))
             }
@@ -93,6 +95,7 @@ private fun StatItem(
             text = value,
             style = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface,
         )
         Text(
             text = label,

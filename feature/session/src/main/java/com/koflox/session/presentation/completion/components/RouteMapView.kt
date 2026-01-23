@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.createBitmap
@@ -21,12 +22,16 @@ import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
+import com.google.android.gms.maps.model.MapStyleOptions
 import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.Polyline
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberUpdatedMarkerState
+import com.koflox.designsystem.theme.LocalDarkTheme
+import com.koflox.session.R
 import kotlin.math.atan2
 
 private const val MAP_PADDING = 100
@@ -40,7 +45,10 @@ private val END_MARKER_COLOR = Color(0xFFE84940)
 internal fun RouteMapView(
     routePoints: List<LatLng>,
     modifier: Modifier = Modifier,
+    onMapLoaded: (() -> Unit)? = null,
 ) {
+    val isDarkTheme = LocalDarkTheme.current
+    val context = LocalContext.current
     val cameraPositionState = rememberCameraPositionState()
     val markerSizePx = with(LocalDensity.current) { 24.dp.toPx().toInt() }
     val startMarkerIcon = remember(routePoints, markerSizePx) {
@@ -58,10 +66,21 @@ internal fun RouteMapView(
             mapToolbarEnabled = false,
         )
     }
+    val mapProperties = remember(isDarkTheme) {
+        MapProperties(
+            mapStyleOptions = if (isDarkTheme) {
+                MapStyleOptions.loadRawResourceStyle(context, R.raw.map_style_dark)
+            } else {
+                null
+            },
+        )
+    }
     GoogleMap(
         modifier = modifier,
         cameraPositionState = cameraPositionState,
         uiSettings = uiSettings,
+        properties = mapProperties,
+        onMapLoaded = onMapLoaded,
     ) {
         if (routePoints.isNotEmpty()) {
             Marker(

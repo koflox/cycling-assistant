@@ -58,6 +58,7 @@ private fun StatItem(
             text = value,
             style = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface,
         )
         Text(
             text = label,
