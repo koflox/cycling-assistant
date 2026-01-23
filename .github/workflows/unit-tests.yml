@@ -45,8 +45,38 @@ jobs:
           restore-keys: |
             android-build-${{ runner.os }}-
 
-      - name: Run unit tests
-        run: gradle testDebug --build-cache
+      - name: Run detekt
+        run: gradle detektRun --build-cache
+
+      - name: Upload detekt report
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: detekt-report
+          path: build/reports/detekt/
+          retention-days: 7
+
+      - name: Run unit tests with coverage
+        run: gradle koverXmlReport --build-cache
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: coverage-report
+          path: build/reports/kover/
+          retention-days: 7
+
+      - name: Add coverage to PR
+        if: github.event_name == 'pull_request'
+        uses: madrapps/jacoco-report@v1.7.1
+        with:
+          paths: build/reports/kover/report.xml
+          token: ${{ secrets.GITHUB_TOKEN }}
+          min-coverage-overall: 40
+          min-coverage-changed-files: 60
+          title: "Test Coverage Report"
+          update-comment: true
 
       - name: Upload test results
         if: always()
