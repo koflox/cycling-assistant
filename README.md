@@ -3,7 +3,7 @@
 An Android app that helps cyclists discover cycling destinations. Features include destination
 selection, session tracking, and real-time location updates.
 
-![Coverage](https://img.shields.io/badge/coverage-0%25-red)
+![Coverage](https://img.shields.io/badge/coverage-%25-red)
 
 ## Tech Stack
 
