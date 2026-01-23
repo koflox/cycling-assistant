@@ -37,4 +37,5 @@ dependencies {
     testImplementation(libs.mockk)
     testImplementation(libs.turbine)
     testImplementation(project(":shared:testing"))
+    testImplementation(testFixtures(project(":feature:session")))
 }

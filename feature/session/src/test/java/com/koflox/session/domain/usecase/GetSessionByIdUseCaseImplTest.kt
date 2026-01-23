@@ -1,9 +1,7 @@
 package com.koflox.session.domain.usecase
 
-import com.koflox.session.domain.model.Session
-import com.koflox.session.domain.model.SessionStatus
-import com.koflox.session.domain.model.TrackPoint
 import com.koflox.session.domain.repository.SessionRepository
+import com.koflox.session.testutil.createSession
 import com.koflox.testing.coroutine.MainDispatcherRule
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -34,7 +32,7 @@ class GetSessionByIdUseCaseImplTest {
 
     @Test
     fun `getSession delegates to repository`() = runTest {
-        val session = createSession()
+        val session = createTestSession()
         coEvery { sessionRepository.getSession(SESSION_ID) } returns Result.success(session)
 
         useCase.getSession(SESSION_ID)
@@ -44,7 +42,7 @@ class GetSessionByIdUseCaseImplTest {
 
     @Test
     fun `getSession returns success when session found`() = runTest {
-        val session = createSession()
+        val session = createTestSession()
         coEvery { sessionRepository.getSession(SESSION_ID) } returns Result.success(session)
 
         val result = useCase.getSession(SESSION_ID)
@@ -78,7 +76,7 @@ class GetSessionByIdUseCaseImplTest {
     @Test
     fun `getSession passes correct session id to repository`() = runTest {
         val customId = "custom-session-id"
-        val session = createSession(id = customId)
+        val session = createTestSession(id = customId)
         coEvery { sessionRepository.getSession(customId) } returns Result.success(session)
 
         useCase.getSession(customId)
@@ -88,7 +86,7 @@ class GetSessionByIdUseCaseImplTest {
 
     @Test
     fun `getSession returns session with correct id`() = runTest {
-        val session = createSession()
+        val session = createTestSession()
         coEvery { sessionRepository.getSession(SESSION_ID) } returns Result.success(session)
 
         val result = useCase.getSession(SESSION_ID)
@@ -96,31 +94,9 @@ class GetSessionByIdUseCaseImplTest {
         assertEquals(SESSION_ID, result.getOrNull()?.id)
     }
 
-    private fun createSession(
+    private fun createTestSession(
         id: String = SESSION_ID,
-    ) = Session(
+    ) = createSession(
         id = id,
-        destinationId = "dest-456",
-        destinationName = "Test Destination",
-        destinationLatitude = 52.52,
-        destinationLongitude = 13.405,
-        startLatitude = 52.50,
-        startLongitude = 13.40,
-        startTimeMs = 1000000L,
-        lastResumedTimeMs = 1000000L,
-        endTimeMs = 2000000L,
-        elapsedTimeMs = 900000L,
-        traveledDistanceKm = 5.5,
-        averageSpeedKmh = 22.0,
-        topSpeedKmh = 35.0,
-        status = SessionStatus.COMPLETED,
-        trackPoints = listOf(
-            TrackPoint(
-                latitude = 52.51,
-                longitude = 13.41,
-                timestampMs = 1500000L,
-                speedKmh = 25.0,
-            ),
-        ),
     )
 }

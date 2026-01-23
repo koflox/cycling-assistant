@@ -1,11 +1,9 @@
 package com.koflox.destinationsession.bridge.impl.usecase
 
 import app.cash.turbine.test
-import com.koflox.session.domain.model.Session
-import com.koflox.session.domain.model.SessionStatus
-import com.koflox.session.domain.model.TrackPoint
 import com.koflox.session.domain.usecase.ActiveSessionUseCase
 import com.koflox.session.domain.usecase.NoActiveSessionException
+import com.koflox.session.testutil.createSession
 import com.koflox.testing.coroutine.MainDispatcherRule
 import io.mockk.coEvery
 import io.mockk.every
@@ -83,7 +81,7 @@ class CyclingSessionUseCaseImplTest {
 
     @Test
     fun `getActiveSessionDestination returns destination when session exists`() = runTest {
-        val session = createSession()
+        val session = createSession(id = SESSION_ID, destinationId = DESTINATION_ID)
         coEvery { activeSessionUseCase.getActiveSession() } returns session
 
         val result = useCase.getActiveSessionDestination()
@@ -112,40 +110,11 @@ class CyclingSessionUseCaseImplTest {
     @Test
     fun `getActiveSessionDestination returns correct destination id`() = runTest {
         val customDestinationId = "custom-dest-id"
-        val session = createSession(destinationId = customDestinationId)
+        val session = createSession(id = SESSION_ID, destinationId = customDestinationId)
         coEvery { activeSessionUseCase.getActiveSession() } returns session
 
         val result = useCase.getActiveSessionDestination()
 
         assertEquals(customDestinationId, result?.id)
     }
-
-    private fun createSession(
-        id: String = SESSION_ID,
-        destinationId: String = DESTINATION_ID,
-    ) = Session(
-        id = id,
-        destinationId = destinationId,
-        destinationName = "Test Destination",
-        destinationLatitude = 52.52,
-        destinationLongitude = 13.405,
-        startLatitude = 52.50,
-        startLongitude = 13.40,
-        startTimeMs = 1000000L,
-        lastResumedTimeMs = 1000000L,
-        endTimeMs = null,
-        elapsedTimeMs = 0L,
-        traveledDistanceKm = 0.0,
-        averageSpeedKmh = 0.0,
-        topSpeedKmh = 0.0,
-        status = SessionStatus.RUNNING,
-        trackPoints = listOf(
-            TrackPoint(
-                latitude = 52.51,
-                longitude = 13.41,
-                timestampMs = 1500000L,
-                speedKmh = 25.0,
-            ),
-        ),
-    )
 }

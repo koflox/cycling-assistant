@@ -1,9 +1,11 @@
+@file:Suppress("UnusedFlow")
+
 package com.koflox.session.data.source.local
 
 import com.koflox.session.data.source.local.dao.SessionDao
-import com.koflox.session.data.source.local.entity.SessionEntity
-import com.koflox.session.data.source.local.entity.SessionWithTrackPoints
-import com.koflox.session.data.source.local.entity.TrackPointEntity
+import com.koflox.session.testutil.createSessionEntity
+import com.koflox.session.testutil.createSessionWithTrackPoints
+import com.koflox.session.testutil.createTrackPointEntity
 import com.koflox.testing.coroutine.MainDispatcherRule
 import io.mockk.coEvery
 import io.mockk.coJustRun
@@ -23,8 +25,6 @@ class SessionLocalDataSourceImplTest {
 
     companion object {
         private const val SESSION_ID = "session-123"
-        private const val DESTINATION_ID = "dest-456"
-        private const val DESTINATION_NAME = "Test Destination"
     }
 
     @get:Rule
@@ -64,7 +64,7 @@ class SessionLocalDataSourceImplTest {
 
     @Test
     fun `getSessionWithTrackPoints delegates to dao`() = runTest {
-        val sessionWithTrackPoints = createSessionWithTrackPoints()
+        val sessionWithTrackPoints = createTestSessionWithTrackPoints()
         coEvery { dao.getSessionWithTrackPoints(SESSION_ID) } returns sessionWithTrackPoints
 
         dataSource.getSessionWithTrackPoints(SESSION_ID)
@@ -74,7 +74,7 @@ class SessionLocalDataSourceImplTest {
 
     @Test
     fun `getSessionWithTrackPoints returns session when found`() = runTest {
-        val sessionWithTrackPoints = createSessionWithTrackPoints()
+        val sessionWithTrackPoints = createTestSessionWithTrackPoints()
         coEvery { dao.getSessionWithTrackPoints(SESSION_ID) } returns sessionWithTrackPoints
 
         val result = dataSource.getSessionWithTrackPoints(SESSION_ID)
@@ -104,7 +104,7 @@ class SessionLocalDataSourceImplTest {
     @Test
     fun `observeSessionsByStatuses returns flow from dao`() = runTest {
         val statuses = listOf("RUNNING")
-        val sessions = listOf(createSessionWithTrackPoints())
+        val sessions = listOf(createTestSessionWithTrackPoints())
         val flow = flowOf(sessions)
         every { dao.observeSessionsByStatuses(statuses) } returns flow
 
@@ -126,7 +126,7 @@ class SessionLocalDataSourceImplTest {
     @Test
     fun `observeFirstSessionByStatuses returns flow from dao`() = runTest {
         val statuses = listOf("RUNNING")
-        val session = createSessionWithTrackPoints()
+        val session = createTestSessionWithTrackPoints()
         val flow = flowOf(session)
         every { dao.observeFirstSessionByStatuses(statuses) } returns flow
 
@@ -146,7 +146,7 @@ class SessionLocalDataSourceImplTest {
 
     @Test
     fun `observeAllSessions returns flow from dao`() = runTest {
-        val sessions = listOf(createSessionWithTrackPoints())
+        val sessions = listOf(createTestSessionWithTrackPoints())
         val flow = flowOf(sessions)
         every { dao.observeAllSessions() } returns flow
 
@@ -155,35 +155,7 @@ class SessionLocalDataSourceImplTest {
         assertEquals(flow, result)
     }
 
-    private fun createSessionEntity(
-        id: String = SESSION_ID,
-    ) = SessionEntity(
-        id = id,
-        destinationId = DESTINATION_ID,
-        destinationName = DESTINATION_NAME,
-        destinationLatitude = 52.52,
-        destinationLongitude = 13.405,
-        startLatitude = 52.50,
-        startLongitude = 13.40,
-        startTimeMs = 1000000L,
-        lastResumedTimeMs = 1000000L,
-        endTimeMs = null,
-        elapsedTimeMs = 0L,
-        traveledDistanceKm = 0.0,
-        averageSpeedKmh = 0.0,
-        topSpeedKmh = 0.0,
-        status = "RUNNING",
-    )
-
-    private fun createTrackPointEntity() = TrackPointEntity(
-        sessionId = SESSION_ID,
-        latitude = 52.51,
-        longitude = 13.41,
-        timestampMs = 1500000L,
-        speedKmh = 25.0,
-    )
-
-    private fun createSessionWithTrackPoints() = SessionWithTrackPoints(
+    private fun createTestSessionWithTrackPoints() = createSessionWithTrackPoints(
         session = createSessionEntity(),
         trackPoints = listOf(createTrackPointEntity()),
     )

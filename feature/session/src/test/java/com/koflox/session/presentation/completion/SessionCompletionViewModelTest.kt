@@ -5,16 +5,16 @@ import android.graphics.Bitmap
 import androidx.lifecycle.SavedStateHandle
 import app.cash.turbine.test
 import com.koflox.error.mapper.ErrorMessageMapper
-import com.koflox.session.domain.model.Session
 import com.koflox.session.domain.model.SessionStatus
-import com.koflox.session.domain.model.TrackPoint
 import com.koflox.session.domain.usecase.GetSessionByIdUseCase
 import com.koflox.session.navigation.SESSION_ID_ARG
 import com.koflox.session.presentation.mapper.SessionUiMapper
-import com.koflox.session.presentation.mapper.SessionUiModel
 import com.koflox.session.presentation.share.SessionImageSharer
 import com.koflox.session.presentation.share.ShareErrorMapper
 import com.koflox.session.presentation.share.ShareResult
+import com.koflox.session.testutil.createSession
+import com.koflox.session.testutil.createSessionUiModel
+import com.koflox.session.testutil.createTrackPoint
 import com.koflox.testing.coroutine.MainDispatcherRule
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -60,7 +60,12 @@ class SessionCompletionViewModelTest {
     }
 
     private fun setupDefaultMocks() {
-        every { sessionUiMapper.toSessionUiModel(any()) } returns createSessionUiModel()
+        every { sessionUiMapper.toSessionUiModel(any()) } returns createSessionUiModel(
+            elapsedTimeFormatted = FORMATTED_TIME,
+            traveledDistanceFormatted = FORMATTED_DISTANCE,
+            averageSpeedFormatted = FORMATTED_AVG_SPEED,
+            topSpeedFormatted = FORMATTED_TOP_SPEED,
+        )
         every { sessionUiMapper.formatStartDate(any()) } returns FORMATTED_DATE
         coEvery { errorMessageMapper.map(any()) } returns ERROR_MESSAGE
     }
@@ -79,7 +84,9 @@ class SessionCompletionViewModelTest {
 
     @Test
     fun `initial state is Loading`() = runTest {
-        coEvery { getSessionByIdUseCase.getSession(SESSION_ID) } returns Result.success(createSession())
+        coEvery {
+            getSessionByIdUseCase.getSession(SESSION_ID)
+        } returns Result.success(createSession(id = SESSION_ID, destinationName = DESTINATION_NAME, status = SessionStatus.COMPLETED))
 
         viewModel = createViewModel()
 
@@ -91,7 +98,7 @@ class SessionCompletionViewModelTest {
 
     @Test
     fun `loadSession success shows Content state`() = runTest {
-        val session = createSession()
+        val session = createSession(id = SESSION_ID, destinationName = DESTINATION_NAME, status = SessionStatus.COMPLETED)
         coEvery { getSessionByIdUseCase.getSession(SESSION_ID) } returns Result.success(session)
 
         viewModel = createViewModel()
@@ -113,9 +120,11 @@ class SessionCompletionViewModelTest {
     @Test
     fun `loadSession success maps track points to route points`() = runTest {
         val session = createSession(
+            id = SESSION_ID,
+            status = SessionStatus.COMPLETED,
             trackPoints = listOf(
-                createTrackPoint(lat = 52.51, lon = 13.41),
-                createTrackPoint(lat = 52.52, lon = 13.42),
+                createTrackPoint(latitude = 52.51, longitude = 13.41),
+                createTrackPoint(latitude = 52.52, longitude = 13.42),
             ),
         )
         coEvery { getSessionByIdUseCase.getSession(SESSION_ID) } returns Result.success(session)
@@ -191,7 +200,9 @@ class SessionCompletionViewModelTest {
 
     @Test
     fun `ShareClicked shows share dialog`() = runTest {
-        coEvery { getSessionByIdUseCase.getSession(SESSION_ID) } returns Result.success(createSession())
+        coEvery {
+            getSessionByIdUseCase.getSession(SESSION_ID)
+        } returns Result.success(createSession(id = SESSION_ID, destinationName = DESTINATION_NAME, status = SessionStatus.COMPLETED))
 
         viewModel = createViewModel()
 
@@ -208,7 +219,9 @@ class SessionCompletionViewModelTest {
 
     @Test
     fun `ShareDialogDismissed clears overlay`() = runTest {
-        coEvery { getSessionByIdUseCase.getSession(SESSION_ID) } returns Result.success(createSession())
+        coEvery {
+            getSessionByIdUseCase.getSession(SESSION_ID)
+        } returns Result.success(createSession(id = SESSION_ID, destinationName = DESTINATION_NAME, status = SessionStatus.COMPLETED))
 
         viewModel = createViewModel()
 
@@ -230,7 +243,9 @@ class SessionCompletionViewModelTest {
     fun `ShareConfirmed shows Sharing state first`() = runTest {
         val bitmap = mockk<Bitmap>()
         val intent = mockk<Intent>()
-        coEvery { getSessionByIdUseCase.getSession(SESSION_ID) } returns Result.success(createSession())
+        coEvery {
+            getSessionByIdUseCase.getSession(SESSION_ID)
+        } returns Result.success(createSession(id = SESSION_ID, destinationName = DESTINATION_NAME, status = SessionStatus.COMPLETED))
         coEvery { imageSharer.shareImage(bitmap, DESTINATION_NAME) } returns ShareResult.Success(intent)
 
         viewModel = createViewModel()
@@ -251,7 +266,9 @@ class SessionCompletionViewModelTest {
     fun `ShareConfirmed success shows ShareReady with intent`() = runTest {
         val bitmap = mockk<Bitmap>()
         val intent = mockk<Intent>()
-        coEvery { getSessionByIdUseCase.getSession(SESSION_ID) } returns Result.success(createSession())
+        coEvery {
+            getSessionByIdUseCase.getSession(SESSION_ID)
+        } returns Result.success(createSession(id = SESSION_ID, destinationName = DESTINATION_NAME, status = SessionStatus.COMPLETED))
         coEvery { imageSharer.shareImage(bitmap, DESTINATION_NAME) } returns ShareResult.Success(intent)
 
         viewModel = createViewModel()
@@ -272,7 +289,9 @@ class SessionCompletionViewModelTest {
     @Test
     fun `ShareConfirmed failure shows ShareError`() = runTest {
         val bitmap = mockk<Bitmap>()
-        coEvery { getSessionByIdUseCase.getSession(SESSION_ID) } returns Result.success(createSession())
+        coEvery {
+            getSessionByIdUseCase.getSession(SESSION_ID)
+        } returns Result.success(createSession(id = SESSION_ID, destinationName = DESTINATION_NAME, status = SessionStatus.COMPLETED))
         coEvery { imageSharer.shareImage(bitmap, DESTINATION_NAME) } returns ShareResult.CannotProcessTheImage
         every { shareErrorMapper.map(ShareResult.CannotProcessTheImage) } returns SHARE_ERROR_MESSAGE
 
@@ -294,7 +313,9 @@ class SessionCompletionViewModelTest {
     @Test
     fun `ShareConfirmed failure with null error returns to ShareDialog`() = runTest {
         val bitmap = mockk<Bitmap>()
-        coEvery { getSessionByIdUseCase.getSession(SESSION_ID) } returns Result.success(createSession())
+        coEvery {
+            getSessionByIdUseCase.getSession(SESSION_ID)
+        } returns Result.success(createSession(id = SESSION_ID, destinationName = DESTINATION_NAME, status = SessionStatus.COMPLETED))
         coEvery { imageSharer.shareImage(bitmap, DESTINATION_NAME) } returns ShareResult.NoAppAvailable
         every { shareErrorMapper.map(ShareResult.NoAppAvailable) } returns null
 
@@ -316,7 +337,9 @@ class SessionCompletionViewModelTest {
     fun `ShareIntentLaunched clears overlay`() = runTest {
         val bitmap = mockk<Bitmap>()
         val intent = mockk<Intent>()
-        coEvery { getSessionByIdUseCase.getSession(SESSION_ID) } returns Result.success(createSession())
+        coEvery {
+            getSessionByIdUseCase.getSession(SESSION_ID)
+        } returns Result.success(createSession(id = SESSION_ID, destinationName = DESTINATION_NAME, status = SessionStatus.COMPLETED))
         coEvery { imageSharer.shareImage(bitmap, DESTINATION_NAME) } returns ShareResult.Success(intent)
 
         viewModel = createViewModel()
@@ -339,7 +362,9 @@ class SessionCompletionViewModelTest {
     @Test
     fun `ErrorDismissed returns to ShareDialog when in ShareError state`() = runTest {
         val bitmap = mockk<Bitmap>()
-        coEvery { getSessionByIdUseCase.getSession(SESSION_ID) } returns Result.success(createSession())
+        coEvery {
+            getSessionByIdUseCase.getSession(SESSION_ID)
+        } returns Result.success(createSession(id = SESSION_ID, destinationName = DESTINATION_NAME, status = SessionStatus.COMPLETED))
         coEvery { imageSharer.shareImage(bitmap, DESTINATION_NAME) } returns ShareResult.CannotProcessTheImage
         every { shareErrorMapper.map(ShareResult.CannotProcessTheImage) } returns SHARE_ERROR_MESSAGE
 
@@ -362,7 +387,9 @@ class SessionCompletionViewModelTest {
 
     @Test
     fun `ErrorDismissed keeps overlay when not in ShareError state`() = runTest {
-        coEvery { getSessionByIdUseCase.getSession(SESSION_ID) } returns Result.success(createSession())
+        coEvery {
+            getSessionByIdUseCase.getSession(SESSION_ID)
+        } returns Result.success(createSession(id = SESSION_ID, destinationName = DESTINATION_NAME, status = SessionStatus.COMPLETED))
 
         viewModel = createViewModel()
 
@@ -382,45 +409,4 @@ class SessionCompletionViewModelTest {
             assertEquals(Overlay.ShareDialog, (viewModel.uiState.value as SessionCompletionUiState.Content).overlay)
         }
     }
-
-    private fun createSession(
-        id: String = SESSION_ID,
-        destinationName: String = DESTINATION_NAME,
-        status: SessionStatus = SessionStatus.COMPLETED,
-        trackPoints: List<TrackPoint> = listOf(createTrackPoint()),
-    ) = Session(
-        id = id,
-        destinationId = "dest-456",
-        destinationName = destinationName,
-        destinationLatitude = 52.52,
-        destinationLongitude = 13.405,
-        startLatitude = 52.50,
-        startLongitude = 13.40,
-        startTimeMs = 1704067200000L,
-        lastResumedTimeMs = 1704067200000L,
-        endTimeMs = 1704072600000L,
-        elapsedTimeMs = 5400000L,
-        traveledDistanceKm = 15.5,
-        averageSpeedKmh = 22.0,
-        topSpeedKmh = 35.0,
-        status = status,
-        trackPoints = trackPoints,
-    )
-
-    private fun createTrackPoint(
-        lat: Double = 52.51,
-        lon: Double = 13.41,
-    ) = TrackPoint(
-        latitude = lat,
-        longitude = lon,
-        timestampMs = 1704068000000L,
-        speedKmh = 25.0,
-    )
-
-    private fun createSessionUiModel() = SessionUiModel(
-        elapsedTimeFormatted = FORMATTED_TIME,
-        traveledDistanceFormatted = FORMATTED_DISTANCE,
-        averageSpeedFormatted = FORMATTED_AVG_SPEED,
-        topSpeedFormatted = FORMATTED_TOP_SPEED,
-    )
 }

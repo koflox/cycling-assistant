@@ -2,6 +2,7 @@ package com.koflox.destinations.data.source.local
 
 import com.koflox.destinations.data.source.local.database.dao.DestinationDao
 import com.koflox.destinations.data.source.local.entity.DestinationLocal
+import com.koflox.destinations.testutil.createDestinationLocal
 import com.koflox.testing.coroutine.MainDispatcherRule
 import io.mockk.coEvery
 import io.mockk.coJustRun
@@ -57,8 +58,8 @@ class PoiLocalDataSourceImplTest {
     @Test
     fun `getAllDestinations returns destinations from dao`() = runTest {
         val destinations = listOf(
-            createDestination("1"),
-            createDestination("2"),
+            createDestinationLocal(id = "1", title = TEST_TITLE, latitude = TEST_LAT, longitude = TEST_LONG),
+            createDestinationLocal(id = "2", title = TEST_TITLE, latitude = TEST_LAT, longitude = TEST_LONG),
         )
         coEvery { dao.getAllDestinations() } returns destinations
 
@@ -71,7 +72,7 @@ class PoiLocalDataSourceImplTest {
 
     @Test
     fun `insertAll delegates to dao`() = runTest {
-        val destinations = listOf(createDestination())
+        val destinations = listOf(createDestinationLocal(id = TEST_ID, title = TEST_TITLE, latitude = TEST_LAT, longitude = TEST_LONG))
         coJustRun { dao.insertAll(any()) }
 
         dataSource.insertAll(destinations)
@@ -82,9 +83,9 @@ class PoiLocalDataSourceImplTest {
     @Test
     fun `insertAll passes correct destinations to dao`() = runTest {
         val destinations = listOf(
-            createDestination("a"),
-            createDestination("b"),
-            createDestination("c"),
+            createDestinationLocal(id = "a", title = TEST_TITLE, latitude = TEST_LAT, longitude = TEST_LONG),
+            createDestinationLocal(id = "b", title = TEST_TITLE, latitude = TEST_LAT, longitude = TEST_LONG),
+            createDestinationLocal(id = "c", title = TEST_TITLE, latitude = TEST_LAT, longitude = TEST_LONG),
         )
         coJustRun { dao.insertAll(any()) }
 
@@ -102,16 +103,4 @@ class PoiLocalDataSourceImplTest {
 
         coVerify { dao.insertAll(destinations) }
     }
-
-    private fun createDestination(
-        id: String = TEST_ID,
-        title: String = TEST_TITLE,
-        latitude: Double = TEST_LAT,
-        longitude: Double = TEST_LONG,
-    ) = DestinationLocal(
-        id = id,
-        title = title,
-        latitude = latitude,
-        longitude = longitude,
-    )
 }

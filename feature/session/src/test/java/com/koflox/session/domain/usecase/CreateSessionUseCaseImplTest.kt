@@ -4,6 +4,7 @@ import com.koflox.id.IdGenerator
 import com.koflox.session.domain.model.Session
 import com.koflox.session.domain.model.SessionStatus
 import com.koflox.session.domain.repository.SessionRepository
+import com.koflox.session.testutil.createCreateSessionParams
 import com.koflox.testing.coroutine.MainDispatcherRule
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -46,7 +47,7 @@ class CreateSessionUseCaseImplTest {
     fun `create generates unique session id`() = runTest {
         coEvery { sessionRepository.saveSession(any()) } returns Result.success(Unit)
 
-        useCase.create(createParams())
+        useCase.create(createTestParams())
 
         coVerify { idGenerator.generate() }
     }
@@ -56,7 +57,7 @@ class CreateSessionUseCaseImplTest {
         val sessionSlot = slot<Session>()
         coEvery { sessionRepository.saveSession(capture(sessionSlot)) } returns Result.success(Unit)
 
-        useCase.create(createParams())
+        useCase.create(createTestParams())
 
         assertEquals(GENERATED_ID, sessionSlot.captured.id)
     }
@@ -66,7 +67,7 @@ class CreateSessionUseCaseImplTest {
         val sessionSlot = slot<Session>()
         coEvery { sessionRepository.saveSession(capture(sessionSlot)) } returns Result.success(Unit)
 
-        useCase.create(createParams())
+        useCase.create(createTestParams())
 
         assertEquals(DESTINATION_ID, sessionSlot.captured.destinationId)
         assertEquals(DESTINATION_NAME, sessionSlot.captured.destinationName)
@@ -79,7 +80,7 @@ class CreateSessionUseCaseImplTest {
         val sessionSlot = slot<Session>()
         coEvery { sessionRepository.saveSession(capture(sessionSlot)) } returns Result.success(Unit)
 
-        useCase.create(createParams())
+        useCase.create(createTestParams())
 
         assertEquals(START_LAT, sessionSlot.captured.startLatitude, 0.0)
         assertEquals(START_LONG, sessionSlot.captured.startLongitude, 0.0)
@@ -90,7 +91,7 @@ class CreateSessionUseCaseImplTest {
         val sessionSlot = slot<Session>()
         coEvery { sessionRepository.saveSession(capture(sessionSlot)) } returns Result.success(Unit)
 
-        useCase.create(createParams())
+        useCase.create(createTestParams())
 
         assertEquals(SessionStatus.RUNNING, sessionSlot.captured.status)
     }
@@ -100,7 +101,7 @@ class CreateSessionUseCaseImplTest {
         val sessionSlot = slot<Session>()
         coEvery { sessionRepository.saveSession(capture(sessionSlot)) } returns Result.success(Unit)
 
-        useCase.create(createParams())
+        useCase.create(createTestParams())
 
         assertEquals(0L, sessionSlot.captured.elapsedTimeMs)
         assertEquals(0.0, sessionSlot.captured.traveledDistanceKm, 0.0)
@@ -113,7 +114,7 @@ class CreateSessionUseCaseImplTest {
         val sessionSlot = slot<Session>()
         coEvery { sessionRepository.saveSession(capture(sessionSlot)) } returns Result.success(Unit)
 
-        useCase.create(createParams())
+        useCase.create(createTestParams())
 
         assertEquals(null, sessionSlot.captured.endTimeMs)
     }
@@ -123,7 +124,7 @@ class CreateSessionUseCaseImplTest {
         val sessionSlot = slot<Session>()
         coEvery { sessionRepository.saveSession(capture(sessionSlot)) } returns Result.success(Unit)
 
-        useCase.create(createParams())
+        useCase.create(createTestParams())
 
         assertEquals(1, sessionSlot.captured.trackPoints.size)
         val trackPoint = sessionSlot.captured.trackPoints[0]
@@ -136,7 +137,7 @@ class CreateSessionUseCaseImplTest {
     fun `create returns success with session id`() = runTest {
         coEvery { sessionRepository.saveSession(any()) } returns Result.success(Unit)
 
-        val result = useCase.create(createParams())
+        val result = useCase.create(createTestParams())
 
         assertTrue(result.isSuccess)
         assertEquals(GENERATED_ID, result.getOrNull())
@@ -147,7 +148,7 @@ class CreateSessionUseCaseImplTest {
         val exception = RuntimeException("Save failed")
         coEvery { sessionRepository.saveSession(any()) } returns Result.failure(exception)
 
-        val result = useCase.create(createParams())
+        val result = useCase.create(createTestParams())
 
         assertTrue(result.isFailure)
     }
@@ -157,7 +158,7 @@ class CreateSessionUseCaseImplTest {
         val sessionSlot = slot<Session>()
         coEvery { sessionRepository.saveSession(capture(sessionSlot)) } returns Result.success(Unit)
 
-        useCase.create(createParams())
+        useCase.create(createTestParams())
 
         assertEquals(sessionSlot.captured.startTimeMs, sessionSlot.captured.lastResumedTimeMs)
     }
@@ -167,13 +168,13 @@ class CreateSessionUseCaseImplTest {
         val sessionSlot = slot<Session>()
         coEvery { sessionRepository.saveSession(capture(sessionSlot)) } returns Result.success(Unit)
 
-        useCase.create(createParams())
+        useCase.create(createTestParams())
 
         val trackPoint = sessionSlot.captured.trackPoints[0]
         assertEquals(sessionSlot.captured.startTimeMs, trackPoint.timestampMs)
     }
 
-    private fun createParams() = CreateSessionParams(
+    private fun createTestParams() = createCreateSessionParams(
         destinationId = DESTINATION_ID,
         destinationName = DESTINATION_NAME,
         destinationLatitude = DESTINATION_LAT,

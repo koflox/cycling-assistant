@@ -1,7 +1,7 @@
 package com.koflox.destinations.domain.usecase
 
-import com.koflox.destinations.domain.model.Destination
 import com.koflox.destinations.domain.repository.DestinationRepository
+import com.koflox.destinations.testutil.createDestination
 import com.koflox.distance.DistanceCalculator
 import com.koflox.location.model.Location
 import com.koflox.testing.coroutine.MainDispatcherRule
@@ -21,6 +21,7 @@ class GetDestinationInfoUseCaseTest {
 
     companion object {
         private const val DEFAULT_LON = 13.405
+        private const val TEST_TITLE_PREFIX = "Destination "
     }
 
     @get:Rule
@@ -43,7 +44,7 @@ class GetDestinationInfoUseCaseTest {
 
     @Test
     fun `getRandomDestinations calls repository getAllDestinations`() = runTest {
-        val destinations = listOf(createDestination("1", 10.0))
+        val destinations = listOf(createDestination(id = "1", title = "$TEST_TITLE_PREFIX 1", latitude = 10.0, longitude = DEFAULT_LON))
         coEvery { repository.getAllDestinations() } returns Result.success(destinations)
         every { distanceCalculator.calculateKm(any(), any(), any(), any()) } returns 15.0
 
@@ -58,7 +59,7 @@ class GetDestinationInfoUseCaseTest {
 
     @Test
     fun `getRandomDestinations returns success with valid destination in range`() = runTest {
-        val destination = createDestination("1", 15.0)
+        val destination = createDestination(id = "1", title = "$TEST_TITLE_PREFIX 1", latitude = 15.0, longitude = DEFAULT_LON)
         coEvery { repository.getAllDestinations() } returns Result.success(listOf(destination))
         every { distanceCalculator.calculateKm(any(), any(), any(), any()) } returns 15.0
 
@@ -74,9 +75,9 @@ class GetDestinationInfoUseCaseTest {
 
     @Test
     fun `getRandomDestinations filters destinations within tolerance range`() = runTest {
-        val nearDestination = createDestination("1", 10.0)
-        val validDestination = createDestination("2", 15.0)
-        val farDestination = createDestination("3", 25.0)
+        val nearDestination = createDestination(id = "1", title = "$TEST_TITLE_PREFIX 1", latitude = 10.0, longitude = DEFAULT_LON)
+        val validDestination = createDestination(id = "2", title = "$TEST_TITLE_PREFIX 2", latitude = 15.0, longitude = DEFAULT_LON)
+        val farDestination = createDestination(id = "3", title = "$TEST_TITLE_PREFIX 3", latitude = 25.0, longitude = DEFAULT_LON)
 
         coEvery { repository.getAllDestinations() } returns Result.success(
             listOf(nearDestination, validDestination, farDestination),
@@ -105,9 +106,9 @@ class GetDestinationInfoUseCaseTest {
 
     @Test
     fun `getRandomDestinations returns multiple valid destinations when in range`() = runTest {
-        val destination1 = createDestination("1", 12.0)
-        val destination2 = createDestination("2", 14.0)
-        val destination3 = createDestination("3", 16.0)
+        val destination1 = createDestination(id = "1", title = "$TEST_TITLE_PREFIX 1", latitude = 12.0, longitude = DEFAULT_LON)
+        val destination2 = createDestination(id = "2", title = "$TEST_TITLE_PREFIX 2", latitude = 14.0, longitude = DEFAULT_LON)
+        val destination3 = createDestination(id = "3", title = "$TEST_TITLE_PREFIX 3", latitude = 16.0, longitude = DEFAULT_LON)
 
         coEvery { repository.getAllDestinations() } returns Result.success(
             listOf(destination1, destination2, destination3),
@@ -137,7 +138,7 @@ class GetDestinationInfoUseCaseTest {
 
     @Test
     fun `getRandomDestinations throws NoSuitableDestinationException when no valid destinations`() = runTest {
-        val farDestination = createDestination("1", 50.0)
+        val farDestination = createDestination(id = "1", title = "$TEST_TITLE_PREFIX 1", latitude = 50.0, longitude = DEFAULT_LON)
         coEvery { repository.getAllDestinations() } returns Result.success(listOf(farDestination))
         every { distanceCalculator.calculateKm(any(), any(), any(), any()) } returns 50.0
 
@@ -169,9 +170,9 @@ class GetDestinationInfoUseCaseTest {
     @Test
     fun `getRandomDestinations calls distanceCalculator for each destination`() = runTest {
         val destinations = listOf(
-            createDestination("1", 10.0),
-            createDestination("2", 20.0),
-            createDestination("3", 30.0),
+            createDestination(id = "1", title = "$TEST_TITLE_PREFIX 1", latitude = 10.0, longitude = DEFAULT_LON),
+            createDestination(id = "2", title = "$TEST_TITLE_PREFIX 2", latitude = 20.0, longitude = DEFAULT_LON),
+            createDestination(id = "3", title = "$TEST_TITLE_PREFIX 3", latitude = 30.0, longitude = DEFAULT_LON),
         )
         coEvery { repository.getAllDestinations() } returns Result.success(destinations)
         every { distanceCalculator.calculateKm(any(), any(), any(), any()) } returns 50.0
@@ -187,7 +188,7 @@ class GetDestinationInfoUseCaseTest {
 
     @Test
     fun `getRandomDestinations uses correct coordinates for distance calculation`() = runTest {
-        val destination = createDestination("1", 48.0, 11.0)
+        val destination = createDestination(id = "1", title = "$TEST_TITLE_PREFIX 1", latitude = 48.0, longitude = 11.0)
         coEvery { repository.getAllDestinations() } returns Result.success(listOf(destination))
         every { distanceCalculator.calculateKm(any(), any(), any(), any()) } returns 15.0
 
@@ -209,7 +210,7 @@ class GetDestinationInfoUseCaseTest {
 
     @Test
     fun `getRandomDestinations includes destination at lower tolerance boundary`() = runTest {
-        val destination = createDestination("1", 15.0)
+        val destination = createDestination(id = "1", title = "$TEST_TITLE_PREFIX 1", latitude = 15.0, longitude = DEFAULT_LON)
         coEvery { repository.getAllDestinations() } returns Result.success(listOf(destination))
         every { distanceCalculator.calculateKm(any(), any(), any(), any()) } returns 11.0 // 15 - 4 = 11 (lower bound)
 
@@ -224,7 +225,7 @@ class GetDestinationInfoUseCaseTest {
 
     @Test
     fun `getRandomDestinations includes destination at upper tolerance boundary`() = runTest {
-        val destination = createDestination("1", 15.0)
+        val destination = createDestination(id = "1", title = "$TEST_TITLE_PREFIX 1", latitude = 15.0, longitude = DEFAULT_LON)
         coEvery { repository.getAllDestinations() } returns Result.success(listOf(destination))
         every { distanceCalculator.calculateKm(any(), any(), any(), any()) } returns 19.0 // 15 + 4 = 19 (upper bound)
 
@@ -239,7 +240,7 @@ class GetDestinationInfoUseCaseTest {
 
     @Test
     fun `getRandomDestinations excludes destination just outside tolerance range`() = runTest {
-        val destination = createDestination("1", 15.0)
+        val destination = createDestination(id = "1", title = "$TEST_TITLE_PREFIX 1", latitude = 15.0, longitude = DEFAULT_LON)
         coEvery { repository.getAllDestinations() } returns Result.success(listOf(destination))
         every { distanceCalculator.calculateKm(any(), any(), any(), any()) } returns 19.1 // Just above upper bound
 
@@ -252,15 +253,4 @@ class GetDestinationInfoUseCaseTest {
         assertTrue(result.isFailure)
         assertTrue(result.exceptionOrNull() is NoSuitableDestinationException)
     }
-
-    private fun createDestination(
-        id: String,
-        latitude: Double,
-        longitude: Double = DEFAULT_LON,
-    ) = Destination(
-        id = id,
-        title = "Destination $id",
-        latitude = latitude,
-        longitude = longitude,
-    )
 }
