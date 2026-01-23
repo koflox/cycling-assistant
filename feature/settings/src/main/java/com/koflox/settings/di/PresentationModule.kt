@@ -1,5 +1,6 @@
 package com.koflox.settings.di
 
+import com.koflox.concurrent.DispatchersQualifier
 import com.koflox.settings.domain.usecase.ObserveSettingsUseCase
 import com.koflox.settings.domain.usecase.ObserveSettingsUseCaseImpl
 import com.koflox.settings.domain.usecase.UpdateSettingsUseCase
@@ -19,6 +20,7 @@ internal val presentationModule = module {
         SettingsViewModel(
             observeSettingsUseCase = get(),
             updateSettingsUseCase = get(),
+            dispatcherDefault = get(DispatchersQualifier.Default),
         )
     }
 }

@@ -26,7 +26,7 @@ import com.koflox.session.presentation.session.SessionUiState
 
 @Composable
 internal fun SessionControlsOverlay(
-    state: SessionUiState,
+    state: SessionUiState.Active,
     onPauseClick: () -> Unit,
     onResumeClick: () -> Unit,
     onStopClick: () -> Unit,
@@ -49,18 +49,14 @@ internal fun SessionControlsOverlay(
                 text = state.destinationName,
                 style = MaterialTheme.typography.titleMedium,
             )
-
             Spacer(modifier = Modifier.height(Spacing.Medium))
-
             SessionStatsDisplay(
                 elapsedTime = state.elapsedTimeFormatted,
-                distance = state.traveledDistanceKm,
-                averageSpeed = state.averageSpeedKmh,
-                topSpeed = state.topSpeedKmh,
+                distance = state.traveledDistanceFormatted,
+                averageSpeed = state.averageSpeedFormatted,
+                topSpeed = state.topSpeedFormatted,
             )
-
             Spacer(modifier = Modifier.height(Spacing.Large))
-
             Row(
                 horizontalArrangement = Arrangement.spacedBy(Spacing.Medium),
             ) {
@@ -79,7 +75,6 @@ internal fun SessionControlsOverlay(
                         Text(stringResource(R.string.session_button_pause))
                     }
                 }
-
                 Button(
                     onClick = onStopClick,
                     modifier = Modifier.weight(1f),

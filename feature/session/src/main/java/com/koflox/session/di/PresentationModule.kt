@@ -7,6 +7,8 @@ import com.koflox.session.presentation.completion.SessionCompletionViewModel
 import com.koflox.session.presentation.error.SessionErrorMessageMapper
 import com.koflox.session.presentation.mapper.SessionUiMapper
 import com.koflox.session.presentation.mapper.SessionUiMapperImpl
+import com.koflox.session.presentation.session.timer.SessionTimerFactory
+import com.koflox.session.presentation.session.timer.SessionTimerImpl
 import com.koflox.session.presentation.session.SessionViewModel
 import com.koflox.session.presentation.sessionslist.SessionsListUiMapper
 import com.koflox.session.presentation.sessionslist.SessionsListUiMapperImpl
@@ -35,6 +37,9 @@ internal val presentationModule = module {
     single<SessionUiMapper> {
         SessionUiMapperImpl()
     }
+    single<SessionTimerFactory> {
+        SessionTimerFactory { scope -> SessionTimerImpl(scope) }
+    }
     viewModel {
         SessionViewModel(
             createSessionUseCase = get(),
@@ -43,6 +48,7 @@ internal val presentationModule = module {
             sessionServiceController = get(),
             sessionUiMapper = get(),
             errorMessageMapper = get(PresentationModuleQualifier.SessionErrorMessageMapper),
+            sessionTimerFactory = get(),
             dispatcherDefault = get(DispatchersQualifier.Default),
         )
     }
@@ -66,6 +72,7 @@ internal val presentationModule = module {
             sessionUiMapper = get(),
             imageSharer = get(),
             shareErrorMapper = get(),
+            dispatcherDefault = get(DispatchersQualifier.Default),
         )
     }
     viewModel {

@@ -4,11 +4,24 @@ import com.koflox.concurrent.DispatchersQualifier
 import com.koflox.destinations.presentation.destinations.DestinationsViewModel
 import com.koflox.destinations.presentation.mapper.DestinationUiMapper
 import com.koflox.destinations.presentation.mapper.DestinationUiMapperImpl
-import org.koin.core.module.dsl.viewModelOf
+import org.koin.android.ext.koin.androidApplication
+import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 
 internal val presentationModule = module {
-    viewModelOf(::DestinationsViewModel)
+    viewModel {
+        DestinationsViewModel(
+            getUserLocationUseCase = get(),
+            observeUserLocationUseCase = get(),
+            initializeDatabaseUseCase = get(),
+            getDestinationInfoUseCase = get(),
+            distanceCalculator = get(),
+            uiMapper = get(),
+            application = androidApplication(),
+            cyclingSessionUseCase = get(),
+            dispatcherDefault = get(DispatchersQualifier.Default),
+        )
+    }
     single<DestinationUiMapper> {
         DestinationUiMapperImpl(
             dispatcherDefault = get(DispatchersQualifier.Default),
