@@ -1,4 +1,4 @@
-name: Cache
+name: Build & Update Badges
 
 on:
   push:
@@ -10,16 +10,20 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.caching=true" # to avoid process leaking and speed up the building
+  GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.caching=true"
 
 jobs:
-  cache:
-    name: Build & Cache
+  build:
+    name: Build, Test & Update Badges
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up JDK
         uses: actions/setup-java@v5
@@ -46,3 +50,44 @@ jobs:
 
       - name: Build project
         run: gradle buildDebug --build-cache -x test
+
+      - name: Run unit tests with coverage
+        run: gradle koverXmlReport --build-cache
+
+      - name: Extract coverage percentage
+        id: coverage
+        run: |
+          COVERAGE=$(grep -oP 'line-rate="\K[0-9.]+' build/reports/kover/report.xml | head -1)
+          COVERAGE_PCT=$(echo "$COVERAGE * 100" | bc | cut -d'.' -f1)
+          echo "percentage=$COVERAGE_PCT" >> $GITHUB_OUTPUT
+
+          # Determine badge color based on coverage
+          if [ "$COVERAGE_PCT" -ge 80 ]; then
+            echo "color=brightgreen" >> $GITHUB_OUTPUT
+          elif [ "$COVERAGE_PCT" -ge 60 ]; then
+            echo "color=green" >> $GITHUB_OUTPUT
+          elif [ "$COVERAGE_PCT" -ge 40 ]; then
+            echo "color=yellow" >> $GITHUB_OUTPUT
+          elif [ "$COVERAGE_PCT" -ge 20 ]; then
+            echo "color=orange" >> $GITHUB_OUTPUT
+          else
+            echo "color=red" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Update coverage badge in README
+        run: |
+          sed -i "s|!\[Coverage\](https://img.shields.io/badge/coverage-[0-9]*%25-[a-z]*)|![Coverage](https://img.shields.io/badge/coverage-${{ steps.coverage.outputs.percentage }}%25-${{ steps.coverage.outputs.color }})|g" README.md
+
+      - name: Commit and push changes
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git diff --quiet README.md || (git add README.md && git commit -m "Update README: coverage ${{ steps.coverage.outputs.percentage }}%, module graph" && git push)
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: coverage-report
+          path: build/reports/kover/
+          retention-days: 7
