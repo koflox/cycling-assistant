@@ -86,11 +86,11 @@ jobs:
           echo "Total: $TOTAL lines"
           echo "Percentage: $PERCENT%"
           echo "percentage=$PERCENT" >> $GITHUB_OUTPUT
-          if [ $PERCENT -ge 80 ]; then
+          if [ $PERCENT -ge 60 ]; then
             echo "color=brightgreen" >> $GITHUB_OUTPUT
-          elif [ $PERCENT -ge 60 ]; then
+          elif [ $PERCENT -ge 45 ]; then
             echo "color=green" >> $GITHUB_OUTPUT
-          elif [ $PERCENT -ge 40 ]; then
+          elif [ $PERCENT -ge 30 ]; then
             echo "color=yellow" >> $GITHUB_OUTPUT
           else
             echo "color=red" >> $GITHUB_OUTPUT
