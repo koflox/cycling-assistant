@@ -21,6 +21,7 @@ import com.koflox.designsystem.theme.Spacing
 import com.koflox.destinations.presentation.destinations.components.GoogleMapView
 import com.koflox.destinations.presentation.destinations.components.LetsGoButton
 import com.koflox.destinations.presentation.destinations.components.LoadingOverlay
+import com.koflox.destinations.presentation.destinations.components.PreparingDestinationsCard
 import com.koflox.destinations.presentation.destinations.components.RouteSlider
 import com.koflox.destinations.presentation.permission.LocationPermissionHandler
 import com.koflox.destinationsession.bridge.navigator.CyclingSessionUiNavigator
@@ -118,7 +119,6 @@ private fun DestinationsContent(
             isSessionActive = uiState.isSessionActive,
             onSelectedMarkerInfoClick = { viewModel.onEvent(DestinationsUiEvent.SelectedMarkerInfoClicked) },
         )
-
         if (uiState.isReady) {
             if (uiState.isSessionActive) {
                 uiState.selectedDestination?.let { destination ->
@@ -172,15 +172,21 @@ private fun DestinationSelectionControls(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        RouteSlider(
-            distanceKm = uiState.routeDistanceKm,
-            toleranceKm = uiState.toleranceKm,
-            onDistanceChanged = { viewModel.onEvent(DestinationsUiEvent.RouteDistanceChanged(it)) },
-            modifier = Modifier.padding(bottom = Spacing.Large),
-        )
+        if (uiState.areDestinationsReady) {
+            RouteSlider(
+                distanceKm = uiState.routeDistanceKm,
+                toleranceKm = uiState.toleranceKm,
+                onDistanceChanged = { viewModel.onEvent(DestinationsUiEvent.RouteDistanceChanged(it)) },
+                modifier = Modifier.padding(bottom = Spacing.Large),
+            )
+        } else {
+            PreparingDestinationsCard(
+                modifier = Modifier.padding(bottom = Spacing.Large),
+            )
+        }
         LetsGoButton(
             onClick = { viewModel.onEvent(DestinationsUiEvent.LetsGoClicked) },
-            enabled = !uiState.isLoading && uiState.isPermissionGranted,
+            enabled = !uiState.isLoading && uiState.isPermissionGranted && uiState.areDestinationsReady,
         )
     }
 }

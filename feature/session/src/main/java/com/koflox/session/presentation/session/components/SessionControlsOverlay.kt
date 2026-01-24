@@ -60,34 +60,39 @@ internal fun SessionControlsOverlay(
                 altitudeGain = state.altitudeGainFormatted,
             )
             Spacer(modifier = Modifier.height(Spacing.Large))
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(Spacing.Medium),
-            ) {
-                if (state.isPaused) {
-                    Button(
-                        onClick = onResumeClick,
-                        modifier = Modifier.weight(1f),
-                    ) {
-                        Text(stringResource(R.string.session_button_continue))
-                    }
-                } else {
-                    OutlinedButton(
-                        onClick = onPauseClick,
-                        modifier = Modifier.weight(1f),
-                    ) {
-                        Text(stringResource(R.string.session_button_pause))
-                    }
-                }
-                Button(
-                    onClick = onStopClick,
-                    modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.error,
-                    ),
-                ) {
-                    Text(stringResource(R.string.session_button_stop))
-                }
+            SessionControlButtons(
+                isPaused = state.isPaused,
+                onPauseClick = onPauseClick,
+                onResumeClick = onResumeClick,
+                onStopClick = onStopClick,
+            )
+        }
+    }
+}
+
+@Composable
+private fun SessionControlButtons(
+    isPaused: Boolean,
+    onPauseClick: () -> Unit,
+    onResumeClick: () -> Unit,
+    onStopClick: () -> Unit,
+) {
+    Row(horizontalArrangement = Arrangement.spacedBy(Spacing.Medium)) {
+        if (isPaused) {
+            Button(onClick = onResumeClick, modifier = Modifier.weight(1f)) {
+                Text(stringResource(R.string.session_button_continue))
             }
+        } else {
+            OutlinedButton(onClick = onPauseClick, modifier = Modifier.weight(1f)) {
+                Text(stringResource(R.string.session_button_pause))
+            }
+        }
+        Button(
+            onClick = onStopClick,
+            modifier = Modifier.weight(1f),
+            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+        ) {
+            Text(stringResource(R.string.session_button_stop))
         }
     }
 }

@@ -78,6 +78,7 @@ dependencies {
     implementation(project(":feature:settings"))
 
     // Shared modules
+    implementation(project(":shared:altitude"))
     implementation(project(":shared:concurrent"))
     implementation(project(":shared:design-system"))
     implementation(project(":shared:distance"))

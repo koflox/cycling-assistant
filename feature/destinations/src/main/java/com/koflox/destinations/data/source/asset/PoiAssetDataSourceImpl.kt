@@ -10,14 +10,11 @@ internal class PoiAssetDataSourceImpl(
     private val dispatcherIo: CoroutineDispatcher,
     private val context: Context,
 ) : PoiAssetDataSource {
-    override suspend fun readDestinationsJson(): List<DestinationAsset> = withContext(dispatcherIo) {
-        context.assets.open(DESTINATIONS_FILE).use { inputStream ->
-            val jsonString = inputStream.bufferedReader().use { it.readText() }
-            Json.decodeFromString<List<DestinationAsset>>(jsonString)
+    override suspend fun readDestinationsJson(fileName: String): List<DestinationAsset> =
+        withContext(dispatcherIo) {
+            context.assets.open(fileName).use { inputStream ->
+                val jsonString = inputStream.bufferedReader().use { it.readText() }
+                Json.decodeFromString<List<DestinationAsset>>(jsonString)
+            }
         }
-    }
-
-    companion object {
-        private const val DESTINATIONS_FILE = "destinations.json"
-    }
 }

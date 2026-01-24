@@ -63,6 +63,7 @@ dependencies {
     implementation(libs.play.services.maps)
 
     // Shared modules
+    implementation(project(":shared:altitude"))
     implementation(project(":shared:concurrent"))
     implementation(project(":shared:design-system"))
     implementation(project(":shared:di"))

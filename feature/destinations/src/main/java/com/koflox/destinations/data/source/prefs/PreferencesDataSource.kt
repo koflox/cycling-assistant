@@ -1,6 +1,6 @@
 package com.koflox.destinations.data.source.prefs
 
 internal interface PreferencesDataSource {
-    suspend fun isDatabaseInitialized(): Boolean
-    suspend fun setDatabaseInitialized(initialized: Boolean)
+    suspend fun getLoadedFiles(): Set<String>
+    suspend fun addLoadedFile(fileName: String)
 }

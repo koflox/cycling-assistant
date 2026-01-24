@@ -5,6 +5,8 @@ import com.koflox.concurrent.DispatchersQualifier
 import com.koflox.destinations.data.mapper.DestinationMapper
 import com.koflox.destinations.data.mapper.DestinationMapperImpl
 import com.koflox.destinations.data.repository.DestinationRepositoryImpl
+import com.koflox.destinations.data.source.asset.DestinationFileResolver
+import com.koflox.destinations.data.source.asset.DestinationFileResolverImpl
 import com.koflox.destinations.data.source.asset.PoiAssetDataSource
 import com.koflox.destinations.data.source.asset.PoiAssetDataSourceImpl
 import com.koflox.destinations.data.source.local.PoiLocalDataSource
@@ -13,6 +15,7 @@ import com.koflox.destinations.data.source.prefs.PreferencesDataSource
 import com.koflox.destinations.data.source.prefs.PreferencesDataSourceImpl
 import com.koflox.destinations.domain.repository.DestinationRepository
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.sync.Mutex
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.Module
 import org.koin.dsl.module
@@ -45,6 +48,13 @@ private val dataSourceModule = module {
             prefs = androidContext().getSharedPreferences("destinations_prefs", Context.MODE_PRIVATE),
         )
     }
+    single<DestinationFileResolver> {
+        DestinationFileResolverImpl(
+            dispatcherIo = get<CoroutineDispatcher>(DispatchersQualifier.Io),
+            context = androidContext(),
+            distanceCalculator = get(),
+        )
+    }
 }
 
 private val repoModule = module {
@@ -55,7 +65,9 @@ private val repoModule = module {
             poiAssetDataSource = get(),
             locationDataSource = get(),
             preferencesDataSource = get(),
+            destinationFileResolver = get(),
             mapper = get(),
+            mutex = Mutex(),
         )
     }
 }

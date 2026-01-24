@@ -6,6 +6,7 @@ import androidx.core.net.toUri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.koflox.destinations.R
+import com.koflox.destinations.domain.model.DestinationLoadingEvent
 import com.koflox.destinations.domain.model.Destinations
 import com.koflox.destinations.domain.usecase.GetDestinationInfoUseCase
 import com.koflox.destinations.domain.usecase.GetUserLocationUseCase
@@ -24,6 +25,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.util.concurrent.atomic.AtomicReference
 import kotlin.math.roundToInt
 
 internal class DestinationsViewModel(
@@ -40,6 +42,7 @@ internal class DestinationsViewModel(
 
     companion object {
         private const val CAMERA_MOVEMENT_THRESHOLD_METERS = 50.0
+        private const val DESTINATION_RELOAD_THRESHOLD_KM = 50.0 // TODO: should be unified with DestinationFileResolverImpl
         private const val METERS_IN_KILOMETER = 1000.0
         private const val GOOGLE_MAPS_PACKAGE = "com.google.android.apps.maps"
     }
@@ -49,6 +52,7 @@ internal class DestinationsViewModel(
 
     private var locationObservationJob: Job? = null
     private var isScreenVisible = false
+    private val lastDestinationLoadLocation = AtomicReference<Location?>(null)
 
     init {
         initialize()
@@ -57,10 +61,55 @@ internal class DestinationsViewModel(
     private fun initialize() {
         viewModelScope.launch(dispatcherDefault) {
             _uiState.update { it.copy(isInitializing = true) }
-            initializeDatabaseUseCase.init()
+            getUserLocationUseCase.getLocation()
+                .onSuccess { location ->
+                    _uiState.update {
+                        it.copy(
+                            userLocation = location,
+                            cameraFocusLocation = location,
+                        )
+                    }
+                    startDestinationLoading(location)
+                }
             checkActiveSession()
             _uiState.update { it.copy(isInitializing = false) }
             listenToActiveSession()
+        }
+    }
+
+    private fun startDestinationLoading(location: Location) {
+        viewModelScope.launch(dispatcherDefault) {
+            lastDestinationLoadLocation.set(location)
+            initializeDatabaseUseCase.init(location).collect { event ->
+                when (event) {
+                    is DestinationLoadingEvent.Loading -> {
+                        _uiState.update {
+                            it.copy(
+                                isPreparingDestinations = true,
+                                areDestinationsReady = false,
+                            )
+                        }
+                    }
+
+                    is DestinationLoadingEvent.Completed -> {
+                        _uiState.update {
+                            it.copy(
+                                isPreparingDestinations = false,
+                                areDestinationsReady = true,
+                            )
+                        }
+                    }
+
+                    is DestinationLoadingEvent.Error -> {
+                        _uiState.update {
+                            it.copy(
+                                isPreparingDestinations = false,
+                                error = application.getString(R.string.error_not_handled),
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -212,13 +261,13 @@ internal class DestinationsViewModel(
 
     private fun onPermissionGranted() {
         _uiState.update { it.copy(isPermissionGranted = true) }
-        fetchInitialLocation()
+        fetchInitialLocationAndStartLoading()
         if (isScreenVisible) {
             startLocationObservation()
         }
     }
 
-    private fun fetchInitialLocation() {
+    private fun fetchInitialLocationAndStartLoading() {
         viewModelScope.launch(dispatcherDefault) {
             getUserLocationUseCase.getLocation().onSuccess { location ->
                 _uiState.update {
@@ -227,6 +276,7 @@ internal class DestinationsViewModel(
                         cameraFocusLocation = it.cameraFocusLocation ?: location,
                     )
                 }
+                checkAndReloadDestinationsIfNeeded(location)
             }
         }
     }
@@ -267,7 +317,28 @@ internal class DestinationsViewModel(
                         },
                     )
                 }
+                checkAndReloadDestinationsIfNeeded(newLocation)
             }
+        }
+    }
+
+    private fun checkAndReloadDestinationsIfNeeded(newLocation: Location) {
+        if (_uiState.value.isPreparingDestinations) return
+
+        val lastLoadLocation = lastDestinationLoadLocation.get()
+        if (lastLoadLocation == null) {
+            startDestinationLoading(newLocation)
+            return
+        }
+
+        val distanceKm = distanceCalculator.calculateKm(
+            lat1 = lastLoadLocation.latitude,
+            lon1 = lastLoadLocation.longitude,
+            lat2 = newLocation.latitude,
+            lon2 = newLocation.longitude,
+        )
+        if (distanceKm >= DESTINATION_RELOAD_THRESHOLD_KM) {
+            startDestinationLoading(newLocation)
         }
     }
 

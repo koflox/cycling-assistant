@@ -1,6 +1,7 @@
 package com.koflox.cyclingassistant.app
 
 import androidx.room.Room
+import com.koflox.altitude.di.altitudeModule
 import com.koflox.concurrent.concurrentModule
 import com.koflox.cyclingassistant.MainViewModel
 import com.koflox.cyclingassistant.data.AppDatabase
@@ -40,8 +41,9 @@ private val databaseModule = module {
 }
 
 internal val appModule = module {
+    // alphabetically sorted
     includes(
-        // alphabetically sorted
+        altitudeModule,
         bridgeImplModule,
         concurrentModule,
         databaseModule,

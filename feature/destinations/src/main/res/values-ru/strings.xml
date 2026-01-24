@@ -11,4 +11,5 @@
     <string name="find_destination">Поехали!</string>
     <string name="one_way_distance_title">Расстояние в одну сторону</string>
     <string name="km_unit">км</string>
+    <string name="preparing_destinations">Подготовка маршрутов</string>
 </resources>

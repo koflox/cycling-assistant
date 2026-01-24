@@ -1,9 +1,13 @@
 package com.koflox.destinations.data.repository
 
+import app.cash.turbine.test
 import com.koflox.destinations.data.mapper.DestinationMapper
+import com.koflox.destinations.data.source.asset.DestinationFileResolver
 import com.koflox.destinations.data.source.asset.PoiAssetDataSource
+import com.koflox.destinations.data.source.asset.model.DestinationFileMetadata
 import com.koflox.destinations.data.source.local.PoiLocalDataSource
 import com.koflox.destinations.data.source.prefs.PreferencesDataSource
+import com.koflox.destinations.domain.model.DestinationLoadingEvent
 import com.koflox.destinations.testutil.createDestination
 import com.koflox.destinations.testutil.createDestinationAsset
 import com.koflox.destinations.testutil.createDestinationLocal
@@ -17,6 +21,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -31,6 +36,7 @@ class DestinationRepositoryImplTest {
         private const val TEST_TITLE = "Test Destination"
         private const val TEST_LAT = 52.52
         private const val TEST_LONG = 13.405
+        private const val TEST_FILE_NAME = "destinations_tokyo_japan_35.6812_139.7671_tier1.json"
     }
 
     @get:Rule
@@ -40,6 +46,7 @@ class DestinationRepositoryImplTest {
     private val poiAssetDataSource: PoiAssetDataSource = mockk()
     private val locationDataSource: LocationDataSource = mockk()
     private val preferencesDataSource: PreferencesDataSource = mockk()
+    private val destinationFileResolver: DestinationFileResolver = mockk()
     private val mapper: DestinationMapper = mockk()
     private lateinit var repository: DestinationRepositoryImpl
 
@@ -51,112 +58,146 @@ class DestinationRepositoryImplTest {
             poiAssetDataSource = poiAssetDataSource,
             locationDataSource = locationDataSource,
             preferencesDataSource = preferencesDataSource,
+            destinationFileResolver = destinationFileResolver,
             mapper = mapper,
+            mutex = Mutex(),
         )
     }
 
+    private fun createFileMetadata(
+        fileName: String = TEST_FILE_NAME,
+        tier: Int = 1,
+    ) = DestinationFileMetadata(
+        fileName = fileName,
+        city = "tokyo",
+        country = "japan",
+        centerLatitude = 35.6812,
+        centerLongitude = 139.7671,
+        tier = tier,
+    )
+
     @Test
-    fun `initializeDatabase checks if already initialized`() = runTest {
-        coEvery { preferencesDataSource.isDatabaseInitialized() } returns true
+    fun `loadDestinationsForLocation gets loaded files from preferences`() = runTest {
+        val location = Location(TEST_LAT, TEST_LONG)
+        coEvery { preferencesDataSource.getLoadedFiles() } returns emptySet()
+        coEvery { destinationFileResolver.getFilesWithinRadius(location) } returns emptyList()
 
-        repository.initializeDatabase()
+        repository.loadDestinationsForLocation(location).test {
+            awaitItem() // Loading
+            awaitItem() // Completed
+            awaitComplete()
+        }
 
-        coVerify { preferencesDataSource.isDatabaseInitialized() }
+        coVerify { preferencesDataSource.getLoadedFiles() }
     }
 
     @Test
-    fun `initializeDatabase skips initialization when already done`() = runTest {
-        coEvery { preferencesDataSource.isDatabaseInitialized() } returns true
+    fun `loadDestinationsForLocation resolves files for nearest city`() = runTest {
+        val location = Location(TEST_LAT, TEST_LONG)
+        coEvery { preferencesDataSource.getLoadedFiles() } returns emptySet()
+        coEvery { destinationFileResolver.getFilesWithinRadius(location) } returns emptyList()
 
-        repository.initializeDatabase()
+        repository.loadDestinationsForLocation(location).test {
+            awaitItem() // Loading
+            awaitItem() // Completed
+            awaitComplete()
+        }
 
-        coVerify(exactly = 0) { poiAssetDataSource.readDestinationsJson() }
-        coVerify(exactly = 0) { poiLocalDataSource.insertAll(any()) }
+        coVerify { destinationFileResolver.getFilesWithinRadius(location) }
     }
 
     @Test
-    fun `initializeDatabase reads assets when not initialized`() = runTest {
-        coEvery { preferencesDataSource.isDatabaseInitialized() } returns false
-        coEvery { poiAssetDataSource.readDestinationsJson() } returns emptyList()
-        coEvery { mapper.toLocalList(any()) } returns emptyList()
+    fun `loadDestinationsForLocation skips already loaded files`() = runTest {
+        val location = Location(TEST_LAT, TEST_LONG)
+        val fileMetadata = createFileMetadata()
+        coEvery { preferencesDataSource.getLoadedFiles() } returns setOf(TEST_FILE_NAME)
+        coEvery { destinationFileResolver.getFilesWithinRadius(location) } returns listOf(fileMetadata)
 
-        repository.initializeDatabase()
+        repository.loadDestinationsForLocation(location).test {
+            awaitItem() // Loading
+            awaitItem() // Completed
+            awaitComplete()
+        }
 
-        coVerify { poiAssetDataSource.readDestinationsJson() }
+        coVerify(exactly = 0) { poiAssetDataSource.readDestinationsJson(any()) }
     }
 
     @Test
-    fun `initializeDatabase maps assets to entities`() = runTest {
+    fun `loadDestinationsForLocation reads and inserts new files`() = runTest {
+        val location = Location(TEST_LAT, TEST_LONG)
+        val fileMetadata = createFileMetadata()
         val assets = listOf(createDestinationAsset(id = TEST_ID, title = TEST_TITLE, latitude = TEST_LAT, longitude = TEST_LONG))
-        coEvery { preferencesDataSource.isDatabaseInitialized() } returns false
-        coEvery { poiAssetDataSource.readDestinationsJson() } returns assets
-        coEvery {
-            mapper.toLocalList(assets)
-        } returns listOf(createDestinationLocal(id = TEST_ID, title = TEST_TITLE, latitude = TEST_LAT, longitude = TEST_LONG))
-
-        repository.initializeDatabase()
-
-        coVerify { mapper.toLocalList(assets) }
-    }
-
-    @Test
-    fun `initializeDatabase inserts entities into database`() = runTest {
         val entities = listOf(createDestinationLocal(id = TEST_ID, title = TEST_TITLE, latitude = TEST_LAT, longitude = TEST_LONG))
-        coEvery { preferencesDataSource.isDatabaseInitialized() } returns false
-        coEvery {
-            poiAssetDataSource.readDestinationsJson()
-        } returns listOf(createDestinationAsset(id = TEST_ID, title = TEST_TITLE, latitude = TEST_LAT, longitude = TEST_LONG))
-        coEvery { mapper.toLocalList(any()) } returns entities
+        coEvery { preferencesDataSource.getLoadedFiles() } returns emptySet()
+        coEvery { destinationFileResolver.getFilesWithinRadius(location) } returns listOf(fileMetadata)
+        coEvery { poiAssetDataSource.readDestinationsJson(TEST_FILE_NAME) } returns assets
+        coEvery { mapper.toLocalList(assets) } returns entities
+        coJustRun { poiLocalDataSource.insertAll(entities) }
+        coJustRun { preferencesDataSource.addLoadedFile(TEST_FILE_NAME) }
 
-        repository.initializeDatabase()
+        repository.loadDestinationsForLocation(location).test {
+            awaitItem() // Loading
+            awaitItem() // Completed
+            awaitComplete()
+        }
 
+        coVerify { poiAssetDataSource.readDestinationsJson(TEST_FILE_NAME) }
         coVerify { poiLocalDataSource.insertAll(entities) }
+        coVerify { preferencesDataSource.addLoadedFile(TEST_FILE_NAME) }
     }
 
     @Test
-    fun `initializeDatabase sets initialized flag after success`() = runTest {
-        coEvery { preferencesDataSource.isDatabaseInitialized() } returns false
-        coEvery { poiAssetDataSource.readDestinationsJson() } returns emptyList()
+    fun `loadDestinationsForLocation loads files in order`() = runTest {
+        val location = Location(TEST_LAT, TEST_LONG)
+        val tier1File = createFileMetadata(fileName = "tier1.json", tier = 1)
+        val tier2File = createFileMetadata(fileName = "tier2.json", tier = 2)
+        coEvery { preferencesDataSource.getLoadedFiles() } returns emptySet()
+        coEvery { destinationFileResolver.getFilesWithinRadius(location) } returns listOf(tier1File, tier2File)
+        coEvery { poiAssetDataSource.readDestinationsJson(any()) } returns emptyList()
         coEvery { mapper.toLocalList(any()) } returns emptyList()
         coJustRun { poiLocalDataSource.insertAll(any()) }
+        coJustRun { preferencesDataSource.addLoadedFile(any()) }
 
-        repository.initializeDatabase()
+        repository.loadDestinationsForLocation(location).test {
+            awaitItem() // Loading
+            awaitItem() // Completed
+            awaitComplete()
+        }
 
-        coVerify { preferencesDataSource.setDatabaseInitialized(true) }
+        coVerify(ordering = io.mockk.Ordering.ORDERED) {
+            poiAssetDataSource.readDestinationsJson("tier1.json")
+            poiAssetDataSource.readDestinationsJson("tier2.json")
+        }
     }
 
     @Test
-    fun `initializeDatabase returns success when already initialized`() = runTest {
-        coEvery { preferencesDataSource.isDatabaseInitialized() } returns true
+    fun `loadDestinationsForLocation emits Completed when no files to load`() = runTest {
+        val location = Location(TEST_LAT, TEST_LONG)
+        coEvery { preferencesDataSource.getLoadedFiles() } returns emptySet()
+        coEvery { destinationFileResolver.getFilesWithinRadius(location) } returns emptyList()
 
-        val result = repository.initializeDatabase()
-
-        assertTrue(result.isSuccess)
+        repository.loadDestinationsForLocation(location).test {
+            assertEquals(DestinationLoadingEvent.Loading, awaitItem())
+            assertEquals(DestinationLoadingEvent.Completed, awaitItem())
+            awaitComplete()
+        }
     }
 
     @Test
-    fun `initializeDatabase returns success after initialization`() = runTest {
-        coEvery { preferencesDataSource.isDatabaseInitialized() } returns false
-        coEvery { poiAssetDataSource.readDestinationsJson() } returns emptyList()
-        coEvery { mapper.toLocalList(any()) } returns emptyList()
-        coJustRun { poiLocalDataSource.insertAll(any()) }
-        coJustRun { preferencesDataSource.setDatabaseInitialized(any()) }
-
-        val result = repository.initializeDatabase()
-
-        assertTrue(result.isSuccess)
-    }
-
-    @Test
-    fun `initializeDatabase returns failure on error`() = runTest {
+    fun `loadDestinationsForLocation emits Error on failure`() = runTest {
+        val location = Location(TEST_LAT, TEST_LONG)
         val exception = RuntimeException("Asset read failed")
-        coEvery { preferencesDataSource.isDatabaseInitialized() } returns false
-        coEvery { poiAssetDataSource.readDestinationsJson() } throws exception
+        val fileMetadata = createFileMetadata()
+        coEvery { preferencesDataSource.getLoadedFiles() } returns emptySet()
+        coEvery { destinationFileResolver.getFilesWithinRadius(location) } returns listOf(fileMetadata)
+        coEvery { poiAssetDataSource.readDestinationsJson(any()) } throws exception
 
-        val result = repository.initializeDatabase()
-
-        assertTrue(result.isFailure)
-        assertEquals(exception, result.exceptionOrNull())
+        repository.loadDestinationsForLocation(location).test {
+            assertEquals(DestinationLoadingEvent.Loading, awaitItem())
+            val errorEvent = awaitItem() as DestinationLoadingEvent.Error
+            assertEquals(exception, errorEvent.throwable)
+            awaitComplete()
+        }
     }
 
     @Test

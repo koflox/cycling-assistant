@@ -169,7 +169,9 @@ private fun SessionCompletionBody(
 
             is SessionCompletionUiState.Content -> {
                 val cardAlignment = calculateCardAlignment(uiState.routePoints)
-                RouteMapView(routePoints = uiState.routePoints, modifier = Modifier.fillMaxSize())
+                if (uiState.routePoints.isNotEmpty()) {
+                    RouteMapView(routePoints = uiState.routePoints, modifier = Modifier.fillMaxSize())
+                }
                 SessionSummaryCard(
                     startDate = uiState.startDateFormatted,
                     elapsedTime = uiState.elapsedTimeFormatted,

@@ -18,10 +18,18 @@ fun LetsGoButton(
     modifier: Modifier = Modifier,
 ) {
     FloatingActionButton(
-        onClick = onClick,
+        onClick = { if (enabled) onClick() },
         modifier = modifier.size(width = 120.dp, height = 56.dp),
-        containerColor = MaterialTheme.colorScheme.primaryContainer,
-        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+        containerColor = if (enabled) {
+            MaterialTheme.colorScheme.primaryContainer
+        } else {
+            MaterialTheme.colorScheme.surfaceVariant
+        },
+        contentColor = if (enabled) {
+            MaterialTheme.colorScheme.onPrimaryContainer
+        } else {
+            MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+        },
     ) {
         Text(
             text = stringResource(R.string.find_destination),

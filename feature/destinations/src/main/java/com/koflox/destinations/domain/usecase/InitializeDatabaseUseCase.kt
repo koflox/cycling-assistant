@@ -1,13 +1,17 @@
 package com.koflox.destinations.domain.usecase
 
+import com.koflox.destinations.domain.model.DestinationLoadingEvent
 import com.koflox.destinations.domain.repository.DestinationRepository
+import com.koflox.location.model.Location
+import kotlinx.coroutines.flow.Flow
 
-interface InitializeDatabaseUseCase {
-    suspend fun init(): Result<Unit>
+internal interface InitializeDatabaseUseCase {
+    fun init(location: Location): Flow<DestinationLoadingEvent>
 }
 
 internal class InitializeDatabaseUseCaseImpl(
     private val repository: DestinationRepository,
 ) : InitializeDatabaseUseCase {
-    override suspend fun init(): Result<Unit> = repository.initializeDatabase()
+    override fun init(location: Location): Flow<DestinationLoadingEvent> =
+        repository.loadDestinationsForLocation(location)
 }
