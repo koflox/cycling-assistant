@@ -28,7 +28,7 @@ koinCompose = "4.1.1"
 room = "2.8.4"
 
 # DataStore
-datastore = "1.1.1"
+datastore = "1.2.0"
 
 # Google Maps Compose
 mapsCompose = "7.0.0"
