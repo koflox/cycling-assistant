@@ -1,6 +1,9 @@
 name: Unit Tests
 
 on:
+  push:
+    branches:
+      - main
   pull_request:
     branches:
       - main
@@ -66,6 +69,39 @@ jobs:
           name: coverage-report
           path: build/reports/kover/
           retention-days: 7
+
+      - name: Extract coverage percentage
+        id: coverage
+        run: |
+          COVERAGE=$(grep -oP 'LINE.*?covered="\K[0-9]+' build/reports/kover/report.xml | head -1)
+          MISSED=$(grep -oP 'LINE.*?missed="\K[0-9]+' build/reports/kover/report.xml | head -1)
+          TOTAL=$((COVERAGE + MISSED))
+          if [ $TOTAL -gt 0 ]; then
+            PERCENT=$((COVERAGE * 100 / TOTAL))
+          else
+            PERCENT=0
+          fi
+          echo "percentage=$PERCENT" >> $GITHUB_OUTPUT
+          if [ $PERCENT -ge 80 ]; then
+            echo "color=brightgreen" >> $GITHUB_OUTPUT
+          elif [ $PERCENT -ge 60 ]; then
+            echo "color=green" >> $GITHUB_OUTPUT
+          elif [ $PERCENT -ge 40 ]; then
+            echo "color=yellow" >> $GITHUB_OUTPUT
+          else
+            echo "color=red" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Update coverage badge
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        uses: schneegans/dynamic-badges-action@v1.7.0
+        with:
+          auth: ${{ secrets.GIST_TOKEN }}
+          gistID: ${{ vars.COVERAGE_GIST_ID }}
+          filename: coverage.json
+          label: coverage
+          message: ${{ steps.coverage.outputs.percentage }}%
+          color: ${{ steps.coverage.outputs.color }}
 
       - name: Add coverage to PR
         if: github.event_name == 'pull_request'
