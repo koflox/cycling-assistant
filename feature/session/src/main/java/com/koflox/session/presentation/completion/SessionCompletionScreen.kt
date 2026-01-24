@@ -75,7 +75,7 @@ internal fun SessionCompletionRoute(
 }
 
 @Composable
-private fun SessionCompletionContent(
+internal fun SessionCompletionContent(
     uiState: SessionCompletionUiState,
     onBackClick: () -> Unit,
     onEvent: (SessionCompletionUiEvent) -> Unit,
@@ -92,6 +92,7 @@ private fun SessionCompletionContent(
                 traveledDistanceFormatted = content.traveledDistanceFormatted,
                 averageSpeedFormatted = content.averageSpeedFormatted,
                 topSpeedFormatted = content.topSpeedFormatted,
+                altitudeGainFormatted = content.altitudeGainFormatted,
                 routePoints = content.routePoints,
             ),
             isSharing = content.overlay is Overlay.Sharing,
@@ -175,6 +176,7 @@ private fun SessionCompletionBody(
                     distance = uiState.traveledDistanceFormatted,
                     averageSpeed = uiState.averageSpeedFormatted,
                     topSpeed = uiState.topSpeedFormatted,
+                    altitudeGain = uiState.altitudeGainFormatted,
                     modifier = Modifier.align(cardAlignment),
                 )
             }

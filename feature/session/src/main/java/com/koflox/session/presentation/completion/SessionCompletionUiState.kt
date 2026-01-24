@@ -15,6 +15,7 @@ internal sealed interface SessionCompletionUiState {
         val traveledDistanceFormatted: String,
         val averageSpeedFormatted: String,
         val topSpeedFormatted: String,
+        val altitudeGainFormatted: String,
         val routePoints: List<LatLng>,
         val overlay: Overlay? = null,
     ) : SessionCompletionUiState

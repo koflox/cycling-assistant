@@ -34,12 +34,7 @@ internal class LocationDataSourceImpl(
                 .addOnSuccessListener { location ->
                     if (location != null) {
                         continuation.resume(
-                            Result.success(
-                                Location(
-                                    latitude = location.latitude,
-                                    longitude = location.longitude,
-                                ),
-                            ),
+                            Result.success(mapLocation(location)),
                         )
                     } else {
                         continuation.resume(

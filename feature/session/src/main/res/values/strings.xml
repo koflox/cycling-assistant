@@ -8,6 +8,7 @@
     <string name="session_stat_distance">Distance</string>
     <string name="session_stat_avg_speed">Avg</string>
     <string name="session_stat_top_speed">Top</string>
+    <string name="session_stat_altitude_gain">Climb</string>
 
     <!-- Session Buttons -->
     <string name="session_button_pause">Pause</string>

@@ -48,7 +48,7 @@ internal fun SettingsRoute(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun SettingsContent(
+internal fun SettingsContent(
     uiState: SettingsUiState,
     onBackClick: () -> Unit,
     onEvent: (SettingsUiEvent) -> Unit,

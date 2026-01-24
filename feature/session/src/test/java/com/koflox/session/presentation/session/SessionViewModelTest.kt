@@ -343,6 +343,7 @@ class SessionViewModelTest {
                 destinationLongitude = DESTINATION_LONGITUDE,
                 startLatitude = START_LATITUDE,
                 startLongitude = START_LONGITUDE,
+                startAltitudeMeters = null,
             )
             mainDispatcherRule.testDispatcher.scheduler.advanceUntilIdle()
         }
@@ -380,6 +381,7 @@ class SessionViewModelTest {
                 destinationLongitude = DESTINATION_LONGITUDE,
                 startLatitude = START_LATITUDE,
                 startLongitude = START_LONGITUDE,
+                startAltitudeMeters = null,
             )
         }
 
@@ -403,6 +405,7 @@ class SessionViewModelTest {
                 destinationLongitude = DESTINATION_LONGITUDE,
                 startLatitude = START_LATITUDE,
                 startLongitude = START_LONGITUDE,
+                startAltitudeMeters = null,
             )
         }
 

@@ -10,5 +10,6 @@ data class SharePreviewData(
     val traveledDistanceFormatted: String,
     val averageSpeedFormatted: String,
     val topSpeedFormatted: String,
+    val altitudeGainFormatted: String,
     val routePoints: List<LatLng>,
 )

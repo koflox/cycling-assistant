@@ -65,6 +65,7 @@ internal class SessionsListViewModel(
                     traveledDistanceFormatted = formattedData.traveledDistanceFormatted,
                     averageSpeedFormatted = formattedData.averageSpeedFormatted,
                     topSpeedFormatted = formattedData.topSpeedFormatted,
+                    altitudeGainFormatted = formattedData.altitudeGainFormatted,
                     routePoints = routePoints,
                 )
                 updateContent { it.copy(overlay = SessionsListOverlay.SharePreview(previewData)) }

@@ -57,6 +57,7 @@ internal fun SessionControlsOverlay(
                 distance = state.traveledDistanceFormatted,
                 averageSpeed = state.averageSpeedFormatted,
                 topSpeed = state.topSpeedFormatted,
+                altitudeGain = state.altitudeGainFormatted,
             )
             Spacer(modifier = Modifier.height(Spacing.Large))
             Row(

@@ -28,6 +28,7 @@ internal fun SessionSummaryCard(
     distance: String,
     averageSpeed: String,
     topSpeed: String,
+    altitudeGain: String,
     modifier: Modifier = Modifier,
     destinationName: String? = null,
 ) {
@@ -76,6 +77,13 @@ internal fun SessionSummaryCard(
                 StatItem(label = stringResource(R.string.session_stat_avg_speed), value = "$averageSpeed km/h")
                 Spacer(modifier = Modifier.width(Spacing.ExtraLarge))
                 StatItem(label = stringResource(R.string.session_stat_top_speed), value = "$topSpeed km/h")
+            }
+            Spacer(modifier = Modifier.height(Spacing.Small))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+            ) {
+                StatItem(label = stringResource(R.string.session_stat_altitude_gain), value = "$altitudeGain m")
             }
         }
     }

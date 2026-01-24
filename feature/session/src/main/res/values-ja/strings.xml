@@ -8,6 +8,7 @@
     <string name="session_stat_distance">距離</string>
     <string name="session_stat_avg_speed">平均</string>
     <string name="session_stat_top_speed">最高</string>
+    <string name="session_stat_altitude_gain">獲得標高</string>
 
     <!-- Session Buttons -->
     <string name="session_button_pause">一時停止</string>
