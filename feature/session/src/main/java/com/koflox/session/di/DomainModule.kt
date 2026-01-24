@@ -37,6 +37,7 @@ internal val domainModule = module {
             activeSessionUseCase = get(),
             sessionRepository = get(),
             distanceCalculator = get(),
+            altitudeCalculator = get(),
         )
     }
     factory<GetAllSessionsUseCase> {

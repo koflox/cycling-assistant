@@ -6,7 +6,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertFalse
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -15,7 +15,8 @@ import org.junit.Test
 class PreferencesDataSourceImplTest {
 
     companion object {
-        private const val KEY_DB_INITIALIZED = "database_initialized"
+        private const val KEY_LOADED_FILES = "loaded_destination_files"
+        private const val TEST_FILE_NAME = "destinations_tokyo_japan_35.6812_139.7671_tier1.json"
     }
 
     @get:Rule
@@ -28,7 +29,6 @@ class PreferencesDataSourceImplTest {
     @Before
     fun setup() {
         every { prefs.edit() } returns editor
-        every { editor.putBoolean(any(), any()) } returns editor
         every { editor.commit() } returns true
         dataSource = PreferencesDataSourceImpl(
             dispatcherIo = mainDispatcherRule.testDispatcher,
@@ -37,49 +37,41 @@ class PreferencesDataSourceImplTest {
     }
 
     @Test
-    fun `isDatabaseInitialized returns false when not initialized`() = runTest {
-        every { prefs.getBoolean(KEY_DB_INITIALIZED, false) } returns false
+    fun `getLoadedFiles returns empty set when no files loaded`() = runTest {
+        every { prefs.getStringSet(KEY_LOADED_FILES, emptySet()) } returns emptySet()
 
-        val result = dataSource.isDatabaseInitialized()
+        val result = dataSource.getLoadedFiles()
 
-        assertFalse(result)
+        assertTrue(result.isEmpty())
     }
 
     @Test
-    fun `isDatabaseInitialized returns true when initialized`() = runTest {
-        every { prefs.getBoolean(KEY_DB_INITIALIZED, false) } returns true
+    fun `getLoadedFiles returns previously loaded files`() = runTest {
+        val loadedFiles = setOf(TEST_FILE_NAME)
+        every { prefs.getStringSet(KEY_LOADED_FILES, emptySet()) } returns loadedFiles
 
-        val result = dataSource.isDatabaseInitialized()
+        val result = dataSource.getLoadedFiles()
 
-        assertTrue(result)
+        assertEquals(loadedFiles, result)
     }
 
     @Test
-    fun `isDatabaseInitialized reads correct key from preferences`() = runTest {
-        every { prefs.getBoolean(any(), any()) } returns false
+    fun `addLoadedFile adds file to existing set`() = runTest {
+        val existingFiles = setOf("existing_file.json")
+        every { prefs.getStringSet(KEY_LOADED_FILES, emptySet()) } returns existingFiles
+        every { editor.putStringSet(any(), any()) } returns editor
 
-        dataSource.isDatabaseInitialized()
+        dataSource.addLoadedFile(TEST_FILE_NAME)
 
-        verify { prefs.getBoolean(KEY_DB_INITIALIZED, false) }
+        verify { editor.putStringSet(KEY_LOADED_FILES, existingFiles + TEST_FILE_NAME) }
     }
 
     @Test
-    fun `setDatabaseInitialized writes true to preferences`() = runTest {
-        dataSource.setDatabaseInitialized(true)
+    fun `addLoadedFile commits changes`() = runTest {
+        every { prefs.getStringSet(KEY_LOADED_FILES, emptySet()) } returns emptySet()
+        every { editor.putStringSet(any(), any()) } returns editor
 
-        verify { editor.putBoolean(KEY_DB_INITIALIZED, true) }
-    }
-
-    @Test
-    fun `setDatabaseInitialized writes false to preferences`() = runTest {
-        dataSource.setDatabaseInitialized(false)
-
-        verify { editor.putBoolean(KEY_DB_INITIALIZED, false) }
-    }
-
-    @Test
-    fun `setDatabaseInitialized commits changes`() = runTest {
-        dataSource.setDatabaseInitialized(true)
+        dataSource.addLoadedFile(TEST_FILE_NAME)
 
         verify { editor.commit() }
     }

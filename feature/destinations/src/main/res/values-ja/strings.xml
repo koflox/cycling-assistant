@@ -11,4 +11,5 @@
     <string name="find_destination">出発！</string>
     <string name="one_way_distance_title">片道距離</string>
     <string name="km_unit">km</string>
+    <string name="preparing_destinations">目的地を準備中</string>
 </resources>

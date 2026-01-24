@@ -6,6 +6,8 @@ import com.koflox.location.model.Location
 
 internal data class DestinationsUiState(
     val isInitializing: Boolean = true,
+    val isPreparingDestinations: Boolean = false,
+    val areDestinationsReady: Boolean = false,
     val isLoading: Boolean = false,
     val selectedDestination: DestinationUiModel? = null,
     val otherValidDestinations: List<DestinationUiModel> = emptyList(),

@@ -49,6 +49,12 @@ internal class LocationDataSourceImpl(
         }
     }
 
+    private fun mapLocation(location: android.location.Location): Location = Location(
+        latitude = location.latitude,
+        longitude = location.longitude,
+        altitudeMeters = if (location.hasAltitude()) location.altitude else null,
+    )
+
     @SuppressLint("MissingPermission")
     override fun observeLocationUpdates(
         intervalMs: Long,
@@ -62,13 +68,8 @@ internal class LocationDataSourceImpl(
             .build()
         val locationCallback = object : LocationCallback() {
             override fun onLocationResult(result: LocationResult) {
-                result.lastLocation?.let { androidLocation ->
-                    trySend(
-                        Location(
-                            latitude = androidLocation.latitude,
-                            longitude = androidLocation.longitude,
-                        ),
-                    )
+                result.lastLocation?.let { location ->
+                    trySend(mapLocation(location))
                 }
             }
         }

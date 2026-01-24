@@ -10,17 +10,18 @@ internal class PreferencesDataSourceImpl(
     private val prefs: SharedPreferences,
 ) : PreferencesDataSource {
 
-    override suspend fun isDatabaseInitialized(): Boolean = withContext(dispatcherIo) {
-        prefs.getBoolean(KEY_DB_INITIALIZED, false)
-    }
-
-    override suspend fun setDatabaseInitialized(initialized: Boolean) = withContext(dispatcherIo) {
-        prefs.edit(commit = true) {
-            putBoolean(KEY_DB_INITIALIZED, initialized)
-        }
-    }
-
     companion object {
-        private const val KEY_DB_INITIALIZED = "database_initialized"
+        private const val KEY_LOADED_FILES = "loaded_destination_files"
+    }
+
+    override suspend fun getLoadedFiles(): Set<String> = withContext(dispatcherIo) {
+        prefs.getStringSet(KEY_LOADED_FILES, emptySet()) ?: emptySet()
+    }
+
+    override suspend fun addLoadedFile(fileName: String) = withContext(dispatcherIo) {
+        val currentFiles = prefs.getStringSet(KEY_LOADED_FILES, emptySet()) ?: emptySet()
+        prefs.edit(commit = true) {
+            putStringSet(KEY_LOADED_FILES, currentFiles + fileName)
+        }
     }
 }

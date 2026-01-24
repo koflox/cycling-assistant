@@ -16,7 +16,7 @@ import java.io.ByteArrayInputStream
 class PoiAssetDataSourceImplTest {
 
     companion object {
-        private const val DESTINATIONS_FILE = "destinations.json"
+        private const val TEST_FILE_NAME = "destinations_tokyo_japan_35.6812_139.7671_tier1.json"
     }
 
     @get:Rule
@@ -36,13 +36,13 @@ class PoiAssetDataSourceImplTest {
     }
 
     @Test
-    fun `readDestinationsJson opens correct file`() = runTest {
+    fun `readDestinationsJson opens specified file`() = runTest {
         val json = "[]"
         every { assetManager.open(any()) } returns ByteArrayInputStream(json.toByteArray())
 
-        dataSource.readDestinationsJson()
+        dataSource.readDestinationsJson(TEST_FILE_NAME)
 
-        verify { assetManager.open(DESTINATIONS_FILE) }
+        verify { assetManager.open(TEST_FILE_NAME) }
     }
 
     @Test
@@ -50,7 +50,7 @@ class PoiAssetDataSourceImplTest {
         val json = "[]"
         every { assetManager.open(any()) } returns ByteArrayInputStream(json.toByteArray())
 
-        val result = dataSource.readDestinationsJson()
+        val result = dataSource.readDestinationsJson(TEST_FILE_NAME)
 
         assertEquals(0, result.size)
     }
@@ -69,7 +69,7 @@ class PoiAssetDataSourceImplTest {
         """.trimIndent()
         every { assetManager.open(any()) } returns ByteArrayInputStream(json.toByteArray())
 
-        val result = dataSource.readDestinationsJson()
+        val result = dataSource.readDestinationsJson(TEST_FILE_NAME)
 
         assertEquals(1, result.size)
         assertEquals("test-1", result[0].id)
@@ -89,7 +89,7 @@ class PoiAssetDataSourceImplTest {
         """.trimIndent()
         every { assetManager.open(any()) } returns ByteArrayInputStream(json.toByteArray())
 
-        val result = dataSource.readDestinationsJson()
+        val result = dataSource.readDestinationsJson(TEST_FILE_NAME)
 
         assertEquals(3, result.size)
         assertEquals("1", result[0].id)
@@ -106,7 +106,7 @@ class PoiAssetDataSourceImplTest {
         """.trimIndent()
         every { assetManager.open(any()) } returns ByteArrayInputStream(json.toByteArray())
 
-        val result = dataSource.readDestinationsJson()
+        val result = dataSource.readDestinationsJson(TEST_FILE_NAME)
 
         assertEquals(-33.8688, result[0].latitude, 0.0001)
         assertEquals(151.2093, result[0].longitude, 0.0001)
@@ -123,7 +123,7 @@ class PoiAssetDataSourceImplTest {
         """.trimIndent()
         every { assetManager.open(any()) } returns ByteArrayInputStream(json.toByteArray())
 
-        val result = dataSource.readDestinationsJson()
+        val result = dataSource.readDestinationsJson(TEST_FILE_NAME)
 
         assertEquals("z", result[0].id)
         assertEquals("a", result[1].id)

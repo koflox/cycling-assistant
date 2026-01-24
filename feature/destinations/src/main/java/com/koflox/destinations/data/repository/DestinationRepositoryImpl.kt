@@ -2,15 +2,21 @@ package com.koflox.destinations.data.repository
 
 import com.koflox.concurrent.suspendRunCatching
 import com.koflox.destinations.data.mapper.DestinationMapper
+import com.koflox.destinations.data.source.asset.DestinationFileResolver
 import com.koflox.destinations.data.source.asset.PoiAssetDataSource
 import com.koflox.destinations.data.source.local.PoiLocalDataSource
 import com.koflox.destinations.data.source.prefs.PreferencesDataSource
 import com.koflox.destinations.domain.model.Destination
+import com.koflox.destinations.domain.model.DestinationLoadingEvent
 import com.koflox.destinations.domain.repository.DestinationRepository
 import com.koflox.location.LocationDataSource
 import com.koflox.location.model.Location
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
 internal class DestinationRepositoryImpl(
@@ -19,19 +25,31 @@ internal class DestinationRepositoryImpl(
     private val poiAssetDataSource: PoiAssetDataSource,
     private val locationDataSource: LocationDataSource,
     private val preferencesDataSource: PreferencesDataSource,
+    private val destinationFileResolver: DestinationFileResolver,
     private val mapper: DestinationMapper,
+    private val mutex: Mutex,
 ) : DestinationRepository {
 
-    override suspend fun initializeDatabase(): Result<Unit> = withContext(dispatcherDefault) {
-        suspendRunCatching {
-            if (!preferencesDataSource.isDatabaseInitialized()) {
-                val jsonData = poiAssetDataSource.readDestinationsJson()
-                val entities = mapper.toLocalList(jsonData)
-                poiLocalDataSource.insertAll(entities)
-                preferencesDataSource.setDatabaseInitialized(true)
+    override fun loadDestinationsForLocation(location: Location): Flow<DestinationLoadingEvent> =
+        flow {
+            mutex.withLock {
+                emit(DestinationLoadingEvent.Loading)
+                try {
+                    val loadedFiles = preferencesDataSource.getLoadedFiles()
+                    val files = destinationFileResolver.getFilesWithinRadius(location)
+                    val filesToLoad = files.filter { it.fileName !in loadedFiles }
+                    for (file in filesToLoad) {
+                        val jsonData = poiAssetDataSource.readDestinationsJson(file.fileName)
+                        val entities = mapper.toLocalList(jsonData)
+                        poiLocalDataSource.insertAll(entities)
+                        preferencesDataSource.addLoadedFile(file.fileName)
+                    }
+                    emit(DestinationLoadingEvent.Completed)
+                } catch (e: Exception) {
+                    emit(DestinationLoadingEvent.Error(e))
+                }
             }
-        }
-    }
+        }.flowOn(dispatcherDefault)
 
     override suspend fun getAllDestinations(): Result<List<Destination>> = withContext(dispatcherDefault) {
         suspendRunCatching {

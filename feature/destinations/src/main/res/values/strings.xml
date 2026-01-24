@@ -11,4 +11,5 @@
     <string name="find_destination">Let\'s go!</string>
     <string name="one_way_distance_title">One way distance</string>
     <string name="km_unit">km</string>
+    <string name="preparing_destinations">Preparing the destinations</string>
 </resources>
