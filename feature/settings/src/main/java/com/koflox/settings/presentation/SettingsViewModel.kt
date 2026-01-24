@@ -39,7 +39,6 @@ internal class SettingsViewModel(
                 SettingsUiEvent.ThemeDropdownToggled -> toggleThemeDropdown()
                 SettingsUiEvent.LanguageDropdownToggled -> toggleLanguageDropdown()
                 SettingsUiEvent.DropdownsDismissed -> dismissDropdowns()
-                SettingsUiEvent.RestartHintDismissed -> dismissRestartHint()
             }
         }
     }
@@ -65,14 +64,8 @@ internal class SettingsViewModel(
     }
 
     private suspend fun updateLanguage(language: AppLanguage) {
-        val currentLanguage = _uiState.value.selectedLanguage
         updateSettingsUseCase.updateLanguage(language)
-        _uiState.update {
-            it.copy(
-                isLanguageDropdownExpanded = false,
-                isLanguageChangeRequiresRestart = language != currentLanguage,
-            )
-        }
+        _uiState.update { it.copy(isLanguageDropdownExpanded = false) }
     }
 
     private fun toggleThemeDropdown() {
@@ -97,9 +90,5 @@ internal class SettingsViewModel(
         _uiState.update {
             it.copy(isThemeDropdownExpanded = false, isLanguageDropdownExpanded = false)
         }
-    }
-
-    private fun dismissRestartHint() {
-        _uiState.update { it.copy(isLanguageChangeRequiresRestart = false) }
     }
 }

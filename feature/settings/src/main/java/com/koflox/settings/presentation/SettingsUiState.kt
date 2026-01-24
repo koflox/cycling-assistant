@@ -10,5 +10,4 @@ internal data class SettingsUiState(
     val availableLanguages: List<AppLanguage> = AppLanguage.entries,
     val isThemeDropdownExpanded: Boolean = false,
     val isLanguageDropdownExpanded: Boolean = false,
-    val isLanguageChangeRequiresRestart: Boolean = false,
 )

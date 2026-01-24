@@ -351,11 +351,11 @@ class SessionViewModelTest {
             createSessionUseCase.create(
                 match {
                     it.destinationId == DESTINATION_ID &&
-                            it.destinationName == DESTINATION_NAME &&
-                            it.destinationLatitude == DESTINATION_LATITUDE &&
-                            it.destinationLongitude == DESTINATION_LONGITUDE &&
-                            it.startLatitude == START_LATITUDE &&
-                            it.startLongitude == START_LONGITUDE
+                        it.destinationName == DESTINATION_NAME &&
+                        it.destinationLatitude == DESTINATION_LATITUDE &&
+                        it.destinationLongitude == DESTINATION_LONGITUDE &&
+                        it.startLatitude == START_LATITUDE &&
+                        it.startLongitude == START_LONGITUDE
                 },
             )
         }
