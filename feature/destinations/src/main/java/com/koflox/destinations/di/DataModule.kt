@@ -1,6 +1,5 @@
 package com.koflox.destinations.di
 
-import android.content.Context
 import com.koflox.concurrent.DispatchersQualifier
 import com.koflox.destinations.data.mapper.DestinationMapper
 import com.koflox.destinations.data.mapper.DestinationMapperImpl
@@ -9,10 +8,10 @@ import com.koflox.destinations.data.source.asset.DestinationFileResolver
 import com.koflox.destinations.data.source.asset.DestinationFileResolverImpl
 import com.koflox.destinations.data.source.asset.PoiAssetDataSource
 import com.koflox.destinations.data.source.asset.PoiAssetDataSourceImpl
+import com.koflox.destinations.data.source.local.DestinationFilesLocalDataSource
+import com.koflox.destinations.data.source.local.DestinationFilesLocalDataSourceImpl
 import com.koflox.destinations.data.source.local.PoiLocalDataSource
 import com.koflox.destinations.data.source.local.PoiLocalDataSourceImpl
-import com.koflox.destinations.data.source.prefs.PreferencesDataSource
-import com.koflox.destinations.data.source.prefs.PreferencesDataSourceImpl
 import com.koflox.destinations.domain.repository.DestinationRepository
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.sync.Mutex
@@ -42,10 +41,10 @@ private val dataSourceModule = module {
             context = androidContext(),
         )
     }
-    single<PreferencesDataSource> {
-        PreferencesDataSourceImpl(
+    single<DestinationFilesLocalDataSource> {
+        DestinationFilesLocalDataSourceImpl(
             dispatcherIo = get(DispatchersQualifier.Io),
-            prefs = androidContext().getSharedPreferences("destinations_prefs", Context.MODE_PRIVATE),
+            context = androidContext(),
         )
     }
     single<DestinationFileResolver> {
@@ -64,7 +63,7 @@ private val repoModule = module {
             poiLocalDataSource = get(),
             poiAssetDataSource = get(),
             locationDataSource = get(),
-            preferencesDataSource = get(),
+            destinationFilesLocalDataSource = get(),
             destinationFileResolver = get(),
             mapper = get(),
             mutex = Mutex(),

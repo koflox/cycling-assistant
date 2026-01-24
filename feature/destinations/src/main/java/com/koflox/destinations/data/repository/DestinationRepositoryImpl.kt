@@ -4,8 +4,8 @@ import com.koflox.concurrent.suspendRunCatching
 import com.koflox.destinations.data.mapper.DestinationMapper
 import com.koflox.destinations.data.source.asset.DestinationFileResolver
 import com.koflox.destinations.data.source.asset.PoiAssetDataSource
+import com.koflox.destinations.data.source.local.DestinationFilesLocalDataSource
 import com.koflox.destinations.data.source.local.PoiLocalDataSource
-import com.koflox.destinations.data.source.prefs.PreferencesDataSource
 import com.koflox.destinations.domain.model.Destination
 import com.koflox.destinations.domain.model.DestinationLoadingEvent
 import com.koflox.destinations.domain.repository.DestinationRepository
@@ -24,7 +24,7 @@ internal class DestinationRepositoryImpl(
     private val poiLocalDataSource: PoiLocalDataSource,
     private val poiAssetDataSource: PoiAssetDataSource,
     private val locationDataSource: LocationDataSource,
-    private val preferencesDataSource: PreferencesDataSource,
+    private val destinationFilesLocalDataSource: DestinationFilesLocalDataSource,
     private val destinationFileResolver: DestinationFileResolver,
     private val mapper: DestinationMapper,
     private val mutex: Mutex,
@@ -35,14 +35,14 @@ internal class DestinationRepositoryImpl(
             mutex.withLock {
                 emit(DestinationLoadingEvent.Loading)
                 try {
-                    val loadedFiles = preferencesDataSource.getLoadedFiles()
+                    val loadedFiles = destinationFilesLocalDataSource.getLoadedFiles()
                     val files = destinationFileResolver.getFilesWithinRadius(location)
                     val filesToLoad = files.filter { it.fileName !in loadedFiles }
                     for (file in filesToLoad) {
                         val jsonData = poiAssetDataSource.readDestinationsJson(file.fileName)
                         val entities = mapper.toLocalList(jsonData)
                         poiLocalDataSource.insertAll(entities)
-                        preferencesDataSource.addLoadedFile(file.fileName)
+                        destinationFilesLocalDataSource.addLoadedFile(file.fileName)
                     }
                     emit(DestinationLoadingEvent.Completed)
                 } catch (e: Exception) {

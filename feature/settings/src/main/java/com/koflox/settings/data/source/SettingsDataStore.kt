@@ -21,19 +21,19 @@ private val Context.settingsDataStore: DataStore<Preferences> by preferencesData
 internal class SettingsDataStore(
     private val context: Context,
     private val dispatcherIo: CoroutineDispatcher,
-) {
+) : SettingsLocalDataSource {
     companion object {
         private val KEY_THEME = stringPreferencesKey("theme")
         private val KEY_LANGUAGE = stringPreferencesKey("language")
     }
 
-    fun observeTheme(): Flow<AppTheme> = context.settingsDataStore.data
+    override fun observeTheme(): Flow<AppTheme> = context.settingsDataStore.data
         .map { prefs ->
             prefs[KEY_THEME]?.let { runCatching { AppTheme.valueOf(it) }.getOrNull() } ?: AppTheme.SYSTEM
         }
         .flowOn(dispatcherIo)
 
-    fun observeLanguage(): Flow<AppLanguage> = context.settingsDataStore.data
+    override fun observeLanguage(): Flow<AppLanguage> = context.settingsDataStore.data
         .map { prefs ->
             prefs[KEY_LANGUAGE]?.let { code ->
                 AppLanguage.entries.find { it.code == code }
@@ -41,15 +41,19 @@ internal class SettingsDataStore(
         }
         .flowOn(dispatcherIo)
 
-    suspend fun setTheme(theme: AppTheme) = withContext(dispatcherIo) {
-        context.settingsDataStore.edit { prefs ->
-            prefs[KEY_THEME] = theme.name
+    override suspend fun setTheme(theme: AppTheme) {
+        withContext(dispatcherIo) {
+            context.settingsDataStore.edit { prefs ->
+                prefs[KEY_THEME] = theme.name
+            }
         }
     }
 
-    suspend fun setLanguage(language: AppLanguage) = withContext(dispatcherIo) {
-        context.settingsDataStore.edit { prefs ->
-            prefs[KEY_LANGUAGE] = language.code
+    override suspend fun setLanguage(language: AppLanguage) {
+        withContext(dispatcherIo) {
+            context.settingsDataStore.edit { prefs ->
+                prefs[KEY_LANGUAGE] = language.code
+            }
         }
     }
 }

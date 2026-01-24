@@ -5,8 +5,8 @@ import com.koflox.destinations.data.mapper.DestinationMapper
 import com.koflox.destinations.data.source.asset.DestinationFileResolver
 import com.koflox.destinations.data.source.asset.PoiAssetDataSource
 import com.koflox.destinations.data.source.asset.model.DestinationFileMetadata
+import com.koflox.destinations.data.source.local.DestinationFilesLocalDataSource
 import com.koflox.destinations.data.source.local.PoiLocalDataSource
-import com.koflox.destinations.data.source.prefs.PreferencesDataSource
 import com.koflox.destinations.domain.model.DestinationLoadingEvent
 import com.koflox.destinations.testutil.createDestination
 import com.koflox.destinations.testutil.createDestinationAsset
@@ -45,7 +45,7 @@ class DestinationRepositoryImplTest {
     private val poiLocalDataSource: PoiLocalDataSource = mockk()
     private val poiAssetDataSource: PoiAssetDataSource = mockk()
     private val locationDataSource: LocationDataSource = mockk()
-    private val preferencesDataSource: PreferencesDataSource = mockk()
+    private val destinationFilesLocalDataSource: DestinationFilesLocalDataSource = mockk()
     private val destinationFileResolver: DestinationFileResolver = mockk()
     private val mapper: DestinationMapper = mockk()
     private lateinit var repository: DestinationRepositoryImpl
@@ -57,7 +57,7 @@ class DestinationRepositoryImplTest {
             poiLocalDataSource = poiLocalDataSource,
             poiAssetDataSource = poiAssetDataSource,
             locationDataSource = locationDataSource,
-            preferencesDataSource = preferencesDataSource,
+            destinationFilesLocalDataSource = destinationFilesLocalDataSource,
             destinationFileResolver = destinationFileResolver,
             mapper = mapper,
             mutex = Mutex(),
@@ -79,7 +79,7 @@ class DestinationRepositoryImplTest {
     @Test
     fun `loadDestinationsForLocation gets loaded files from preferences`() = runTest {
         val location = Location(TEST_LAT, TEST_LONG)
-        coEvery { preferencesDataSource.getLoadedFiles() } returns emptySet()
+        coEvery { destinationFilesLocalDataSource.getLoadedFiles() } returns emptySet()
         coEvery { destinationFileResolver.getFilesWithinRadius(location) } returns emptyList()
 
         repository.loadDestinationsForLocation(location).test {
@@ -88,13 +88,13 @@ class DestinationRepositoryImplTest {
             awaitComplete()
         }
 
-        coVerify { preferencesDataSource.getLoadedFiles() }
+        coVerify { destinationFilesLocalDataSource.getLoadedFiles() }
     }
 
     @Test
     fun `loadDestinationsForLocation resolves files for nearest city`() = runTest {
         val location = Location(TEST_LAT, TEST_LONG)
-        coEvery { preferencesDataSource.getLoadedFiles() } returns emptySet()
+        coEvery { destinationFilesLocalDataSource.getLoadedFiles() } returns emptySet()
         coEvery { destinationFileResolver.getFilesWithinRadius(location) } returns emptyList()
 
         repository.loadDestinationsForLocation(location).test {
@@ -110,7 +110,7 @@ class DestinationRepositoryImplTest {
     fun `loadDestinationsForLocation skips already loaded files`() = runTest {
         val location = Location(TEST_LAT, TEST_LONG)
         val fileMetadata = createFileMetadata()
-        coEvery { preferencesDataSource.getLoadedFiles() } returns setOf(TEST_FILE_NAME)
+        coEvery { destinationFilesLocalDataSource.getLoadedFiles() } returns setOf(TEST_FILE_NAME)
         coEvery { destinationFileResolver.getFilesWithinRadius(location) } returns listOf(fileMetadata)
 
         repository.loadDestinationsForLocation(location).test {
@@ -128,12 +128,12 @@ class DestinationRepositoryImplTest {
         val fileMetadata = createFileMetadata()
         val assets = listOf(createDestinationAsset(id = TEST_ID, title = TEST_TITLE, latitude = TEST_LAT, longitude = TEST_LONG))
         val entities = listOf(createDestinationLocal(id = TEST_ID, title = TEST_TITLE, latitude = TEST_LAT, longitude = TEST_LONG))
-        coEvery { preferencesDataSource.getLoadedFiles() } returns emptySet()
+        coEvery { destinationFilesLocalDataSource.getLoadedFiles() } returns emptySet()
         coEvery { destinationFileResolver.getFilesWithinRadius(location) } returns listOf(fileMetadata)
         coEvery { poiAssetDataSource.readDestinationsJson(TEST_FILE_NAME) } returns assets
         coEvery { mapper.toLocalList(assets) } returns entities
         coJustRun { poiLocalDataSource.insertAll(entities) }
-        coJustRun { preferencesDataSource.addLoadedFile(TEST_FILE_NAME) }
+        coJustRun { destinationFilesLocalDataSource.addLoadedFile(TEST_FILE_NAME) }
 
         repository.loadDestinationsForLocation(location).test {
             awaitItem() // Loading
@@ -143,7 +143,7 @@ class DestinationRepositoryImplTest {
 
         coVerify { poiAssetDataSource.readDestinationsJson(TEST_FILE_NAME) }
         coVerify { poiLocalDataSource.insertAll(entities) }
-        coVerify { preferencesDataSource.addLoadedFile(TEST_FILE_NAME) }
+        coVerify { destinationFilesLocalDataSource.addLoadedFile(TEST_FILE_NAME) }
     }
 
     @Test
@@ -151,12 +151,12 @@ class DestinationRepositoryImplTest {
         val location = Location(TEST_LAT, TEST_LONG)
         val tier1File = createFileMetadata(fileName = "tier1.json", tier = 1)
         val tier2File = createFileMetadata(fileName = "tier2.json", tier = 2)
-        coEvery { preferencesDataSource.getLoadedFiles() } returns emptySet()
+        coEvery { destinationFilesLocalDataSource.getLoadedFiles() } returns emptySet()
         coEvery { destinationFileResolver.getFilesWithinRadius(location) } returns listOf(tier1File, tier2File)
         coEvery { poiAssetDataSource.readDestinationsJson(any()) } returns emptyList()
         coEvery { mapper.toLocalList(any()) } returns emptyList()
         coJustRun { poiLocalDataSource.insertAll(any()) }
-        coJustRun { preferencesDataSource.addLoadedFile(any()) }
+        coJustRun { destinationFilesLocalDataSource.addLoadedFile(any()) }
 
         repository.loadDestinationsForLocation(location).test {
             awaitItem() // Loading
@@ -173,7 +173,7 @@ class DestinationRepositoryImplTest {
     @Test
     fun `loadDestinationsForLocation emits Completed when no files to load`() = runTest {
         val location = Location(TEST_LAT, TEST_LONG)
-        coEvery { preferencesDataSource.getLoadedFiles() } returns emptySet()
+        coEvery { destinationFilesLocalDataSource.getLoadedFiles() } returns emptySet()
         coEvery { destinationFileResolver.getFilesWithinRadius(location) } returns emptyList()
 
         repository.loadDestinationsForLocation(location).test {
@@ -188,7 +188,7 @@ class DestinationRepositoryImplTest {
         val location = Location(TEST_LAT, TEST_LONG)
         val exception = RuntimeException("Asset read failed")
         val fileMetadata = createFileMetadata()
-        coEvery { preferencesDataSource.getLoadedFiles() } returns emptySet()
+        coEvery { destinationFilesLocalDataSource.getLoadedFiles() } returns emptySet()
         coEvery { destinationFileResolver.getFilesWithinRadius(location) } returns listOf(fileMetadata)
         coEvery { poiAssetDataSource.readDestinationsJson(any()) } throws exception
 

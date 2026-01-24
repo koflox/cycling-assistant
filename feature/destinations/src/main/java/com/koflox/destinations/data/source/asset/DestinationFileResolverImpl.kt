@@ -1,7 +1,6 @@
 package com.koflox.destinations.data.source.asset
 
 import android.content.Context
-import android.util.Log
 import com.koflox.destinations.data.source.asset.model.DestinationFileMetadata
 import com.koflox.distance.DistanceCalculator
 import com.koflox.location.model.Location
@@ -35,9 +34,6 @@ internal class DestinationFileResolverImpl(
                     distanceKm <= MAX_DISTANCE_KM
                 }
                 .sortedWith(compareBy({ it.city }, { it.tier }))
-                .also {
-                    Log.d("Logos", it.toString())
-                }
         }
 
     private fun scanDestinationFiles(): List<DestinationFileMetadata> {
