@@ -9,20 +9,20 @@ selection, session tracking, and real-time location updates.
 
 | Category                 | Technology                   |
 |--------------------------|------------------------------|
-| **Language**             | Kotlin 2.3                   |
+| **Language**             | Kotlin                       |
 | **UI Framework**         | Jetpack Compose (Material 3) |
 | **Architecture**         | MVVM + Clean Architecture    |
-| **Dependency Injection** | Koin 4.1                     |
+| **Dependency Injection** | Koin                         |
 | **Async**                | Kotlin Coroutines & Flow     |
-| **Database**             | Room 2.8                     |
+| **Database**             | Room                         |
 | **Preferences**          | DataStore                    |
-| **Navigation**           | Navigation Compose 2.9       |
-| **Maps**                 | Google Maps Compose 7.0      |
+| **Navigation**           | Navigation Compose           |
+| **Maps**                 | Google Maps Compose          |
 | **Location**             | Play Services Location       |
 | **Testing**              | JUnit 4, MockK, Turbine      |
 | **Code Quality**         | Detekt                       |
 | **Coverage**             | Kover                        |
-| **Build**                | Gradle 8.13, AGP 8.13        |
+| **Build**                | Gradle , AGP                 |
 | **Min SDK**              | 24 (Android 7.0)             |
 | **Target SDK**           | 36                           |
 
