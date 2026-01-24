@@ -73,8 +73,8 @@ jobs:
       - name: Extract coverage percentage
         id: coverage
         run: |
-          COVERAGE=$(grep -oP 'LINE.*?covered="\K[0-9]+' build/reports/kover/report.xml | head -1)
-          MISSED=$(grep -oP 'LINE.*?missed="\K[0-9]+' build/reports/kover/report.xml | head -1)
+          COVERAGE=$(grep -oP 'LINE.*?covered="\K[0-9]+' build/reports/kover/report.xml | tail -1)
+          MISSED=$(grep -oP 'LINE.*?missed="\K[0-9]+' build/reports/kover/report.xml | tail -1)
           TOTAL=$((COVERAGE + MISSED))
           if [ $TOTAL -gt 0 ]; then
             PERCENT=$((COVERAGE * 100 / TOTAL))
