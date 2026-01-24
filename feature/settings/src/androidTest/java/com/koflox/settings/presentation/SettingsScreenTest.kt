@@ -1,0 +1,136 @@
+package com.koflox.settings.presentation
+
+import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
+import com.koflox.settings.domain.model.AppLanguage
+import com.koflox.settings.domain.model.AppTheme
+import org.junit.Rule
+import org.junit.Test
+
+class SettingsScreenTest {
+
+    @get:Rule
+    val composeTestRule = createComposeRule()
+
+    @Test
+    fun settingsScreen_displaysThemeAndLanguageLabels() {
+        composeTestRule.setContent {
+            SettingsContent(
+                uiState = SettingsUiState(),
+                onBackClick = {},
+                onEvent = {},
+            )
+        }
+
+        composeTestRule.onNodeWithText("Theme").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Language").assertIsDisplayed()
+    }
+
+    @Test
+    fun settingsScreen_displaysDefaultThemeValue() {
+        composeTestRule.setContent {
+            SettingsContent(
+                uiState = SettingsUiState(selectedTheme = AppTheme.SYSTEM),
+                onBackClick = {},
+                onEvent = {},
+            )
+        }
+
+        composeTestRule.onNodeWithText("System").assertIsDisplayed()
+    }
+
+    @Test
+    fun settingsScreen_displaysDefaultLanguageValue() {
+        composeTestRule.setContent {
+            SettingsContent(
+                uiState = SettingsUiState(selectedLanguage = AppLanguage.ENGLISH),
+                onBackClick = {},
+                onEvent = {},
+            )
+        }
+
+        composeTestRule.onNodeWithText("English").assertIsDisplayed()
+    }
+
+    @Test
+    fun settingsScreen_themeDropdownExpanded_showsAllOptions() {
+        composeTestRule.setContent {
+            SettingsContent(
+                uiState = SettingsUiState(isThemeDropdownExpanded = true),
+                onBackClick = {},
+                onEvent = {},
+            )
+        }
+
+        composeTestRule.onNodeWithText("Light").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Dark").assertIsDisplayed()
+        // "System" appears twice: in the field and in the dropdown
+        composeTestRule.onAllNodesWithText("System").assertCountEquals(2)
+    }
+
+    @Test
+    fun settingsScreen_languageDropdownExpanded_showsAllOptions() {
+        composeTestRule.setContent {
+            SettingsContent(
+                uiState = SettingsUiState(isLanguageDropdownExpanded = true),
+                onBackClick = {},
+                onEvent = {},
+            )
+        }
+
+        // "English" appears twice: in the field and in the dropdown
+        composeTestRule.onAllNodesWithText("English").assertCountEquals(2)
+        composeTestRule.onNodeWithText("Русский").assertIsDisplayed()
+        composeTestRule.onNodeWithText("日本語").assertIsDisplayed()
+    }
+
+    @Test
+    fun settingsScreen_selectDarkTheme_updatesDisplay() {
+        composeTestRule.setContent {
+            SettingsContent(
+                uiState = SettingsUiState(selectedTheme = AppTheme.DARK),
+                onBackClick = {},
+                onEvent = {},
+            )
+        }
+
+        composeTestRule.onNodeWithText("Dark").assertIsDisplayed()
+    }
+
+    @Test
+    fun settingsScreen_selectJapaneseLanguage_updatesDisplay() {
+        composeTestRule.setContent {
+            SettingsContent(
+                uiState = SettingsUiState(selectedLanguage = AppLanguage.JAPANESE),
+                onBackClick = {},
+                onEvent = {},
+            )
+        }
+
+        composeTestRule.onNodeWithText("日本語").assertIsDisplayed()
+    }
+
+    @Test
+    fun settingsScreen_clickThemeField_triggersToggleEvent() {
+        var eventTriggered = false
+        composeTestRule.setContent {
+            SettingsContent(
+                uiState = SettingsUiState(),
+                onBackClick = {},
+                onEvent = { event ->
+                    if (event is SettingsUiEvent.ThemeDropdownToggled) {
+                        eventTriggered = true
+                    }
+                },
+            )
+        }
+
+        composeTestRule.onNodeWithText("System").performClick()
+
+        assert(eventTriggered) { "ThemeDropdownToggled event should be triggered" }
+    }
+}
