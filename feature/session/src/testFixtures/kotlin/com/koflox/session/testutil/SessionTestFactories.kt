@@ -26,6 +26,7 @@ fun createSession(
     traveledDistanceKm: Double = 0.0,
     averageSpeedKmh: Double = 0.0,
     topSpeedKmh: Double = 0.0,
+    totalAltitudeGainMeters: Double = 0.0,
     status: SessionStatus = SessionStatus.RUNNING,
     trackPoints: List<TrackPoint> = emptyList(),
 ) = Session(
@@ -43,6 +44,7 @@ fun createSession(
     traveledDistanceKm = traveledDistanceKm,
     averageSpeedKmh = averageSpeedKmh,
     topSpeedKmh = topSpeedKmh,
+    totalAltitudeGainMeters = totalAltitudeGainMeters,
     status = status,
     trackPoints = trackPoints,
 )
@@ -52,11 +54,13 @@ fun createTrackPoint(
     longitude: Double = 0.0,
     timestampMs: Long = 0L,
     speedKmh: Double = 0.0,
+    altitudeMeters: Double? = null,
 ) = TrackPoint(
     latitude = latitude,
     longitude = longitude,
     timestampMs = timestampMs,
     speedKmh = speedKmh,
+    altitudeMeters = altitudeMeters,
 )
 
 fun createSessionEntity(
@@ -74,6 +78,7 @@ fun createSessionEntity(
     traveledDistanceKm: Double = 0.0,
     averageSpeedKmh: Double = 0.0,
     topSpeedKmh: Double = 0.0,
+    totalAltitudeGainMeters: Double = 0.0,
     status: String = "",
 ) = SessionEntity(
     id = id,
@@ -90,6 +95,7 @@ fun createSessionEntity(
     traveledDistanceKm = traveledDistanceKm,
     averageSpeedKmh = averageSpeedKmh,
     topSpeedKmh = topSpeedKmh,
+    totalAltitudeGainMeters = totalAltitudeGainMeters,
     status = status,
 )
 
@@ -100,6 +106,7 @@ fun createTrackPointEntity(
     longitude: Double = 0.0,
     timestampMs: Long = 0L,
     speedKmh: Double = 0.0,
+    altitudeMeters: Double? = null,
 ) = TrackPointEntity(
     id = id,
     sessionId = sessionId,
@@ -107,6 +114,7 @@ fun createTrackPointEntity(
     longitude = longitude,
     timestampMs = timestampMs,
     speedKmh = speedKmh,
+    altitudeMeters = altitudeMeters,
 )
 
 fun createSessionWithTrackPoints(
@@ -124,6 +132,7 @@ fun createCreateSessionParams(
     destinationLongitude: Double = 0.0,
     startLatitude: Double = 0.0,
     startLongitude: Double = 0.0,
+    startAltitudeMeters: Double? = null,
 ) = CreateSessionParams(
     destinationId = destinationId,
     destinationName = destinationName,
@@ -131,6 +140,7 @@ fun createCreateSessionParams(
     destinationLongitude = destinationLongitude,
     startLatitude = startLatitude,
     startLongitude = startLongitude,
+    startAltitudeMeters = startAltitudeMeters,
 )
 
 fun createSessionUiModel(
@@ -138,11 +148,13 @@ fun createSessionUiModel(
     traveledDistanceFormatted: String = "",
     averageSpeedFormatted: String = "",
     topSpeedFormatted: String = "",
+    altitudeGainFormatted: String = "",
 ) = SessionUiModel(
     elapsedTimeFormatted = elapsedTimeFormatted,
     traveledDistanceFormatted = traveledDistanceFormatted,
     averageSpeedFormatted = averageSpeedFormatted,
     topSpeedFormatted = topSpeedFormatted,
+    altitudeGainFormatted = altitudeGainFormatted,
 )
 
 fun createSessionListItemUiModel(

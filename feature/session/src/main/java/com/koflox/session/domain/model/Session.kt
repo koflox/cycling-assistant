@@ -15,6 +15,7 @@ data class Session(
     val traveledDistanceKm: Double,
     val averageSpeedKmh: Double,
     val topSpeedKmh: Double,
+    val totalAltitudeGainMeters: Double,
     val status: SessionStatus,
     val trackPoints: List<TrackPoint>,
 )

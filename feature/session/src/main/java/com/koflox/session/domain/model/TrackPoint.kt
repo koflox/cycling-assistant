@@ -5,4 +5,5 @@ data class TrackPoint(
     val longitude: Double,
     val timestampMs: Long,
     val speedKmh: Double,
+    val altitudeMeters: Double?,
 )

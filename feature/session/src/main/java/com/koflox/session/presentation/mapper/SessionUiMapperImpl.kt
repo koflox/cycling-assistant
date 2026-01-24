@@ -25,6 +25,9 @@ class SessionUiMapperImpl : SessionUiMapper {
     override fun formatSpeed(speedKmh: Double): String =
         String.format(Locale.getDefault(), "%.1f", speedKmh)
 
+    override fun formatAltitudeGain(altitudeGainMeters: Double): String =
+        String.format(Locale.getDefault(), "%.0f", altitudeGainMeters)
+
     override fun formatStartDate(startTimeMs: Long): String {
         val dateFormat = SimpleDateFormat(DATE_FORMAT_PATTERN, Locale.getDefault())
         return dateFormat.format(Date(startTimeMs))
@@ -35,6 +38,7 @@ class SessionUiMapperImpl : SessionUiMapper {
         traveledDistanceFormatted = formatDistance(session.traveledDistanceKm),
         averageSpeedFormatted = formatSpeed(session.averageSpeedKmh),
         topSpeedFormatted = formatSpeed(session.topSpeedKmh),
+        altitudeGainFormatted = formatAltitudeGain(session.totalAltitudeGainMeters),
     )
 
 }

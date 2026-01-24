@@ -29,6 +29,7 @@ internal class SessionMapperImpl(
             traveledDistanceKm = session.traveledDistanceKm,
             averageSpeedKmh = session.averageSpeedKmh,
             topSpeedKmh = session.topSpeedKmh,
+            totalAltitudeGainMeters = session.totalAltitudeGainMeters,
             status = session.status.name,
         )
     }
@@ -44,6 +45,7 @@ internal class SessionMapperImpl(
                 longitude = trackPoint.longitude,
                 timestampMs = trackPoint.timestampMs,
                 speedKmh = trackPoint.speedKmh,
+                altitudeMeters = trackPoint.altitudeMeters,
             )
         }
     }
@@ -66,6 +68,7 @@ internal class SessionMapperImpl(
             traveledDistanceKm = entity.traveledDistanceKm,
             averageSpeedKmh = entity.averageSpeedKmh,
             topSpeedKmh = entity.topSpeedKmh,
+            totalAltitudeGainMeters = entity.totalAltitudeGainMeters,
             status = SessionStatus.valueOf(entity.status),
             trackPoints = trackPoints.map { trackPointEntity ->
                 TrackPoint(
@@ -73,6 +76,7 @@ internal class SessionMapperImpl(
                     longitude = trackPointEntity.longitude,
                     timestampMs = trackPointEntity.timestampMs,
                     speedKmh = trackPointEntity.speedKmh,
+                    altitudeMeters = trackPointEntity.altitudeMeters,
                 )
             },
         )
@@ -98,6 +102,7 @@ internal class SessionMapperImpl(
                     traveledDistanceKm = entity.traveledDistanceKm,
                     averageSpeedKmh = entity.averageSpeedKmh,
                     topSpeedKmh = entity.topSpeedKmh,
+                    totalAltitudeGainMeters = entity.totalAltitudeGainMeters,
                     status = SessionStatus.valueOf(entity.status),
                     trackPoints = trackPoints.map { trackPointEntity ->
                         TrackPoint(
@@ -105,6 +110,7 @@ internal class SessionMapperImpl(
                             longitude = trackPointEntity.longitude,
                             timestampMs = trackPointEntity.timestampMs,
                             speedKmh = trackPointEntity.speedKmh,
+                            altitudeMeters = trackPointEntity.altitudeMeters,
                         )
                     },
                 )

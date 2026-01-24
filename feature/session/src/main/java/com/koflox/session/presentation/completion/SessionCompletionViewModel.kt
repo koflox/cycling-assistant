@@ -113,6 +113,7 @@ internal class SessionCompletionViewModel(
                     traveledDistanceFormatted = formattedData.traveledDistanceFormatted,
                     averageSpeedFormatted = formattedData.averageSpeedFormatted,
                     topSpeedFormatted = formattedData.topSpeedFormatted,
+                    altitudeGainFormatted = formattedData.altitudeGainFormatted,
                     routePoints = routePoints,
                 )
             }

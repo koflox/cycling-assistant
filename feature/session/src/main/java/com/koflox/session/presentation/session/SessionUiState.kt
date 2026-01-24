@@ -15,6 +15,7 @@ internal sealed interface SessionUiState {
         val traveledDistanceFormatted: String,
         val averageSpeedFormatted: String,
         val topSpeedFormatted: String,
+        val altitudeGainFormatted: String,
         val currentLocation: Location?,
         val overlay: SessionOverlay? = null,
     ) : SessionUiState {

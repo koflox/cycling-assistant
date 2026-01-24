@@ -6,6 +6,7 @@ interface SessionUiMapper {
     fun formatElapsedTime(elapsedMs: Long): String
     fun formatDistance(distanceKm: Double): String
     fun formatSpeed(speedKmh: Double): String
+    fun formatAltitudeGain(altitudeGainMeters: Double): String
     fun formatStartDate(startTimeMs: Long): String
     fun toSessionUiModel(session: Session): SessionUiModel
 }
@@ -15,4 +16,5 @@ data class SessionUiModel(
     val traveledDistanceFormatted: String,
     val averageSpeedFormatted: String,
     val topSpeedFormatted: String,
+    val altitudeGainFormatted: String,
 )

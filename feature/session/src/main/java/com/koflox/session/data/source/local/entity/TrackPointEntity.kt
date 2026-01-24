@@ -25,4 +25,5 @@ data class TrackPointEntity(
     val longitude: Double,
     val timestampMs: Long,
     val speedKmh: Double,
+    val altitudeMeters: Double?,
 )

@@ -46,6 +46,7 @@ fun DestinationOptionsRoute(
                     destinationLongitude = destinationLocation.longitude,
                     startLatitude = userLocation.latitude,
                     startLongitude = userLocation.longitude,
+                    startAltitudeMeters = userLocation.altitudeMeters,
                 )
                 onDismiss()
             }

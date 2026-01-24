@@ -116,6 +116,7 @@ internal class SessionViewModel(
         destinationLongitude: Double,
         startLatitude: Double,
         startLongitude: Double,
+        startAltitudeMeters: Double?,
     ) {
         viewModelScope.launch(dispatcherDefault) {
             val hasActiveSession = activeSessionUseCase.observeActiveSession().first() != null
@@ -129,6 +130,7 @@ internal class SessionViewModel(
                     destinationLongitude = destinationLongitude,
                     startLatitude = startLatitude,
                     startLongitude = startLongitude,
+                    startAltitudeMeters = startAltitudeMeters,
                 ),
             )
                 .onSuccess { sessionServiceController.startSessionTracking() }
@@ -187,6 +189,7 @@ internal class SessionViewModel(
             traveledDistanceFormatted = formattedData.traveledDistanceFormatted,
             averageSpeedFormatted = formattedData.averageSpeedFormatted,
             topSpeedFormatted = formattedData.topSpeedFormatted,
+            altitudeGainFormatted = formattedData.altitudeGainFormatted,
             currentLocation = session.trackPoints.lastOrNull()?.let {
                 Location(it.latitude, it.longitude)
             },

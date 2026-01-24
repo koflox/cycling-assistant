@@ -141,6 +141,7 @@ class SessionTrackingService : Service() {
                             latitude = location.latitude,
                             longitude = location.longitude,
                             timestampMs = System.currentTimeMillis(),
+                            altitudeMeters = location.altitudeMeters,
                         )
                     }
             }

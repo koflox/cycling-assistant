@@ -20,5 +20,6 @@ data class SessionEntity(
     val traveledDistanceKm: Double,
     val averageSpeedKmh: Double,
     val topSpeedKmh: Double,
+    val totalAltitudeGainMeters: Double,
     val status: String,
 )

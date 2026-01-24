@@ -18,6 +18,7 @@ data class CreateSessionParams(
     val destinationLongitude: Double,
     val startLatitude: Double,
     val startLongitude: Double,
+    val startAltitudeMeters: Double?,
 )
 
 internal class CreateSessionUseCaseImpl(
@@ -42,6 +43,7 @@ internal class CreateSessionUseCaseImpl(
             traveledDistanceKm = 0.0,
             averageSpeedKmh = 0.0,
             topSpeedKmh = 0.0,
+            totalAltitudeGainMeters = 0.0,
             status = SessionStatus.RUNNING,
             trackPoints = listOf(
                 TrackPoint(
@@ -49,6 +51,7 @@ internal class CreateSessionUseCaseImpl(
                     longitude = params.startLongitude,
                     timestampMs = currentTimeMs,
                     speedKmh = 0.0,
+                    altitudeMeters = params.startAltitudeMeters,
                 ),
             ),
         )

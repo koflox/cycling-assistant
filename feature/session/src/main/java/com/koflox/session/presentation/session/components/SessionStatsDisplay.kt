@@ -19,6 +19,7 @@ fun SessionStatsDisplay(
     distance: String,
     averageSpeed: String,
     topSpeed: String,
+    altitudeGain: String,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -40,6 +41,10 @@ fun SessionStatsDisplay(
         StatItem(
             label = stringResource(R.string.session_stat_top_speed),
             value = "$topSpeed km/h",
+        )
+        StatItem(
+            label = stringResource(R.string.session_stat_altitude_gain),
+            value = "$altitudeGain m",
         )
     }
 }

@@ -182,6 +182,7 @@ private fun SharePreviewContent(
                 distance = data.traveledDistanceFormatted,
                 averageSpeed = data.averageSpeedFormatted,
                 topSpeed = data.topSpeedFormatted,
+                altitudeGain = data.altitudeGainFormatted,
                 destinationName = data.destinationName,
                 modifier = Modifier.fillMaxWidth(),
             )
