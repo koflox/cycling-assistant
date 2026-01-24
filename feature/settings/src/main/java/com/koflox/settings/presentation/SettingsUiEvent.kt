@@ -9,5 +9,4 @@ internal sealed interface SettingsUiEvent {
     data object ThemeDropdownToggled : SettingsUiEvent
     data object LanguageDropdownToggled : SettingsUiEvent
     data object DropdownsDismissed : SettingsUiEvent
-    data object RestartHintDismissed : SettingsUiEvent
 }

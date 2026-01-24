@@ -59,7 +59,6 @@ class SettingsViewModelTest {
             assertEquals(AppLanguage.ENGLISH, state.selectedLanguage)
             assertFalse(state.isThemeDropdownExpanded)
             assertFalse(state.isLanguageDropdownExpanded)
-            assertFalse(state.isLanguageChangeRequiresRestart)
         }
     }
 
@@ -128,39 +127,6 @@ class SettingsViewModelTest {
         }
 
         coVerify { updateSettingsUseCase.updateLanguage(AppLanguage.JAPANESE) }
-    }
-
-    @Test
-    fun `LanguageSelected shows restart hint when language changes`() = runTest {
-        viewModel = createViewModel()
-
-        viewModel.uiState.test {
-            awaitItem() // Initial state
-
-            viewModel.onEvent(SettingsUiEvent.LanguageSelected(AppLanguage.RUSSIAN))
-
-            val updatedState = awaitItem()
-            assertTrue(updatedState.isLanguageChangeRequiresRestart)
-        }
-    }
-
-    @Test
-    fun `LanguageSelected does not show restart hint when same language`() = runTest {
-        viewModel = createViewModel()
-
-        viewModel.uiState.test {
-            awaitItem() // Initial state (English)
-
-            // Open dropdown first to ensure state change when closing
-            viewModel.onEvent(SettingsUiEvent.LanguageDropdownToggled)
-            awaitItem() // Expanded
-
-            viewModel.onEvent(SettingsUiEvent.LanguageSelected(AppLanguage.ENGLISH))
-
-            val updatedState = awaitItem()
-            assertFalse(updatedState.isLanguageChangeRequiresRestart)
-            assertFalse(updatedState.isLanguageDropdownExpanded)
-        }
     }
 
     @Test
@@ -278,24 +244,6 @@ class SettingsViewModelTest {
             val closedState = awaitItem()
             assertFalse(closedState.isThemeDropdownExpanded)
             assertFalse(closedState.isLanguageDropdownExpanded)
-        }
-    }
-
-    @Test
-    fun `RestartHintDismissed clears the restart hint`() = runTest {
-        viewModel = createViewModel()
-
-        viewModel.uiState.test {
-            awaitItem() // Initial state
-
-            viewModel.onEvent(SettingsUiEvent.LanguageSelected(AppLanguage.RUSSIAN))
-            val withHint = awaitItem()
-            assertTrue(withHint.isLanguageChangeRequiresRestart)
-
-            viewModel.onEvent(SettingsUiEvent.RestartHintDismissed)
-
-            val withoutHint = awaitItem()
-            assertFalse(withoutHint.isLanguageChangeRequiresRestart)
         }
     }
 

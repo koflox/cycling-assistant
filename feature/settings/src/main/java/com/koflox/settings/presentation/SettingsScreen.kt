@@ -97,13 +97,6 @@ private fun SettingsContent(
                 itemLabel = { it.displayName },
                 onItemSelected = { onEvent(SettingsUiEvent.LanguageSelected(it)) },
             )
-            if (uiState.isLanguageChangeRequiresRestart) {
-                Text(
-                    text = stringResource(R.string.settings_language_restart_hint),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
         }
     }
 }
