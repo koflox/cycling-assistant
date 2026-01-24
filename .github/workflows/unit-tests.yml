@@ -81,6 +81,10 @@ jobs:
           else
             PERCENT=0
           fi
+          echo "Coverage: $COVERAGE lines covered"
+          echo "Missed: $MISSED lines missed"
+          echo "Total: $TOTAL lines"
+          echo "Percentage: $PERCENT%"
           echo "percentage=$PERCENT" >> $GITHUB_OUTPUT
           if [ $PERCENT -ge 80 ]; then
             echo "color=brightgreen" >> $GITHUB_OUTPUT
