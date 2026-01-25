@@ -1,8 +1,3 @@
-## License
-This project is dual-licensed:
-- Free for non-commercial and educational use
-- Commercial use requires a separate license
-
 # CyclingAssistant
 
 An Android app that helps cyclists discover cycling destinations.  
@@ -11,6 +6,11 @@ Features include randomized destination selection, session tracking, and real-ti
 ![Unit Test Coverage](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/koflox/b2cb29f069e3c32f4b1ecf3c007eeba6/raw/coverage.json)
 
 The project also serves as an attempt to prove and a test of writing a production ready application from scratch via an AI Agent giving it only architectural directions with the minimal code editing.
+
+## License
+This project is dual-licensed:
+- Free for non-commercial and educational use
+- Commercial use requires a separate license
 
 ## Planned work
 ### Features
