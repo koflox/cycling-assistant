@@ -1,3 +1,8 @@
+## License
+This project is dual-licensed:
+- Free for non-commercial and educational use
+- Commercial use requires a separate license
+
 # CyclingAssistant
 
 An Android app that helps cyclists discover cycling destinations.  
