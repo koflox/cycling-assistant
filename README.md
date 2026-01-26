@@ -23,25 +23,26 @@ This project is dual-licensed:
 
 ## Tech Stack
 
-| Category                | Technology                  |
-|-------------------------|-----------------------------|
-| **Language**            | Kotlin                      |
-| **UI Framework**        | Jetpack Compose (Material 3) |
-| **Architecture**        | MVVM + Clean Architecture   |
-| **Dependency Injection** | Koin                        |
-| **Async**               | Kotlin Coroutines & Flow    |
-| **Database**            | Room                        |
-| **Preferences**         | DataStore                   |
-| **Navigation**          | Navigation Compose          |
-| **Maps**                | Google Maps Compose         |
-| **Location**            | Play Services Location      |
-| **Testing**             | JUnit 4, MockK, Turbine     |
-| **Code Quality**        | Detekt                      |
-| **Coverage**            | Kover                       |
-| **Build**               | Gradle, AGP                 |
-| **Min SDK**             | 24 (Android 7.0)            |
-| **Target SDK**          | 36                          |
-| **CI**                  | Github Actions              |
+| Category                 | Technology                   |
+|--------------------------|------------------------------|
+| **Language**             | Kotlin                       |
+| **UI Framework**         | Jetpack Compose (Material 3) |
+| **Architecture**         | MVVM + Clean Architecture    |
+| **Dependency Injection** | Koin                         |
+| **Async**                | Kotlin Coroutines & Flow     |
+| **Database**             | Room                         |
+| **Preferences**          | DataStore                    |
+| **Navigation**           | Navigation Compose           |
+| **Maps**                 | Google Maps Compose          |
+| **Location**             | Play Services Location       |
+| **Testing**              | JUnit 4, MockK, Turbine      |
+| **Code Quality**         | Detekt                       |
+| **Coverage**             | Kover                        |
+| **Build**                | Gradle, AGP                  |
+| **Min SDK**              | 24 (Android 7.0)             |
+| **Target SDK**           | 36                           |
+| **CI**                   | Github Actions               |
+| **Dependencies update**  | Dependabot                   |
 
 ## Features
 
