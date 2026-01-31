@@ -46,7 +46,7 @@ accompanistPermissions = "0.37.3"
 
 # Testing
 coroutinesTest = "1.10.2"
-mockk = "1.14.7"
+mockk = "1.14.9"
 turbine = "1.2.1"
 koinTest = "4.1.1"
 appcompat = "1.7.1"
