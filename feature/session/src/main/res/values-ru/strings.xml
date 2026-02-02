@@ -14,6 +14,10 @@
     <string name="session_stat_altitude_gain">Подъём</string>
     <string name="session_stat_altitude_loss">Спуск</string>
     <string name="session_stat_calories">Калории</string>
+    <string name="session_stat_value_km">%s км</string>
+    <string name="session_stat_value_kmh">%s км/ч</string>
+    <string name="session_stat_value_m">%s м</string>
+    <string name="session_stat_value_kcal">%s ккал</string>
 
     <!-- Session Buttons -->
     <string name="session_button_pause">Пауза</string>

@@ -14,6 +14,10 @@
     <string name="session_stat_altitude_gain">獲得標高</string>
     <string name="session_stat_altitude_loss">下降</string>
     <string name="session_stat_calories">カロリー</string>
+    <string name="session_stat_value_km">%s km</string>
+    <string name="session_stat_value_kmh">%s km/h</string>
+    <string name="session_stat_value_m">%s m</string>
+    <string name="session_stat_value_kcal">%s kcal</string>
 
     <!-- Session Buttons -->
     <string name="session_button_pause">一時停止</string>

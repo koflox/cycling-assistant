@@ -75,8 +75,7 @@ private fun SessionSummaryContent(
     destinationName: String?,
 ) {
     Column(
-        // TODO №1: use a recycler view alternative
-        // TODO №2: localize strings
+        // TODO: use a recycler view alternative
         modifier = Modifier
             .fillMaxWidth()
             .padding(Spacing.Large),
@@ -100,7 +99,7 @@ private fun SessionSummaryContent(
             leftLabel = stringResource(R.string.session_stat_time),
             leftValue = elapsedTime,
             rightLabel = stringResource(R.string.session_stat_distance),
-            rightValue = "$distance km",
+            rightValue = stringResource(R.string.session_stat_value_km, distance),
         )
         StatRow(
             leftLabel = stringResource(R.string.session_stat_moving_time),
@@ -110,20 +109,20 @@ private fun SessionSummaryContent(
         )
         StatRow(
             leftLabel = stringResource(R.string.session_stat_avg_speed),
-            leftValue = "$averageSpeed km/h",
+            leftValue = stringResource(R.string.session_stat_value_kmh, averageSpeed),
             rightLabel = stringResource(R.string.session_stat_top_speed),
-            rightValue = "$topSpeed km/h",
+            rightValue = stringResource(R.string.session_stat_value_kmh, topSpeed),
         )
         StatRow(
             leftLabel = stringResource(R.string.session_stat_altitude_gain),
-            leftValue = "$altitudeGain m",
+            leftValue = stringResource(R.string.session_stat_value_m, altitudeGain),
             rightLabel = stringResource(R.string.session_stat_altitude_loss),
-            rightValue = "$altitudeLoss m",
+            rightValue = stringResource(R.string.session_stat_value_m, altitudeLoss),
         )
         if (calories != null) {
             StatRow(
                 leftLabel = stringResource(R.string.session_stat_calories),
-                leftValue = "$calories kcal",
+                leftValue = stringResource(R.string.session_stat_value_kcal, calories),
             )
         }
     }
