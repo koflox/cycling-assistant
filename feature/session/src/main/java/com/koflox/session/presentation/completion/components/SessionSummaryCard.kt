@@ -75,7 +75,6 @@ private fun SessionSummaryContent(
     destinationName: String?,
 ) {
     Column(
-        // TODO: use a recycler view alternative
         modifier = Modifier
             .fillMaxWidth()
             .padding(Spacing.Large),
