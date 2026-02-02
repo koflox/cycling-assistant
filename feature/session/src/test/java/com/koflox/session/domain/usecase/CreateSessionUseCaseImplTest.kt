@@ -1,6 +1,10 @@
 package com.koflox.session.domain.usecase
 
 import com.koflox.id.IdGenerator
+import com.koflox.location.LocationDataSource
+import com.koflox.location.LocationUnavailableException
+import com.koflox.location.LocationValidator
+import com.koflox.location.model.Location
 import com.koflox.session.domain.model.Session
 import com.koflox.session.domain.model.SessionStatus
 import com.koflox.session.domain.repository.SessionRepository
@@ -35,12 +39,18 @@ class CreateSessionUseCaseImplTest {
 
     private val sessionRepository: SessionRepository = mockk()
     private val idGenerator: IdGenerator = mockk()
+    private val locationDataSource: LocationDataSource = mockk()
+    private val locationValidator: LocationValidator = mockk()
     private lateinit var useCase: CreateSessionUseCaseImpl
 
     @Before
     fun setup() {
         every { idGenerator.generate() } returns GENERATED_ID
-        useCase = CreateSessionUseCaseImpl(sessionRepository, idGenerator)
+        coEvery { locationDataSource.getCurrentLocation() } returns Result.success(
+            Location(latitude = START_LAT, longitude = START_LONG),
+        )
+        every { locationValidator.isAccuracyValid(any()) } returns true
+        useCase = CreateSessionUseCaseImpl(sessionRepository, idGenerator, locationDataSource, locationValidator)
     }
 
     @Test
@@ -76,7 +86,7 @@ class CreateSessionUseCaseImplTest {
     }
 
     @Test
-    fun `create saves session with start location`() = runTest {
+    fun `create saves session with start location from GPS`() = runTest {
         val sessionSlot = slot<Session>()
         coEvery { sessionRepository.saveSession(capture(sessionSlot)) } returns Result.success(Unit)
 
@@ -84,6 +94,38 @@ class CreateSessionUseCaseImplTest {
 
         assertEquals(START_LAT, sessionSlot.captured.startLatitude, 0.0)
         assertEquals(START_LONG, sessionSlot.captured.startLongitude, 0.0)
+    }
+
+    @Test
+    fun `create retries location when accuracy is invalid`() = runTest {
+        val inaccurateLocation = Location(latitude = 0.0, longitude = 0.0, accuracyMeters = 50f)
+        val accurateLocation = Location(latitude = START_LAT, longitude = START_LONG, accuracyMeters = 5f)
+        coEvery { locationDataSource.getCurrentLocation() } returnsMany listOf(
+            Result.success(inaccurateLocation),
+            Result.success(accurateLocation),
+        )
+        every { locationValidator.isAccuracyValid(inaccurateLocation) } returns false
+        every { locationValidator.isAccuracyValid(accurateLocation) } returns true
+        val sessionSlot = slot<Session>()
+        coEvery { sessionRepository.saveSession(capture(sessionSlot)) } returns Result.success(Unit)
+
+        useCase.create(createTestParams())
+
+        assertEquals(START_LAT, sessionSlot.captured.startLatitude, 0.0)
+        assertEquals(START_LONG, sessionSlot.captured.startLongitude, 0.0)
+    }
+
+    @Test
+    fun `create uses best available location when all retries have invalid accuracy`() = runTest {
+        val inaccurateLocation = Location(latitude = START_LAT, longitude = START_LONG, accuracyMeters = 50f)
+        coEvery { locationDataSource.getCurrentLocation() } returns Result.success(inaccurateLocation)
+        every { locationValidator.isAccuracyValid(any()) } returns false
+        val sessionSlot = slot<Session>()
+        coEvery { sessionRepository.saveSession(capture(sessionSlot)) } returns Result.success(Unit)
+
+        useCase.create(createTestParams())
+
+        assertEquals(START_LAT, sessionSlot.captured.startLatitude, 0.0)
     }
 
     @Test
@@ -174,12 +216,20 @@ class CreateSessionUseCaseImplTest {
         assertEquals(sessionSlot.captured.startTimeMs, trackPoint.timestampMs)
     }
 
+    @Test
+    fun `create returns failure with LocationUnavailableException when location cannot be obtained`() = runTest {
+        coEvery { locationDataSource.getCurrentLocation() } returns Result.failure(RuntimeException("GPS error"))
+
+        val result = useCase.create(createTestParams())
+
+        assertTrue(result.isFailure)
+        assertTrue(result.exceptionOrNull() is LocationUnavailableException)
+    }
+
     private fun createTestParams() = createCreateSessionParams(
         destinationId = DESTINATION_ID,
         destinationName = DESTINATION_NAME,
         destinationLatitude = DESTINATION_LAT,
         destinationLongitude = DESTINATION_LONG,
-        startLatitude = START_LAT,
-        startLongitude = START_LONG,
     )
 }

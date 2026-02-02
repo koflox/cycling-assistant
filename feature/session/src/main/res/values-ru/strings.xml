@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Errors -->
+    <string name="error_location_unavailable">Не удалось определить ваше текущее местоположение. Проверьте настройки GPS и попробуйте снова.</string>
     <string name="error_no_active_session">Нет активной велосессии</string>
 
     <!-- Session Stats -->

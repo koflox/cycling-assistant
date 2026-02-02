@@ -30,7 +30,6 @@ interface CyclingSessionUiNavigator {
         destinationName: String,
         destinationLocation: Location,
         distanceKm: Double,
-        userLocation: Location,
         onNavigateClick: () -> Unit,
         onDismiss: () -> Unit,
     )

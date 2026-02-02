@@ -1,5 +1,6 @@
 package com.koflox.session.di
 
+import com.koflox.concurrent.DispatchersQualifier
 import com.koflox.session.domain.usecase.ActiveSessionUseCase
 import com.koflox.session.domain.usecase.ActiveSessionUseCaseImpl
 import com.koflox.session.domain.usecase.CreateSessionUseCase
@@ -24,6 +25,8 @@ internal val domainModule = module {
         CreateSessionUseCaseImpl(
             sessionRepository = get(),
             idGenerator = get(),
+            locationDataSource = get(),
+            locationValidator = get(),
         )
     }
     factory<UpdateSessionStatusUseCase> {
@@ -34,10 +37,12 @@ internal val domainModule = module {
     }
     factory<UpdateSessionLocationUseCase> {
         UpdateSessionLocationUseCaseImpl(
+            dispatcherDefault = get(DispatchersQualifier.Default),
             activeSessionUseCase = get(),
             sessionRepository = get(),
             distanceCalculator = get(),
             altitudeCalculator = get(),
+            locationValidator = get(),
         )
     }
     factory<GetAllSessionsUseCase> {

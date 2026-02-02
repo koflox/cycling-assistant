@@ -4,4 +4,5 @@ data class Location(
     val latitude: Double,
     val longitude: Double,
     val altitudeMeters: Double? = null,
+    val accuracyMeters: Float? = null,
 )

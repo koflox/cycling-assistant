@@ -27,7 +27,6 @@ internal class CyclingSessionUiNavigatorImpl : CyclingSessionUiNavigator {
         destinationName: String,
         destinationLocation: Location,
         distanceKm: Double,
-        userLocation: Location,
         onNavigateClick: () -> Unit,
         onDismiss: () -> Unit,
     ) {
@@ -36,7 +35,6 @@ internal class CyclingSessionUiNavigatorImpl : CyclingSessionUiNavigator {
             destinationName = destinationName,
             destinationLocation = destinationLocation,
             distanceKm = distanceKm,
-            userLocation = userLocation,
             onNavigateClick = onNavigateClick,
             onDismiss = onDismiss,
         )

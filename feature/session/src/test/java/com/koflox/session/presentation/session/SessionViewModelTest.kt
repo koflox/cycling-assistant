@@ -37,8 +37,6 @@ class SessionViewModelTest {
         private const val DESTINATION_NAME = "Test Destination"
         private const val DESTINATION_LATITUDE = 52.52
         private const val DESTINATION_LONGITUDE = 13.405
-        private const val START_LATITUDE = 52.50
-        private const val START_LONGITUDE = 13.40
         private const val ERROR_MESSAGE = "Something went wrong"
         private const val FORMATTED_TIME = "01:30:00"
         private const val FORMATTED_DISTANCE = "15.5 km"
@@ -341,9 +339,6 @@ class SessionViewModelTest {
                 destinationName = DESTINATION_NAME,
                 destinationLatitude = DESTINATION_LATITUDE,
                 destinationLongitude = DESTINATION_LONGITUDE,
-                startLatitude = START_LATITUDE,
-                startLongitude = START_LONGITUDE,
-                startAltitudeMeters = null,
             )
             mainDispatcherRule.testDispatcher.scheduler.advanceUntilIdle()
         }
@@ -354,9 +349,7 @@ class SessionViewModelTest {
                     it.destinationId == DESTINATION_ID &&
                         it.destinationName == DESTINATION_NAME &&
                         it.destinationLatitude == DESTINATION_LATITUDE &&
-                        it.destinationLongitude == DESTINATION_LONGITUDE &&
-                        it.startLatitude == START_LATITUDE &&
-                        it.startLongitude == START_LONGITUDE
+                        it.destinationLongitude == DESTINATION_LONGITUDE
                 },
             )
         }
@@ -379,9 +372,6 @@ class SessionViewModelTest {
                 destinationName = DESTINATION_NAME,
                 destinationLatitude = DESTINATION_LATITUDE,
                 destinationLongitude = DESTINATION_LONGITUDE,
-                startLatitude = START_LATITUDE,
-                startLongitude = START_LONGITUDE,
-                startAltitudeMeters = null,
             )
         }
 
@@ -403,9 +393,6 @@ class SessionViewModelTest {
                 destinationName = DESTINATION_NAME,
                 destinationLatitude = DESTINATION_LATITUDE,
                 destinationLongitude = DESTINATION_LONGITUDE,
-                startLatitude = START_LATITUDE,
-                startLongitude = START_LONGITUDE,
-                startAltitudeMeters = null,
             )
         }
 

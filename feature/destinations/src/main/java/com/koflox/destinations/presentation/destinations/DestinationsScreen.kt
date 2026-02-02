@@ -152,7 +152,6 @@ private fun DestinationsContent(
             destinationName = uiState.selectedDestination.title,
             destinationLocation = uiState.selectedDestination.location,
             distanceKm = uiState.selectedDestination.distanceKm,
-            userLocation = uiState.userLocation,
             onNavigateClick = {
                 viewModel.onEvent(DestinationsUiEvent.SelectedMarkerOptionsDialogDismissed)
                 viewModel.onEvent(DestinationsUiEvent.OpenDestinationInGoogleMaps(uiState.selectedDestination))

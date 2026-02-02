@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Errors -->
+    <string name="error_location_unavailable">Unable to determine your current location. Please check your GPS settings and try again.</string>
     <string name="error_no_active_session">No active cycling session</string>
 
     <!-- Session Stats -->

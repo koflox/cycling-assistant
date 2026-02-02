@@ -114,23 +114,16 @@ internal class SessionViewModel(
         destinationName: String,
         destinationLatitude: Double,
         destinationLongitude: Double,
-        startLatitude: Double,
-        startLongitude: Double,
-        startAltitudeMeters: Double?,
     ) {
         viewModelScope.launch(dispatcherDefault) {
             val hasActiveSession = activeSessionUseCase.observeActiveSession().first() != null
             if (hasActiveSession) return@launch
-
             createSessionUseCase.create(
                 CreateSessionParams(
                     destinationId = destinationId,
                     destinationName = destinationName,
                     destinationLatitude = destinationLatitude,
                     destinationLongitude = destinationLongitude,
-                    startLatitude = startLatitude,
-                    startLongitude = startLongitude,
-                    startAltitudeMeters = startAltitudeMeters,
                 ),
             )
                 .onSuccess { sessionServiceController.startSessionTracking() }

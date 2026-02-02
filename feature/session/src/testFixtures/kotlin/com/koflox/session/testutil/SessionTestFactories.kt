@@ -130,17 +130,11 @@ fun createCreateSessionParams(
     destinationName: String = "",
     destinationLatitude: Double = 0.0,
     destinationLongitude: Double = 0.0,
-    startLatitude: Double = 0.0,
-    startLongitude: Double = 0.0,
-    startAltitudeMeters: Double? = null,
 ) = CreateSessionParams(
     destinationId = destinationId,
     destinationName = destinationName,
     destinationLatitude = destinationLatitude,
     destinationLongitude = destinationLongitude,
-    startLatitude = startLatitude,
-    startLongitude = startLongitude,
-    startAltitudeMeters = startAltitudeMeters,
 )
 
 fun createSessionUiModel(
