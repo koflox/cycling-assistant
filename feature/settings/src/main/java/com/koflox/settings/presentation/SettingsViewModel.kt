@@ -4,9 +4,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.koflox.settings.domain.model.AppLanguage
 import com.koflox.settings.domain.model.AppTheme
+import com.koflox.settings.domain.model.InvalidWeightException
 import com.koflox.settings.domain.usecase.ObserveSettingsUseCase
 import com.koflox.settings.domain.usecase.UpdateSettingsUseCase
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -21,12 +24,13 @@ internal class SettingsViewModel(
 ) : ViewModel() {
 
     companion object {
-        private const val MIN_WEIGHT_KG = 1.0
-        private const val MAX_WEIGHT_KG = 250.0
+        private const val WEIGHT_INPUT_DEBOUNCE_MS = 300L
     }
 
     private val _uiState = MutableStateFlow(SettingsUiState())
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
+
+    private var weightUpdateJob: Job? = null
 
     init {
         initialize()
@@ -38,14 +42,17 @@ internal class SettingsViewModel(
     }
 
     fun onEvent(event: SettingsUiEvent) {
-        viewModelScope.launch(dispatcherDefault) {
-            when (event) {
-                is SettingsUiEvent.ThemeSelected -> updateTheme(event.theme)
-                is SettingsUiEvent.LanguageSelected -> updateLanguage(event.language)
-                is SettingsUiEvent.RiderWeightChanged -> updateRiderWeight(event.input)
-                SettingsUiEvent.ThemeDropdownToggled -> toggleThemeDropdown()
-                SettingsUiEvent.LanguageDropdownToggled -> toggleLanguageDropdown()
-                SettingsUiEvent.DropdownsDismissed -> dismissDropdowns()
+        when (event) {
+            is SettingsUiEvent.RiderWeightChanged -> scheduleWeightUpdate(event.input)
+            else -> viewModelScope.launch(dispatcherDefault) {
+                when (event) {
+                    is SettingsUiEvent.ThemeSelected -> updateTheme(event.theme)
+                    is SettingsUiEvent.LanguageSelected -> updateLanguage(event.language)
+                    SettingsUiEvent.ThemeDropdownToggled -> toggleThemeDropdown()
+                    SettingsUiEvent.LanguageDropdownToggled -> toggleLanguageDropdown()
+                    SettingsUiEvent.DropdownsDismissed -> dismissDropdowns()
+                    is SettingsUiEvent.RiderWeightChanged -> Unit
+                }
             }
         }
     }
@@ -114,11 +121,24 @@ internal class SettingsViewModel(
         }
     }
 
-    private suspend fun updateRiderWeight(input: String) {
+    private fun scheduleWeightUpdate(input: String) {
         _uiState.update { it.copy(riderWeightKg = input) }
-        val weightKg = input.toDoubleOrNull() ?: return
-        if (weightKg in MIN_WEIGHT_KG..MAX_WEIGHT_KG) {
-            updateSettingsUseCase.updateRiderWeightKg(weightKg)
+        weightUpdateJob?.cancel()
+        weightUpdateJob = viewModelScope.launch(dispatcherDefault) {
+            delay(WEIGHT_INPUT_DEBOUNCE_MS)
+            updateSettingsUseCase.updateRiderWeightKg(input)
+                .onSuccess {
+                    _uiState.update { it.copy(riderWeightError = null) }
+                }
+                .onFailure { error ->
+                    val weightError = (error as? InvalidWeightException)?.let {
+                        RiderWeightError(
+                            minWeightKg = it.minWeightKg.toInt(),
+                            maxWeightKg = it.maxWeightKg.toInt(),
+                        )
+                    }
+                    _uiState.update { it.copy(riderWeightError = weightError) }
+                }
         }
     }
 

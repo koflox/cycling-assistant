@@ -72,40 +72,58 @@ internal fun SettingsContent(
             )
         },
     ) { paddingValues ->
-        Column(
+        SettingsBody(
+            uiState = uiState,
+            onEvent = onEvent,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
                 .padding(Spacing.Large),
-            verticalArrangement = Arrangement.spacedBy(Spacing.ExtraLarge),
-        ) {
-            SettingDropdown(
-                label = stringResource(R.string.settings_theme),
-                selectedValue = uiState.selectedTheme.displayName(),
-                isExpanded = uiState.isThemeDropdownExpanded,
-                onExpandToggle = { onEvent(SettingsUiEvent.ThemeDropdownToggled) },
-                onDismiss = { onEvent(SettingsUiEvent.DropdownsDismissed) },
-                items = uiState.availableThemes,
-                itemLabel = { it.displayName() },
-                onItemSelected = { onEvent(SettingsUiEvent.ThemeSelected(it)) },
-            )
-            SettingDropdown(
-                label = stringResource(R.string.settings_language),
-                selectedValue = uiState.selectedLanguage.displayName,
-                isExpanded = uiState.isLanguageDropdownExpanded,
-                onExpandToggle = { onEvent(SettingsUiEvent.LanguageDropdownToggled) },
-                onDismiss = { onEvent(SettingsUiEvent.DropdownsDismissed) },
-                items = uiState.availableLanguages,
-                itemLabel = { it.displayName },
-                onItemSelected = { onEvent(SettingsUiEvent.LanguageSelected(it)) },
-            )
-            SettingTextField(
-                label = stringResource(R.string.settings_rider_weight),
-                value = uiState.riderWeightKg,
-                onValueChange = { onEvent(SettingsUiEvent.RiderWeightChanged(it)) },
-                keyboardType = KeyboardType.Decimal,
-            )
-        }
+        )
+    }
+}
+
+@Composable
+private fun SettingsBody(
+    uiState: SettingsUiState,
+    onEvent: (SettingsUiEvent) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(Spacing.ExtraLarge),
+    ) {
+        SettingDropdown(
+            label = stringResource(R.string.settings_theme),
+            selectedValue = uiState.selectedTheme.displayName(),
+            isExpanded = uiState.isThemeDropdownExpanded,
+            onExpandToggle = { onEvent(SettingsUiEvent.ThemeDropdownToggled) },
+            onDismiss = { onEvent(SettingsUiEvent.DropdownsDismissed) },
+            items = uiState.availableThemes,
+            itemLabel = { it.displayName() },
+            onItemSelected = { onEvent(SettingsUiEvent.ThemeSelected(it)) },
+        )
+        SettingDropdown(
+            label = stringResource(R.string.settings_language),
+            selectedValue = uiState.selectedLanguage.displayName,
+            isExpanded = uiState.isLanguageDropdownExpanded,
+            onExpandToggle = { onEvent(SettingsUiEvent.LanguageDropdownToggled) },
+            onDismiss = { onEvent(SettingsUiEvent.DropdownsDismissed) },
+            items = uiState.availableLanguages,
+            itemLabel = { it.displayName },
+            onItemSelected = { onEvent(SettingsUiEvent.LanguageSelected(it)) },
+        )
+        SettingTextField(
+            label = stringResource(R.string.settings_rider_weight),
+            value = uiState.riderWeightKg,
+            onValueChange = { onEvent(SettingsUiEvent.RiderWeightChanged(it)) },
+            keyboardType = KeyboardType.Decimal,
+            placeholder = stringResource(R.string.settings_rider_weight_hint),
+            isError = uiState.isRiderWeightError,
+            errorText = uiState.riderWeightError?.let {
+                stringResource(R.string.settings_rider_weight_error, it.minWeightKg, it.maxWeightKg)
+            },
+        )
     }
 }
 
@@ -123,6 +141,9 @@ private fun SettingTextField(
     onValueChange: (String) -> Unit,
     keyboardType: KeyboardType,
     modifier: Modifier = Modifier,
+    placeholder: String? = null,
+    isError: Boolean = false,
+    errorText: String? = null,
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
         Text(
@@ -135,6 +156,13 @@ private fun SettingTextField(
             onValueChange = onValueChange,
             keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
             singleLine = true,
+            isError = isError,
+            placeholder = placeholder?.let { { Text(text = it) } },
+            supportingText = errorText?.let {
+                {
+                    Text(text = it, color = MaterialTheme.colorScheme.error)
+                }
+            },
             modifier = Modifier.fillMaxWidth(),
         )
     }

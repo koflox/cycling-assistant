@@ -9,4 +9,6 @@
     <string name="settings_language">Language</string>
     <string name="settings_language_restart_hint">Restart the app to apply the language change</string>
     <string name="settings_rider_weight">Rider weight (kg)</string>
+    <string name="settings_rider_weight_hint">Used for calories calculation</string>
+    <string name="settings_rider_weight_error">Weight must be between %1$d and %2$d kg</string>
 </resources>

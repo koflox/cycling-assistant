@@ -9,4 +9,6 @@
     <string name="settings_language">Язык</string>
     <string name="settings_language_restart_hint">Перезапустите приложение для применения изменений языка</string>
     <string name="settings_rider_weight">Вес велосипедиста (кг)</string>
+    <string name="settings_rider_weight_hint">Используется для расчёта калорий</string>
+    <string name="settings_rider_weight_error">Вес должен быть от %1$d до %2$d кг</string>
 </resources>
