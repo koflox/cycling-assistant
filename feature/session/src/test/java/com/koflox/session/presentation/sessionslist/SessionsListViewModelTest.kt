@@ -3,6 +3,7 @@ package com.koflox.session.presentation.sessionslist
 import android.content.Intent
 import android.graphics.Bitmap
 import app.cash.turbine.test
+import com.koflox.error.mapper.ErrorMessageMapper
 import com.koflox.session.domain.model.SessionDerivedStats
 import com.koflox.session.domain.usecase.CalculateSessionStatsUseCase
 import com.koflox.session.domain.usecase.GetAllSessionsUseCase
@@ -38,6 +39,7 @@ class SessionsListViewModelTest {
         private const val FORMATTED_DISTANCE = "15.5 km"
         private const val FORMATTED_AVG_SPEED = "22.0 km/h"
         private const val FORMATTED_TOP_SPEED = "35.0 km/h"
+        private const val LOAD_ERROR_MESSAGE = "Failed to load session"
     }
 
     @get:Rule
@@ -49,6 +51,7 @@ class SessionsListViewModelTest {
     private val mapper: SessionsListUiMapper = mockk()
     private val sessionUiMapper: SessionUiMapper = mockk()
     private val imageSharer: SessionImageSharer = mockk()
+    private val errorMessageMapper: ErrorMessageMapper = mockk()
     private val shareErrorMapper: ShareErrorMapper = mockk()
 
     private lateinit var viewModel: SessionsListViewModel
@@ -95,6 +98,7 @@ class SessionsListViewModelTest {
             mapper = mapper,
             sessionUiMapper = sessionUiMapper,
             imageSharer = imageSharer,
+            errorMessageMapper = errorMessageMapper,
             shareErrorMapper = shareErrorMapper,
             dispatcherDefault = mainDispatcherRule.testDispatcher,
         )
@@ -318,6 +322,72 @@ class SessionsListViewModelTest {
 
             val content = awaitItem() as SessionsListUiState.Content
             assertTrue(content.overlay is SessionsListOverlay.SharePreview)
+        }
+    }
+
+    @Test
+    fun `ShareClicked with getSession failure shows LoadError`() = runTest {
+        val sessions = listOf(createSession(id = SESSION_ID, destinationName = DESTINATION_NAME))
+        coEvery { getAllSessionsUseCase.observeAllSessions() } returns flowOf(sessions)
+        coEvery { getSessionByIdUseCase.getSession(SESSION_ID) } returns Result.failure(RuntimeException())
+        coEvery { errorMessageMapper.map(any()) } returns LOAD_ERROR_MESSAGE
+
+        viewModel = createViewModel()
+
+        viewModel.uiState.test {
+            awaitItem() // Loading
+            awaitItem() // Content
+
+            viewModel.onEvent(SessionsListUiEvent.ShareClicked(SESSION_ID))
+
+            val updatedContent = awaitItem() as SessionsListUiState.Content
+            assertTrue(updatedContent.overlay is SessionsListOverlay.LoadError)
+            assertEquals(LOAD_ERROR_MESSAGE, (updatedContent.overlay as SessionsListOverlay.LoadError).message)
+        }
+    }
+
+    @Test
+    fun `ShareClicked with calculateStats failure shows LoadError`() = runTest {
+        val session = createSession(id = SESSION_ID, destinationName = DESTINATION_NAME)
+        coEvery { getAllSessionsUseCase.observeAllSessions() } returns flowOf(listOf(session))
+        coEvery { getSessionByIdUseCase.getSession(SESSION_ID) } returns Result.success(session)
+        coEvery { calculateSessionStatsUseCase.calculate(SESSION_ID) } returns Result.failure(RuntimeException())
+        coEvery { errorMessageMapper.map(any()) } returns LOAD_ERROR_MESSAGE
+
+        viewModel = createViewModel()
+
+        viewModel.uiState.test {
+            awaitItem() // Loading
+            awaitItem() // Content
+
+            viewModel.onEvent(SessionsListUiEvent.ShareClicked(SESSION_ID))
+
+            val updatedContent = awaitItem() as SessionsListUiState.Content
+            assertTrue(updatedContent.overlay is SessionsListOverlay.LoadError)
+            assertEquals(LOAD_ERROR_MESSAGE, (updatedContent.overlay as SessionsListOverlay.LoadError).message)
+        }
+    }
+
+    @Test
+    fun `LoadErrorDismissed clears overlay`() = runTest {
+        val sessions = listOf(createSession(id = SESSION_ID, destinationName = DESTINATION_NAME))
+        coEvery { getAllSessionsUseCase.observeAllSessions() } returns flowOf(sessions)
+        coEvery { getSessionByIdUseCase.getSession(SESSION_ID) } returns Result.failure(RuntimeException())
+        coEvery { errorMessageMapper.map(any()) } returns LOAD_ERROR_MESSAGE
+
+        viewModel = createViewModel()
+
+        viewModel.uiState.test {
+            awaitItem() // Loading
+            awaitItem() // Content
+
+            viewModel.onEvent(SessionsListUiEvent.ShareClicked(SESSION_ID))
+            awaitItem() // LoadError
+
+            viewModel.onEvent(SessionsListUiEvent.LoadErrorDismissed)
+
+            val content = awaitItem() as SessionsListUiState.Content
+            assertNull(content.overlay)
         }
     }
 }

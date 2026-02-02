@@ -72,6 +72,7 @@ internal val presentationModule = module {
             mapper = get(),
             sessionUiMapper = get(),
             imageSharer = get(),
+            errorMessageMapper = get(PresentationModuleQualifier.SessionErrorMessageMapper),
             shareErrorMapper = get(),
             dispatcherDefault = get(DispatchersQualifier.Default),
         )
