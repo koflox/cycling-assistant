@@ -138,10 +138,8 @@ class SessionTrackingService : Service() {
                 locationDataSource.getCurrentLocation()
                     .onSuccess { location ->
                         updateSessionLocationUseCase.update(
-                            latitude = location.latitude,
-                            longitude = location.longitude,
+                            location = location,
                             timestampMs = System.currentTimeMillis(),
-                            altitudeMeters = location.altitudeMeters,
                         )
                     }
             }

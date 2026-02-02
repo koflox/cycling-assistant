@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Errors -->
+    <string name="error_location_unavailable">現在地を取得できませんでした。GPS設定を確認して、もう一度お試しください。</string>
     <string name="error_no_active_session">アクティブなサイクリングセッションがありません</string>
 
     <!-- Session Stats -->

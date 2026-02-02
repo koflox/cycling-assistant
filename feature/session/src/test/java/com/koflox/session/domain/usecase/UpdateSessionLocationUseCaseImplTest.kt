@@ -2,6 +2,8 @@ package com.koflox.session.domain.usecase
 
 import com.koflox.altitude.AltitudeCalculator
 import com.koflox.distance.DistanceCalculator
+import com.koflox.location.LocationValidator
+import com.koflox.location.model.Location
 import com.koflox.session.domain.model.Session
 import com.koflox.session.domain.model.SessionStatus
 import com.koflox.session.domain.repository.SessionRepository
@@ -28,7 +30,7 @@ class UpdateSessionLocationUseCaseImplTest {
         private const val START_LONG = 13.40
         private const val NEW_LAT = 52.51
         private const val NEW_LONG = 13.41
-        private const val NEW_TIMESTAMP_MS = 1003600L
+        private const val NEW_TIMESTAMP_MS = 1108000L
         private const val DISTANCE_KM = 1.5
         private const val MILLISECONDS_PER_HOUR = 3_600_000.0
         private const val TIME_DIFF_MS = NEW_TIMESTAMP_MS - START_TIME_MS
@@ -42,16 +44,20 @@ class UpdateSessionLocationUseCaseImplTest {
     private val sessionRepository: SessionRepository = mockk()
     private val distanceCalculator: DistanceCalculator = mockk()
     private val altitudeCalculator: AltitudeCalculator = mockk()
+    private val locationValidator: LocationValidator = mockk()
     private lateinit var useCase: UpdateSessionLocationUseCaseImpl
 
     @Before
     fun setup() {
         every { altitudeCalculator.calculateGain(any(), any()) } returns 0.0
+        every { locationValidator.isAccuracyValid(any()) } returns true
         useCase = UpdateSessionLocationUseCaseImpl(
+            dispatcherDefault = mainDispatcherRule.testDispatcher,
             activeSessionUseCase = activeSessionUseCase,
             sessionRepository = sessionRepository,
             distanceCalculator = distanceCalculator,
             altitudeCalculator = altitudeCalculator,
+            locationValidator = locationValidator,
         )
     }
 
@@ -62,7 +68,7 @@ class UpdateSessionLocationUseCaseImplTest {
         every { distanceCalculator.calculateKm(any(), any(), any(), any()) } returns DISTANCE_KM
         coEvery { sessionRepository.saveSession(any()) } returns Result.success(Unit)
 
-        useCase.update(NEW_LAT, NEW_LONG, NEW_TIMESTAMP_MS, altitudeMeters = null)
+        useCase.update(createNewLocation(), NEW_TIMESTAMP_MS)
 
         coVerify { activeSessionUseCase.getActiveSession() }
     }
@@ -72,7 +78,7 @@ class UpdateSessionLocationUseCaseImplTest {
         val session = createTestSession(status = SessionStatus.PAUSED)
         coEvery { activeSessionUseCase.getActiveSession() } returns session
 
-        useCase.update(NEW_LAT, NEW_LONG, NEW_TIMESTAMP_MS, altitudeMeters = null)
+        useCase.update(createNewLocation(), NEW_TIMESTAMP_MS)
 
         coVerify(exactly = 0) { sessionRepository.saveSession(any()) }
     }
@@ -82,8 +88,18 @@ class UpdateSessionLocationUseCaseImplTest {
         val session = createTestSession(status = SessionStatus.COMPLETED)
         coEvery { activeSessionUseCase.getActiveSession() } returns session
 
-        useCase.update(NEW_LAT, NEW_LONG, NEW_TIMESTAMP_MS, altitudeMeters = null)
+        useCase.update(createNewLocation(), NEW_TIMESTAMP_MS)
 
+        coVerify(exactly = 0) { sessionRepository.saveSession(any()) }
+    }
+
+    @Test
+    fun `update does nothing for invalid accuracy`() = runTest {
+        every { locationValidator.isAccuracyValid(any()) } returns false
+
+        useCase.update(createNewLocation(), NEW_TIMESTAMP_MS)
+
+        coVerify(exactly = 0) { activeSessionUseCase.getActiveSession() }
         coVerify(exactly = 0) { sessionRepository.saveSession(any()) }
     }
 
@@ -94,7 +110,7 @@ class UpdateSessionLocationUseCaseImplTest {
         every { distanceCalculator.calculateKm(START_LAT, START_LONG, NEW_LAT, NEW_LONG) } returns DISTANCE_KM
         coEvery { sessionRepository.saveSession(any()) } returns Result.success(Unit)
 
-        useCase.update(NEW_LAT, NEW_LONG, NEW_TIMESTAMP_MS, altitudeMeters = null)
+        useCase.update(createNewLocation(), NEW_TIMESTAMP_MS)
 
         coVerify { distanceCalculator.calculateKm(START_LAT, START_LONG, NEW_LAT, NEW_LONG) }
     }
@@ -107,7 +123,7 @@ class UpdateSessionLocationUseCaseImplTest {
         every { distanceCalculator.calculateKm(any(), any(), any(), any()) } returns DISTANCE_KM
         coEvery { sessionRepository.saveSession(capture(sessionSlot)) } returns Result.success(Unit)
 
-        useCase.update(NEW_LAT, NEW_LONG, NEW_TIMESTAMP_MS, altitudeMeters = null)
+        useCase.update(createNewLocation(), NEW_TIMESTAMP_MS)
 
         assertEquals(2, sessionSlot.captured.trackPoints.size)
         val newTrackPoint = sessionSlot.captured.trackPoints[1]
@@ -124,7 +140,7 @@ class UpdateSessionLocationUseCaseImplTest {
         every { distanceCalculator.calculateKm(any(), any(), any(), any()) } returns DISTANCE_KM
         coEvery { sessionRepository.saveSession(capture(sessionSlot)) } returns Result.success(Unit)
 
-        useCase.update(NEW_LAT, NEW_LONG, NEW_TIMESTAMP_MS, altitudeMeters = null)
+        useCase.update(createNewLocation(), NEW_TIMESTAMP_MS)
 
         val newTrackPoint = sessionSlot.captured.trackPoints[1]
         assertEquals(EXPECTED_SPEED_KMH, newTrackPoint.speedKmh, 0.0)
@@ -138,7 +154,7 @@ class UpdateSessionLocationUseCaseImplTest {
         every { distanceCalculator.calculateKm(any(), any(), any(), any()) } returns DISTANCE_KM
         coEvery { sessionRepository.saveSession(capture(sessionSlot)) } returns Result.success(Unit)
 
-        useCase.update(NEW_LAT, NEW_LONG, NEW_TIMESTAMP_MS, altitudeMeters = null)
+        useCase.update(createNewLocation(), NEW_TIMESTAMP_MS)
 
         assertEquals(5.0 + DISTANCE_KM, sessionSlot.captured.traveledDistanceKm, 0.0)
     }
@@ -152,20 +168,21 @@ class UpdateSessionLocationUseCaseImplTest {
         every { distanceCalculator.calculateKm(any(), any(), any(), any()) } returns DISTANCE_KM
         coEvery { sessionRepository.saveSession(capture(sessionSlot)) } returns Result.success(Unit)
 
-        useCase.update(NEW_LAT, NEW_LONG, NEW_TIMESTAMP_MS, altitudeMeters = null)
+        useCase.update(createNewLocation(), NEW_TIMESTAMP_MS)
 
         assertEquals(EXPECTED_SPEED_KMH, sessionSlot.captured.topSpeedKmh, 0.0)
     }
 
     @Test
     fun `update preserves top speed when current speed is lower`() = runTest {
+        val smallDistanceKm = 0.005
         val session = createTestSession(topSpeedKmh = 100.0)
         val sessionSlot = slot<Session>()
         coEvery { activeSessionUseCase.getActiveSession() } returns session
-        every { distanceCalculator.calculateKm(any(), any(), any(), any()) } returns 0.0
+        every { distanceCalculator.calculateKm(any(), any(), any(), any()) } returns smallDistanceKm
         coEvery { sessionRepository.saveSession(capture(sessionSlot)) } returns Result.success(Unit)
 
-        useCase.update(NEW_LAT, NEW_LONG, NEW_TIMESTAMP_MS, altitudeMeters = null)
+        useCase.update(createNewLocation(), NEW_TIMESTAMP_MS)
 
         assertEquals(100.0, sessionSlot.captured.topSpeedKmh, 0.0)
     }
@@ -178,10 +195,8 @@ class UpdateSessionLocationUseCaseImplTest {
         every { distanceCalculator.calculateKm(any(), any(), any(), any()) } returns DISTANCE_KM
         coEvery { sessionRepository.saveSession(capture(sessionSlot)) } returns Result.success(Unit)
 
-        useCase.update(NEW_LAT, NEW_LONG, NEW_TIMESTAMP_MS, altitudeMeters = null)
+        useCase.update(createNewLocation(), NEW_TIMESTAMP_MS)
 
-        // elapsedTimeMs = session.elapsedTimeMs + (timestampMs - session.lastResumedTimeMs)
-        // elapsedTimeMs = 0 + (NEW_TIMESTAMP_MS - START_TIME_MS) = TIME_DIFF_MS
         assertEquals(TIME_DIFF_MS, sessionSlot.captured.elapsedTimeMs)
     }
 
@@ -193,7 +208,7 @@ class UpdateSessionLocationUseCaseImplTest {
         every { distanceCalculator.calculateKm(any(), any(), any(), any()) } returns DISTANCE_KM
         coEvery { sessionRepository.saveSession(capture(sessionSlot)) } returns Result.success(Unit)
 
-        useCase.update(NEW_LAT, NEW_LONG, NEW_TIMESTAMP_MS, altitudeMeters = null)
+        useCase.update(createNewLocation(), NEW_TIMESTAMP_MS)
 
         assertEquals(NEW_TIMESTAMP_MS, sessionSlot.captured.lastResumedTimeMs)
     }
@@ -206,12 +221,8 @@ class UpdateSessionLocationUseCaseImplTest {
         every { distanceCalculator.calculateKm(any(), any(), any(), any()) } returns DISTANCE_KM
         coEvery { sessionRepository.saveSession(capture(sessionSlot)) } returns Result.success(Unit)
 
-        useCase.update(NEW_LAT, NEW_LONG, NEW_TIMESTAMP_MS, altitudeMeters = null)
+        useCase.update(createNewLocation(), NEW_TIMESTAMP_MS)
 
-        // averageSpeedKmh = (totalDistanceKm / elapsedTimeMs) * MILLISECONDS_PER_HOUR
-        // elapsedTimeMs = 0 + (NEW_TIMESTAMP_MS - START_TIME_MS) = TIME_DIFF_MS
-        // totalDistanceKm = 0 + DISTANCE_KM = DISTANCE_KM
-        // averageSpeedKmh = (DISTANCE_KM / TIME_DIFF_MS) * MILLISECONDS_PER_HOUR = EXPECTED_SPEED_KMH
         assertEquals(EXPECTED_SPEED_KMH, sessionSlot.captured.averageSpeedKmh, 0.0)
     }
 
@@ -222,7 +233,7 @@ class UpdateSessionLocationUseCaseImplTest {
         every { distanceCalculator.calculateKm(any(), any(), any(), any()) } returns DISTANCE_KM
         coEvery { sessionRepository.saveSession(any()) } returns Result.success(Unit)
 
-        useCase.update(NEW_LAT, NEW_LONG, NEW_TIMESTAMP_MS, altitudeMeters = null)
+        useCase.update(createNewLocation(), NEW_TIMESTAMP_MS)
 
         coVerify { sessionRepository.saveSession(any()) }
     }
@@ -234,7 +245,7 @@ class UpdateSessionLocationUseCaseImplTest {
         coEvery { activeSessionUseCase.getActiveSession() } returns session
         coEvery { sessionRepository.saveSession(capture(sessionSlot)) } returns Result.success(Unit)
 
-        useCase.update(NEW_LAT, NEW_LONG, NEW_TIMESTAMP_MS, altitudeMeters = null)
+        useCase.update(createNewLocation(), NEW_TIMESTAMP_MS)
 
         assertEquals(1, sessionSlot.captured.trackPoints.size)
         assertEquals(0.0, sessionSlot.captured.trackPoints[0].speedKmh, 0.0)
@@ -253,11 +264,16 @@ class UpdateSessionLocationUseCaseImplTest {
         every { distanceCalculator.calculateKm(any(), any(), any(), any()) } returns DISTANCE_KM
         coEvery { sessionRepository.saveSession(capture(sessionSlot)) } returns Result.success(Unit)
 
-        useCase.update(NEW_LAT, NEW_LONG, NEW_TIMESTAMP_MS, altitudeMeters = null)
+        useCase.update(createNewLocation(), NEW_TIMESTAMP_MS)
 
         val newTrackPoint = sessionSlot.captured.trackPoints[1]
         assertEquals(0.0, newTrackPoint.speedKmh, 0.0)
     }
+
+    private fun createNewLocation() = Location(
+        latitude = NEW_LAT,
+        longitude = NEW_LONG,
+    )
 
     private fun createTestSession(
         id: String = SESSION_ID,

@@ -53,6 +53,7 @@ internal class LocationDataSourceImpl(
         latitude = location.latitude,
         longitude = location.longitude,
         altitudeMeters = if (location.hasAltitude()) location.altitude else null,
+        accuracyMeters = if (location.hasAccuracy()) location.accuracy else null,
     )
 
     @SuppressLint("MissingPermission")

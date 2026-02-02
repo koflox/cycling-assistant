@@ -30,7 +30,6 @@ fun DestinationOptionsRoute(
     destinationName: String,
     destinationLocation: Location,
     distanceKm: Double,
-    userLocation: Location,
     onNavigateClick: () -> Unit,
     onDismiss: () -> Unit,
 ) {
@@ -44,9 +43,6 @@ fun DestinationOptionsRoute(
                     destinationName = destinationName,
                     destinationLatitude = destinationLocation.latitude,
                     destinationLongitude = destinationLocation.longitude,
-                    startLatitude = userLocation.latitude,
-                    startLongitude = userLocation.longitude,
-                    startAltitudeMeters = userLocation.altitudeMeters,
                 )
                 onDismiss()
             }

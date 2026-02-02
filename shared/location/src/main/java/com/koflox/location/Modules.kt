@@ -13,4 +13,7 @@ val locationModule = module {
             fusedLocationClient = LocationServices.getFusedLocationProviderClient(androidContext()),
         )
     }
+    single<LocationValidator> {
+        LocationValidatorImpl()
+    }
 }
