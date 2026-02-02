@@ -25,10 +25,14 @@ import com.koflox.session.R
 internal fun SessionSummaryCard(
     startDate: String,
     elapsedTime: String,
+    movingTime: String,
+    idleTime: String,
     distance: String,
     averageSpeed: String,
     topSpeed: String,
     altitudeGain: String,
+    altitudeLoss: String,
+    calories: String,
     modifier: Modifier = Modifier,
     destinationName: String? = null,
 ) {
@@ -41,6 +45,7 @@ internal fun SessionSummaryCard(
         elevation = CardDefaults.cardElevation(defaultElevation = Elevation.Prominent),
     ) {
         Column(
+            // TODO: use a recycler view alternative
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(Spacing.Large),
@@ -60,31 +65,55 @@ internal fun SessionSummaryCard(
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            Spacer(modifier = Modifier.height(Spacing.Medium))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center,
-            ) {
-                StatItem(label = stringResource(R.string.session_stat_time), value = elapsedTime)
-                Spacer(modifier = Modifier.width(Spacing.ExtraLarge))
-                StatItem(label = stringResource(R.string.session_stat_distance), value = "$distance km")
-            }
-            Spacer(modifier = Modifier.height(Spacing.Small))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center,
-            ) {
-                StatItem(label = stringResource(R.string.session_stat_avg_speed), value = "$averageSpeed km/h")
-                Spacer(modifier = Modifier.width(Spacing.ExtraLarge))
-                StatItem(label = stringResource(R.string.session_stat_top_speed), value = "$topSpeed km/h")
-            }
-            Spacer(modifier = Modifier.height(Spacing.Small))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center,
-            ) {
-                StatItem(label = stringResource(R.string.session_stat_altitude_gain), value = "$altitudeGain m")
-            }
+            StatRow(
+                leftLabel = stringResource(R.string.session_stat_time),
+                leftValue = elapsedTime,
+                rightLabel = stringResource(R.string.session_stat_distance),
+                rightValue = "$distance km",
+            )
+            StatRow(
+                leftLabel = stringResource(R.string.session_stat_moving_time),
+                leftValue = movingTime,
+                rightLabel = stringResource(R.string.session_stat_idle_time),
+                rightValue = idleTime,
+            )
+            StatRow(
+                leftLabel = stringResource(R.string.session_stat_avg_speed),
+                leftValue = "$averageSpeed km/h",
+                rightLabel = stringResource(R.string.session_stat_top_speed),
+                rightValue = "$topSpeed km/h",
+            )
+            StatRow(
+                leftLabel = stringResource(R.string.session_stat_altitude_gain),
+                leftValue = "$altitudeGain m",
+                rightLabel = stringResource(R.string.session_stat_altitude_loss),
+                rightValue = "$altitudeLoss m",
+            )
+            StatRow(
+                leftLabel = stringResource(R.string.session_stat_calories),
+                leftValue = "$calories kcal",
+            )
+        }
+    }
+}
+
+@Composable
+private fun StatRow(
+    leftLabel: String,
+    leftValue: String,
+    rightLabel: String? = null,
+    rightValue: String? = null,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = Spacing.Small),
+        horizontalArrangement = Arrangement.Center,
+    ) {
+        StatItem(label = leftLabel, value = leftValue)
+        if (rightLabel != null && rightValue != null) {
+            Spacer(modifier = Modifier.width(Spacing.ExtraLarge))
+            StatItem(label = rightLabel, value = rightValue)
         }
     }
 }

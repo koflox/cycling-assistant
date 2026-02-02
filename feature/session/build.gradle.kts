@@ -72,6 +72,9 @@ dependencies {
     implementation(project(":shared:id"))
     implementation(project(":shared:location"))
 
+    // Feature modules
+    implementation(project(":feature:settings")) // TODO: follow the bridge convention
+
     // Testing
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)

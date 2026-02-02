@@ -8,4 +8,5 @@
     <string name="settings_theme_system">Системная</string>
     <string name="settings_language">Язык</string>
     <string name="settings_language_restart_hint">Перезапустите приложение для применения изменений языка</string>
+    <string name="settings_rider_weight">Вес велосипедиста (кг)</string>
 </resources>

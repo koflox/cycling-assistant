@@ -5,7 +5,9 @@ import android.graphics.Bitmap
 import androidx.lifecycle.SavedStateHandle
 import app.cash.turbine.test
 import com.koflox.error.mapper.ErrorMessageMapper
+import com.koflox.session.domain.model.SessionDerivedStats
 import com.koflox.session.domain.model.SessionStatus
+import com.koflox.session.domain.usecase.CalculateSessionStatsUseCase
 import com.koflox.session.domain.usecase.GetSessionByIdUseCase
 import com.koflox.session.navigation.SESSION_ID_ARG
 import com.koflox.session.presentation.mapper.SessionUiMapper
@@ -46,6 +48,7 @@ class SessionCompletionViewModelTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     private val getSessionByIdUseCase: GetSessionByIdUseCase = mockk()
+    private val calculateSessionStatsUseCase: CalculateSessionStatsUseCase = mockk()
     private val sessionUiMapper: SessionUiMapper = mockk()
     private val errorMessageMapper: ErrorMessageMapper = mockk()
     private val imageSharer: SessionImageSharer = mockk()
@@ -67,12 +70,24 @@ class SessionCompletionViewModelTest {
             topSpeedFormatted = FORMATTED_TOP_SPEED,
         )
         every { sessionUiMapper.formatStartDate(any()) } returns FORMATTED_DATE
+        every { sessionUiMapper.formatElapsedTime(any()) } returns "00:00:00"
+        every { sessionUiMapper.formatAltitudeGain(any()) } returns "0"
+        every { sessionUiMapper.formatCalories(any()) } returns "0"
+        coEvery { calculateSessionStatsUseCase.calculate(any()) } returns Result.success(
+            SessionDerivedStats(
+                idleTimeMs = 0L,
+                movingTimeMs = 0L,
+                altitudeLossMeters = 0.0,
+                caloriesBurned = 0.0,
+            ),
+        )
         coEvery { errorMessageMapper.map(any()) } returns ERROR_MESSAGE
     }
 
     private fun createViewModel(): SessionCompletionViewModel {
         return SessionCompletionViewModel(
             getSessionByIdUseCase = getSessionByIdUseCase,
+            calculateSessionStatsUseCase = calculateSessionStatsUseCase,
             sessionUiMapper = sessionUiMapper,
             errorMessageMapper = errorMessageMapper,
             imageSharer = imageSharer,

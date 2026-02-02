@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.DropdownMenuItem
@@ -26,6 +27,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.KeyboardType
 import com.koflox.designsystem.theme.Spacing
 import com.koflox.settings.R
 import com.koflox.settings.domain.model.AppTheme
@@ -97,6 +99,12 @@ internal fun SettingsContent(
                 itemLabel = { it.displayName },
                 onItemSelected = { onEvent(SettingsUiEvent.LanguageSelected(it)) },
             )
+            SettingTextField(
+                label = stringResource(R.string.settings_rider_weight),
+                value = uiState.riderWeightKg,
+                onValueChange = { onEvent(SettingsUiEvent.RiderWeightChanged(it)) },
+                keyboardType = KeyboardType.Decimal,
+            )
         }
     }
 }
@@ -106,6 +114,30 @@ private fun AppTheme.displayName(): String = when (this) {
     AppTheme.LIGHT -> stringResource(R.string.settings_theme_light)
     AppTheme.DARK -> stringResource(R.string.settings_theme_dark)
     AppTheme.SYSTEM -> stringResource(R.string.settings_theme_system)
+}
+
+@Composable
+private fun SettingTextField(
+    label: String,
+    value: String,
+    onValueChange: (String) -> Unit,
+    keyboardType: KeyboardType,
+    modifier: Modifier = Modifier,
+) {
+    Column(modifier = modifier.fillMaxWidth()) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        OutlinedTextField(
+            value = value,
+            onValueChange = onValueChange,
+            keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth(),
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

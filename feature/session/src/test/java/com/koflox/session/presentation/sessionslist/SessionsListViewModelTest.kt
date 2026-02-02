@@ -3,6 +3,8 @@ package com.koflox.session.presentation.sessionslist
 import android.content.Intent
 import android.graphics.Bitmap
 import app.cash.turbine.test
+import com.koflox.session.domain.model.SessionDerivedStats
+import com.koflox.session.domain.usecase.CalculateSessionStatsUseCase
 import com.koflox.session.domain.usecase.GetAllSessionsUseCase
 import com.koflox.session.domain.usecase.GetSessionByIdUseCase
 import com.koflox.session.presentation.mapper.SessionUiMapper
@@ -43,6 +45,7 @@ class SessionsListViewModelTest {
 
     private val getAllSessionsUseCase: GetAllSessionsUseCase = mockk()
     private val getSessionByIdUseCase: GetSessionByIdUseCase = mockk()
+    private val calculateSessionStatsUseCase: CalculateSessionStatsUseCase = mockk()
     private val mapper: SessionsListUiMapper = mockk()
     private val sessionUiMapper: SessionUiMapper = mockk()
     private val imageSharer: SessionImageSharer = mockk()
@@ -63,6 +66,17 @@ class SessionsListViewModelTest {
             topSpeedFormatted = FORMATTED_TOP_SPEED,
         )
         every { sessionUiMapper.formatStartDate(any()) } returns FORMATTED_DATE
+        every { sessionUiMapper.formatElapsedTime(any()) } returns "00:00:00"
+        every { sessionUiMapper.formatAltitudeGain(any()) } returns "0"
+        every { sessionUiMapper.formatCalories(any()) } returns "0"
+        coEvery { calculateSessionStatsUseCase.calculate(any()) } returns Result.success(
+            SessionDerivedStats(
+                idleTimeMs = 0L,
+                movingTimeMs = 0L,
+                altitudeLossMeters = 0.0,
+                caloriesBurned = 0.0,
+            ),
+        )
         every { mapper.toUiModel(any()) } returns createSessionListItemUiModel(
             id = SESSION_ID,
             destinationName = DESTINATION_NAME,
@@ -77,6 +91,7 @@ class SessionsListViewModelTest {
         return SessionsListViewModel(
             getAllSessionsUseCase = getAllSessionsUseCase,
             getSessionByIdUseCase = getSessionByIdUseCase,
+            calculateSessionStatsUseCase = calculateSessionStatsUseCase,
             mapper = mapper,
             sessionUiMapper = sessionUiMapper,
             imageSharer = imageSharer,

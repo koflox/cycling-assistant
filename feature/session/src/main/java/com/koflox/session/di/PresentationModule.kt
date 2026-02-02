@@ -68,6 +68,7 @@ internal val presentationModule = module {
         SessionsListViewModel(
             getAllSessionsUseCase = get(),
             getSessionByIdUseCase = get(),
+            calculateSessionStatsUseCase = get(),
             mapper = get(),
             sessionUiMapper = get(),
             imageSharer = get(),
@@ -78,6 +79,7 @@ internal val presentationModule = module {
     viewModel {
         SessionCompletionViewModel(
             getSessionByIdUseCase = get(),
+            calculateSessionStatsUseCase = get(),
             sessionUiMapper = get(),
             errorMessageMapper = get(PresentationModuleQualifier.SessionErrorMessageMapper),
             imageSharer = get(),

@@ -3,6 +3,7 @@ package com.koflox.settings.data.source
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.doublePreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
@@ -10,6 +11,7 @@ import com.koflox.settings.domain.model.AppLanguage
 import com.koflox.settings.domain.model.AppTheme
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
@@ -25,6 +27,8 @@ internal class SettingsDataStore(
     companion object {
         private val KEY_THEME = stringPreferencesKey("theme")
         private val KEY_LANGUAGE = stringPreferencesKey("language")
+        private val KEY_RIDER_WEIGHT_KG = doublePreferencesKey("rider_weight_kg")
+        private const val DEFAULT_RIDER_WEIGHT_KG = 75f
     }
 
     override fun observeTheme(): Flow<AppTheme> = context.settingsDataStore.data
@@ -41,6 +45,10 @@ internal class SettingsDataStore(
         }
         .flowOn(dispatcherIo)
 
+    override suspend fun getRiderWeightKg(): Float = withContext(dispatcherIo) {
+        context.settingsDataStore.data.first()[KEY_RIDER_WEIGHT_KG]?.toFloat() ?: DEFAULT_RIDER_WEIGHT_KG
+    }
+
     override suspend fun setTheme(theme: AppTheme) {
         withContext(dispatcherIo) {
             context.settingsDataStore.edit { prefs ->
@@ -53,6 +61,14 @@ internal class SettingsDataStore(
         withContext(dispatcherIo) {
             context.settingsDataStore.edit { prefs ->
                 prefs[KEY_LANGUAGE] = language.code
+            }
+        }
+    }
+
+    override suspend fun setRiderWeightKg(weightKg: Double) {
+        withContext(dispatcherIo) {
+            context.settingsDataStore.edit { prefs ->
+                prefs[KEY_RIDER_WEIGHT_KG] = weightKg
             }
         }
     }

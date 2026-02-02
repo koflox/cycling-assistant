@@ -6,6 +6,7 @@ import com.koflox.settings.domain.model.AppTheme
 import com.koflox.settings.domain.usecase.ObserveSettingsUseCase
 import com.koflox.settings.domain.usecase.UpdateSettingsUseCase
 import com.koflox.testing.coroutine.MainDispatcherRule
+import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
@@ -39,6 +40,7 @@ class SettingsViewModelTest {
     private fun setupDefaultMocks() {
         every { observeSettingsUseCase.observeTheme() } returns themeFlow
         every { observeSettingsUseCase.observeLanguage() } returns languageFlow
+        coEvery { observeSettingsUseCase.getRiderWeightKg() } returns 75f
     }
 
     private fun createViewModel(): SettingsViewModel {
@@ -255,6 +257,84 @@ class SettingsViewModelTest {
             val state = awaitItem()
             assertEquals(AppTheme.entries, state.availableThemes)
         }
+    }
+
+    @Test
+    fun `initial state loads rider weight`() = runTest {
+        coEvery { observeSettingsUseCase.getRiderWeightKg() } returns 80f
+
+        viewModel = createViewModel()
+
+        viewModel.uiState.test {
+            awaitItem() // Initial state with default weight
+
+            val state = awaitItem()
+            assertEquals("80", state.riderWeightKg)
+        }
+    }
+
+    @Test
+    fun `RiderWeightChanged updates state and persists`() = runTest {
+        viewModel = createViewModel()
+
+        viewModel.uiState.test {
+            awaitItem() // Initial state
+
+            viewModel.onEvent(SettingsUiEvent.RiderWeightChanged("82.5"))
+
+            val updatedState = awaitItem()
+            assertEquals("82.5", updatedState.riderWeightKg)
+        }
+
+        coVerify { updateSettingsUseCase.updateRiderWeightKg(82.5) }
+    }
+
+    @Test
+    fun `RiderWeightChanged with invalid input updates text but does not persist`() = runTest {
+        viewModel = createViewModel()
+
+        viewModel.uiState.test {
+            awaitItem() // Initial state
+
+            viewModel.onEvent(SettingsUiEvent.RiderWeightChanged("abc"))
+
+            val updatedState = awaitItem()
+            assertEquals("abc", updatedState.riderWeightKg)
+        }
+
+        coVerify(exactly = 0) { updateSettingsUseCase.updateRiderWeightKg(any()) }
+    }
+
+    @Test
+    fun `RiderWeightChanged with value below minimum does not persist`() = runTest {
+        viewModel = createViewModel()
+
+        viewModel.uiState.test {
+            awaitItem() // Initial state
+
+            viewModel.onEvent(SettingsUiEvent.RiderWeightChanged("0.5"))
+
+            val updatedState = awaitItem()
+            assertEquals("0.5", updatedState.riderWeightKg)
+        }
+
+        coVerify(exactly = 0) { updateSettingsUseCase.updateRiderWeightKg(any()) }
+    }
+
+    @Test
+    fun `RiderWeightChanged with value above maximum does not persist`() = runTest {
+        viewModel = createViewModel()
+
+        viewModel.uiState.test {
+            awaitItem() // Initial state
+
+            viewModel.onEvent(SettingsUiEvent.RiderWeightChanged("300"))
+
+            val updatedState = awaitItem()
+            assertEquals("300", updatedState.riderWeightKg)
+        }
+
+        coVerify(exactly = 0) { updateSettingsUseCase.updateRiderWeightKg(any()) }
     }
 
     @Test

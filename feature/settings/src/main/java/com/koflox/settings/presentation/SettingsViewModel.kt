@@ -20,6 +20,11 @@ internal class SettingsViewModel(
     private val dispatcherDefault: CoroutineDispatcher,
 ) : ViewModel() {
 
+    companion object {
+        private const val MIN_WEIGHT_KG = 1.0
+        private const val MAX_WEIGHT_KG = 250.0
+    }
+
     private val _uiState = MutableStateFlow(SettingsUiState())
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
 
@@ -29,6 +34,7 @@ internal class SettingsViewModel(
 
     private fun initialize() {
         observeSettings()
+        loadRiderWeight()
     }
 
     fun onEvent(event: SettingsUiEvent) {
@@ -36,6 +42,7 @@ internal class SettingsViewModel(
             when (event) {
                 is SettingsUiEvent.ThemeSelected -> updateTheme(event.theme)
                 is SettingsUiEvent.LanguageSelected -> updateLanguage(event.language)
+                is SettingsUiEvent.RiderWeightChanged -> updateRiderWeight(event.input)
                 SettingsUiEvent.ThemeDropdownToggled -> toggleThemeDropdown()
                 SettingsUiEvent.LanguageDropdownToggled -> toggleLanguageDropdown()
                 SettingsUiEvent.DropdownsDismissed -> dismissDropdowns()
@@ -49,12 +56,32 @@ internal class SettingsViewModel(
                 observeSettingsUseCase.observeTheme(),
                 observeSettingsUseCase.observeLanguage(),
             ) { theme, language ->
-                theme to language
+                Pair(theme, language)
             }.collect { (theme, language) ->
                 _uiState.update {
-                    it.copy(selectedTheme = theme, selectedLanguage = language)
+                    it.copy(
+                        selectedTheme = theme,
+                        selectedLanguage = language,
+                    )
                 }
             }
+        }
+    }
+
+    private fun loadRiderWeight() {
+        viewModelScope.launch(dispatcherDefault) {
+            val weightKg = observeSettingsUseCase.getRiderWeightKg()
+            _uiState.update {
+                it.copy(riderWeightKg = formatWeight(weightKg))
+            }
+        }
+    }
+
+    private fun formatWeight(weightKg: Float): String {
+        return if (weightKg == weightKg.toLong().toFloat()) {
+            weightKg.toLong().toString()
+        } else {
+            weightKg.toString()
         }
     }
 
@@ -83,6 +110,14 @@ internal class SettingsViewModel(
                 isLanguageDropdownExpanded = !it.isLanguageDropdownExpanded,
                 isThemeDropdownExpanded = false,
             )
+        }
+    }
+
+    private suspend fun updateRiderWeight(input: String) {
+        _uiState.update { it.copy(riderWeightKg = input) }
+        val weightKg = input.toDoubleOrNull() ?: return
+        if (weightKg in MIN_WEIGHT_KG..MAX_WEIGHT_KG) {
+            updateSettingsUseCase.updateRiderWeightKg(weightKg)
         }
     }
 
