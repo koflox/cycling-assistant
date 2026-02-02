@@ -50,7 +50,7 @@ internal val domainModule = module {
     factory<CalculateSessionStatsUseCase> {
         CalculateSessionStatsUseCaseImpl(
             getSessionByIdUseCase = get(),
-            riderProfileProvider = get(),
+            riderProfileUseCase = get(),
         )
     }
     factory<GetAllSessionsUseCase> {

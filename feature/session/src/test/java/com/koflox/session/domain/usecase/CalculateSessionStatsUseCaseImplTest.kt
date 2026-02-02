@@ -2,7 +2,7 @@ package com.koflox.session.domain.usecase
 
 import com.koflox.session.testutil.createSession
 import com.koflox.session.testutil.createTrackPoint
-import com.koflox.settings.api.RiderProfileProvider
+import com.koflox.sessionsettings.bridge.api.RiderProfileUseCase
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
@@ -22,16 +22,16 @@ class CalculateSessionStatsUseCaseImplTest {
     }
 
     private val getSessionByIdUseCase: GetSessionByIdUseCase = mockk()
-    private val riderProfileProvider: RiderProfileProvider = mockk()
+    private val riderProfileUseCase: RiderProfileUseCase = mockk()
 
     private lateinit var useCase: CalculateSessionStatsUseCaseImpl
 
     @Before
     fun setup() {
-        coEvery { riderProfileProvider.getRiderWeightKg() } returns RIDER_WEIGHT_KG
+        coEvery { riderProfileUseCase.getRiderWeightKg() } returns RIDER_WEIGHT_KG
         useCase = CalculateSessionStatsUseCaseImpl(
             getSessionByIdUseCase = getSessionByIdUseCase,
-            riderProfileProvider = riderProfileProvider,
+            riderProfileUseCase = riderProfileUseCase,
         )
     }
 
@@ -251,7 +251,7 @@ class CalculateSessionStatsUseCaseImplTest {
 
     @Test
     fun `calories is null when rider weight is not set`() = runTest {
-        coEvery { riderProfileProvider.getRiderWeightKg() } returns null
+        coEvery { riderProfileUseCase.getRiderWeightKg() } returns null
         val movingTimeMs = 3_600_000L
         val trackPoints = listOf(
             createTrackPoint(timestampMs = 0L, speedKmh = 10.0),

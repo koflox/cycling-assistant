@@ -73,7 +73,7 @@ dependencies {
     implementation(project(":shared:location"))
 
     // Feature modules
-    implementation(project(":feature:settings")) // TODO: follow the bridge convention
+    implementation(project(":feature:session-settings:bridge:api"))
 
     // Testing
     testImplementation(libs.junit)

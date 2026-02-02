@@ -2,7 +2,7 @@ package com.koflox.session.domain.usecase
 
 import com.koflox.session.domain.model.SessionDerivedStats
 import com.koflox.session.domain.model.TrackPoint
-import com.koflox.settings.api.RiderProfileProvider
+import com.koflox.sessionsettings.bridge.api.RiderProfileUseCase
 
 interface CalculateSessionStatsUseCase {
     suspend fun calculate(sessionId: String): Result<SessionDerivedStats>
@@ -10,7 +10,7 @@ interface CalculateSessionStatsUseCase {
 
 internal class CalculateSessionStatsUseCaseImpl(
     private val getSessionByIdUseCase: GetSessionByIdUseCase,
-    private val riderProfileProvider: RiderProfileProvider,
+    private val riderProfileUseCase: RiderProfileUseCase,
 ) : CalculateSessionStatsUseCase {
 
     companion object {
@@ -31,7 +31,7 @@ internal class CalculateSessionStatsUseCaseImpl(
      */
     override suspend fun calculate(sessionId: String): Result<SessionDerivedStats> {
         return getSessionByIdUseCase.getSession(sessionId).map { session ->
-            val riderWeightKg = riderProfileProvider.getRiderWeightKg()?.toDouble()
+            val riderWeightKg = riderProfileUseCase.getRiderWeightKg()?.toDouble()
             val movingTimeMs = calculateMovingTimeMs(session.trackPoints, session.elapsedTimeMs)
             val idleTimeMs = (session.elapsedTimeMs - movingTimeMs).coerceAtLeast(0L)
             val altitudeLossMeters = calculateAltitudeLoss(session.trackPoints)
