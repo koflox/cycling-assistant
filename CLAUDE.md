@@ -33,7 +33,7 @@ CyclingAssistant/
 │       ├── bridge/api/               # Interfaces exposed to destinations
 │       └── bridge/impl/              # Implementations using session internals
 └── shared/
-    ├── concurrent/                   # Coroutine dispatchers
+    ├── concurrent/                   # Coroutine dispatchers, suspendRunCatching
     ├── design-system/                # UI theme, colors, spacing, components
     ├── di/                           # Koin qualifiers
     ├── distance/                     # Distance calculator
@@ -68,7 +68,9 @@ DataSource
 
 - Upper layers depend on lower layers, never the reverse
 - `presentation` → `domain` → `data` (domain has no Android dependencies)
-- UseCase and DataSource follow Interface + Impl pattern (see Code Conventions)
+- UseCase, DataSource, Mapper, and Repository follow Interface + Impl pattern
+- UseCase interface and Impl are colocated in the same file; related custom exceptions live there
+  too
 - ViewModel never accesses Repository or DataSource directly — always through UseCase
 - DataSource never accesses UseCase or ViewModel
 
@@ -88,15 +90,22 @@ feature:destinations ──depends on──> feature:destination-session:bridge:
 feature:session <──depends on── feature:destination-session:bridge:impl
 ```
 
-**Bridge API** (`feature/destination-session/bridge/api/`):
-```kotlin
-interface CyclingSessionUseCase {
-    fun observeHasActiveSession(): Flow<Boolean>
-    suspend fun getActiveSessionDestination(): ActiveSessionDestination?
-}
+When feature A needs to display UI from feature B, use callback-based bridge interfaces (no
+`NavController` in bridge APIs):
 
-data class ActiveSessionDestination(val id: String)
+```kotlin
+// Bridge API - uses callbacks, not NavController
+interface CyclingSessionUiNavigator {
+    @Composable
+    fun SessionScreen(
+        destinationLocation: Location,
+        modifier: Modifier,
+        onNavigateToCompletion: (sessionId: String) -> Unit,
+    )
+}
 ```
+
+Bridge interface composables use `<Name>Screen` naming; feature implementations use `<Name>Route`.
 
 ### Feature: Destinations
 
@@ -146,110 +155,6 @@ SessionTrackingService (foreground, type=location)
     └── Handles notification actions
 ```
 
-### Shared Modules
-
-| Module          | Purpose                                                |
-|-----------------|--------------------------------------------------------|
-| `concurrent`    | `DispatchersQualifier.{Io, Main, Default, Unconfined}` |
-| `design-system` | Theme, colors, spacing constants, reusable components  |
-| `distance`      | `DistanceCalculator` for haversine distance            |
-| `error`         | `ErrorMapper` interface for error handling             |
-| `graphics`      | `createCircleBitmap()` for map markers                 |
-| `id`            | `IdGenerator` for unique IDs                           |
-| `location`      | `LocationDataSource` via Play Services                 |
-
-### Design System (`shared/design-system`)
-
-Centralized UI theming and components for consistent styling across the app.
-
-**Structure:**
-
-```
-shared/design-system/
-├── component/
-│   └── FloatingMenuButton.kt    # Reusable floating action button
-└── theme/
-    ├── Color.kt                 # Color palette (light/dark schemes)
-    ├── Spacing.kt               # Spacing, elevation, corner radius constants
-    └── Theme.kt                 # Color schemes, LocalDarkTheme
-```
-
-**Spacing Constants (`Spacing`):**
-
-| Constant     | Value | Usage                                         |
-|--------------|-------|-----------------------------------------------|
-| `Tiny`       | 4.dp  | Fine spacing between closely related elements |
-| `Small`      | 8.dp  | Button gaps, minor padding                    |
-| `Medium`     | 12.dp | Internal card/component padding               |
-| `Large`      | 16.dp | Screen edges, cards, containers               |
-| `ExtraLarge` | 24.dp | Horizontal dividers, stat item gaps           |
-| `Huge`       | 32.dp | Empty/loading states                          |
-
-**Elevation Constants (`Elevation`):**
-
-| Constant    | Value | Usage              |
-|-------------|-------|--------------------|
-| `Subtle`    | 2.dp  | List items         |
-| `Prominent` | 4.dp  | Cards and overlays |
-
-**Corner Radius (`CornerRadius`):**
-
-| Constant | Value | Usage               |
-|----------|-------|---------------------|
-| `Small`  | 8.dp  | Info windows, chips |
-| `Medium` | 12.dp | Buttons, cards      |
-
-**Surface Alpha (`SurfaceAlpha`):**
-
-| Constant   | Value | Usage                      |
-|------------|-------|----------------------------|
-| `Light`    | 0.9f  | Light overlay transparency |
-| `Standard` | 0.95f | Standard overlay           |
-
-**Theme Integration:**
-
-- `LocalDarkTheme`: CompositionLocal providing current dark theme state
-- `CyclingLightColorScheme` / `CyclingDarkColorScheme`: Material 3 color schemes
-- Access via `LocalDarkTheme.current` in any composable
-
-**Usage Example:**
-
-```kotlin
-import com.koflox.designsystem.theme.Spacing
-import com.koflox.designsystem.theme.Elevation
-import com.koflox.designsystem.theme.LocalDarkTheme
-
-Card(
-    modifier = Modifier.padding(Spacing.Large),
-    elevation = CardDefaults.cardElevation(defaultElevation = Elevation.Prominent),
-) {
-    val isDark = LocalDarkTheme.current
-    // ...
-}
-```
-
-### DI Hierarchy (Koin)
-
-```
-appModule
-├── bridgeImplModule      # CyclingSessionUseCase implementation
-├── concurrentModule      # Dispatchers
-├── databaseModule        # Room DB, DAOs
-├── destinationsModule    # Destination feature
-├── distanceModule        # DistanceCalculator
-├── errorMapperModule     # Error handling
-├── idModule              # ID generation
-├── locationModule        # Location services
-├── sessionModule         # Session feature
-│   ├── domainModule
-│   ├── presentationModule
-│   ├── serviceModule
-│   └── dataModules
-└── settingsModule        # Settings feature (theme, language)
-    ├── dataModule
-    └── presentationModule
-```
-
 ### Database
 
 Centralized Room database in app module (`AppDatabase`):
@@ -257,62 +162,13 @@ Centralized Room database in app module (`AppDatabase`):
 - `DestinationDao` - Cycling POI data
 - `SessionDao` - Session and track points
 
+**DAO conventions:** `@Dao` interfaces with suspend functions for one-shot operations and `Flow`
+for observable queries. Default conflict strategy: `OnConflictStrategy.REPLACE`.
+
 ### State Management (MVVM)
 
-ViewModels follow conventions where all work runs on background dispatcher, UI state uses
-sealed interfaces for explicit state representation, and navigation is separated into a dedicated
-Channel for one-time events.
-
-**Two-Flow Pattern:**
-
-```kotlin
-// ViewModel exposes two flows:
-// 1. StateFlow<UiState> - persistent UI state
-// 2. Flow<Navigation> - one-time navigation events (via Channel)
-
-private val _uiState = MutableStateFlow<FeatureUiState>(FeatureUiState.Loading)
-val uiState: StateFlow<FeatureUiState> = _uiState.asStateFlow()
-
-private val _navigation = Channel<FeatureNavigation>()
-val navigation = _navigation.receiveAsFlow()
-```
-
-**UiState Convention (Sealed Interface):**
-
-```kotlin
-// FeatureUiState.kt - explicit states with no meaningless defaults
-internal sealed interface FeatureUiState {
-    data object Loading : FeatureUiState
-
-    data class Content(
-        val data: DataType,
-        val overlay: Overlay? = null,  // For dialogs, toasts, etc.
-    ) : FeatureUiState
-
-    data class Error(val message: String) : FeatureUiState
-}
-
-// Overlay states for Content (dialogs, sharing, etc.)
-internal sealed interface Overlay {
-    data object Dialog : Overlay
-    data object Processing : Overlay
-    data class Ready(val result: ResultType) : Overlay
-    data class Error(val message: String) : Overlay
-}
-```
-
-**Navigation Convention (Sealed Interface + Channel):**
-
-```kotlin
-// FeatureNavigation.kt - one-time navigation events
-internal sealed interface FeatureNavigation {
-    data object ToDashboard : FeatureNavigation
-    data class ToDetails(val id: String) : FeatureNavigation
-}
-
-// In ViewModel - emit navigation event (consumed once, no reset needed)
-_navigation.send(FeatureNavigation.ToDashboard)
-```
+ViewModels expose two flows: `StateFlow<UiState>` for persistent UI state and
+`Flow<Navigation>` via Channel for one-time navigation events.
 
 **ViewModel Structure:**
 
@@ -328,14 +184,10 @@ internal class FeatureViewModel(
     private val _navigation = Channel<FeatureNavigation>()
     val navigation = _navigation.receiveAsFlow()
 
-    init {
-        initialize()
-    }
+    init { initialize() }
 
     private fun initialize() {
-        viewModelScope.launch(dispatcherDefault) {
-            loadData()
-        }
+        viewModelScope.launch(dispatcherDefault) { loadData() }
     }
 
     fun onEvent(event: FeatureUiEvent) {
@@ -344,20 +196,6 @@ internal class FeatureViewModel(
                 is FeatureUiEvent.Action -> handleAction()
             }
         }
-    }
-
-    private suspend fun loadData() {
-        useCase.getData()
-            .onSuccess { data ->
-                _uiState.value = FeatureUiState.Content(data = data)
-            }
-            .onFailure { error ->
-                _uiState.value = FeatureUiState.Error(message = error.message)
-            }
-    }
-
-    private suspend fun navigateToDashboard() {
-        _navigation.send(FeatureNavigation.ToDashboard)
     }
 
     private inline fun updateContent(transform: (FeatureUiState.Content) -> FeatureUiState.Content) {
@@ -369,6 +207,24 @@ internal class FeatureViewModel(
 }
 ```
 
+**UiState** — sealed interface with explicit states, no meaningless defaults:
+
+```kotlin
+internal sealed interface FeatureUiState {
+    data object Loading : FeatureUiState
+    data class Content(val data: DataType, val overlay: Overlay? = null) : FeatureUiState
+    data class Error(val message: String) : FeatureUiState
+}
+
+internal sealed interface Overlay { /* Dialog, Processing, Ready, Error variants */ }
+```
+
+**UiEvent** — sealed interface, one per feature. `data object` for parameterless events,
+`data class` for parameterized. Handler methods are private.
+
+**Navigation** — sealed interface, emitted via `_navigation.send(...)`, collected in Route with
+`LaunchedEffect(Unit)`.
+
 **Screen Pattern:**
 
 ```kotlin
@@ -378,143 +234,122 @@ internal fun FeatureRoute(
     viewModel: FeatureViewModel = koinViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
-
-    // Collect navigation events (one-time, auto-consumed)
     LaunchedEffect(Unit) {
         viewModel.navigation.collect { event ->
             when (event) {
                 FeatureNavigation.ToDashboard -> onNavigateToDashboard()
-                is FeatureNavigation.ToDetails -> { /* ... */ }
             }
         }
     }
-
     FeatureContent(uiState = uiState, onEvent = viewModel::onEvent)
-}
-
-@Composable
-private fun FeatureBody(uiState: FeatureUiState) {
-    when (uiState) {
-        FeatureUiState.Loading -> {
-            CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-        }
-        is FeatureUiState.Error -> {
-            Text(text = uiState.message, modifier = Modifier.align(Alignment.Center))
-        }
-        is FeatureUiState.Content -> {
-            ContentView(data = uiState.data)
-        }
-    }
 }
 ```
 
 **Key Rules:**
 
-- **Two flows:** `StateFlow<UiState>` for persistent state, `Channel<Navigation>` for one-time
-  events
-- Use sealed interface for UiState with explicit states (`Loading`, `Content`, `Error`)
-- Use sealed interface for Navigation events (consumed once, no reset needed)
-- Each state contains only relevant data - no meaningless defaults
 - Use `Overlay` sealed interface for dialogs/toasts within `Content` state
-- Inject `dispatcherDefault: CoroutineDispatcher` via DI (`DispatchersQualifier.Default`)
+- Inject `dispatcherDefault` via DI (`DispatchersQualifier.Default`)
 - `init` calls `initialize()` which uses `launch(dispatcherDefault)`
 - `onEvent` always wraps handling in `launch(dispatcherDefault)`
 - Use `updateContent` helper for partial updates within Content state
-- Screen collects navigation with `LaunchedEffect(Unit)` for lifecycle-aware collection
 
-**Reference Implementation:** `SessionCompletionViewModel`, `SessionCompletionUiState`,
+**Reference:** `SessionCompletionViewModel`, `SessionCompletionUiState`,
 `SessionCompletionNavigation`
-
-### ViewModel Event Pattern
-
-ViewModels expose a single `onEvent(event: UiEvent)` method instead of multiple public methods.
-This ensures consistent API and clear separation between UI actions and ViewModel logic.
-
-**Structure:**
-
-```kotlin
-// FeatureUiEvent.kt - sealed interface for all UI events
-sealed interface FeatureUiEvent {
-    data object ButtonClicked : FeatureUiEvent
-    data class ItemSelected(val id: String) : FeatureUiEvent
-    data object DialogDismissed : FeatureUiEvent
-}
-
-// FeatureViewModel.kt - single entry point for events
-internal class FeatureViewModel(
-    private val dispatcherDefault: CoroutineDispatcher,
-) : ViewModel() {
-
-    fun onEvent(event: FeatureUiEvent) {
-        viewModelScope.launch(dispatcherDefault) {
-            when (event) {
-                FeatureUiEvent.ButtonClicked -> handleButtonClick()
-                is FeatureUiEvent.ItemSelected -> handleItemSelected(event.id)
-                FeatureUiEvent.DialogDismissed -> dismissDialog()
-            }
-        }
-    }
-
-    private suspend fun handleButtonClick() { /* ... */ }
-    private suspend fun handleItemSelected(id: String) { /* ... */ }
-    private fun dismissDialog() { updateContent { it.copy(overlay = null) } }
-}
-
-// FeatureScreen.kt - usage in Composable
-Button(onClick = { viewModel.onEvent(FeatureUiEvent.ButtonClicked) })
-```
-
-**Rules:**
-
-- One `UiEvent` sealed interface per screen/feature
-- Use `data object` for events without parameters
-- Use `data class` for events with parameters
-- Keep event handler methods private in ViewModel
-- `onEvent` always launches with `dispatcherDefault`
 
 ## Code Conventions
 
 - **Detekt**: Zero issues tolerance, auto-correct enabled
-- **Use Cases**: Interface + Impl pattern, registered as `factory`
-- **Data Sources**: Interface + Impl pattern, registered as `single`
-- **Dispatchers**: Inject via `DispatchersQualifier`, never hardcode
-- **Boolean Props**: Prefix with `is`, `has`, `are`
 - **Trailing Commas**: Required on declarations
 - **Max Line Length**: 150 characters
 - **Companion Object**: Place at the top of the class body
+- **Boolean Props**: Prefix with `is`, `has`, `are`
+- **Dispatchers**: Inject via `DispatchersQualifier`, never hardcode
+
+### Interface + Impl Pattern
+
+UseCases, DataSources, Mappers, and Repositories all follow the Interface + Impl pattern.
+UseCase interface and `Impl` are colocated in the same file along with related custom exceptions.
+Mapper and DataSource interfaces may use separate files for interface and impl.
+
+### Error Handling
+
+Use `suspendRunCatching` (from `shared/concurrent`) instead of `runCatching` in coroutine contexts.
+It rethrows `CancellationException` to preserve structured concurrency. Used consistently in
+repositories and use cases.
+
+Repository suspend functions return `Result<T>`. Observable functions return `Flow<T>` (no `Result`
+wrapping for flows).
+
+### Dispatcher Usage by Layer
+
+| Layer      | Dispatcher          |
+|------------|---------------------|
+| ViewModel  | `dispatcherDefault` |
+| Mapper     | `dispatcherDefault` |
+| Repository | delegates (or `dispatcherDefault`) |
+| DataSource | `dispatcherIo`      |
+
+### Visibility Modifiers
+
+| Element                        | Visibility |
+|--------------------------------|------------|
+| Domain use case interfaces     | `public` if cross-module, `internal` if module-local |
+| Domain repository interfaces   | `public`   |
+| Data layer interfaces (DataSource, Mapper) | `internal` |
+| All `*Impl` classes            | `internal` |
+| All ViewModels                 | `internal` |
+| Top-level feature Koin modules | `public`   |
+| Sub-module Koin modules (`domainModule`, `presentationModule`) | `internal` |
+| Private DI sub-modules (`dataModule`, `dataSourceModule`, `repoModule`) | `private` |
+
+### DI (Koin)
+
+**Registration conventions:**
+
+| Type       | Scope     |
+|------------|-----------|
+| UseCase    | `factory` |
+| DataSource | `single`  |
+| Mapper     | `single`  |
+| Repository | `single`  |
+| ViewModel  | `viewModel { }` |
+
+**Feature DI file organization:**
+
+- `DataModule.kt` — `private val dataModule`, `private val dataSourceModule`,
+  `private val repoModule`, exported as `internal val dataModules: List<Module>`
+- `DomainModule.kt` — `internal val domainModule`
+- `PresentationModule.kt` — `internal val presentationModule`
+- `<Feature>Module.kt` — public aggregator: `val featureModule = module { includes(...) }`
+
+### Design System
+
+Use constants from `shared/design-system/theme/Spacing.kt`: `Spacing.*`, `Elevation.*`,
+`CornerRadius.*`, `SurfaceAlpha.*`. Theme state via `LocalDarkTheme.current`. Color schemes:
+`CyclingLightColorScheme` / `CyclingDarkColorScheme` (Material 3).
 
 ### Composable Conventions
 
-**Structure:**
-
-| Layer          | Naming Pattern  | Visibility | ViewModel        | Example                    |
-|----------------|-----------------|------------|------------------|----------------------------|
-| Entry point    | `<Name>Route`   | internal   | Obtained via DI  | `SessionCompletionRoute`   |
-| Screen content | `<Name>Content` | private    | Passed as params | `SessionCompletionContent` |
+| Layer          | Naming Pattern  | Visibility | ViewModel        |
+|----------------|-----------------|------------|------------------|
+| Entry point    | `<Name>Route`   | internal   | Obtained via DI  |
+| Screen content | `<Name>Content` | private    | Passed as params |
 
 **Rules:**
 
-- ViewModels are always marked `internal` since they're obtained within Route composables
 - Only expose publicly required params (e.g., `onBackClick`, `onNavigateTo...`)
 - Content-level composables should have previews for all their states
 - No blank lines between composable body elements
 
-**Navigation:**
+### Navigation
 
-Navigation follows a callback-based pattern where composables are navigation-agnostic. Only
-`AppNavHost` knows about `NavController`.
+Callback-based pattern — composables are navigation-agnostic. Only `AppNavHost` knows about
+`NavController`. Never pass `NavController` to composables.
 
-**Rules:**
-
-- Never pass `NavController` to composables - use lambda callbacks instead
-- Feature modules expose `NavGraphBuilder` extension functions with callback parameters
-- Each screen gets its own extension function (one function per composable route)
-- Route constants are defined in feature navigation files and used directly in `AppNavHost`
-
-**Feature navigation structure:**
+Feature modules expose `NavGraphBuilder` extension functions with callback parameters. Route
+constants are defined in feature navigation files.
 
 ```kotlin
-// In feature/session/navigation/SessionsNavigation.kt
 const val SESSIONS_LIST_ROUTE = "sessions_list"
 
 fun NavGraphBuilder.sessionsListScreen(
@@ -522,82 +357,30 @@ fun NavGraphBuilder.sessionsListScreen(
     onSessionClick: (sessionId: String) -> Unit,
 ) {
     composable(route = SESSIONS_LIST_ROUTE) {
-        SessionsListRoute(
-            onBackClick = onBackClick,
-            onSessionClick = onSessionClick,
-        )
+        SessionsListRoute(onBackClick = onBackClick, onSessionClick = onSessionClick)
     }
 }
 ```
 
-**AppNavHost wiring:**
+### String Resource Naming
 
-```kotlin
-// In app/navigation/AppNavHost.kt
-NavHost(navController = navController, startDestination = DASHBOARD_ROUTE) {
-    dashboardScreen(
-        onNavigateToSessionsList = { navController.navigate(SESSIONS_LIST_ROUTE) },
-        onNavigateToSessionCompletion = { sessionId ->
-            navController.navigate(sessionCompletionRoute(sessionId))
-        },
-    )
-    sessionsListScreen(
-        onBackClick = { navController.popBackStack() },
-        onSessionClick = { sessionId ->
-            navController.navigate(sessionCompletionRoute(sessionId))
-        },
-    )
-}
-```
+Follow `feature_component_description` pattern: `session_stat_*`, `session_button_*`,
+`notification_*`, `dialog_*`, `permission_*`, `error_*`, `share_*`.
 
-**Bridge Pattern (for cross-feature UI):**
+### Build Conventions
 
-When feature A needs to display UI from feature B without direct dependency, use callback-based
-bridge interfaces (no `NavController` in bridge APIs):
-
-| Location               | Naming Pattern | Example         |
-|------------------------|----------------|-----------------|
-| Bridge interface       | `<Name>Screen` | `SessionScreen` |
-| Feature implementation | `<Name>Route`  | `SessionRoute`  |
-
-```kotlin
-// Bridge API - uses callbacks, not NavController
-interface CyclingSessionUiNavigator {
-    @Composable
-    fun SessionScreen(
-        destinationLocation: Location,
-        modifier: Modifier,
-        onNavigateToCompletion: (sessionId: String) -> Unit,
-    )
-}
-
-// Bridge implementation delegates to feature's internal Route
-override fun SessionScreen(
-    destinationLocation: Location,
-    modifier: Modifier,
-    onNavigateToCompletion: (sessionId: String) -> Unit,
-) {
-    SessionScreenRoute(
-        onNavigateToCompletion = onNavigateToCompletion,
-        modifier = modifier,
-    )
-}
-```
+- All plugins use version catalog aliases: `alias(libs.plugins.*)`
+- Root `build.gradle.kts` sets shared Android config via `subprojects {}` (compileSdk, minSdk,
+  Java 11, JVM target) — feature modules do NOT repeat these, only set `namespace`
+- Modules in `settings.gradle.kts` are alphabetically sorted
 
 ## Unit Testing
 
 ### Test Structure
 
-Tests are located in `src/test/java` within each module. Test file naming follows the pattern
-`<ClassName>Test.kt`.
+Tests in `src/test/java` per module. Naming: `<ClassName>Test.kt`.
 
-**Test Dependencies:**
-
-- JUnit 4 - Test framework
-- MockK - Mocking library
-- Turbine - Flow testing
-- kotlinx-coroutines-test - Coroutine testing
-- `shared:testing` - Common test utilities
+**Dependencies:** JUnit 4, MockK, Turbine, kotlinx-coroutines-test, `shared:testing`
 
 ### ViewModel Test Pattern
 
@@ -617,108 +400,38 @@ class FeatureViewModelTest {
     private lateinit var viewModel: FeatureViewModel
 
     @Before
-    fun setup() {
-        setupDefaultMocks()
-    }
+    fun setup() { setupDefaultMocks() }
 
     private fun setupDefaultMocks() {
         coEvery { errorMapper.map(any()) } returns ERROR_MESSAGE
     }
 
-    private fun createViewModel(): FeatureViewModel {
-        return FeatureViewModel(
-            useCase = useCase,
-            errorMapper = errorMapper,
-            dispatcherDefault = mainDispatcherRule.testDispatcher,
-        )
-    }
+    private fun createViewModel() = FeatureViewModel(
+        useCase = useCase,
+        errorMapper = errorMapper,
+        dispatcherDefault = mainDispatcherRule.testDispatcher,
+    )
 
     @Test
     fun `initial state is Loading`() = runTest {
         coEvery { useCase.getData() } returns Result.success(createData())
-
         viewModel = createViewModel()
-
         viewModel.uiState.test {
             assertTrue(awaitItem() is FeatureUiState.Loading)
             cancelAndIgnoreRemainingEvents()
         }
     }
-
-    private fun createData() = Data(id = TEST_ID)
 }
 ```
 
 ### Testing Conventions
 
-**Structure:**
-
-- Use `companion object` for test constants at the top
-- Use `@get:Rule` for `MainDispatcherRule` (replaces Main dispatcher)
-- Declare mocks as class properties
-- Use `@Before` for common mock setup
-- Create `createViewModel()` factory method for consistent initialization
-- No region comments or unnecessary comments between methods - test names should be self-documenting
-
-**Flow Testing with Turbine:**
-
-```kotlin
-@Test
-fun `loads data and shows Content state`() = runTest {
-    val data = createData()
-    coEvery { useCase.getData() } returns Result.success(data)
-
-    viewModel = createViewModel()
-
-    viewModel.uiState.test {
-        awaitItem() // Loading
-        val content = awaitItem() as FeatureUiState.Content
-        assertEquals(data, content.data)
-    }
-}
-```
-
-**Navigation Channel Testing:**
-
-```kotlin
-@Test
-fun `navigates to dashboard on action`() = runTest {
-    coEvery { useCase.getData() } returns Result.success(createData())
-
-    viewModel = createViewModel()
-
-    viewModel.navigation.test {
-        viewModel.onEvent(FeatureUiEvent.ActionClicked)
-        assertEquals(FeatureNavigation.ToDashboard, awaitItem())
-    }
-}
-```
-
-**Testing State Transitions:**
-
-```kotlin
-@Test
-fun `ShareClicked shows share dialog`() = runTest {
-    coEvery { useCase.getData() } returns Result.success(createData())
-
-    viewModel = createViewModel()
-
-    viewModel.uiState.test {
-        awaitItem() // Loading
-        awaitItem() // Content
-
-        viewModel.onEvent(FeatureUiEvent.ShareClicked)
-
-        val updatedContent = awaitItem() as FeatureUiState.Content
-        assertEquals(Overlay.ShareDialog, updatedContent.overlay)
-    }
-}
-```
-
-**Test Naming:**
-
-- Use backticks with descriptive names: `` `loads data and shows Content state` ``
-- Format: `<action/condition> <expected result>`
+- `companion object` for test constants at the top
+- `@get:Rule` for `MainDispatcherRule`
+- Mocks as class properties, `@Before` for common mock setup
+- `createViewModel()` factory method for consistent initialization
+- No region comments — test names should be self-documenting
+- Backtick names: `` `action/condition expected result` ``
 
 **Common Patterns:**
 
@@ -729,139 +442,36 @@ fun `ShareClicked shows share dialog`() = runTest {
 | `coVerify { ... }`                 | Verify suspend function calls              |
 | `slot<T>()`                        | Capture arguments for verification         |
 | `awaitItem()`                      | Wait for next Flow emission (Turbine)      |
-| `expectNoEvents()`                 | Assert no more emissions (Turbine)         |
 | `cancelAndIgnoreRemainingEvents()` | End test without consuming remaining items |
 
 ### Test Factory Functions
-
-Factory functions for creating test objects are organized by sharing scope:
-
-**Location Options:**
 
 | Scope        | Location                                | Consumed via                            |
 |--------------|-----------------------------------------|-----------------------------------------|
 | Cross-module | `src/testFixtures/kotlin/.../testutil/` | `testImplementation(testFixtures(...))` |
 | Module-local | `src/test/java/.../testutil/`           | Direct import                           |
 
-**Test Fixtures (Cross-Module Sharing):**
-
-Use Android's test fixtures feature when factories need to be shared across modules:
-
-```kotlin
-// In feature/session/build.gradle.kts
-android {
-    testFixtures {
-        enable = true
-    }
-}
-
-dependencies {
-    // Dependencies needed by testFixtures code
-    testFixturesImplementation(platform(libs.androidx.compose.bom))
-    testFixturesImplementation(libs.androidx.ui)
-}
-
-// In consuming module's build.gradle.kts
-dependencies {
-    testImplementation(testFixtures(project(":feature:session")))
-}
-```
-
-```
-feature/session/
-├── src/main/
-├── src/test/                    # Module's own tests (can access testFixtures)
-└── src/testFixtures/kotlin/     # Shared test utilities
-    └── com/koflox/session/testutil/
-        └── SessionTestFactories.kt
-```
-
-**Convention:**
-
-- All parameters have empty/zero defaults (empty strings, `0`, `0.0`, `emptyList()`, etc.)
-- For test specific values, tests must pass explicit values using constants defined in
-  `companion object`
-- No inline magic values - use constants like `SESSION_ID`, `DESTINATION_NAME`, etc.
-
-**Example Factory:**
-
-```kotlin
-// In testutil/SessionTestFactories.kt
-fun createSession(
-    id: String = "",
-    destinationId: String = "",
-    destinationName: String = "",
-    status: SessionStatus = SessionStatus.RUNNING,
-    elapsedTimeMs: Long = 0L,
-    traveledDistanceKm: Double = 0.0,
-    trackPoints: List<TrackPoint> = emptyList(),
-) = Session(
-    id = id,
-    destinationId = destinationId,
-    destinationName = destinationName,
-    status = status,
-    elapsedTimeMs = elapsedTimeMs,
-    traveledDistanceKm = traveledDistanceKm,
-    trackPoints = trackPoints,
-)
-```
-
-**Usage in Tests:**
-
-```kotlin
-class SessionViewModelTest {
-
-    companion object {
-        private const val SESSION_ID = "session-123"
-        private const val DESTINATION_NAME = "Test Destination"
-    }
-
-    @Test
-    fun `loads session and shows Content state`() = runTest {
-        // Pass explicit values using constants - no magic values
-        val session = createSession(
-            id = SESSION_ID,
-            destinationName = DESTINATION_NAME,
-            status = SessionStatus.COMPLETED,
-        )
-        coEvery { useCase.getSession(SESSION_ID) } returns Result.success(session)
-
-        // ...
-    }
-}
-```
-
 **Rules:**
 
-- Factory functions use empty/zero defaults to avoid hidden assumptions
-- Tests explicitly pass only the values they care about
-- Constants are defined in test class `companion object`
-- Use `testFixtures` when factories are needed by other modules
-- Use `src/test/.../testutil/` when factories are module-local only
+- All parameters have empty/zero defaults (empty strings, `0`, `0.0`, `emptyList()`, etc.)
+- Tests pass explicit values using constants from `companion object` — no inline magic values
+- Use `testFixtures` for cross-module sharing (enable in `build.gradle.kts` with
+  `android { testFixtures { enable = true } }`)
 
-**Reference Implementations:**
-
-- `feature/session/src/testFixtures/kotlin/com/koflox/session/testutil/SessionTestFactories.kt`
-- `feature/destinations/src/test/java/com/koflox/destinations/testutil/DestinationTestFactories.kt`
-
-**Reference Implementation:** `SessionCompletionViewModelTest`
+**Reference:** `SessionTestFactories.kt`, `DestinationTestFactories.kt`,
+`SessionCompletionViewModelTest`
 
 ## Localization
 
-The app supports multiple languages: English (default), Russian (`values-ru`), and
-Japanese (`values-ja`).
+Supported languages: English (default), Russian (`values-ru`), Japanese (`values-ja`).
 
-**Rules:**
-
-- All user-facing strings must be defined in `res/values/strings.xml`, never hardcoded
-- When adding or modifying a string resource, always add translations to all supported locales
-- String resource files per module: `src/main/res/values/strings.xml`,
-  `src/main/res/values-ru/strings.xml`, `src/main/res/values-ja/strings.xml`
+- All user-facing strings in `res/values/strings.xml`, never hardcoded
+- Always add translations to all supported locales when adding/modifying strings
 
 ## Adding New Features
 
 1. Create module under `feature/<name>/` with di/, domain/, data/, presentation/
-2. Add to `settings.gradle.kts`
+2. Add to `settings.gradle.kts` (alphabetically sorted)
 3. Export DI module and include in `app/Modules.kt`
 4. Add navigation in `AppNavHost.kt`
 
@@ -873,23 +483,16 @@ Japanese (`values-ja`).
 
 ## Key Files
 
-| Path                                                                      | Purpose                       |
-|---------------------------------------------------------------------------|-------------------------------|
-| `app/navigation/AppNavHost.kt`                                            | Central navigation wiring     |
-| `app/Modules.kt`                                                          | Root DI configuration         |
-| `app/data/AppDatabase.kt`                                                 | Room database                 |
-| `app/ui/theme/Theme.kt`                                                   | App theme with LocalDarkTheme |
-| `feature/destinations/di/DestinationsModule.kt`                           | Destinations DI               |
-| `feature/session/di/SessionModule.kt`                                     | Session DI                    |
-| `feature/session/navigation/SessionsNavigation.kt`                        | Session routes & functions    |
-| `feature/session/service/SessionTrackingService.kt`                       | Foreground service            |
-| `feature/settings/di/SettingsModule.kt`                                   | Settings DI                   |
-| `feature/settings/api/ThemeProvider.kt`                                   | Theme observation interface   |
-| `feature/destination-session/bridge/api/.../CyclingSessionUseCase.kt`     | Bridge data interface         |
-| `feature/destination-session/bridge/api/.../CyclingSessionUiNavigator.kt` | Bridge UI interface           |
-| `shared/design-system/theme/Color.kt`                                     | Color palette definitions     |
-| `shared/design-system/theme/Spacing.kt`                                   | Spacing & dimension constants |
-| `shared/design-system/theme/Theme.kt`                                     | Color schemes, LocalDarkTheme |
+| Path                                                                      | Purpose                   |
+|---------------------------------------------------------------------------|---------------------------|
+| `app/navigation/AppNavHost.kt`                                            | Central navigation wiring |
+| `app/Modules.kt`                                                          | Root DI configuration     |
+| `app/data/AppDatabase.kt`                                                 | Room database             |
+| `feature/session/service/SessionTrackingService.kt`                       | Foreground service        |
+| `feature/settings/api/ThemeProvider.kt`                                   | Theme observation         |
+| `feature/destination-session/bridge/api/.../CyclingSessionUseCase.kt`     | Bridge data interface     |
+| `feature/destination-session/bridge/api/.../CyclingSessionUiNavigator.kt` | Bridge UI interface       |
+| `shared/concurrent/.../SuspendRunCatching.kt`                             | Coroutine-safe runCatching |
 
 ## API Keys
 
