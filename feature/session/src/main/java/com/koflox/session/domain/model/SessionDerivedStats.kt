@@ -4,5 +4,5 @@ data class SessionDerivedStats(
     val idleTimeMs: Long,
     val movingTimeMs: Long,
     val altitudeLossMeters: Double,
-    val caloriesBurned: Double,
+    val caloriesBurned: Double?,
 )

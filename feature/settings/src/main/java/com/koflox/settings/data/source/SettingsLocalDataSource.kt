@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.Flow
 internal interface SettingsLocalDataSource {
     fun observeTheme(): Flow<AppTheme>
     fun observeLanguage(): Flow<AppLanguage>
-    suspend fun getRiderWeightKg(): Float
+    suspend fun getRiderWeightKg(): Float?
     suspend fun setTheme(theme: AppTheme)
     suspend fun setLanguage(language: AppLanguage)
     suspend fun setRiderWeightKg(weightKg: Double)

@@ -7,6 +7,7 @@ import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -211,7 +212,7 @@ class CalculateSessionStatsUseCaseImplTest {
 
         val result = useCase.calculate(SESSION_ID).getOrThrow()
 
-        assertEquals(4.0 * RIDER_WEIGHT_KG * movingTimeHours, result.caloriesBurned, 0.01)
+        assertEquals(4.0 * RIDER_WEIGHT_KG * movingTimeHours, result.caloriesBurned!!, 0.01)
     }
 
     @Test
@@ -228,7 +229,7 @@ class CalculateSessionStatsUseCaseImplTest {
 
         val result = useCase.calculate(SESSION_ID).getOrThrow()
 
-        assertEquals(6.8 * RIDER_WEIGHT_KG * movingTimeHours, result.caloriesBurned, 0.01)
+        assertEquals(6.8 * RIDER_WEIGHT_KG * movingTimeHours, result.caloriesBurned!!, 0.01)
     }
 
     @Test
@@ -245,7 +246,24 @@ class CalculateSessionStatsUseCaseImplTest {
 
         val result = useCase.calculate(SESSION_ID).getOrThrow()
 
-        assertEquals(12.0 * RIDER_WEIGHT_KG * movingTimeHours, result.caloriesBurned, 0.01)
+        assertEquals(12.0 * RIDER_WEIGHT_KG * movingTimeHours, result.caloriesBurned!!, 0.01)
+    }
+
+    @Test
+    fun `calories is null when rider weight is not set`() = runTest {
+        coEvery { riderProfileProvider.getRiderWeightKg() } returns null
+        val movingTimeMs = 3_600_000L
+        val trackPoints = listOf(
+            createTrackPoint(timestampMs = 0L, speedKmh = 10.0),
+            createTrackPoint(timestampMs = movingTimeMs, speedKmh = 10.0),
+        )
+        coEvery { getSessionByIdUseCase.getSession(SESSION_ID) } returns Result.success(
+            createSession(trackPoints = trackPoints, elapsedTimeMs = movingTimeMs, averageSpeedKmh = 10.0),
+        )
+
+        val result = useCase.calculate(SESSION_ID).getOrThrow()
+
+        assertNull(result.caloriesBurned)
     }
 
     @Test

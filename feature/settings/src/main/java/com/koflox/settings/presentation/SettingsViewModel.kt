@@ -77,7 +77,8 @@ internal class SettingsViewModel(
         }
     }
 
-    private fun formatWeight(weightKg: Float): String {
+    private fun formatWeight(weightKg: Float?): String {
+        if (weightKg == null) return ""
         return if (weightKg == weightKg.toLong().toFloat()) {
             weightKg.toLong().toString()
         } else {

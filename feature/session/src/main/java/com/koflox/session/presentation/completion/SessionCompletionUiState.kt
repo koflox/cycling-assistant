@@ -19,7 +19,7 @@ internal sealed interface SessionCompletionUiState {
         val topSpeedFormatted: String,
         val altitudeGainFormatted: String,
         val altitudeLossFormatted: String,
-        val caloriesFormatted: String,
+        val caloriesFormatted: String?,
         val routePoints: List<LatLng>,
         val overlay: Overlay? = null,
     ) : SessionCompletionUiState

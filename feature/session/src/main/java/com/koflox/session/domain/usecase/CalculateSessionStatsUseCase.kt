@@ -31,12 +31,14 @@ internal class CalculateSessionStatsUseCaseImpl(
      */
     override suspend fun calculate(sessionId: String): Result<SessionDerivedStats> {
         return getSessionByIdUseCase.getSession(sessionId).map { session ->
-            val riderWeightKg = riderProfileProvider.getRiderWeightKg().toDouble()
+            val riderWeightKg = riderProfileProvider.getRiderWeightKg()?.toDouble()
             val movingTimeMs = calculateMovingTimeMs(session.trackPoints, session.elapsedTimeMs)
             val idleTimeMs = (session.elapsedTimeMs - movingTimeMs).coerceAtLeast(0L)
             val altitudeLossMeters = calculateAltitudeLoss(session.trackPoints)
             val movingTimeHours = movingTimeMs / MS_PER_HOUR
-            val caloriesBurned = calculateCalories(session.averageSpeedKmh, riderWeightKg, movingTimeHours)
+            val caloriesBurned = riderWeightKg?.let {
+                calculateCalories(session.averageSpeedKmh, it, movingTimeHours)
+            }
             SessionDerivedStats(
                 idleTimeMs = idleTimeMs,
                 movingTimeMs = movingTimeMs,

@@ -14,6 +14,6 @@ data class SharePreviewData(
     val topSpeedFormatted: String,
     val altitudeGainFormatted: String,
     val altitudeLossFormatted: String,
-    val caloriesFormatted: String,
+    val caloriesFormatted: String?,
     val routePoints: List<LatLng>,
 )

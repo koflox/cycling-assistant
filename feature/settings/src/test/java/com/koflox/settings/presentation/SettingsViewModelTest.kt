@@ -40,7 +40,7 @@ class SettingsViewModelTest {
     private fun setupDefaultMocks() {
         every { observeSettingsUseCase.observeTheme() } returns themeFlow
         every { observeSettingsUseCase.observeLanguage() } returns languageFlow
-        coEvery { observeSettingsUseCase.getRiderWeightKg() } returns 75f
+        coEvery { observeSettingsUseCase.getRiderWeightKg() } returns null
     }
 
     private fun createViewModel(): SettingsViewModel {
@@ -270,6 +270,18 @@ class SettingsViewModelTest {
 
             val state = awaitItem()
             assertEquals("80", state.riderWeightKg)
+        }
+    }
+
+    @Test
+    fun `initial state shows empty weight when not set`() = runTest {
+        coEvery { observeSettingsUseCase.getRiderWeightKg() } returns null
+
+        viewModel = createViewModel()
+
+        viewModel.uiState.test {
+            val state = awaitItem()
+            assertEquals("", state.riderWeightKg)
         }
     }
 

@@ -32,7 +32,7 @@ internal fun SessionSummaryCard(
     topSpeed: String,
     altitudeGain: String,
     altitudeLoss: String,
-    calories: String,
+    calories: String?,
     modifier: Modifier = Modifier,
     destinationName: String? = null,
 ) {
@@ -44,51 +44,83 @@ internal fun SessionSummaryCard(
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = Elevation.Prominent),
     ) {
-        Column(
-            // TODO: use a recycler view alternative
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(Spacing.Large),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            if (destinationName != null) {
-                Text(
-                    text = destinationName,
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
-                Spacer(modifier = Modifier.height(Spacing.Tiny))
-            }
+        SessionSummaryContent(
+            startDate = startDate,
+            elapsedTime = elapsedTime,
+            movingTime = movingTime,
+            idleTime = idleTime,
+            distance = distance,
+            averageSpeed = averageSpeed,
+            topSpeed = topSpeed,
+            altitudeGain = altitudeGain,
+            altitudeLoss = altitudeLoss,
+            calories = calories,
+            destinationName = destinationName,
+        )
+    }
+}
+
+@Composable
+private fun SessionSummaryContent(
+    startDate: String,
+    elapsedTime: String,
+    movingTime: String,
+    idleTime: String,
+    distance: String,
+    averageSpeed: String,
+    topSpeed: String,
+    altitudeGain: String,
+    altitudeLoss: String,
+    calories: String?,
+    destinationName: String?,
+) {
+    Column(
+        // TODO №1: use a recycler view alternative
+        // TODO №2: localize strings
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(Spacing.Large),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        if (destinationName != null) {
             Text(
-                text = startDate,
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                text = destinationName,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface,
             )
-            StatRow(
-                leftLabel = stringResource(R.string.session_stat_time),
-                leftValue = elapsedTime,
-                rightLabel = stringResource(R.string.session_stat_distance),
-                rightValue = "$distance km",
-            )
-            StatRow(
-                leftLabel = stringResource(R.string.session_stat_moving_time),
-                leftValue = movingTime,
-                rightLabel = stringResource(R.string.session_stat_idle_time),
-                rightValue = idleTime,
-            )
-            StatRow(
-                leftLabel = stringResource(R.string.session_stat_avg_speed),
-                leftValue = "$averageSpeed km/h",
-                rightLabel = stringResource(R.string.session_stat_top_speed),
-                rightValue = "$topSpeed km/h",
-            )
-            StatRow(
-                leftLabel = stringResource(R.string.session_stat_altitude_gain),
-                leftValue = "$altitudeGain m",
-                rightLabel = stringResource(R.string.session_stat_altitude_loss),
-                rightValue = "$altitudeLoss m",
-            )
+            Spacer(modifier = Modifier.height(Spacing.Tiny))
+        }
+        Text(
+            text = startDate,
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        StatRow(
+            leftLabel = stringResource(R.string.session_stat_time),
+            leftValue = elapsedTime,
+            rightLabel = stringResource(R.string.session_stat_distance),
+            rightValue = "$distance km",
+        )
+        StatRow(
+            leftLabel = stringResource(R.string.session_stat_moving_time),
+            leftValue = movingTime,
+            rightLabel = stringResource(R.string.session_stat_idle_time),
+            rightValue = idleTime,
+        )
+        StatRow(
+            leftLabel = stringResource(R.string.session_stat_avg_speed),
+            leftValue = "$averageSpeed km/h",
+            rightLabel = stringResource(R.string.session_stat_top_speed),
+            rightValue = "$topSpeed km/h",
+        )
+        StatRow(
+            leftLabel = stringResource(R.string.session_stat_altitude_gain),
+            leftValue = "$altitudeGain m",
+            rightLabel = stringResource(R.string.session_stat_altitude_loss),
+            rightValue = "$altitudeLoss m",
+        )
+        if (calories != null) {
             StatRow(
                 leftLabel = stringResource(R.string.session_stat_calories),
                 leftValue = "$calories kcal",

@@ -14,7 +14,7 @@ internal class SettingsRepositoryImpl(
 ) : SettingsRepository, ThemeProvider, LocaleProvider, RiderProfileProvider {
     override fun observeTheme(): Flow<AppTheme> = localDataSource.observeTheme()
     override fun observeLanguage(): Flow<AppLanguage> = localDataSource.observeLanguage()
-    override suspend fun getRiderWeightKg(): Float = localDataSource.getRiderWeightKg()
+    override suspend fun getRiderWeightKg(): Float? = localDataSource.getRiderWeightKg()
 
     override suspend fun setTheme(theme: AppTheme) {
         localDataSource.setTheme(theme)

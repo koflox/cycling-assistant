@@ -82,7 +82,7 @@ internal class SessionsListViewModel(
                     topSpeedFormatted = formattedData.topSpeedFormatted,
                     altitudeGainFormatted = formattedData.altitudeGainFormatted,
                     altitudeLossFormatted = sessionUiMapper.formatAltitudeGain(derivedStats.altitudeLossMeters),
-                    caloriesFormatted = sessionUiMapper.formatCalories(derivedStats.caloriesBurned),
+                    caloriesFormatted = derivedStats.caloriesBurned?.let { sessionUiMapper.formatCalories(it) },
                     routePoints = routePoints,
                 )
                 updateContent { it.copy(overlay = SessionsListOverlay.SharePreview(previewData)) }

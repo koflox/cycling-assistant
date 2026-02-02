@@ -12,6 +12,7 @@ import com.koflox.settings.domain.model.AppTheme
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
@@ -28,7 +29,6 @@ internal class SettingsDataStore(
         private val KEY_THEME = stringPreferencesKey("theme")
         private val KEY_LANGUAGE = stringPreferencesKey("language")
         private val KEY_RIDER_WEIGHT_KG = doublePreferencesKey("rider_weight_kg")
-        private const val DEFAULT_RIDER_WEIGHT_KG = 75f
     }
 
     override fun observeTheme(): Flow<AppTheme> = context.settingsDataStore.data
@@ -45,8 +45,12 @@ internal class SettingsDataStore(
         }
         .flowOn(dispatcherIo)
 
-    override suspend fun getRiderWeightKg(): Float = withContext(dispatcherIo) {
-        context.settingsDataStore.data.first()[KEY_RIDER_WEIGHT_KG]?.toFloat() ?: DEFAULT_RIDER_WEIGHT_KG
+    override suspend fun getRiderWeightKg(): Float? = withContext(dispatcherIo) {
+        context.settingsDataStore
+            .data
+            .firstOrNull()
+            ?.get(KEY_RIDER_WEIGHT_KG)
+            ?.toFloat()
     }
 
     override suspend fun setTheme(theme: AppTheme) {
