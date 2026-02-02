@@ -12,6 +12,7 @@ import com.koflox.error.di.errorMapperModule
 import com.koflox.id.di.idModule
 import com.koflox.location.locationModule
 import com.koflox.session.di.sessionModule
+import com.koflox.sessionsettings.bridge.impl.di.sessionSettingsBridgeImplModule
 import com.koflox.settings.di.settingsModule
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModel
@@ -54,6 +55,7 @@ internal val appModule = module {
         locationModule,
         mainModule,
         sessionModule,
+        sessionSettingsBridgeImplModule,
         settingsModule,
     )
 }

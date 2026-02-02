@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.google.android.gms.maps.model.LatLng
 import com.koflox.error.mapper.ErrorMessageMapper
 import com.koflox.session.domain.model.SessionStatus
+import com.koflox.session.domain.usecase.CalculateSessionStatsUseCase
 import com.koflox.session.domain.usecase.GetSessionByIdUseCase
 import com.koflox.session.navigation.SESSION_ID_ARG
 import com.koflox.session.presentation.mapper.SessionUiMapper
@@ -23,6 +24,7 @@ import kotlinx.coroutines.launch
 
 internal class SessionCompletionViewModel(
     private val getSessionByIdUseCase: GetSessionByIdUseCase,
+    private val calculateSessionStatsUseCase: CalculateSessionStatsUseCase,
     private val sessionUiMapper: SessionUiMapper,
     private val errorMessageMapper: ErrorMessageMapper,
     private val imageSharer: SessionImageSharer,
@@ -102,6 +104,7 @@ internal class SessionCompletionViewModel(
                     return@onSuccess
                 }
                 val formattedData = sessionUiMapper.toSessionUiModel(session)
+                val derivedStats = calculateSessionStatsUseCase.calculate(sessionId).getOrNull() ?: return@onSuccess
                 val routePoints = session.trackPoints.map { trackPoint ->
                     LatLng(trackPoint.latitude, trackPoint.longitude)
                 }
@@ -110,10 +113,14 @@ internal class SessionCompletionViewModel(
                     destinationName = session.destinationName,
                     startDateFormatted = sessionUiMapper.formatStartDate(session.startTimeMs),
                     elapsedTimeFormatted = formattedData.elapsedTimeFormatted,
+                    movingTimeFormatted = sessionUiMapper.formatElapsedTime(derivedStats.movingTimeMs),
+                    idleTimeFormatted = sessionUiMapper.formatElapsedTime(derivedStats.idleTimeMs),
                     traveledDistanceFormatted = formattedData.traveledDistanceFormatted,
                     averageSpeedFormatted = formattedData.averageSpeedFormatted,
                     topSpeedFormatted = formattedData.topSpeedFormatted,
                     altitudeGainFormatted = formattedData.altitudeGainFormatted,
+                    altitudeLossFormatted = sessionUiMapper.formatAltitudeGain(derivedStats.altitudeLossMeters),
+                    caloriesFormatted = derivedStats.caloriesBurned?.let { sessionUiMapper.formatCalories(it) },
                     routePoints = routePoints,
                 )
             }

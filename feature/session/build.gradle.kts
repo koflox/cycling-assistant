@@ -72,6 +72,9 @@ dependencies {
     implementation(project(":shared:id"))
     implementation(project(":shared:location"))
 
+    // Feature modules
+    implementation(project(":feature:session-settings:bridge:api"))
+
     // Testing
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)

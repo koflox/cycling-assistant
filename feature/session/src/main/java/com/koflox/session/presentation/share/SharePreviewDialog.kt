@@ -179,10 +179,14 @@ private fun SharePreviewContent(
             SessionSummaryCard(
                 startDate = data.startDateFormatted,
                 elapsedTime = data.elapsedTimeFormatted,
+                movingTime = data.movingTimeFormatted,
+                idleTime = data.idleTimeFormatted,
                 distance = data.traveledDistanceFormatted,
                 averageSpeed = data.averageSpeedFormatted,
                 topSpeed = data.topSpeedFormatted,
                 altitudeGain = data.altitudeGainFormatted,
+                altitudeLoss = data.altitudeLossFormatted,
+                calories = data.caloriesFormatted,
                 destinationName = data.destinationName,
                 modifier = Modifier.fillMaxWidth(),
             )

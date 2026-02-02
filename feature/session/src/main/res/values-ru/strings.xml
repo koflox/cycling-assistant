@@ -9,7 +9,15 @@
     <string name="session_stat_distance">Расстояние</string>
     <string name="session_stat_avg_speed">Сред</string>
     <string name="session_stat_top_speed">Макс</string>
+    <string name="session_stat_moving_time">Движение</string>
+    <string name="session_stat_idle_time">Простой</string>
     <string name="session_stat_altitude_gain">Подъём</string>
+    <string name="session_stat_altitude_loss">Спуск</string>
+    <string name="session_stat_calories">Калории</string>
+    <string name="session_stat_value_km">%s км</string>
+    <string name="session_stat_value_kmh">%s км/ч</string>
+    <string name="session_stat_value_m">%s м</string>
+    <string name="session_stat_value_kcal">%s ккал</string>
 
     <!-- Session Buttons -->
     <string name="session_button_pause">Пауза</string>

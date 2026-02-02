@@ -19,6 +19,7 @@ internal sealed interface SessionsListOverlay {
     data class Sharing(val data: SharePreviewData) : SessionsListOverlay
     data class ShareReady(val intent: Intent) : SessionsListOverlay
     data class ShareError(val message: String, val data: SharePreviewData) : SessionsListOverlay
+    data class LoadError(val message: String) : SessionsListOverlay
 }
 
 data class SessionListItemUiModel(

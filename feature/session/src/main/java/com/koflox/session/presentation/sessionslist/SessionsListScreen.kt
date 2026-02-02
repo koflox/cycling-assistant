@@ -52,19 +52,19 @@ internal fun SessionsListRoute(
     val context = LocalContext.current
     LaunchedEffect(uiState) {
         val content = uiState as? SessionsListUiState.Content ?: return@LaunchedEffect
-        when (val overlay = content.overlay) {
-            is SessionsListOverlay.ShareReady -> {
-                context.startActivity(overlay.intent)
-                viewModel.onEvent(SessionsListUiEvent.ShareIntentLaunched)
-            }
-
-            is SessionsListOverlay.ShareError -> {
-                Toast.makeText(context, overlay.message, Toast.LENGTH_SHORT).show()
-                viewModel.onEvent(SessionsListUiEvent.ShareErrorDismissed)
-            }
-
-            else -> Unit
+        val overlay = content.overlay
+        if (overlay is SessionsListOverlay.ShareReady) {
+            context.startActivity(overlay.intent)
+            viewModel.onEvent(SessionsListUiEvent.ShareIntentLaunched)
+            return@LaunchedEffect
         }
+        val (message, dismissEvent) = when (overlay) {
+            is SessionsListOverlay.ShareError -> overlay.message to SessionsListUiEvent.ShareErrorDismissed
+            is SessionsListOverlay.LoadError -> overlay.message to SessionsListUiEvent.LoadErrorDismissed
+            else -> return@LaunchedEffect
+        }
+        Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+        viewModel.onEvent(dismissEvent)
     }
     SessionsListContent(
         uiState = uiState,
@@ -92,6 +92,7 @@ private fun SessionsListContent(
             is SessionsListOverlay.Sharing -> overlay.data
             is SessionsListOverlay.ShareError -> overlay.data
             is SessionsListOverlay.ShareReady -> null
+            is SessionsListOverlay.LoadError -> null
         }
         previewData?.let { data ->
             SharePreviewDialog(

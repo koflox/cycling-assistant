@@ -9,6 +9,7 @@ class SessionUiMapperImpl : SessionUiMapper {
 
     companion object {
         private const val DATE_FORMAT_PATTERN = "MMM dd, yyyy HH:mm"
+        private const val FORMAT_WHOLE_NUMBER = "%.0f"
     }
 
     override fun formatElapsedTime(elapsedMs: Long): String {
@@ -26,7 +27,10 @@ class SessionUiMapperImpl : SessionUiMapper {
         String.format(Locale.getDefault(), "%.1f", speedKmh)
 
     override fun formatAltitudeGain(altitudeGainMeters: Double): String =
-        String.format(Locale.getDefault(), "%.0f", altitudeGainMeters)
+        String.format(Locale.getDefault(), FORMAT_WHOLE_NUMBER, altitudeGainMeters)
+
+    override fun formatCalories(calories: Double): String =
+        String.format(Locale.getDefault(), FORMAT_WHOLE_NUMBER, calories)
 
     override fun formatStartDate(startTimeMs: Long): String {
         val dateFormat = SimpleDateFormat(DATE_FORMAT_PATTERN, Locale.getDefault())

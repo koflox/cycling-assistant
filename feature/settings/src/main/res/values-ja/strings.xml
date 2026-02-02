@@ -8,4 +8,7 @@
     <string name="settings_theme_system">システム</string>
     <string name="settings_language">言語</string>
     <string name="settings_language_restart_hint">言語変更を適用するにはアプリを再起動してください</string>
+    <string name="settings_rider_weight">体重（kg）</string>
+    <string name="settings_rider_weight_hint">カロリー計算に使用されます</string>
+    <string name="settings_rider_weight_error">体重は%1$d〜%2$d kgの範囲で入力してください</string>
 </resources>

@@ -7,9 +7,13 @@ data class SharePreviewData(
     val destinationName: String,
     val startDateFormatted: String,
     val elapsedTimeFormatted: String,
+    val movingTimeFormatted: String,
+    val idleTimeFormatted: String,
     val traveledDistanceFormatted: String,
     val averageSpeedFormatted: String,
     val topSpeedFormatted: String,
     val altitudeGainFormatted: String,
+    val altitudeLossFormatted: String,
+    val caloriesFormatted: String?,
     val routePoints: List<LatLng>,
 )
