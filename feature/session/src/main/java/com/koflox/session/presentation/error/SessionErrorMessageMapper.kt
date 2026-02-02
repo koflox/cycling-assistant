@@ -2,8 +2,8 @@ package com.koflox.session.presentation.error
 
 import android.content.Context
 import com.koflox.error.mapper.ErrorMessageMapper
-import com.koflox.session.R
 import com.koflox.location.LocationUnavailableException
+import com.koflox.session.R
 import com.koflox.session.domain.usecase.NoActiveSessionException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext

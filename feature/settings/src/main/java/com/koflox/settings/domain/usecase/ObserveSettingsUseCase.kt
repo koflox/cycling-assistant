@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.Flow
 internal interface ObserveSettingsUseCase {
     fun observeTheme(): Flow<AppTheme>
     fun observeLanguage(): Flow<AppLanguage>
+    suspend fun getRiderWeightKg(): Float?
 }
 
 internal class ObserveSettingsUseCaseImpl(
@@ -15,4 +16,5 @@ internal class ObserveSettingsUseCaseImpl(
 ) : ObserveSettingsUseCase {
     override fun observeTheme(): Flow<AppTheme> = repository.observeTheme()
     override fun observeLanguage(): Flow<AppLanguage> = repository.observeLanguage()
+    override suspend fun getRiderWeightKg(): Float? = repository.getRiderWeightKg()
 }

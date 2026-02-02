@@ -25,10 +25,14 @@ import com.koflox.session.R
 internal fun SessionSummaryCard(
     startDate: String,
     elapsedTime: String,
+    movingTime: String,
+    idleTime: String,
     distance: String,
     averageSpeed: String,
     topSpeed: String,
     altitudeGain: String,
+    altitudeLoss: String,
+    calories: String?,
     modifier: Modifier = Modifier,
     destinationName: String? = null,
 ) {
@@ -40,51 +44,106 @@ internal fun SessionSummaryCard(
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = Elevation.Prominent),
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(Spacing.Large),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            if (destinationName != null) {
-                Text(
-                    text = destinationName,
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
-                Spacer(modifier = Modifier.height(Spacing.Tiny))
-            }
+        SessionSummaryContent(
+            startDate = startDate,
+            elapsedTime = elapsedTime,
+            movingTime = movingTime,
+            idleTime = idleTime,
+            distance = distance,
+            averageSpeed = averageSpeed,
+            topSpeed = topSpeed,
+            altitudeGain = altitudeGain,
+            altitudeLoss = altitudeLoss,
+            calories = calories,
+            destinationName = destinationName,
+        )
+    }
+}
+
+@Composable
+private fun SessionSummaryContent(
+    startDate: String,
+    elapsedTime: String,
+    movingTime: String,
+    idleTime: String,
+    distance: String,
+    averageSpeed: String,
+    topSpeed: String,
+    altitudeGain: String,
+    altitudeLoss: String,
+    calories: String?,
+    destinationName: String?,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(Spacing.Large),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        if (destinationName != null) {
             Text(
-                text = startDate,
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                text = destinationName,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface,
             )
-            Spacer(modifier = Modifier.height(Spacing.Medium))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center,
-            ) {
-                StatItem(label = stringResource(R.string.session_stat_time), value = elapsedTime)
-                Spacer(modifier = Modifier.width(Spacing.ExtraLarge))
-                StatItem(label = stringResource(R.string.session_stat_distance), value = "$distance km")
-            }
-            Spacer(modifier = Modifier.height(Spacing.Small))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center,
-            ) {
-                StatItem(label = stringResource(R.string.session_stat_avg_speed), value = "$averageSpeed km/h")
-                Spacer(modifier = Modifier.width(Spacing.ExtraLarge))
-                StatItem(label = stringResource(R.string.session_stat_top_speed), value = "$topSpeed km/h")
-            }
-            Spacer(modifier = Modifier.height(Spacing.Small))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center,
-            ) {
-                StatItem(label = stringResource(R.string.session_stat_altitude_gain), value = "$altitudeGain m")
-            }
+            Spacer(modifier = Modifier.height(Spacing.Tiny))
+        }
+        Text(
+            text = startDate,
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        StatRow(
+            leftLabel = stringResource(R.string.session_stat_time),
+            leftValue = elapsedTime,
+            rightLabel = stringResource(R.string.session_stat_distance),
+            rightValue = stringResource(R.string.session_stat_value_km, distance),
+        )
+        StatRow(
+            leftLabel = stringResource(R.string.session_stat_moving_time),
+            leftValue = movingTime,
+            rightLabel = stringResource(R.string.session_stat_idle_time),
+            rightValue = idleTime,
+        )
+        StatRow(
+            leftLabel = stringResource(R.string.session_stat_avg_speed),
+            leftValue = stringResource(R.string.session_stat_value_kmh, averageSpeed),
+            rightLabel = stringResource(R.string.session_stat_top_speed),
+            rightValue = stringResource(R.string.session_stat_value_kmh, topSpeed),
+        )
+        StatRow(
+            leftLabel = stringResource(R.string.session_stat_altitude_gain),
+            leftValue = stringResource(R.string.session_stat_value_m, altitudeGain),
+            rightLabel = stringResource(R.string.session_stat_altitude_loss),
+            rightValue = stringResource(R.string.session_stat_value_m, altitudeLoss),
+        )
+        if (calories != null) {
+            StatRow(
+                leftLabel = stringResource(R.string.session_stat_calories),
+                leftValue = stringResource(R.string.session_stat_value_kcal, calories),
+            )
+        }
+    }
+}
+
+@Composable
+private fun StatRow(
+    leftLabel: String,
+    leftValue: String,
+    rightLabel: String? = null,
+    rightValue: String? = null,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = Spacing.Small),
+        horizontalArrangement = Arrangement.Center,
+    ) {
+        StatItem(label = leftLabel, value = leftValue)
+        if (rightLabel != null && rightValue != null) {
+            Spacer(modifier = Modifier.width(Spacing.ExtraLarge))
+            StatItem(label = rightLabel, value = rightValue)
         }
     }
 }

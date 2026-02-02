@@ -4,6 +4,8 @@ import android.graphics.Bitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.android.gms.maps.model.LatLng
+import com.koflox.error.mapper.ErrorMessageMapper
+import com.koflox.session.domain.usecase.CalculateSessionStatsUseCase
 import com.koflox.session.domain.usecase.GetAllSessionsUseCase
 import com.koflox.session.domain.usecase.GetSessionByIdUseCase
 import com.koflox.session.presentation.mapper.SessionUiMapper
@@ -12,6 +14,8 @@ import com.koflox.session.presentation.share.ShareErrorMapper
 import com.koflox.session.presentation.share.SharePreviewData
 import com.koflox.session.presentation.share.ShareResult
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -20,9 +24,11 @@ import kotlinx.coroutines.launch
 internal class SessionsListViewModel(
     private val getAllSessionsUseCase: GetAllSessionsUseCase,
     private val getSessionByIdUseCase: GetSessionByIdUseCase,
+    private val calculateSessionStatsUseCase: CalculateSessionStatsUseCase,
     private val mapper: SessionsListUiMapper,
     private val sessionUiMapper: SessionUiMapper,
     private val imageSharer: SessionImageSharer,
+    private val errorMessageMapper: ErrorMessageMapper,
     private val shareErrorMapper: ShareErrorMapper,
     private val dispatcherDefault: CoroutineDispatcher,
 ) : ViewModel() {
@@ -46,13 +52,20 @@ internal class SessionsListViewModel(
                 SessionsListUiEvent.ShareDialogDismissed -> dismissShareDialog()
                 SessionsListUiEvent.ShareIntentLaunched -> dismissShareDialog()
                 SessionsListUiEvent.ShareErrorDismissed -> clearShareError()
+                SessionsListUiEvent.LoadErrorDismissed -> dismissLoadError()
             }
         }
     }
 
     private suspend fun showSharePreview(sessionId: String) {
-        getSessionByIdUseCase.getSession(sessionId)
-            .onSuccess { session ->
+        try {
+            coroutineScope {
+                val sessionDeferred = async { getSessionByIdUseCase.getSession(sessionId) }
+                val statsDeferred = async { calculateSessionStatsUseCase.calculate(sessionId) }
+                val sessionResult = sessionDeferred.await()
+                val statsResult = statsDeferred.await()
+                val session = sessionResult.getOrThrow()
+                val derivedStats = statsResult.getOrThrow()
                 val formattedData = sessionUiMapper.toSessionUiModel(session)
                 val routePoints = session.trackPoints.map { trackPoint ->
                     LatLng(trackPoint.latitude, trackPoint.longitude)
@@ -62,14 +75,26 @@ internal class SessionsListViewModel(
                     destinationName = session.destinationName,
                     startDateFormatted = sessionUiMapper.formatStartDate(session.startTimeMs),
                     elapsedTimeFormatted = formattedData.elapsedTimeFormatted,
+                    movingTimeFormatted = sessionUiMapper.formatElapsedTime(derivedStats.movingTimeMs),
+                    idleTimeFormatted = sessionUiMapper.formatElapsedTime(derivedStats.idleTimeMs),
                     traveledDistanceFormatted = formattedData.traveledDistanceFormatted,
                     averageSpeedFormatted = formattedData.averageSpeedFormatted,
                     topSpeedFormatted = formattedData.topSpeedFormatted,
                     altitudeGainFormatted = formattedData.altitudeGainFormatted,
+                    altitudeLossFormatted = sessionUiMapper.formatAltitudeGain(derivedStats.altitudeLossMeters),
+                    caloriesFormatted = derivedStats.caloriesBurned?.let { sessionUiMapper.formatCalories(it) },
                     routePoints = routePoints,
                 )
                 updateContent { it.copy(overlay = SessionsListOverlay.SharePreview(previewData)) }
             }
+        } catch (e: Exception) {
+            val errorMessage = errorMessageMapper.map(e)
+            updateContent { it.copy(overlay = SessionsListOverlay.LoadError(errorMessage)) }
+        }
+    }
+
+    private fun dismissLoadError() {
+        updateContent { it.copy(overlay = null) }
     }
 
     private fun dismissShareDialog() {

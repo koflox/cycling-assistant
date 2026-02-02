@@ -3,6 +3,8 @@ package com.koflox.session.di
 import com.koflox.concurrent.DispatchersQualifier
 import com.koflox.session.domain.usecase.ActiveSessionUseCase
 import com.koflox.session.domain.usecase.ActiveSessionUseCaseImpl
+import com.koflox.session.domain.usecase.CalculateSessionStatsUseCase
+import com.koflox.session.domain.usecase.CalculateSessionStatsUseCaseImpl
 import com.koflox.session.domain.usecase.CreateSessionUseCase
 import com.koflox.session.domain.usecase.CreateSessionUseCaseImpl
 import com.koflox.session.domain.usecase.GetAllSessionsUseCase
@@ -43,6 +45,12 @@ internal val domainModule = module {
             distanceCalculator = get(),
             altitudeCalculator = get(),
             locationValidator = get(),
+        )
+    }
+    factory<CalculateSessionStatsUseCase> {
+        CalculateSessionStatsUseCaseImpl(
+            getSessionByIdUseCase = get(),
+            riderProfileUseCase = get(),
         )
     }
     factory<GetAllSessionsUseCase> {

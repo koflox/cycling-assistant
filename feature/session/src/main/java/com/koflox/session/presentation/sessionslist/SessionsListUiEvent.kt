@@ -8,4 +8,5 @@ internal sealed interface SessionsListUiEvent {
     data object ShareDialogDismissed : SessionsListUiEvent
     data object ShareIntentLaunched : SessionsListUiEvent
     data object ShareErrorDismissed : SessionsListUiEvent
+    data object LoadErrorDismissed : SessionsListUiEvent
 }
