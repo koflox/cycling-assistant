@@ -44,6 +44,34 @@ CyclingAssistant/
     └── testing/                      # Test utilities
 ```
 
+### Layer Dependencies
+
+Each feature follows Clean Architecture with strict unidirectional dependencies:
+
+```
+Composable (Route/Content)
+    │ observes
+    ▼
+ViewModel
+    │ calls
+    ▼
+UseCase
+    │ calls
+    ▼
+Repository
+    │ calls
+    ▼
+DataSource
+```
+
+**Rules:**
+
+- Upper layers depend on lower layers, never the reverse
+- `presentation` → `domain` → `data` (domain has no Android dependencies)
+- UseCase and DataSource follow Interface + Impl pattern (see Code Conventions)
+- ViewModel never accesses Repository or DataSource directly — always through UseCase
+- DataSource never accesses UseCase or ViewModel
+
 ### Cross-Feature Communication (Bridge Pattern)
 
 Features communicate via bridge modules to maintain separation:
@@ -817,6 +845,18 @@ class SessionViewModelTest {
 - `feature/destinations/src/test/java/com/koflox/destinations/testutil/DestinationTestFactories.kt`
 
 **Reference Implementation:** `SessionCompletionViewModelTest`
+
+## Localization
+
+The app supports multiple languages: English (default), Russian (`values-ru`), and
+Japanese (`values-ja`).
+
+**Rules:**
+
+- All user-facing strings must be defined in `res/values/strings.xml`, never hardcoded
+- When adding or modifying a string resource, always add translations to all supported locales
+- String resource files per module: `src/main/res/values/strings.xml`,
+  `src/main/res/values-ru/strings.xml`, `src/main/res/values-ja/strings.xml`
 
 ## Adding New Features
 
