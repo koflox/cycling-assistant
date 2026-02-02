@@ -13,4 +13,6 @@ dependencies {
     implementation(libs.koin.core)
     implementation(libs.koin.android)
     implementation(project(":shared:concurrent"))
+
+    testImplementation(libs.junit)
 }
