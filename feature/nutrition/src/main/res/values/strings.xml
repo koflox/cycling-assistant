@@ -3,4 +3,6 @@
     <string name="nutrition_popup_title">Time for a snack break!</string>
     <string name="nutrition_popup_timer">Suggested %s ago</string>
     <string name="nutrition_popup_dismiss">Dismiss</string>
+    <string name="nutrition_settings_enabled">Enable nutrition reminders</string>
+    <string name="nutrition_settings_interval_label">Reminder interval: %d minutes</string>
 </resources>

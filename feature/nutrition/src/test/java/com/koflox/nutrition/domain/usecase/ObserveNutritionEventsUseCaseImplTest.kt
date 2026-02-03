@@ -2,11 +2,13 @@ package com.koflox.nutrition.domain.usecase
 
 import app.cash.turbine.test
 import com.koflox.nutrition.domain.model.NutritionEvent
+import com.koflox.nutrition.domain.model.NutritionSettings
 import com.koflox.nutritionsession.bridge.model.SessionTimeInfo
 import com.koflox.nutritionsession.bridge.usecase.SessionElapsedTimeUseCase
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -17,12 +19,15 @@ import java.util.concurrent.atomic.AtomicLong
 class ObserveNutritionEventsUseCaseImplTest {
 
     companion object {
-        private const val TEST_INTERVAL_MS = 5000L
+        private const val TEST_INTERVAL_MINUTES = 1
+        private const val TEST_INTERVAL_MS = TEST_INTERVAL_MINUTES * 60 * 1000L
         private const val BASE_TIME = 1000000L
     }
 
     private val sessionElapsedTimeUseCase: SessionElapsedTimeUseCase = mockk()
+    private val observeNutritionSettingsUseCase: ObserveNutritionSettingsUseCase = mockk()
     private val sessionTimeInfoFlow = MutableSharedFlow<SessionTimeInfo?>()
+    private val settingsFlow = MutableStateFlow(createSettings())
     private val currentTime = AtomicLong(BASE_TIME)
 
     private lateinit var useCase: ObserveNutritionEventsUseCaseImpl
@@ -31,13 +36,22 @@ class ObserveNutritionEventsUseCaseImplTest {
     fun setup() {
         currentTime.set(BASE_TIME)
         every { sessionElapsedTimeUseCase.observeSessionTimeInfo() } returns sessionTimeInfoFlow
+        every { observeNutritionSettingsUseCase.observeSettings() } returns settingsFlow
         useCase = ObserveNutritionEventsUseCaseImpl(
             sessionElapsedTimeUseCase = sessionElapsedTimeUseCase,
+            observeNutritionSettingsUseCase = observeNutritionSettingsUseCase,
             currentTimeProvider = { currentTime.get() },
-            intervalMs = TEST_INTERVAL_MS,
-            checkIntervalMs = Long.MAX_VALUE, // Disable periodic checks for unit tests
+            checkIntervalMs = Long.MAX_VALUE,
         )
     }
+
+    private fun createSettings(
+        isEnabled: Boolean = true,
+        intervalMinutes: Int = TEST_INTERVAL_MINUTES,
+    ) = NutritionSettings(
+        isEnabled = isEnabled,
+        intervalMinutes = intervalMinutes,
+    )
 
     @Test
     fun `emits BreakRequired when first interval is reached`() = runTest {
@@ -254,6 +268,80 @@ class ObserveNutritionEventsUseCaseImplTest {
                 ),
             )
             // No event for paused session
+
+            // Session ends
+            sessionTimeInfoFlow.emit(null)
+
+            val event = awaitItem()
+            assertEquals(NutritionEvent.ChecksStopped, event)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `does not emit BreakRequired when reminders are disabled`() = runTest {
+        settingsFlow.value = createSettings(isEnabled = false)
+
+        useCase.observeNutritionEvents().test {
+            val timeInfo = SessionTimeInfo(
+                elapsedTimeMs = TEST_INTERVAL_MS * 2,
+                lastResumedTimeMs = currentTime.get(),
+                isRunning = true,
+            )
+
+            sessionTimeInfoFlow.emit(timeInfo)
+
+            expectNoEvents()
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `uses dynamic interval from settings`() = runTest {
+        val doubleIntervalMinutes = TEST_INTERVAL_MINUTES * 2
+        settingsFlow.value = createSettings(intervalMinutes = doubleIntervalMinutes)
+
+        useCase.observeNutritionEvents().test {
+            // Elapsed time equals original interval - should not trigger with doubled interval
+            val timeInfo1 = SessionTimeInfo(
+                elapsedTimeMs = TEST_INTERVAL_MS,
+                lastResumedTimeMs = currentTime.get(),
+                isRunning = true,
+            )
+
+            sessionTimeInfoFlow.emit(timeInfo1)
+            expectNoEvents()
+
+            // Elapsed time equals doubled interval - should trigger
+            val timeInfo2 = SessionTimeInfo(
+                elapsedTimeMs = TEST_INTERVAL_MS * 2,
+                lastResumedTimeMs = currentTime.get(),
+                isRunning = true,
+            )
+
+            sessionTimeInfoFlow.emit(timeInfo2)
+
+            val event = awaitItem()
+            assertTrue(event is NutritionEvent.BreakRequired)
+            assertEquals(1, (event as NutritionEvent.BreakRequired).intervalNumber)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `emits ChecksStopped when session ends while reminders disabled`() = runTest {
+        settingsFlow.value = createSettings(isEnabled = false)
+
+        useCase.observeNutritionEvents().test {
+            // Start session with reminders disabled
+            sessionTimeInfoFlow.emit(
+                SessionTimeInfo(
+                    elapsedTimeMs = TEST_INTERVAL_MS,
+                    lastResumedTimeMs = currentTime.get(),
+                    isRunning = true,
+                ),
+            )
+            expectNoEvents()
 
             // Session ends
             sessionTimeInfoFlow.emit(null)

@@ -47,6 +47,9 @@ dependencies {
     implementation(project(":feature:locale"))
     implementation(project(":feature:profile"))
 
+    // Bridge modules
+    implementation(project(":feature:settings-nutrition:bridge:api"))
+
     // Shared modules
     implementation(project(":shared:concurrent"))
     implementation(project(":shared:design-system"))

@@ -85,6 +85,8 @@ dependencies {
     implementation(project(":feature:session-settings:bridge:api"))
     implementation(project(":feature:session-settings:bridge:impl"))
     implementation(project(":feature:settings"))
+    implementation(project(":feature:settings-nutrition:bridge:api"))
+    implementation(project(":feature:settings-nutrition:bridge:impl"))
     implementation(project(":feature:theme"))
 
     // Shared modules
