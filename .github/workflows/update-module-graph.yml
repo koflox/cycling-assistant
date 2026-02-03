@@ -1,0 +1,60 @@
+name: Update Module Graph
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.caching=true"
+
+jobs:
+  update-graph:
+    name: Generate Module Graph
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up JDK
+        uses: actions/setup-java@v5
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v5
+        with:
+          gradle-version: "8.13"
+          cache-read-only: true
+
+      - name: Restore Android build cache
+        uses: actions/cache/restore@v5
+        with:
+          path: |
+            ~/.android/build-cache
+            **/build/intermediates
+            **/build/generated
+            **/build/tmp
+          key: android-build-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', 'gradle/libs.versions.toml') }}
+          restore-keys: |
+            android-build-${{ runner.os }}-
+
+      - name: Create docs directory
+        run: mkdir -p docs
+
+      - name: Generate module graph
+        run: gradle createModuleGraph --build-cache
+
+      - name: Commit and push if changed
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add docs/MODULE_GRAPH.md
+          git diff --cached --quiet || (git commit -m "docs: update module dependency graph" && git push)

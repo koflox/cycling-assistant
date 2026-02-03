@@ -44,6 +44,12 @@ This project is dual-licensed:
 | **CI**                   | Github Actions               |
 | **Dependencies update**  | Dependabot                   |
 
+## Architecture
+
+Multi-module Clean Architecture with feature modules and bridge pattern for cross-feature communication.
+
+See [Module Dependency Graph](docs/MODULE_GRAPH.md) for visual representation.
+
 ## Features
 
 - **Destination Discovery** - Browse and select cycling destinations
