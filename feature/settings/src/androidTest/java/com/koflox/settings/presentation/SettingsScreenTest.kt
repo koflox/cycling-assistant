@@ -6,8 +6,8 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import com.koflox.settings.domain.model.AppLanguage
-import com.koflox.settings.domain.model.AppTheme
+import com.koflox.locale.domain.model.AppLanguage
+import com.koflox.theme.domain.model.AppTheme
 import org.junit.Rule
 import org.junit.Test
 

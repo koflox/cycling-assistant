@@ -16,5 +16,5 @@ dependencies {
 
     // Bridge API
     implementation(project(":feature:session-settings:bridge:api"))
-    implementation(project(":feature:settings"))
+    implementation(project(":feature:profile"))
 }

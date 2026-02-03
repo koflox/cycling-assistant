@@ -1,7 +1,7 @@
 package com.koflox.settings.presentation
 
-import com.koflox.settings.domain.model.AppLanguage
-import com.koflox.settings.domain.model.AppTheme
+import com.koflox.locale.domain.model.AppLanguage
+import com.koflox.theme.domain.model.AppTheme
 
 internal sealed interface SettingsUiEvent {
     data class ThemeSelected(val theme: AppTheme) : SettingsUiEvent

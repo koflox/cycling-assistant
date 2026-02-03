@@ -42,8 +42,10 @@ dependencies {
     implementation(libs.koin.androidx.compose)
     implementation(libs.koin.core)
 
-    // DataStore
-    implementation(libs.androidx.datastore.preferences)
+    // Feature modules
+    implementation(project(":feature:theme"))
+    implementation(project(":feature:locale"))
+    implementation(project(":feature:profile"))
 
     // Shared modules
     implementation(project(":shared:concurrent"))

@@ -74,10 +74,13 @@ dependencies {
     implementation(project(":feature:destinations"))
     implementation(project(":feature:destination-session:bridge:api"))
     implementation(project(":feature:destination-session:bridge:impl"))
+    implementation(project(":feature:locale"))
+    implementation(project(":feature:profile"))
     implementation(project(":feature:session"))
     implementation(project(":feature:session-settings:bridge:api"))
     implementation(project(":feature:session-settings:bridge:impl"))
     implementation(project(":feature:settings"))
+    implementation(project(":feature:theme"))
 
     // Shared modules
     implementation(project(":shared:altitude"))

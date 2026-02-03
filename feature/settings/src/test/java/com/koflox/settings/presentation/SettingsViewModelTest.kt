@@ -1,12 +1,16 @@
 package com.koflox.settings.presentation
 
 import app.cash.turbine.test
-import com.koflox.settings.domain.model.AppLanguage
-import com.koflox.settings.domain.model.AppTheme
-import com.koflox.settings.domain.model.InvalidWeightException
-import com.koflox.settings.domain.usecase.ObserveSettingsUseCase
-import com.koflox.settings.domain.usecase.UpdateSettingsUseCase
+import com.koflox.locale.domain.model.AppLanguage
+import com.koflox.locale.domain.usecase.ObserveLocaleUseCase
+import com.koflox.locale.domain.usecase.UpdateLocaleUseCase
+import com.koflox.profile.domain.model.InvalidWeightException
+import com.koflox.profile.domain.usecase.GetRiderWeightUseCase
+import com.koflox.profile.domain.usecase.UpdateRiderWeightUseCase
 import com.koflox.testing.coroutine.MainDispatcherRule
+import com.koflox.theme.domain.model.AppTheme
+import com.koflox.theme.domain.usecase.ObserveThemeUseCase
+import com.koflox.theme.domain.usecase.UpdateThemeUseCase
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -34,8 +38,12 @@ class SettingsViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private val observeSettingsUseCase: ObserveSettingsUseCase = mockk()
-    private val updateSettingsUseCase: UpdateSettingsUseCase = mockk(relaxed = true)
+    private val observeThemeUseCase: ObserveThemeUseCase = mockk()
+    private val updateThemeUseCase: UpdateThemeUseCase = mockk(relaxed = true)
+    private val observeLocaleUseCase: ObserveLocaleUseCase = mockk()
+    private val updateLocaleUseCase: UpdateLocaleUseCase = mockk(relaxed = true)
+    private val getRiderWeightUseCase: GetRiderWeightUseCase = mockk()
+    private val updateRiderWeightUseCase: UpdateRiderWeightUseCase = mockk(relaxed = true)
 
     private val themeFlow = MutableStateFlow(AppTheme.SYSTEM)
     private val languageFlow = MutableStateFlow(AppLanguage.ENGLISH)
@@ -48,15 +56,19 @@ class SettingsViewModelTest {
     }
 
     private fun setupDefaultMocks() {
-        every { observeSettingsUseCase.observeTheme() } returns themeFlow
-        every { observeSettingsUseCase.observeLanguage() } returns languageFlow
-        coEvery { observeSettingsUseCase.getRiderWeightKg() } returns null
+        every { observeThemeUseCase.observeTheme() } returns themeFlow
+        every { observeLocaleUseCase.observeLanguage() } returns languageFlow
+        coEvery { getRiderWeightUseCase.getRiderWeightKg() } returns null
     }
 
     private fun createViewModel(): SettingsViewModel {
         return SettingsViewModel(
-            observeSettingsUseCase = observeSettingsUseCase,
-            updateSettingsUseCase = updateSettingsUseCase,
+            observeThemeUseCase = observeThemeUseCase,
+            updateThemeUseCase = updateThemeUseCase,
+            observeLocaleUseCase = observeLocaleUseCase,
+            updateLocaleUseCase = updateLocaleUseCase,
+            getRiderWeightUseCase = getRiderWeightUseCase,
+            updateRiderWeightUseCase = updateRiderWeightUseCase,
             dispatcherDefault = mainDispatcherRule.testDispatcher,
         )
     }
@@ -119,7 +131,7 @@ class SettingsViewModelTest {
             assertFalse(closedState.isThemeDropdownExpanded)
         }
 
-        coVerify { updateSettingsUseCase.updateTheme(AppTheme.DARK) }
+        coVerify { updateThemeUseCase.updateTheme(AppTheme.DARK) }
     }
 
     @Test
@@ -138,7 +150,7 @@ class SettingsViewModelTest {
             assertFalse(closedState.isLanguageDropdownExpanded)
         }
 
-        coVerify { updateSettingsUseCase.updateLanguage(AppLanguage.JAPANESE) }
+        coVerify { updateLocaleUseCase.updateLanguage(AppLanguage.JAPANESE) }
     }
 
     @Test
@@ -271,7 +283,7 @@ class SettingsViewModelTest {
 
     @Test
     fun `initial state loads rider weight`() = runTest {
-        coEvery { observeSettingsUseCase.getRiderWeightKg() } returns 80f
+        coEvery { getRiderWeightUseCase.getRiderWeightKg() } returns 80f
 
         viewModel = createViewModel()
 
@@ -285,7 +297,7 @@ class SettingsViewModelTest {
 
     @Test
     fun `initial state shows empty weight when not set`() = runTest {
-        coEvery { observeSettingsUseCase.getRiderWeightKg() } returns null
+        coEvery { getRiderWeightUseCase.getRiderWeightKg() } returns null
 
         viewModel = createViewModel()
 
@@ -297,7 +309,7 @@ class SettingsViewModelTest {
 
     @Test
     fun `RiderWeightChanged updates text and persists valid weight`() = runTest {
-        coEvery { updateSettingsUseCase.updateRiderWeightKg("82.5") } returns Result.success(Unit)
+        coEvery { updateRiderWeightUseCase.updateRiderWeightKg("82.5") } returns Result.success(Unit)
 
         viewModel = createViewModel()
         advanceUntilIdle()
@@ -308,13 +320,13 @@ class SettingsViewModelTest {
         val state = viewModel.uiState.value
         assertEquals("82.5", state.riderWeightKg)
         assertNull(state.riderWeightError)
-        coVerify { updateSettingsUseCase.updateRiderWeightKg("82.5") }
+        coVerify { updateRiderWeightUseCase.updateRiderWeightKg("82.5") }
     }
 
     @Test
     fun `RiderWeightChanged with invalid input shows error with weight bounds`() = runTest {
         coEvery {
-            updateSettingsUseCase.updateRiderWeightKg("abc")
+            updateRiderWeightUseCase.updateRiderWeightKg("abc")
         } returns Result.failure(InvalidWeightException(MIN_WEIGHT_KG.toDouble(), MAX_WEIGHT_KG.toDouble()))
 
         viewModel = createViewModel()
@@ -331,7 +343,7 @@ class SettingsViewModelTest {
     @Test
     fun `RiderWeightChanged with value below minimum shows error`() = runTest {
         coEvery {
-            updateSettingsUseCase.updateRiderWeightKg("0.5")
+            updateRiderWeightUseCase.updateRiderWeightKg("0.5")
         } returns Result.failure(InvalidWeightException(MIN_WEIGHT_KG.toDouble(), MAX_WEIGHT_KG.toDouble()))
 
         viewModel = createViewModel()
@@ -348,7 +360,7 @@ class SettingsViewModelTest {
     @Test
     fun `RiderWeightChanged with value above maximum shows error`() = runTest {
         coEvery {
-            updateSettingsUseCase.updateRiderWeightKg("301")
+            updateRiderWeightUseCase.updateRiderWeightKg("301")
         } returns Result.failure(InvalidWeightException(MIN_WEIGHT_KG.toDouble(), MAX_WEIGHT_KG.toDouble()))
 
         viewModel = createViewModel()
@@ -365,7 +377,7 @@ class SettingsViewModelTest {
     @Test
     fun `RiderWeightChanged with empty input shows error`() = runTest {
         coEvery {
-            updateSettingsUseCase.updateRiderWeightKg("")
+            updateRiderWeightUseCase.updateRiderWeightKg("")
         } returns Result.failure(InvalidWeightException(MIN_WEIGHT_KG.toDouble(), MAX_WEIGHT_KG.toDouble()))
 
         viewModel = createViewModel()
@@ -381,7 +393,7 @@ class SettingsViewModelTest {
 
     @Test
     fun `rapid RiderWeightChanged only processes last value`() = runTest {
-        coEvery { updateSettingsUseCase.updateRiderWeightKg("85") } returns Result.success(Unit)
+        coEvery { updateRiderWeightUseCase.updateRiderWeightKg("85") } returns Result.success(Unit)
 
         viewModel = createViewModel()
         advanceUntilIdle()
@@ -393,8 +405,8 @@ class SettingsViewModelTest {
         val state = viewModel.uiState.value
         assertEquals("85", state.riderWeightKg)
         assertNull(state.riderWeightError)
-        coVerify(exactly = 0) { updateSettingsUseCase.updateRiderWeightKg("8") }
-        coVerify { updateSettingsUseCase.updateRiderWeightKg("85") }
+        coVerify(exactly = 0) { updateRiderWeightUseCase.updateRiderWeightKg("8") }
+        coVerify { updateRiderWeightUseCase.updateRiderWeightKg("85") }
     }
 
     @Test
