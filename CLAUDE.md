@@ -489,7 +489,7 @@ Supported languages: English (default), Russian (`values-ru`), Japanese (`values
 | `app/Modules.kt`                                                          | Root DI configuration     |
 | `app/data/AppDatabase.kt`                                                 | Room database             |
 | `feature/session/service/SessionTrackingService.kt`                       | Foreground service        |
-| `feature/settings/api/ThemeProvider.kt`                                   | Theme observation         |
+| `feature/theme/domain/usecase/ObserveThemeUseCase.kt`                     | Theme observation         |
 | `feature/destination-session/bridge/api/.../CyclingSessionUseCase.kt`     | Bridge data interface     |
 | `feature/destination-session/bridge/api/.../CyclingSessionUiNavigator.kt` | Bridge UI interface       |
 | `shared/concurrent/.../SuspendRunCatching.kt`                             | Coroutine-safe runCatching |

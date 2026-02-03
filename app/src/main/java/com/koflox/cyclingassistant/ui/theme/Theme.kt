@@ -11,7 +11,7 @@ import androidx.compose.ui.platform.LocalContext
 import com.koflox.designsystem.theme.CyclingDarkColorScheme
 import com.koflox.designsystem.theme.CyclingLightColorScheme
 import com.koflox.designsystem.theme.LocalDarkTheme
-import com.koflox.settings.domain.model.AppTheme
+import com.koflox.theme.domain.model.AppTheme
 
 @Composable
 fun CyclingAssistantTheme(

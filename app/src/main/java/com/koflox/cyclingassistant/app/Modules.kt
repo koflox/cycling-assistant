@@ -10,10 +10,13 @@ import com.koflox.destinationsession.bridge.impl.di.bridgeImplModule
 import com.koflox.distance.di.distanceModule
 import com.koflox.error.di.errorMapperModule
 import com.koflox.id.di.idModule
+import com.koflox.locale.di.localeModule
 import com.koflox.location.locationModule
+import com.koflox.profile.di.profileModule
 import com.koflox.session.di.sessionModule
 import com.koflox.sessionsettings.bridge.impl.di.sessionSettingsBridgeImplModule
 import com.koflox.settings.di.settingsModule
+import com.koflox.theme.di.themeModule
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
@@ -21,8 +24,8 @@ import org.koin.dsl.module
 private val mainModule = module {
     viewModel {
         MainViewModel(
-            themeProvider = get(),
-            localeProvider = get(),
+            observeThemeUseCase = get(),
+            observeLocaleUseCase = get(),
         )
     }
 }
@@ -52,10 +55,13 @@ internal val appModule = module {
         distanceModule,
         errorMapperModule,
         idModule,
+        localeModule,
         locationModule,
         mainModule,
+        profileModule,
         sessionModule,
         sessionSettingsBridgeImplModule,
         settingsModule,
+        themeModule,
     )
 }

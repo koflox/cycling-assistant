@@ -7,7 +7,7 @@ import org.koin.dsl.module
 val sessionSettingsBridgeImplModule = module {
     factory<RiderProfileUseCase> {
         RiderProfileUseCaseImpl(
-            riderProfileProvider = get(),
+            getRiderWeightUseCase = get(),
         )
     }
 }

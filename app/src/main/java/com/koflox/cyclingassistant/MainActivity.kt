@@ -23,7 +23,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.rememberNavController
 import com.koflox.cyclingassistant.navigation.AppNavHost
 import com.koflox.cyclingassistant.ui.theme.CyclingAssistantTheme
-import com.koflox.settings.domain.model.AppLanguage
+import com.koflox.locale.domain.model.AppLanguage
 import org.koin.androidx.compose.koinViewModel
 import java.util.Locale
 

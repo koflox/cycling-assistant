@@ -1,11 +1,11 @@
 package com.koflox.sessionsettings.bridge.impl.usecase
 
+import com.koflox.profile.domain.usecase.GetRiderWeightUseCase
 import com.koflox.sessionsettings.bridge.api.RiderProfileUseCase
-import com.koflox.settings.api.RiderProfileProvider
 
 internal class RiderProfileUseCaseImpl(
-    private val riderProfileProvider: RiderProfileProvider,
+    private val getRiderWeightUseCase: GetRiderWeightUseCase,
 ) : RiderProfileUseCase {
 
-    override suspend fun getRiderWeightKg(): Float? = riderProfileProvider.getRiderWeightKg()
+    override suspend fun getRiderWeightKg(): Float? = getRiderWeightUseCase.getRiderWeightKg()
 }

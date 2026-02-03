@@ -2,11 +2,15 @@ package com.koflox.settings.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.koflox.settings.domain.model.AppLanguage
-import com.koflox.settings.domain.model.AppTheme
-import com.koflox.settings.domain.model.InvalidWeightException
-import com.koflox.settings.domain.usecase.ObserveSettingsUseCase
-import com.koflox.settings.domain.usecase.UpdateSettingsUseCase
+import com.koflox.locale.domain.model.AppLanguage
+import com.koflox.locale.domain.usecase.ObserveLocaleUseCase
+import com.koflox.locale.domain.usecase.UpdateLocaleUseCase
+import com.koflox.profile.domain.model.InvalidWeightException
+import com.koflox.profile.domain.usecase.GetRiderWeightUseCase
+import com.koflox.profile.domain.usecase.UpdateRiderWeightUseCase
+import com.koflox.theme.domain.model.AppTheme
+import com.koflox.theme.domain.usecase.ObserveThemeUseCase
+import com.koflox.theme.domain.usecase.UpdateThemeUseCase
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -18,8 +22,12 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 internal class SettingsViewModel(
-    private val observeSettingsUseCase: ObserveSettingsUseCase,
-    private val updateSettingsUseCase: UpdateSettingsUseCase,
+    private val observeThemeUseCase: ObserveThemeUseCase,
+    private val updateThemeUseCase: UpdateThemeUseCase,
+    private val observeLocaleUseCase: ObserveLocaleUseCase,
+    private val updateLocaleUseCase: UpdateLocaleUseCase,
+    private val getRiderWeightUseCase: GetRiderWeightUseCase,
+    private val updateRiderWeightUseCase: UpdateRiderWeightUseCase,
     private val dispatcherDefault: CoroutineDispatcher,
 ) : ViewModel() {
 
@@ -60,8 +68,8 @@ internal class SettingsViewModel(
     private fun observeSettings() {
         viewModelScope.launch(dispatcherDefault) {
             combine(
-                observeSettingsUseCase.observeTheme(),
-                observeSettingsUseCase.observeLanguage(),
+                observeThemeUseCase.observeTheme(),
+                observeLocaleUseCase.observeLanguage(),
             ) { theme, language ->
                 Pair(theme, language)
             }.collect { (theme, language) ->
@@ -77,7 +85,7 @@ internal class SettingsViewModel(
 
     private fun loadRiderWeight() {
         viewModelScope.launch(dispatcherDefault) {
-            val weightKg = observeSettingsUseCase.getRiderWeightKg()
+            val weightKg = getRiderWeightUseCase.getRiderWeightKg()
             _uiState.update {
                 it.copy(riderWeightKg = formatWeight(weightKg))
             }
@@ -94,12 +102,12 @@ internal class SettingsViewModel(
     }
 
     private suspend fun updateTheme(theme: AppTheme) {
-        updateSettingsUseCase.updateTheme(theme)
+        updateThemeUseCase.updateTheme(theme)
         _uiState.update { it.copy(isThemeDropdownExpanded = false) }
     }
 
     private suspend fun updateLanguage(language: AppLanguage) {
-        updateSettingsUseCase.updateLanguage(language)
+        updateLocaleUseCase.updateLanguage(language)
         _uiState.update { it.copy(isLanguageDropdownExpanded = false) }
     }
 
@@ -126,7 +134,7 @@ internal class SettingsViewModel(
         weightUpdateJob?.cancel()
         weightUpdateJob = viewModelScope.launch(dispatcherDefault) {
             delay(WEIGHT_INPUT_DEBOUNCE_MS)
-            updateSettingsUseCase.updateRiderWeightKg(input)
+            updateRiderWeightUseCase.updateRiderWeightKg(input)
                 .onSuccess {
                     _uiState.update { it.copy(riderWeightError = null) }
                 }

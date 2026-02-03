@@ -30,7 +30,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import com.koflox.designsystem.theme.Spacing
 import com.koflox.settings.R
-import com.koflox.settings.domain.model.AppTheme
+import com.koflox.theme.domain.model.AppTheme
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
