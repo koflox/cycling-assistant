@@ -1,16 +1,14 @@
 {
   "permissions": {
     "allow": [
-      "Bash(./gradlew assembleDebug:*)",
-      "Bash(./gradlew clean:*)",
+      "Bash(./gradlew *compile*)",
       "Bash(./gradlew --stop)",
-      "Bash(./gradlew detektRun:*)",
-      "Bash(./gradlew *compileDebugKotlin:*)",
-      "Bash(./gradlew build:*)",
-      "Bash(./gradlew :*test:*)",
-      "Bash(./gradlew:*)",
-      "Bash(taskkill:*)",
-      "Bash(.gradlew detektRun:*)",
+      "Bash(./gradlew *test*)",
+      "Bash(./gradlew *assemble*)",
+      "Bash(./gradlew *build*)",
+      "Bash(./gradlew *clean*)",
+      "Bash(./gradlew *detektRun*)",
+      "Bash(taskkill)"
     ]
   }
 }

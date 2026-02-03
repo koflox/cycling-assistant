@@ -2,6 +2,8 @@
 <resources>
     <string name="settings_title">Настройки</string>
     <string name="settings_back">Назад</string>
+    <string name="settings_section_app">Приложение</string>
+    <string name="settings_section_profile">Профиль</string>
     <string name="settings_theme">Тема</string>
     <string name="settings_theme_light">Светлая</string>
     <string name="settings_theme_dark">Тёмная</string>
