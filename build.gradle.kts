@@ -7,6 +7,7 @@ plugins {
     alias(libs.plugins.kotlin.compose) apply false
     alias(libs.plugins.detekt)
     alias(libs.plugins.kover)
+    alias(libs.plugins.module.graph)
     alias(libs.plugins.android.library) apply false
 }
 
@@ -96,4 +97,13 @@ kover {
             }
         }
     }
+}
+
+moduleGraphConfig {
+    readmePath.set("./docs/MODULE_GRAPH.md")
+    heading.set("# Module Dependency Graph")
+    theme.set(dev.iurysouza.modulegraph.Theme.NEUTRAL)
+    showFullPath.set(false)
+    rootModulesRegex.set(".*:app")
+    excludedModulesRegex.set(".*:testing")
 }
