@@ -5,6 +5,8 @@ import android.content.pm.PackageManager
 import androidx.core.net.toUri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.koflox.destinationnutrition.bridge.model.NutritionBreakEvent
+import com.koflox.destinationnutrition.bridge.usecase.ObserveNutritionBreakUseCase
 import com.koflox.destinations.R
 import com.koflox.destinations.domain.model.DestinationLoadingEvent
 import com.koflox.destinations.domain.model.Destinations
@@ -37,6 +39,7 @@ internal class DestinationsViewModel(
     private val uiMapper: DestinationUiMapper,
     private val application: Application,
     private val cyclingSessionUseCase: CyclingSessionUseCase,
+    private val observeNutritionBreakUseCase: ObserveNutritionBreakUseCase,
     private val dispatcherDefault: CoroutineDispatcher,
 ) : AndroidViewModel(application) {
 
@@ -74,6 +77,7 @@ internal class DestinationsViewModel(
             checkActiveSession()
             _uiState.update { it.copy(isInitializing = false) }
             listenToActiveSession()
+            observeNutritionEvents()
         }
     }
 
@@ -146,6 +150,7 @@ internal class DestinationsViewModel(
                 DestinationsUiEvent.NavigationActionHandled -> clearNavigationAction()
                 DestinationsUiEvent.SelectedMarkerInfoClicked -> showMarkerOptionsDialog()
                 DestinationsUiEvent.SelectedMarkerOptionsDialogDismissed -> dismissSelectedMarkerOptionsDialog()
+                DestinationsUiEvent.NutritionPopupDismissed -> dismissNutritionPopup()
             }
         }
     }
@@ -389,5 +394,24 @@ internal class DestinationsViewModel(
 
     private fun dismissSelectedMarkerOptionsDialog() {
         _uiState.update { it.copy(showSelectedMarkerOptionsDialog = false) }
+    }
+
+    private fun observeNutritionEvents() {
+        viewModelScope.launch(dispatcherDefault) {
+            observeNutritionBreakUseCase.observeNutritionBreakEvents().collect { event ->
+                when (event) {
+                    is NutritionBreakEvent.BreakRequired -> {
+                        _uiState.update { it.copy(nutritionSuggestionTimeMs = event.suggestionTimeMs) }
+                    }
+                    NutritionBreakEvent.ChecksStopped -> {
+                        _uiState.update { it.copy(nutritionSuggestionTimeMs = null) }
+                    }
+                }
+            }
+        }
+    }
+
+    private fun dismissNutritionPopup() {
+        _uiState.update { it.copy(nutritionSuggestionTimeMs = null) }
     }
 }

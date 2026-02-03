@@ -33,7 +33,7 @@ internal fun SessionControlsOverlay(
     modifier: Modifier = Modifier,
 ) {
     Card(
-        modifier = modifier.padding(Spacing.Large),
+        modifier = modifier,
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface.copy(alpha = SurfaceAlpha.Standard),
             contentColor = MaterialTheme.colorScheme.onSurface,

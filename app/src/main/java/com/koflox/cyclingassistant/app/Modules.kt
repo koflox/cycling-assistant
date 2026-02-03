@@ -5,6 +5,7 @@ import com.koflox.altitude.di.altitudeModule
 import com.koflox.concurrent.concurrentModule
 import com.koflox.cyclingassistant.MainViewModel
 import com.koflox.cyclingassistant.data.AppDatabase
+import com.koflox.destinationnutrition.bridge.impl.di.destinationNutritionBridgeImplModule
 import com.koflox.destinations.di.destinationsModule
 import com.koflox.destinationsession.bridge.impl.di.bridgeImplModule
 import com.koflox.distance.di.distanceModule
@@ -12,6 +13,8 @@ import com.koflox.error.di.errorMapperModule
 import com.koflox.id.di.idModule
 import com.koflox.locale.di.localeModule
 import com.koflox.location.locationModule
+import com.koflox.nutrition.di.nutritionModule
+import com.koflox.nutritionsession.bridge.impl.di.nutritionSessionBridgeImplModule
 import com.koflox.profile.di.profileModule
 import com.koflox.session.di.sessionModule
 import com.koflox.sessionsettings.bridge.impl.di.sessionSettingsBridgeImplModule
@@ -51,6 +54,7 @@ internal val appModule = module {
         bridgeImplModule,
         concurrentModule,
         databaseModule,
+        destinationNutritionBridgeImplModule,
         destinationsModule,
         distanceModule,
         errorMapperModule,
@@ -58,6 +62,8 @@ internal val appModule = module {
         localeModule,
         locationModule,
         mainModule,
+        nutritionModule,
+        nutritionSessionBridgeImplModule,
         profileModule,
         sessionModule,
         sessionSettingsBridgeImplModule,

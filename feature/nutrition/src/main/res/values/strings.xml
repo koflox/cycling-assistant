@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="nutrition_popup_title">Time for a snack break!</string>
+    <string name="nutrition_popup_timer">Suggested %s ago</string>
+    <string name="nutrition_popup_dismiss">Dismiss</string>
+</resources>

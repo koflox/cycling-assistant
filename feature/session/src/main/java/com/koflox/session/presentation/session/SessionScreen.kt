@@ -2,13 +2,11 @@ package com.koflox.session.presentation.session
 
 import android.widget.Toast
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import com.koflox.session.presentation.dialog.StopConfirmationDialog
@@ -50,7 +48,7 @@ private fun SessionContent(
     onEvent: (SessionUiEvent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Box(modifier = modifier.fillMaxSize()) {
+    Box(modifier = modifier) {
         when (uiState) {
             SessionUiState.Idle -> Unit
             is SessionUiState.Active -> {
@@ -59,9 +57,7 @@ private fun SessionContent(
                     onPauseClick = { onEvent(SessionUiEvent.PauseClicked) },
                     onResumeClick = { onEvent(SessionUiEvent.ResumeClicked) },
                     onStopClick = { onEvent(SessionUiEvent.StopClicked) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .align(Alignment.BottomCenter),
+                    modifier = Modifier.fillMaxWidth(),
                 )
                 if (uiState.overlay is SessionOverlay.StopConfirmation) {
                     StopConfirmationDialog(

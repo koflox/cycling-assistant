@@ -8,7 +8,11 @@
       "Bash(./gradlew *build*)",
       "Bash(./gradlew *clean*)",
       "Bash(./gradlew *detektRun*)",
-      "Bash(taskkill)"
+      "Bash(taskkill)",
+      "Bash(./gradlew:*)",
+      "Bash(./gradlew clean:*)",
+      "Bash(taskkill:*)",
+      "Bash(timeout:*)"
     ]
   }
 }

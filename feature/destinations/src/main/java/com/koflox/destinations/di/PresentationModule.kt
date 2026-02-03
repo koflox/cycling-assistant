@@ -19,6 +19,7 @@ internal val presentationModule = module {
             uiMapper = get(),
             application = androidApplication(),
             cyclingSessionUseCase = get(),
+            observeNutritionBreakUseCase = get(),
             dispatcherDefault = get(DispatchersQualifier.Default),
         )
     }

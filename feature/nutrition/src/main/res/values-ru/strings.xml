@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="nutrition_popup_title">Время перекусить!</string>
+    <string name="nutrition_popup_timer">Предложено %s назад</string>
+    <string name="nutrition_popup_dismiss">Закрыть</string>
+</resources>
