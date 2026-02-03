@@ -14,4 +14,5 @@ internal sealed interface DestinationsUiEvent {
     data object NavigationActionHandled : DestinationsUiEvent
     data object SelectedMarkerInfoClicked : DestinationsUiEvent
     data object SelectedMarkerOptionsDialogDismissed : DestinationsUiEvent
+    data object NutritionPopupDismissed : DestinationsUiEvent
 }

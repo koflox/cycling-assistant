@@ -18,6 +18,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.koflox.designsystem.theme.Spacing
+import com.koflox.destinationnutrition.bridge.navigator.NutritionUiNavigator
 import com.koflox.destinations.presentation.destinations.components.GoogleMapView
 import com.koflox.destinations.presentation.destinations.components.LetsGoButton
 import com.koflox.destinations.presentation.destinations.components.LoadingOverlay
@@ -47,6 +48,7 @@ internal fun DestinationsScreenInternal(
     modifier: Modifier = Modifier,
     viewModel: DestinationsViewModel = koinViewModel(),
     sessionUiNavigator: CyclingSessionUiNavigator = koinInject(),
+    nutritionUiNavigator: NutritionUiNavigator = koinInject(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
@@ -61,6 +63,7 @@ internal fun DestinationsScreenInternal(
             uiState = uiState,
             viewModel = viewModel,
             sessionUiNavigator = sessionUiNavigator,
+            nutritionUiNavigator = nutritionUiNavigator,
             modifier = modifier,
             onNavigateToSessionCompletion = onNavigateToSessionCompletion,
         )
@@ -96,6 +99,7 @@ private fun NavigationEffect(action: NavigationAction?, context: Context, viewMo
                 context.startActivity(intent)
                 viewModel.onEvent(DestinationsUiEvent.NavigationActionHandled)
             }
+
             null -> Unit
         }
     }
@@ -107,6 +111,7 @@ private fun DestinationsContent(
     uiState: DestinationsUiState,
     viewModel: DestinationsViewModel,
     sessionUiNavigator: CyclingSessionUiNavigator,
+    nutritionUiNavigator: NutritionUiNavigator,
     onNavigateToSessionCompletion: (sessionId: String) -> Unit,
 ) {
     Box(modifier = modifier.fillMaxSize()) {
@@ -122,13 +127,30 @@ private fun DestinationsContent(
         if (uiState.isReady) {
             if (uiState.isSessionActive) {
                 uiState.selectedDestination?.let { destination ->
-                    sessionUiNavigator.SessionScreen(
-                        destinationLocation = destination.location,
+                    Column(
                         modifier = Modifier
                             .fillMaxWidth()
                             .align(Alignment.BottomCenter),
-                        onNavigateToCompletion = onNavigateToSessionCompletion,
-                    )
+                    ) {
+                        uiState.nutritionSuggestionTimeMs?.let { suggestionTimeMs ->
+                            nutritionUiNavigator.NutritionBreakPopup(
+                                suggestionTimeMs = suggestionTimeMs,
+                                onDismiss = { viewModel.onEvent(DestinationsUiEvent.NutritionPopupDismissed) },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = Spacing.Large),
+                            )
+                        }
+                        sessionUiNavigator.SessionScreen(
+                            destinationLocation = destination.location,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = Spacing.Tiny)
+                                .padding(bottom = Spacing.Large)
+                                .padding(horizontal = Spacing.Large),
+                            onNavigateToCompletion = onNavigateToSessionCompletion,
+                        )
+                    }
                 }
             } else {
                 DestinationSelectionControls(
@@ -145,7 +167,15 @@ private fun DestinationsContent(
             LoadingOverlay()
         }
     }
+    DestinationOptionsDialog(uiState, viewModel, sessionUiNavigator)
+}
 
+@Composable
+private fun DestinationOptionsDialog(
+    uiState: DestinationsUiState,
+    viewModel: DestinationsViewModel,
+    sessionUiNavigator: CyclingSessionUiNavigator,
+) {
     if (uiState.showSelectedMarkerOptionsDialog && uiState.selectedDestination != null && uiState.userLocation != null) {
         sessionUiNavigator.DestinationOptions(
             destinationId = uiState.selectedDestination.id,

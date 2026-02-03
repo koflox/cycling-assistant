@@ -71,10 +71,15 @@ dependencies {
 
     // Feature modules
     implementation(project(":feature:dashboard"))
-    implementation(project(":feature:destinations"))
+    implementation(project(":feature:destination-nutrition:bridge:api"))
+    implementation(project(":feature:destination-nutrition:bridge:impl"))
     implementation(project(":feature:destination-session:bridge:api"))
     implementation(project(":feature:destination-session:bridge:impl"))
+    implementation(project(":feature:destinations"))
     implementation(project(":feature:locale"))
+    implementation(project(":feature:nutrition"))
+    implementation(project(":feature:nutrition-session:bridge:api"))
+    implementation(project(":feature:nutrition-session:bridge:impl"))
     implementation(project(":feature:profile"))
     implementation(project(":feature:session"))
     implementation(project(":feature:session-settings:bridge:api"))
