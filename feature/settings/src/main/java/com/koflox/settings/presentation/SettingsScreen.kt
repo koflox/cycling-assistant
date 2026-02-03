@@ -2,6 +2,7 @@ package com.koflox.settings.presentation
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -93,36 +94,60 @@ private fun SettingsBody(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(Spacing.ExtraLarge),
     ) {
-        SettingDropdown(
-            label = stringResource(R.string.settings_theme),
-            selectedValue = uiState.selectedTheme.displayName(),
-            isExpanded = uiState.isThemeDropdownExpanded,
-            onExpandToggle = { onEvent(SettingsUiEvent.ThemeDropdownToggled) },
-            onDismiss = { onEvent(SettingsUiEvent.DropdownsDismissed) },
-            items = uiState.availableThemes,
-            itemLabel = { it.displayName() },
-            onItemSelected = { onEvent(SettingsUiEvent.ThemeSelected(it)) },
+        SettingsSection(title = stringResource(R.string.settings_section_app)) {
+            SettingDropdown(
+                label = stringResource(R.string.settings_theme),
+                selectedValue = uiState.selectedTheme.displayName(),
+                isExpanded = uiState.isThemeDropdownExpanded,
+                onExpandToggle = { onEvent(SettingsUiEvent.ThemeDropdownToggled) },
+                onDismiss = { onEvent(SettingsUiEvent.DropdownsDismissed) },
+                items = uiState.availableThemes,
+                itemLabel = { it.displayName() },
+                onItemSelected = { onEvent(SettingsUiEvent.ThemeSelected(it)) },
+            )
+            SettingDropdown(
+                label = stringResource(R.string.settings_language),
+                selectedValue = uiState.selectedLanguage.displayName,
+                isExpanded = uiState.isLanguageDropdownExpanded,
+                onExpandToggle = { onEvent(SettingsUiEvent.LanguageDropdownToggled) },
+                onDismiss = { onEvent(SettingsUiEvent.DropdownsDismissed) },
+                items = uiState.availableLanguages,
+                itemLabel = { it.displayName },
+                onItemSelected = { onEvent(SettingsUiEvent.LanguageSelected(it)) },
+            )
+        }
+        SettingsSection(title = stringResource(R.string.settings_section_profile)) {
+            SettingTextField(
+                label = stringResource(R.string.settings_rider_weight),
+                value = uiState.riderWeightKg,
+                onValueChange = { onEvent(SettingsUiEvent.RiderWeightChanged(it)) },
+                keyboardType = KeyboardType.Decimal,
+                placeholder = stringResource(R.string.settings_rider_weight_hint),
+                isError = uiState.isRiderWeightError,
+                errorText = uiState.riderWeightError?.let {
+                    stringResource(R.string.settings_rider_weight_error, it.minWeightKg, it.maxWeightKg)
+                },
+            )
+        }
+    }
+}
+
+@Composable
+private fun SettingsSection(
+    title: String,
+    modifier: Modifier = Modifier,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    Column(modifier = modifier.fillMaxWidth()) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.primary,
         )
-        SettingDropdown(
-            label = stringResource(R.string.settings_language),
-            selectedValue = uiState.selectedLanguage.displayName,
-            isExpanded = uiState.isLanguageDropdownExpanded,
-            onExpandToggle = { onEvent(SettingsUiEvent.LanguageDropdownToggled) },
-            onDismiss = { onEvent(SettingsUiEvent.DropdownsDismissed) },
-            items = uiState.availableLanguages,
-            itemLabel = { it.displayName },
-            onItemSelected = { onEvent(SettingsUiEvent.LanguageSelected(it)) },
-        )
-        SettingTextField(
-            label = stringResource(R.string.settings_rider_weight),
-            value = uiState.riderWeightKg,
-            onValueChange = { onEvent(SettingsUiEvent.RiderWeightChanged(it)) },
-            keyboardType = KeyboardType.Decimal,
-            placeholder = stringResource(R.string.settings_rider_weight_hint),
-            isError = uiState.isRiderWeightError,
-            errorText = uiState.riderWeightError?.let {
-                stringResource(R.string.settings_rider_weight_error, it.minWeightKg, it.maxWeightKg)
-            },
+        Spacer(modifier = Modifier.height(Spacing.Medium))
+        Column(
+            verticalArrangement = Arrangement.spacedBy(Spacing.Large),
+            content = content,
         )
     }
 }
