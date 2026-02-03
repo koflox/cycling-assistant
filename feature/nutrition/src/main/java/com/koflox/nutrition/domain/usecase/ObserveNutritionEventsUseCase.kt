@@ -1,11 +1,13 @@
 package com.koflox.nutrition.domain.usecase
 
 import com.koflox.nutrition.domain.model.NutritionEvent
+import com.koflox.nutrition.domain.model.NutritionSettings
 import com.koflox.nutritionsession.bridge.model.SessionTimeInfo
 import com.koflox.nutritionsession.bridge.usecase.SessionElapsedTimeUseCase
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
@@ -17,14 +19,14 @@ interface ObserveNutritionEventsUseCase {
 
 internal class ObserveNutritionEventsUseCaseImpl(
     private val sessionElapsedTimeUseCase: SessionElapsedTimeUseCase,
+    private val observeNutritionSettingsUseCase: ObserveNutritionSettingsUseCase,
     private val currentTimeProvider: () -> Long = { System.currentTimeMillis() },
-    private val intervalMs: Long = NUTRITION_INTERVAL_MS,
     private val checkIntervalMs: Long = CHECK_INTERVAL_MS,
 ) : ObserveNutritionEventsUseCase {
 
     companion object {
-        private const val NUTRITION_INTERVAL_MS = 25L * 60L * 1000L
         private const val CHECK_INTERVAL_MS = 1000L
+        private const val MINUTES_TO_MS = 60L * 1000L
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -33,12 +35,18 @@ internal class ObserveNutritionEventsUseCaseImpl(
         var lastEmittedInterval = 0
         var hadSession = false
 
-        sessionElapsedTimeUseCase.observeSessionTimeInfo()
-            .flatMapLatest { timeInfo ->
+        combine(
+            sessionElapsedTimeUseCase.observeSessionTimeInfo(),
+            observeNutritionSettingsUseCase.observeSettings(),
+        ) { timeInfo, settings ->
+            Pair(timeInfo, settings)
+        }
+            .flatMapLatest { (timeInfo, settings) ->
                 when {
                     timeInfo == null -> flowOf(NutritionCheckResult.SessionEnded)
                     !timeInfo.isRunning -> flowOf(NutritionCheckResult.SessionPaused)
-                    else -> createTickerFlow(timeInfo)
+                    !settings.isEnabled -> flowOf(NutritionCheckResult.Disabled)
+                    else -> createTickerFlow(timeInfo, settings)
                 }
             }
             .collect { result ->
@@ -50,12 +58,19 @@ internal class ObserveNutritionEventsUseCaseImpl(
                             hadSession = false
                         }
                     }
+
                     is NutritionCheckResult.SessionPaused -> {
                         hadSession = true
                     }
+
+                    is NutritionCheckResult.Disabled -> {
+                        hadSession = true
+                    }
+
                     is NutritionCheckResult.TimeCheck -> {
                         hadSession = true
-                        val currentInterval = calculateCurrentInterval(result.timeInfo)
+                        val intervalMs = result.settings.intervalMinutes * MINUTES_TO_MS
+                        val currentInterval = calculateCurrentInterval(result.timeInfo, intervalMs)
                         if (currentInterval > lastEmittedInterval) {
                             emit(
                                 NutritionEvent.BreakRequired(
@@ -70,18 +85,20 @@ internal class ObserveNutritionEventsUseCaseImpl(
             }
     }
 
-    private fun createTickerFlow(timeInfo: SessionTimeInfo): Flow<NutritionCheckResult> =
-        merge(
-            flowOf(NutritionCheckResult.TimeCheck(timeInfo)),
-            flow {
-                while (true) {
-                    delay(checkIntervalMs)
-                    emit(NutritionCheckResult.TimeCheck(timeInfo))
-                }
-            },
-        )
+    private fun createTickerFlow(
+        timeInfo: SessionTimeInfo,
+        settings: NutritionSettings,
+    ): Flow<NutritionCheckResult> = merge(
+        flowOf(NutritionCheckResult.TimeCheck(timeInfo, settings)),
+        flow {
+            while (true) {
+                delay(checkIntervalMs)
+                emit(NutritionCheckResult.TimeCheck(timeInfo, settings))
+            }
+        },
+    )
 
-    private fun calculateCurrentInterval(timeInfo: SessionTimeInfo): Int {
+    private fun calculateCurrentInterval(timeInfo: SessionTimeInfo, intervalMs: Long): Int {
         val currentTimeMs = currentTimeProvider()
         val realElapsedMs = timeInfo.elapsedTimeMs + (currentTimeMs - timeInfo.lastResumedTimeMs)
         return (realElapsedMs / intervalMs).toInt()
@@ -90,6 +107,7 @@ internal class ObserveNutritionEventsUseCaseImpl(
     private sealed interface NutritionCheckResult {
         data object SessionEnded : NutritionCheckResult
         data object SessionPaused : NutritionCheckResult
-        data class TimeCheck(val timeInfo: SessionTimeInfo) : NutritionCheckResult
+        data object Disabled : NutritionCheckResult
+        data class TimeCheck(val timeInfo: SessionTimeInfo, val settings: NutritionSettings) : NutritionCheckResult
     }
 }

@@ -3,4 +3,6 @@
     <string name="nutrition_popup_title">おやつの時間です!</string>
     <string name="nutrition_popup_timer">%s前に提案</string>
     <string name="nutrition_popup_dismiss">閉じる</string>
+    <string name="nutrition_settings_enabled">栄養リマインダーを有効にする</string>
+    <string name="nutrition_settings_interval_label">リマインダー間隔: %d分</string>
 </resources>

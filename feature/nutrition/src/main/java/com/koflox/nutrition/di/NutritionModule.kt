@@ -4,6 +4,6 @@ import org.koin.dsl.module
 
 val nutritionModule = module {
     includes(
-        domainModule,
+        dataModules + domainModule + presentationModule,
     )
 }

@@ -19,6 +19,7 @@ import com.koflox.profile.di.profileModule
 import com.koflox.session.di.sessionModule
 import com.koflox.sessionsettings.bridge.impl.di.sessionSettingsBridgeImplModule
 import com.koflox.settings.di.settingsModule
+import com.koflox.settingsnutrition.bridge.impl.di.settingsNutritionBridgeImplModule
 import com.koflox.theme.di.themeModule
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModel
@@ -68,6 +69,7 @@ internal val appModule = module {
         sessionModule,
         sessionSettingsBridgeImplModule,
         settingsModule,
+        settingsNutritionBridgeImplModule,
         themeModule,
     )
 }

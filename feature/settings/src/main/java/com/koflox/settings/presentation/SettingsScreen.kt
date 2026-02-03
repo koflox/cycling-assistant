@@ -31,13 +31,16 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import com.koflox.designsystem.theme.Spacing
 import com.koflox.settings.R
+import com.koflox.settingsnutrition.bridge.navigator.NutritionSettingsUiNavigator
 import com.koflox.theme.domain.model.AppTheme
 import org.koin.androidx.compose.koinViewModel
+import org.koin.compose.koinInject
 
 @Composable
 internal fun SettingsRoute(
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
+    nutritionSettingsUiNavigator: NutritionSettingsUiNavigator = koinInject(),
 ) {
     val viewModel: SettingsViewModel = koinViewModel()
     val uiState by viewModel.uiState.collectAsState()
@@ -45,6 +48,7 @@ internal fun SettingsRoute(
         uiState = uiState,
         onBackClick = onBackClick,
         onEvent = viewModel::onEvent,
+        nutritionSettingsUiNavigator = nutritionSettingsUiNavigator,
         modifier = modifier,
     )
 }
@@ -55,6 +59,7 @@ internal fun SettingsContent(
     uiState: SettingsUiState,
     onBackClick: () -> Unit,
     onEvent: (SettingsUiEvent) -> Unit,
+    nutritionSettingsUiNavigator: NutritionSettingsUiNavigator,
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
@@ -76,6 +81,7 @@ internal fun SettingsContent(
         SettingsBody(
             uiState = uiState,
             onEvent = onEvent,
+            nutritionSettingsUiNavigator = nutritionSettingsUiNavigator,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
@@ -88,6 +94,7 @@ internal fun SettingsContent(
 private fun SettingsBody(
     uiState: SettingsUiState,
     onEvent: (SettingsUiEvent) -> Unit,
+    nutritionSettingsUiNavigator: NutritionSettingsUiNavigator,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -128,6 +135,9 @@ private fun SettingsBody(
                     stringResource(R.string.settings_rider_weight_error, it.minWeightKg, it.maxWeightKg)
                 },
             )
+        }
+        SettingsSection(title = stringResource(R.string.settings_section_nutrition)) {
+            nutritionSettingsUiNavigator.NutritionSettingsSection(modifier = Modifier)
         }
     }
 }
