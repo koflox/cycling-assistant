@@ -1,9 +1,6 @@
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 plugins {
     alias(libs.plugins.android.application) apply false
-    alias(libs.plugins.kotlin.android) apply false
     alias(libs.plugins.kotlin.compose) apply false
     alias(libs.plugins.detekt)
     alias(libs.plugins.kover)
@@ -32,9 +29,10 @@ tasks.register("detektRun", io.gitlab.arturbosch.detekt.Detekt::class) {
 
 subprojects {
     apply(plugin = "org.jetbrains.kotlinx.kover")
-    afterEvaluate {
-        extensions.findByType<com.android.build.gradle.BaseExtension>()?.apply {
-            compileSdkVersion(36)
+
+    plugins.withId("com.android.library") {
+        configure<com.android.build.api.dsl.LibraryExtension> {
+            compileSdk = 36
 
             defaultConfig {
                 minSdk = 24
@@ -43,7 +41,7 @@ subprojects {
             }
 
             buildTypes {
-                getByName("release") {
+                release {
                     isMinifyEnabled = false
                     proguardFiles(
                         getDefaultProguardFile("proguard-android-optimize.txt"),
@@ -57,9 +55,31 @@ subprojects {
                 targetCompatibility = JavaVersion.VERSION_11
             }
         }
+    }
 
-        extensions.findByType<org.jetbrains.kotlin.gradle.dsl.KotlinAndroidProjectExtension>()?.apply {
-            compilerOptions.jvmTarget.set(JvmTarget.JVM_11)
+    plugins.withId("com.android.application") {
+        configure<com.android.build.api.dsl.ApplicationExtension> {
+            compileSdk = 36
+
+            defaultConfig {
+                minSdk = 24
+                testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+            }
+
+            buildTypes {
+                release {
+                    isMinifyEnabled = false
+                    proguardFiles(
+                        getDefaultProguardFile("proguard-android-optimize.txt"),
+                        "proguard-rules.pro",
+                    )
+                }
+            }
+
+            compileOptions {
+                sourceCompatibility = JavaVersion.VERSION_11
+                targetCompatibility = JavaVersion.VERSION_11
+            }
         }
     }
 }
