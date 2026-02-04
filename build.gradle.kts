@@ -1,12 +1,16 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 plugins {
     alias(libs.plugins.android.application) apply false
+    alias(libs.plugins.android.library) apply false
     alias(libs.plugins.kotlin.compose) apply false
     alias(libs.plugins.detekt)
     alias(libs.plugins.kover)
     alias(libs.plugins.module.graph)
-    alias(libs.plugins.android.library) apply false
 }
+
+// ===========================================
+// Detekt
+// ===========================================
 
 dependencies {
     detektPlugins(libs.detekt)
@@ -27,15 +31,23 @@ tasks.register("detektRun", io.gitlab.arturbosch.detekt.Detekt::class) {
     }
 }
 
+// ===========================================
+// Subprojects Common Configuration
+// ===========================================
+
 subprojects {
     apply(plugin = "org.jetbrains.kotlinx.kover")
 
+    val compileSdkVersion = rootProject.libs.versions.compileSdk.get().toInt()
+    val minSdkVersion = rootProject.libs.versions.minSdk.get().toInt()
+    val javaVersion = JavaVersion.toVersion(rootProject.libs.versions.javaVersion.get())
+
     plugins.withId("com.android.library") {
         configure<com.android.build.api.dsl.LibraryExtension> {
-            compileSdk = 36
+            compileSdk = compileSdkVersion
 
             defaultConfig {
-                minSdk = 24
+                minSdk = minSdkVersion
                 testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
                 consumerProguardFiles("consumer-rules.pro")
             }
@@ -51,18 +63,18 @@ subprojects {
             }
 
             compileOptions {
-                sourceCompatibility = JavaVersion.VERSION_11
-                targetCompatibility = JavaVersion.VERSION_11
+                sourceCompatibility = javaVersion
+                targetCompatibility = javaVersion
             }
         }
     }
 
     plugins.withId("com.android.application") {
         configure<com.android.build.api.dsl.ApplicationExtension> {
-            compileSdk = 36
+            compileSdk = compileSdkVersion
 
             defaultConfig {
-                minSdk = 24
+                minSdk = minSdkVersion
                 testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
             }
 
@@ -77,12 +89,16 @@ subprojects {
             }
 
             compileOptions {
-                sourceCompatibility = JavaVersion.VERSION_11
-                targetCompatibility = JavaVersion.VERSION_11
+                sourceCompatibility = javaVersion
+                targetCompatibility = javaVersion
             }
         }
     }
 }
+
+// ===========================================
+// Kover (Code Coverage)
+// ===========================================
 
 dependencies {
     subprojects.forEach { subproject ->
@@ -94,7 +110,6 @@ kover {
     reports {
         filters {
             excludes {
-                // Exclude generated code and common non-testable patterns
                 classes(
                     "*_Factory",
                     "*_Factory\$*",
@@ -104,12 +119,10 @@ kover {
                     "*_Impl",
                     "*_Impl\$*",
                 )
-                // Exclude DI modules and navigation
                 packages(
                     "*.di",
                     "*.navigation",
                 )
-                // Exclude annotated classes
                 annotatedBy(
                     "androidx.compose.runtime.Composable",
                     "androidx.compose.ui.tooling.preview.Preview",
@@ -118,6 +131,10 @@ kover {
         }
     }
 }
+
+// ===========================================
+// Module Graph
+// ===========================================
 
 moduleGraphConfig {
     readmePath.set("./docs/MODULE_GRAPH.md")

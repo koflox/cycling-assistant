@@ -1,4 +1,11 @@
 [versions]
+# SDK
+compileSdk = "36"
+minSdk = "24"
+targetSdk = "36"
+javaVersion = "11"
+
+# Build tools
 agp = "9.0.0"
 kotlin = "2.3.0"
 ksp = "2.3.4"
