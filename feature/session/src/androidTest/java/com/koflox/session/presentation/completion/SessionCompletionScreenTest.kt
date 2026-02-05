@@ -15,10 +15,14 @@ class SessionCompletionScreenTest {
         private const val DESTINATION_NAME = "Central Park"
         private const val START_DATE = "Jan 15, 2025"
         private const val ELAPSED_TIME = "01:30:45"
+        private const val MOVING_TIME = "01:15:30"
+        private const val IDLE_TIME = "00:15:15"
         private const val DISTANCE = "25.50"
         private const val AVG_SPEED = "17.0"
         private const val TOP_SPEED = "32.5"
         private const val ALTITUDE_GAIN = "150"
+        private const val ALTITUDE_LOSS = "120"
+        private const val CALORIES = "450"
         private const val ERROR_MESSAGE = "Failed to load session"
     }
 
@@ -162,10 +166,14 @@ class SessionCompletionScreenTest {
         destinationName = DESTINATION_NAME,
         startDateFormatted = START_DATE,
         elapsedTimeFormatted = ELAPSED_TIME,
+        movingTimeFormatted = MOVING_TIME,
+        idleTimeFormatted = IDLE_TIME,
         traveledDistanceFormatted = DISTANCE,
         averageSpeedFormatted = AVG_SPEED,
         topSpeedFormatted = TOP_SPEED,
         altitudeGainFormatted = ALTITUDE_GAIN,
+        altitudeLossFormatted = ALTITUDE_LOSS,
+        caloriesFormatted = CALORIES,
         routePoints = emptyList(), // Empty to avoid Google Maps initialization issues in tests
         overlay = overlay,
     )
