@@ -10,6 +10,7 @@ import com.koflox.destinationnutrition.bridge.usecase.ObserveNutritionBreakUseCa
 import com.koflox.destinations.R
 import com.koflox.destinations.domain.model.DestinationLoadingEvent
 import com.koflox.destinations.domain.model.Destinations
+import com.koflox.destinations.domain.usecase.CheckLocationEnabledUseCase
 import com.koflox.destinations.domain.usecase.GetDestinationInfoUseCase
 import com.koflox.destinations.domain.usecase.GetUserLocationUseCase
 import com.koflox.destinations.domain.usecase.InitializeDatabaseUseCase
@@ -31,6 +32,7 @@ import java.util.concurrent.atomic.AtomicReference
 import kotlin.math.roundToInt
 
 internal class DestinationsViewModel(
+    private val checkLocationEnabledUseCase: CheckLocationEnabledUseCase,
     private val getUserLocationUseCase: GetUserLocationUseCase,
     private val observeUserLocationUseCase: ObserveUserLocationUseCase,
     private val initializeDatabaseUseCase: InitializeDatabaseUseCase,
@@ -62,6 +64,11 @@ internal class DestinationsViewModel(
     }
 
     private fun initialize() {
+        observeLocationEnabled()
+        initializeInternal()
+    }
+
+    private fun initializeInternal() {
         viewModelScope.launch(dispatcherDefault) {
             _uiState.update { it.copy(isInitializing = true) }
             getUserLocationUseCase.getLocation()
@@ -78,6 +85,14 @@ internal class DestinationsViewModel(
             _uiState.update { it.copy(isInitializing = false) }
             listenToActiveSession()
             observeNutritionEvents()
+        }
+    }
+
+    private fun observeLocationEnabled() {
+        viewModelScope.launch(dispatcherDefault) {
+            checkLocationEnabledUseCase.observeLocationEnabled().collect { isEnabled ->
+                _uiState.update { it.copy(isLocationDisabled = !isEnabled) }
+            }
         }
     }
 
@@ -151,6 +166,8 @@ internal class DestinationsViewModel(
                 DestinationsUiEvent.SelectedMarkerInfoClicked -> showMarkerOptionsDialog()
                 DestinationsUiEvent.SelectedMarkerOptionsDialogDismissed -> dismissSelectedMarkerOptionsDialog()
                 DestinationsUiEvent.NutritionPopupDismissed -> dismissNutritionPopup()
+                DestinationsUiEvent.RetryInitializationClicked -> initializeInternal()
+//                DestinationsUiEvent.RetryInitializationClicked -> retryInitialization()
             }
         }
     }

@@ -22,6 +22,7 @@ internal data class DestinationsUiState(
     val isSessionActive: Boolean = false,
     val isActiveSessionChecked: Boolean = false,
     val nutritionSuggestionTimeMs: Long? = null,
+    val isLocationDisabled: Boolean = false,
 ) {
     companion object {
         const val DEFAULT_ROUTE_DISTANCE_KM = 15.0
@@ -30,6 +31,9 @@ internal data class DestinationsUiState(
 
     val isReady: Boolean
         get() = !isInitializing && isActiveSessionChecked && isPermissionGranted
+
+    val isLocationRetryNeeded: Boolean
+        get() = isLocationDisabled && !areDestinationsReady && !isPreparingDestinations
 }
 
 internal sealed interface NavigationAction {
