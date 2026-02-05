@@ -18,12 +18,14 @@ import androidx.room.PrimaryKey
     indices = [Index("sessionId")],
 )
 data class TrackPointEntity(
-    @PrimaryKey(autoGenerate = true)
-    val id: Long = 0,
+    @PrimaryKey
+    val id: String,
     val sessionId: String,
     val latitude: Double,
     val longitude: Double,
     val timestampMs: Long,
     val speedKmh: Double,
     val altitudeMeters: Double?,
+    val isSegmentStart: Boolean,
+    val accuracyMeters: Float?,
 )

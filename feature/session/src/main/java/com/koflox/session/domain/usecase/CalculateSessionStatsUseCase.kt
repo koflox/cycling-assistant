@@ -52,6 +52,7 @@ internal class CalculateSessionStatsUseCaseImpl(
         if (trackPoints.size < 2) return 0L
         var movingMs = 0L
         for (i in 1 until trackPoints.size) {
+            if (trackPoints[i].isSegmentStart) continue
             if (trackPoints[i].speedKmh >= IDLE_SPEED_THRESHOLD_KMH) {
                 movingMs += trackPoints[i].timestampMs - trackPoints[i - 1].timestampMs
             }
@@ -62,6 +63,7 @@ internal class CalculateSessionStatsUseCaseImpl(
     private fun calculateAltitudeLoss(trackPoints: List<TrackPoint>): Double {
         if (trackPoints.size < 2) return 0.0
         return trackPoints.zipWithNext().sumOf { (prev, curr) ->
+            if (curr.isSegmentStart) return@sumOf 0.0
             val prevAlt = prev.altitudeMeters ?: return@sumOf 0.0
             val currAlt = curr.altitudeMeters ?: return@sumOf 0.0
             val diff = prevAlt - currAlt

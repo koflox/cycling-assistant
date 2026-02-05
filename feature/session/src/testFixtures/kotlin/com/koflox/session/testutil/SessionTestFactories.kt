@@ -50,17 +50,23 @@ fun createSession(
 )
 
 fun createTrackPoint(
+    id: String = "",
     latitude: Double = 0.0,
     longitude: Double = 0.0,
     timestampMs: Long = 0L,
     speedKmh: Double = 0.0,
     altitudeMeters: Double? = null,
+    isSegmentStart: Boolean = false,
+    accuracyMeters: Float? = null,
 ) = TrackPoint(
+    id = id,
     latitude = latitude,
     longitude = longitude,
     timestampMs = timestampMs,
     speedKmh = speedKmh,
     altitudeMeters = altitudeMeters,
+    isSegmentStart = isSegmentStart,
+    accuracyMeters = accuracyMeters,
 )
 
 fun createSessionEntity(
@@ -100,13 +106,15 @@ fun createSessionEntity(
 )
 
 fun createTrackPointEntity(
-    id: Long = 0L,
+    id: String = "",
     sessionId: String = "",
     latitude: Double = 0.0,
     longitude: Double = 0.0,
     timestampMs: Long = 0L,
     speedKmh: Double = 0.0,
     altitudeMeters: Double? = null,
+    isSegmentStart: Boolean = false,
+    accuracyMeters: Float? = null,
 ) = TrackPointEntity(
     id = id,
     sessionId = sessionId,
@@ -115,6 +123,8 @@ fun createTrackPointEntity(
     timestampMs = timestampMs,
     speedKmh = speedKmh,
     altitudeMeters = altitudeMeters,
+    isSegmentStart = isSegmentStart,
+    accuracyMeters = accuracyMeters,
 )
 
 fun createSessionWithTrackPoints(

@@ -294,6 +294,40 @@ class CalculateSessionStatsUseCaseImplTest {
     }
 
     @Test
+    fun `moving time skips segment start points`() = runTest {
+        val trackPoints = listOf(
+            createTrackPoint(timestampMs = 0L, speedKmh = 15.0),
+            createTrackPoint(timestampMs = 3000L, speedKmh = 20.0),
+            createTrackPoint(timestampMs = 6000L, speedKmh = 25.0, isSegmentStart = true),
+            createTrackPoint(timestampMs = 9000L, speedKmh = 18.0),
+        )
+        coEvery { getSessionByIdUseCase.getSession(SESSION_ID) } returns Result.success(
+            createSession(trackPoints = trackPoints, elapsedTimeMs = 9000L, averageSpeedKmh = AVERAGE_SPEED_KMH),
+        )
+
+        val result = useCase.calculate(SESSION_ID).getOrThrow()
+
+        assertEquals(6000L, result.movingTimeMs)
+    }
+
+    @Test
+    fun `altitude loss skips segment start points`() = runTest {
+        val trackPoints = listOf(
+            createTrackPoint(altitudeMeters = 100.0),
+            createTrackPoint(altitudeMeters = 95.0),
+            createTrackPoint(altitudeMeters = 50.0, isSegmentStart = true),
+            createTrackPoint(altitudeMeters = 45.0),
+        )
+        coEvery { getSessionByIdUseCase.getSession(SESSION_ID) } returns Result.success(
+            createSession(trackPoints = trackPoints, elapsedTimeMs = ELAPSED_TIME_MS, averageSpeedKmh = AVERAGE_SPEED_KMH),
+        )
+
+        val result = useCase.calculate(SESSION_ID).getOrThrow()
+
+        assertEquals(10.0, result.altitudeLossMeters, 0.01)
+    }
+
+    @Test
     fun `returns failure when session not found`() = runTest {
         val exception = RuntimeException("Not found")
         coEvery { getSessionByIdUseCase.getSession(SESSION_ID) } returns Result.failure(exception)

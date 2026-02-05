@@ -9,6 +9,7 @@ import com.koflox.session.testutil.createTrackPointEntity
 import com.koflox.testing.coroutine.MainDispatcherRule
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -30,10 +31,12 @@ class SessionMapperImplTest {
         private const val TRAVELED_DISTANCE_KM = 5.5
         private const val AVERAGE_SPEED_KMH = 22.0
         private const val TOP_SPEED_KMH = 35.0
+        private const val TRACK_POINT_ID = "tp-123"
         private const val TRACK_POINT_LAT = 52.51
         private const val TRACK_POINT_LONG = 13.41
         private const val TRACK_POINT_TIMESTAMP = 1500000L
         private const val TRACK_POINT_SPEED = 25.0
+        private const val TRACK_POINT_ACCURACY = 8.5f
     }
 
     @get:Rule
@@ -161,6 +164,17 @@ class SessionMapperImplTest {
     }
 
     @Test
+    fun `toTrackPointEntities maps id and new fields correctly`() = runTest {
+        val trackPoints = listOf(createTestTrackPoint())
+
+        val entities = mapper.toTrackPointEntities(SESSION_ID, trackPoints)
+
+        assertEquals(TRACK_POINT_ID, entities[0].id)
+        assertTrue(entities[0].isSegmentStart)
+        assertEquals(TRACK_POINT_ACCURACY, entities[0].accuracyMeters)
+    }
+
+    @Test
     fun `toTrackPointEntities returns empty list for empty input`() = runTest {
         val entities = mapper.toTrackPointEntities(SESSION_ID, emptyList())
 
@@ -250,6 +264,18 @@ class SessionMapperImplTest {
     }
 
     @Test
+    fun `toDomain maps track point id and new fields correctly`() = runTest {
+        val sessionWithTrackPoints = createTestSessionWithTrackPoints()
+
+        val session = mapper.toDomain(sessionWithTrackPoints)
+
+        val trackPoint = session.trackPoints[0]
+        assertEquals(TRACK_POINT_ID, trackPoint.id)
+        assertTrue(trackPoint.isSegmentStart)
+        assertEquals(TRACK_POINT_ACCURACY, trackPoint.accuracyMeters)
+    }
+
+    @Test
     fun `toDomainList maps multiple sessions`() = runTest {
         val sessions = listOf(
             createTestSessionWithTrackPoints(sessionId = "session-1"),
@@ -308,15 +334,21 @@ class SessionMapperImplTest {
     )
 
     private fun createTestTrackPoint(
+        id: String = TRACK_POINT_ID,
         latitude: Double = TRACK_POINT_LAT,
         longitude: Double = TRACK_POINT_LONG,
         timestampMs: Long = TRACK_POINT_TIMESTAMP,
         speedKmh: Double = TRACK_POINT_SPEED,
+        isSegmentStart: Boolean = true,
+        accuracyMeters: Float? = TRACK_POINT_ACCURACY,
     ) = createTrackPoint(
+        id = id,
         latitude = latitude,
         longitude = longitude,
         timestampMs = timestampMs,
         speedKmh = speedKmh,
+        isSegmentStart = isSegmentStart,
+        accuracyMeters = accuracyMeters,
     )
 
     private fun createTestSessionEntity(
@@ -341,14 +373,20 @@ class SessionMapperImplTest {
     )
 
     private fun createTestTrackPointEntity(
+        id: String = TRACK_POINT_ID,
         latitude: Double = TRACK_POINT_LAT,
         longitude: Double = TRACK_POINT_LONG,
+        isSegmentStart: Boolean = true,
+        accuracyMeters: Float? = TRACK_POINT_ACCURACY,
     ) = createTrackPointEntity(
+        id = id,
         sessionId = SESSION_ID,
         latitude = latitude,
         longitude = longitude,
         timestampMs = TRACK_POINT_TIMESTAMP,
         speedKmh = TRACK_POINT_SPEED,
+        isSegmentStart = isSegmentStart,
+        accuracyMeters = accuracyMeters,
     )
 
     private fun createTestSessionWithTrackPoints(
