@@ -12,7 +12,9 @@
       "Bash(./gradlew:*)",
       "Bash(./gradlew clean:*)",
       "Bash(taskkill:*)",
-      "Bash(timeout:*)"
+      "Bash(timeout:*)",
+      "Bash(find:*)",
+      "Bash(xargs:*)"
     ]
   }
 }

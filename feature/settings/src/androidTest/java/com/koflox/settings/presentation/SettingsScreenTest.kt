@@ -1,5 +1,7 @@
 package com.koflox.settings.presentation
 
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -7,11 +9,19 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.koflox.locale.domain.model.AppLanguage
+import com.koflox.settingsnutrition.bridge.navigator.NutritionSettingsUiNavigator
 import com.koflox.theme.domain.model.AppTheme
 import org.junit.Rule
 import org.junit.Test
 
 class SettingsScreenTest {
+
+    private val testNutritionSettingsUiNavigator = object : NutritionSettingsUiNavigator {
+        @Composable
+        override fun NutritionSettingsSection(modifier: Modifier) {
+            // No-op for tests
+        }
+    }
 
     @get:Rule
     val composeTestRule = createComposeRule()
@@ -23,6 +33,7 @@ class SettingsScreenTest {
                 uiState = SettingsUiState(),
                 onBackClick = {},
                 onEvent = {},
+                nutritionSettingsUiNavigator = testNutritionSettingsUiNavigator,
             )
         }
 
@@ -37,6 +48,7 @@ class SettingsScreenTest {
                 uiState = SettingsUiState(selectedTheme = AppTheme.SYSTEM),
                 onBackClick = {},
                 onEvent = {},
+                nutritionSettingsUiNavigator = testNutritionSettingsUiNavigator,
             )
         }
 
@@ -50,6 +62,7 @@ class SettingsScreenTest {
                 uiState = SettingsUiState(selectedLanguage = AppLanguage.ENGLISH),
                 onBackClick = {},
                 onEvent = {},
+                nutritionSettingsUiNavigator = testNutritionSettingsUiNavigator,
             )
         }
 
@@ -63,6 +76,7 @@ class SettingsScreenTest {
                 uiState = SettingsUiState(isThemeDropdownExpanded = true),
                 onBackClick = {},
                 onEvent = {},
+                nutritionSettingsUiNavigator = testNutritionSettingsUiNavigator,
             )
         }
 
@@ -79,6 +93,7 @@ class SettingsScreenTest {
                 uiState = SettingsUiState(isLanguageDropdownExpanded = true),
                 onBackClick = {},
                 onEvent = {},
+                nutritionSettingsUiNavigator = testNutritionSettingsUiNavigator,
             )
         }
 
@@ -95,6 +110,7 @@ class SettingsScreenTest {
                 uiState = SettingsUiState(selectedTheme = AppTheme.DARK),
                 onBackClick = {},
                 onEvent = {},
+                nutritionSettingsUiNavigator = testNutritionSettingsUiNavigator,
             )
         }
 
@@ -108,6 +124,7 @@ class SettingsScreenTest {
                 uiState = SettingsUiState(selectedLanguage = AppLanguage.JAPANESE),
                 onBackClick = {},
                 onEvent = {},
+                nutritionSettingsUiNavigator = testNutritionSettingsUiNavigator,
             )
         }
 
@@ -126,6 +143,7 @@ class SettingsScreenTest {
                         eventTriggered = true
                     }
                 },
+                nutritionSettingsUiNavigator = testNutritionSettingsUiNavigator,
             )
         }
 
