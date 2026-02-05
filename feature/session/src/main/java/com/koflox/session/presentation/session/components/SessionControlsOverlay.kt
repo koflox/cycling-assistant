@@ -30,6 +30,7 @@ internal fun SessionControlsOverlay(
     onPauseClick: () -> Unit,
     onResumeClick: () -> Unit,
     onStopClick: () -> Unit,
+    onEnableLocationClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Card(
@@ -62,9 +63,11 @@ internal fun SessionControlsOverlay(
             Spacer(modifier = Modifier.height(Spacing.Large))
             SessionControlButtons(
                 isPaused = state.isPaused,
+                isLocationDisabled = state.isLocationDisabled,
                 onPauseClick = onPauseClick,
                 onResumeClick = onResumeClick,
                 onStopClick = onStopClick,
+                onEnableLocationClick = onEnableLocationClick,
             )
         }
     }
@@ -73,18 +76,28 @@ internal fun SessionControlsOverlay(
 @Composable
 private fun SessionControlButtons(
     isPaused: Boolean,
+    isLocationDisabled: Boolean,
     onPauseClick: () -> Unit,
     onResumeClick: () -> Unit,
     onStopClick: () -> Unit,
+    onEnableLocationClick: () -> Unit,
 ) {
     Row(horizontalArrangement = Arrangement.spacedBy(Spacing.Medium)) {
-        if (isPaused) {
-            Button(onClick = onResumeClick, modifier = Modifier.weight(1f)) {
-                Text(stringResource(R.string.session_button_continue))
+        when {
+            isPaused && isLocationDisabled -> {
+                Button(onClick = onEnableLocationClick, modifier = Modifier.weight(1f)) {
+                    Text(stringResource(R.string.location_disabled_enable))
+                }
             }
-        } else {
-            OutlinedButton(onClick = onPauseClick, modifier = Modifier.weight(1f)) {
-                Text(stringResource(R.string.session_button_pause))
+            isPaused -> {
+                Button(onClick = onResumeClick, modifier = Modifier.weight(1f)) {
+                    Text(stringResource(R.string.session_button_continue))
+                }
+            }
+            else -> {
+                OutlinedButton(onClick = onPauseClick, modifier = Modifier.weight(1f)) {
+                    Text(stringResource(R.string.session_button_pause))
+                }
             }
         }
         Button(

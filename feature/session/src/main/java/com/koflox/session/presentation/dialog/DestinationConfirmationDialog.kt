@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.koflox.designsystem.theme.Spacing
 import com.koflox.location.model.Location
+import com.koflox.location.settings.LocationSettingsHandler
 import com.koflox.session.R
 import com.koflox.session.presentation.permission.NotificationPermissionHandler
 import com.koflox.session.presentation.session.SessionViewModel
@@ -34,7 +35,21 @@ fun DestinationOptionsRoute(
     onDismiss: () -> Unit,
 ) {
     val viewModel: SessionViewModel = koinViewModel()
+    var shouldCheckLocation by remember { mutableStateOf(false) }
     var shouldRequestPermission by remember { mutableStateOf(false) }
+    if (shouldCheckLocation) {
+        LocationSettingsHandler(
+            onLocationEnabled = {
+                shouldCheckLocation = false
+                @Suppress("AssignedValueIsNeverRead")
+                shouldRequestPermission = true
+            },
+            onLocationDenied = {
+                @Suppress("AssignedValueIsNeverRead")
+                shouldCheckLocation = false
+            },
+        )
+    }
     if (shouldRequestPermission) {
         NotificationPermissionHandler { isGranted ->
             if (isGranted) {
@@ -56,7 +71,7 @@ fun DestinationOptionsRoute(
         onNavigateClick = onNavigateClick,
         onStartSessionClick = {
             @Suppress("AssignedValueIsNeverRead")
-            shouldRequestPermission = true
+            shouldCheckLocation = true
         },
         onDismiss = onDismiss,
     )

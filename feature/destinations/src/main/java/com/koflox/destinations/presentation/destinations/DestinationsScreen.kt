@@ -11,6 +11,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -22,10 +25,12 @@ import com.koflox.destinationnutrition.bridge.navigator.NutritionUiNavigator
 import com.koflox.destinations.presentation.destinations.components.GoogleMapView
 import com.koflox.destinations.presentation.destinations.components.LetsGoButton
 import com.koflox.destinations.presentation.destinations.components.LoadingOverlay
+import com.koflox.destinations.presentation.destinations.components.LocationRetryCard
 import com.koflox.destinations.presentation.destinations.components.PreparingDestinationsCard
 import com.koflox.destinations.presentation.destinations.components.RouteSlider
 import com.koflox.destinations.presentation.permission.LocationPermissionHandler
 import com.koflox.destinationsession.bridge.navigator.CyclingSessionUiNavigator
+import com.koflox.location.settings.LocationSettingsHandler
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 
@@ -126,33 +131,17 @@ private fun DestinationsContent(
         )
         if (uiState.isReady) {
             if (uiState.isSessionActive) {
-                uiState.selectedDestination?.let { destination ->
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .align(Alignment.BottomCenter),
-                    ) {
-                        uiState.nutritionSuggestionTimeMs?.let { suggestionTimeMs ->
-                            nutritionUiNavigator.NutritionBreakPopup(
-                                suggestionTimeMs = suggestionTimeMs,
-                                onDismiss = { viewModel.onEvent(DestinationsUiEvent.NutritionPopupDismissed) },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = Spacing.Large),
-                            )
-                        }
-                        sessionUiNavigator.SessionScreen(
-                            destinationLocation = destination.location,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = Spacing.Tiny)
-                                .padding(bottom = Spacing.Large)
-                                .padding(horizontal = Spacing.Large),
-                            onNavigateToCompletion = onNavigateToSessionCompletion,
-                        )
-                    }
-                }
-            } else {
+                ActiveSessionControls(
+                    uiState = uiState,
+                    viewModel = viewModel,
+                    sessionUiNavigator = sessionUiNavigator,
+                    nutritionUiNavigator = nutritionUiNavigator,
+                    onNavigateToSessionCompletion = onNavigateToSessionCompletion,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.BottomCenter),
+                )
+            } else if (!uiState.isLocationRetryNeeded) {
                 DestinationSelectionControls(
                     uiState = uiState,
                     viewModel = viewModel,
@@ -163,8 +152,16 @@ private fun DestinationsContent(
             }
         }
 
-        if (uiState.isInitializing || uiState.isLoading) {
+        if ((uiState.isInitializing || uiState.isLoading) && !uiState.isLocationRetryNeeded) {
             LoadingOverlay()
+        }
+        if (uiState.isLocationRetryNeeded) {
+            LocationRetryOverlay(
+                viewModel = viewModel,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(Spacing.Large),
+            )
         }
     }
     DestinationOptionsDialog(uiState, viewModel, sessionUiNavigator)
@@ -192,11 +189,57 @@ private fun DestinationOptionsDialog(
 }
 
 @Composable
+private fun ActiveSessionControls(
+    uiState: DestinationsUiState,
+    viewModel: DestinationsViewModel,
+    sessionUiNavigator: CyclingSessionUiNavigator,
+    nutritionUiNavigator: NutritionUiNavigator,
+    onNavigateToSessionCompletion: (sessionId: String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    uiState.selectedDestination?.let { destination ->
+        Column(modifier = modifier) {
+            uiState.nutritionSuggestionTimeMs?.let { suggestionTimeMs ->
+                nutritionUiNavigator.NutritionBreakPopup(
+                    suggestionTimeMs = suggestionTimeMs,
+                    onDismiss = { viewModel.onEvent(DestinationsUiEvent.NutritionPopupDismissed) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = Spacing.Large),
+                )
+            }
+            sessionUiNavigator.SessionScreen(
+                destinationLocation = destination.location,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = Spacing.Tiny)
+                    .padding(bottom = Spacing.Large)
+                    .padding(horizontal = Spacing.Large),
+                onNavigateToCompletion = onNavigateToSessionCompletion,
+            )
+        }
+    }
+}
+
+@Composable
 private fun DestinationSelectionControls(
     uiState: DestinationsUiState,
     viewModel: DestinationsViewModel,
     modifier: Modifier = Modifier,
 ) {
+    var shouldCheckLocation by remember { mutableStateOf(false) }
+    if (shouldCheckLocation) {
+        LocationSettingsHandler(
+            onLocationEnabled = {
+                shouldCheckLocation = false
+                viewModel.onEvent(DestinationsUiEvent.LetsGoClicked)
+            },
+            onLocationDenied = {
+                @Suppress("AssignedValueIsNeverRead")
+                shouldCheckLocation = false
+            },
+        )
+    }
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -214,8 +257,32 @@ private fun DestinationSelectionControls(
             )
         }
         LetsGoButton(
-            onClick = { viewModel.onEvent(DestinationsUiEvent.LetsGoClicked) },
+            onClick = { shouldCheckLocation = true },
             enabled = !uiState.isLoading && uiState.isPermissionGranted && uiState.areDestinationsReady,
         )
     }
+}
+
+@Composable
+private fun LocationRetryOverlay(
+    viewModel: DestinationsViewModel,
+    modifier: Modifier = Modifier,
+) {
+    var shouldCheckLocation by remember { mutableStateOf(false) }
+    if (shouldCheckLocation) {
+        LocationSettingsHandler(
+            onLocationEnabled = {
+                shouldCheckLocation = false
+                viewModel.onEvent(DestinationsUiEvent.RetryInitializationClicked)
+            },
+            onLocationDenied = {
+                @Suppress("AssignedValueIsNeverRead")
+                shouldCheckLocation = false
+            },
+        )
+    }
+    LocationRetryCard(
+        onEnableLocationClick = { shouldCheckLocation = true },
+        modifier = modifier,
+    )
 }

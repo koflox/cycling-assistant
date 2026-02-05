@@ -2,8 +2,8 @@ package com.koflox.session.domain.usecase
 
 import com.koflox.altitude.AltitudeCalculator
 import com.koflox.distance.DistanceCalculator
-import com.koflox.location.LocationValidator
 import com.koflox.location.model.Location
+import com.koflox.location.validator.LocationValidator
 import com.koflox.session.domain.model.Session
 import com.koflox.session.domain.model.SessionStatus
 import com.koflox.session.domain.model.TrackPoint

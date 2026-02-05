@@ -11,6 +11,7 @@ import org.koin.dsl.module
 internal val presentationModule = module {
     viewModel {
         DestinationsViewModel(
+            checkLocationEnabledUseCase = get(),
             getUserLocationUseCase = get(),
             observeUserLocationUseCase = get(),
             initializeDatabaseUseCase = get(),

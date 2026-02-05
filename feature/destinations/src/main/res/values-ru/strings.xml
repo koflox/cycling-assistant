@@ -12,4 +12,8 @@
     <string name="one_way_distance_title">Расстояние в одну сторону</string>
     <string name="km_unit">км</string>
     <string name="preparing_destinations">Подготовка маршрутов</string>
+
+    <!-- Location Disabled -->
+    <string name="location_disabled_message">Геолокация отключена</string>
+    <string name="location_disabled_enable">Включить</string>
 </resources>

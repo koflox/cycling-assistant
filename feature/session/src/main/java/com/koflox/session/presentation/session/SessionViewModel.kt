@@ -7,6 +7,7 @@ import com.koflox.location.model.Location
 import com.koflox.session.domain.model.Session
 import com.koflox.session.domain.model.SessionStatus
 import com.koflox.session.domain.usecase.ActiveSessionUseCase
+import com.koflox.session.domain.usecase.CheckLocationEnabledUseCase
 import com.koflox.session.domain.usecase.CreateSessionParams
 import com.koflox.session.domain.usecase.CreateSessionUseCase
 import com.koflox.session.domain.usecase.UpdateSessionStatusUseCase
@@ -28,6 +29,7 @@ internal class SessionViewModel(
     private val createSessionUseCase: CreateSessionUseCase,
     private val updateSessionStatusUseCase: UpdateSessionStatusUseCase,
     private val activeSessionUseCase: ActiveSessionUseCase,
+    private val checkLocationEnabledUseCase: CheckLocationEnabledUseCase,
     private val sessionServiceController: SessionServiceController,
     private val sessionUiMapper: SessionUiMapper,
     private val errorMessageMapper: ErrorMessageMapper,
@@ -43,6 +45,8 @@ internal class SessionViewModel(
 
     private val sessionTimer: SessionTimer = sessionTimerFactory.create(viewModelScope)
 
+    private var isPausedDueToLocation = false
+
     init {
         initialize()
     }
@@ -50,6 +54,7 @@ internal class SessionViewModel(
     private fun initialize() {
         showNotificationForStartedSession()
         observeActiveSession()
+        observeLocationEnabled()
     }
 
     private fun observeActiveSession() {
@@ -70,6 +75,21 @@ internal class SessionViewModel(
         }
     }
 
+    private fun observeLocationEnabled() {
+        viewModelScope.launch(dispatcherDefault) {
+            checkLocationEnabledUseCase.observeLocationEnabled().collect { isEnabled ->
+                val state = _uiState.value as? SessionUiState.Active ?: return@collect
+                updateActive { it.copy(isLocationDisabled = !isEnabled) }
+                if (!isEnabled && state.status == SessionStatus.RUNNING) {
+                    isPausedDueToLocation = true
+                } else if (isEnabled && isPausedDueToLocation) {
+                    isPausedDueToLocation = false
+                    resumeSession()
+                }
+            }
+        }
+    }
+
     private fun showNotificationForStartedSession() {
         viewModelScope.launch(dispatcherDefault) {
             activeSessionUseCase.observeActiveSession()
@@ -82,12 +102,39 @@ internal class SessionViewModel(
     fun onEvent(event: SessionUiEvent) {
         viewModelScope.launch(dispatcherDefault) {
             when (event) {
-                SessionUiEvent.PauseClicked -> pauseSession()
-                SessionUiEvent.ResumeClicked -> resumeSession()
-                SessionUiEvent.StopClicked -> showStopConfirmation()
-                SessionUiEvent.StopConfirmationDismissed -> dismissStopConfirmation()
-                SessionUiEvent.StopConfirmed -> confirmStop()
-                SessionUiEvent.ErrorDismissed -> dismissError()
+                is SessionUiEvent.SessionManagementEvent -> handleSessionManagementEvent(event)
+                is SessionUiEvent.LocationSettingsEvent -> handleLocationSettingsEvent(event)
+            }
+        }
+    }
+
+    private suspend fun handleSessionManagementEvent(event: SessionUiEvent.SessionManagementEvent) {
+        when (event) {
+            SessionUiEvent.SessionManagementEvent.PauseClicked -> pauseSession()
+            SessionUiEvent.SessionManagementEvent.ResumeClicked -> handleResumeClicked()
+            SessionUiEvent.SessionManagementEvent.StopClicked -> showStopConfirmation()
+            SessionUiEvent.SessionManagementEvent.StopConfirmationDismissed -> dismissStopConfirmation()
+            SessionUiEvent.SessionManagementEvent.StopConfirmed -> confirmStop()
+            SessionUiEvent.SessionManagementEvent.ErrorDismissed -> dismissError()
+        }
+    }
+
+    private fun handleLocationSettingsEvent(event: SessionUiEvent.LocationSettingsEvent) {
+        when (event) {
+            SessionUiEvent.LocationSettingsEvent.EnableLocationClicked -> {
+                updateActive { it.copy(overlay = SessionOverlay.LocationDisabled) }
+            }
+
+            SessionUiEvent.LocationSettingsEvent.LocationEnabled -> {
+                updateActive { it.copy(overlay = null) }
+            }
+
+            SessionUiEvent.LocationSettingsEvent.LocationEnableDenied -> {
+                updateActive { it.copy(overlay = null) }
+            }
+
+            SessionUiEvent.LocationSettingsEvent.LocationDisabledDismissed -> {
+                updateActive { it.copy(overlay = null) }
             }
         }
     }
@@ -132,8 +179,17 @@ internal class SessionViewModel(
     }
 
     private suspend fun pauseSession() {
+        isPausedDueToLocation = false
         updateSessionStatusUseCase.pause()
             .onFailure { showError(it) }
+    }
+
+    private suspend fun handleResumeClicked() {
+        if (!checkLocationEnabledUseCase.isLocationEnabled()) {
+            updateActive { it.copy(overlay = SessionOverlay.LocationDisabled) }
+            return
+        }
+        resumeSession()
     }
 
     private suspend fun resumeSession() {
@@ -186,6 +242,7 @@ internal class SessionViewModel(
             currentLocation = session.trackPoints.lastOrNull()?.let {
                 Location(it.latitude, it.longitude)
             },
+            isLocationDisabled = !checkLocationEnabledUseCase.isLocationEnabled(),
             overlay = currentOverlay,
         )
     }

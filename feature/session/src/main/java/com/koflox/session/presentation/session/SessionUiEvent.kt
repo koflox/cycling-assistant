@@ -1,10 +1,19 @@
 package com.koflox.session.presentation.session
 
-sealed interface SessionUiEvent {
-    data object PauseClicked : SessionUiEvent
-    data object ResumeClicked : SessionUiEvent
-    data object StopClicked : SessionUiEvent
-    data object StopConfirmationDismissed : SessionUiEvent
-    data object StopConfirmed : SessionUiEvent
-    data object ErrorDismissed : SessionUiEvent
+internal sealed interface SessionUiEvent {
+    sealed interface SessionManagementEvent : SessionUiEvent {
+        data object PauseClicked : SessionManagementEvent
+        data object ResumeClicked : SessionManagementEvent
+        data object StopClicked : SessionManagementEvent
+        data object StopConfirmationDismissed : SessionManagementEvent
+        data object StopConfirmed : SessionManagementEvent
+        data object ErrorDismissed : SessionManagementEvent
+    }
+
+    sealed interface LocationSettingsEvent : SessionUiEvent {
+        data object EnableLocationClicked : LocationSettingsEvent
+        data object LocationEnabled : LocationSettingsEvent
+        data object LocationEnableDenied : LocationSettingsEvent
+        data object LocationDisabledDismissed : LocationSettingsEvent
+    }
 }
