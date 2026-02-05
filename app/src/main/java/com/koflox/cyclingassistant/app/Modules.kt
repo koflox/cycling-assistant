@@ -40,7 +40,7 @@ private val databaseModule = module {
             androidContext(),
             AppDatabase::class.java,
             AppDatabase.DATABASE_NAME,
-        ).build()
+        ).fallbackToDestructiveMigration(true).build()
     }
 
     single { get<AppDatabase>().destinationDao() }
