@@ -2,6 +2,7 @@ package com.koflox.session.domain.usecase
 
 import com.koflox.altitude.AltitudeCalculator
 import com.koflox.distance.DistanceCalculator
+import com.koflox.id.IdGenerator
 import com.koflox.location.model.Location
 import com.koflox.location.validator.LocationValidator
 import com.koflox.session.domain.model.Session
@@ -17,6 +18,8 @@ import io.mockk.mockk
 import io.mockk.slot
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -25,6 +28,7 @@ class UpdateSessionLocationUseCaseImplTest {
 
     companion object {
         private const val SESSION_ID = "session-123"
+        private const val TRACK_POINT_ID = "tp-uuid"
         private const val START_TIME_MS = 1000000L
         private const val START_LAT = 52.50
         private const val START_LONG = 13.40
@@ -45,12 +49,14 @@ class UpdateSessionLocationUseCaseImplTest {
     private val distanceCalculator: DistanceCalculator = mockk()
     private val altitudeCalculator: AltitudeCalculator = mockk()
     private val locationValidator: LocationValidator = mockk()
+    private val idGenerator: IdGenerator = mockk()
     private lateinit var useCase: UpdateSessionLocationUseCaseImpl
 
     @Before
     fun setup() {
         every { altitudeCalculator.calculateGain(any(), any()) } returns 0.0
         every { locationValidator.isAccuracyValid(any()) } returns true
+        every { idGenerator.generate() } returns TRACK_POINT_ID
         useCase = UpdateSessionLocationUseCaseImpl(
             dispatcherDefault = mainDispatcherRule.testDispatcher,
             activeSessionUseCase = activeSessionUseCase,
@@ -58,6 +64,7 @@ class UpdateSessionLocationUseCaseImplTest {
             distanceCalculator = distanceCalculator,
             altitudeCalculator = altitudeCalculator,
             locationValidator = locationValidator,
+            idGenerator = idGenerator,
         )
     }
 
@@ -116,7 +123,7 @@ class UpdateSessionLocationUseCaseImplTest {
     }
 
     @Test
-    fun `update adds new track point`() = runTest {
+    fun `update adds new track point with generated id`() = runTest {
         val session = createTestSession()
         val sessionSlot = slot<Session>()
         coEvery { activeSessionUseCase.getActiveSession() } returns session
@@ -127,6 +134,7 @@ class UpdateSessionLocationUseCaseImplTest {
 
         assertEquals(2, sessionSlot.captured.trackPoints.size)
         val newTrackPoint = sessionSlot.captured.trackPoints[1]
+        assertEquals(TRACK_POINT_ID, newTrackPoint.id)
         assertEquals(NEW_LAT, newTrackPoint.latitude, 0.0)
         assertEquals(NEW_LONG, newTrackPoint.longitude, 0.0)
         assertEquals(NEW_TIMESTAMP_MS, newTrackPoint.timestampMs)
@@ -239,7 +247,7 @@ class UpdateSessionLocationUseCaseImplTest {
     }
 
     @Test
-    fun `update handles empty track points gracefully`() = runTest {
+    fun `update handles empty track points as segment start`() = runTest {
         val session = createTestSession().copy(trackPoints = emptyList())
         val sessionSlot = slot<Session>()
         coEvery { activeSessionUseCase.getActiveSession() } returns session
@@ -249,6 +257,7 @@ class UpdateSessionLocationUseCaseImplTest {
 
         assertEquals(1, sessionSlot.captured.trackPoints.size)
         assertEquals(0.0, sessionSlot.captured.trackPoints[0].speedKmh, 0.0)
+        assertTrue(sessionSlot.captured.trackPoints[0].isSegmentStart)
     }
 
     @Test
@@ -268,6 +277,112 @@ class UpdateSessionLocationUseCaseImplTest {
 
         val newTrackPoint = sessionSlot.captured.trackPoints[1]
         assertEquals(0.0, newTrackPoint.speedKmh, 0.0)
+    }
+
+    @Test
+    fun `update creates segment start after resume`() = runTest {
+        val resumeTimeMs = 2000000L
+        val session = createSession(
+            id = SESSION_ID,
+            lastResumedTimeMs = resumeTimeMs,
+            status = SessionStatus.RUNNING,
+            trackPoints = listOf(
+                createTrackPoint(
+                    latitude = START_LAT,
+                    longitude = START_LONG,
+                    timestampMs = START_TIME_MS,
+                ),
+            ),
+        )
+        val sessionSlot = slot<Session>()
+        coEvery { activeSessionUseCase.getActiveSession() } returns session
+        coEvery { sessionRepository.saveSession(capture(sessionSlot)) } returns Result.success(Unit)
+
+        useCase.update(createNewLocation(), resumeTimeMs + 3000L)
+
+        val newTrackPoint = sessionSlot.captured.trackPoints[1]
+        assertTrue(newTrackPoint.isSegmentStart)
+        assertEquals(0.0, newTrackPoint.speedKmh, 0.0)
+    }
+
+    @Test
+    fun `update segment start does not add distance`() = runTest {
+        val resumeTimeMs = 2000000L
+        val initialDistance = 5.0
+        val session = createSession(
+            id = SESSION_ID,
+            lastResumedTimeMs = resumeTimeMs,
+            traveledDistanceKm = initialDistance,
+            status = SessionStatus.RUNNING,
+            trackPoints = listOf(
+                createTrackPoint(
+                    latitude = START_LAT,
+                    longitude = START_LONG,
+                    timestampMs = START_TIME_MS,
+                ),
+            ),
+        )
+        val sessionSlot = slot<Session>()
+        coEvery { activeSessionUseCase.getActiveSession() } returns session
+        coEvery { sessionRepository.saveSession(capture(sessionSlot)) } returns Result.success(Unit)
+
+        useCase.update(createNewLocation(), resumeTimeMs + 3000L)
+
+        assertEquals(initialDistance, sessionSlot.captured.traveledDistanceKm, 0.0)
+    }
+
+    @Test
+    fun `update normal point is not segment start`() = runTest {
+        val session = createTestSession()
+        val sessionSlot = slot<Session>()
+        coEvery { activeSessionUseCase.getActiveSession() } returns session
+        every { distanceCalculator.calculateKm(any(), any(), any(), any()) } returns DISTANCE_KM
+        coEvery { sessionRepository.saveSession(capture(sessionSlot)) } returns Result.success(Unit)
+
+        useCase.update(createNewLocation(), NEW_TIMESTAMP_MS)
+
+        val newTrackPoint = sessionSlot.captured.trackPoints[1]
+        assertFalse(newTrackPoint.isSegmentStart)
+    }
+
+    @Test
+    fun `update discards point when displacement is less than accuracy`() = runTest {
+        val smallDistanceKm = 0.003
+        val session = createTestSession()
+        coEvery { activeSessionUseCase.getActiveSession() } returns session
+        every { distanceCalculator.calculateKm(any(), any(), any(), any()) } returns smallDistanceKm
+        coEvery { sessionRepository.saveSession(any()) } returns Result.success(Unit)
+
+        useCase.update(Location(latitude = NEW_LAT, longitude = NEW_LONG, accuracyMeters = 10.0f), NEW_TIMESTAMP_MS)
+
+        coVerify(exactly = 0) { sessionRepository.saveSession(any()) }
+    }
+
+    @Test
+    fun `update accepts point when displacement exceeds accuracy`() = runTest {
+        val session = createTestSession()
+        val sessionSlot = slot<Session>()
+        coEvery { activeSessionUseCase.getActiveSession() } returns session
+        every { distanceCalculator.calculateKm(any(), any(), any(), any()) } returns DISTANCE_KM
+        coEvery { sessionRepository.saveSession(capture(sessionSlot)) } returns Result.success(Unit)
+
+        useCase.update(Location(latitude = NEW_LAT, longitude = NEW_LONG, accuracyMeters = 5.0f), NEW_TIMESTAMP_MS)
+
+        coVerify { sessionRepository.saveSession(any()) }
+    }
+
+    @Test
+    fun `update stores accuracy on track point`() = runTest {
+        val accuracyMeters = 8.5f
+        val session = createTestSession()
+        val sessionSlot = slot<Session>()
+        coEvery { activeSessionUseCase.getActiveSession() } returns session
+        every { distanceCalculator.calculateKm(any(), any(), any(), any()) } returns DISTANCE_KM
+        coEvery { sessionRepository.saveSession(capture(sessionSlot)) } returns Result.success(Unit)
+
+        useCase.update(Location(latitude = NEW_LAT, longitude = NEW_LONG, accuracyMeters = accuracyMeters), NEW_TIMESTAMP_MS)
+
+        assertEquals(accuracyMeters, sessionSlot.captured.trackPoints[1].accuracyMeters)
     }
 
     private fun createNewLocation() = Location(

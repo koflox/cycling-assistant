@@ -2,6 +2,7 @@ package com.koflox.session.domain.usecase
 
 import com.koflox.altitude.AltitudeCalculator
 import com.koflox.distance.DistanceCalculator
+import com.koflox.id.IdGenerator
 import com.koflox.location.model.Location
 import com.koflox.location.validator.LocationValidator
 import com.koflox.session.domain.model.Session
@@ -22,11 +23,12 @@ internal class UpdateSessionLocationUseCaseImpl(
     private val distanceCalculator: DistanceCalculator,
     private val altitudeCalculator: AltitudeCalculator,
     private val locationValidator: LocationValidator,
+    private val idGenerator: IdGenerator,
 ) : UpdateSessionLocationUseCase {
 
     companion object {
         private const val MILLISECONDS_PER_HOUR = 3_600_000.0
-        private const val MIN_DISTANCE_METERS = 3.0
+        private const val MIN_DISTANCE_METERS = 5.0
         private const val MAX_SPEED_KMH = 100.0
         private const val METERS_PER_KM = 1000.0
     }
@@ -36,15 +38,56 @@ internal class UpdateSessionLocationUseCaseImpl(
         val session = activeSessionUseCase.getActiveSession()
         if (session.status != SessionStatus.RUNNING) return@withContext
         val previousTrackPoint = session.trackPoints.lastOrNull()
-        val distanceKm = previousTrackPoint?.let {
-            distanceCalculator.calculateKm(it.latitude, it.longitude, location.latitude, location.longitude)
-        } ?: 0.0
-        val timeDiffMs = previousTrackPoint?.let { timestampMs - it.timestampMs } ?: 0L
-        val speedKmh = if (timeDiffMs > 0) (distanceKm / timeDiffMs) * MILLISECONDS_PER_HOUR else 0.0
-        val isValid = previousTrackPoint == null || isLocationValid(distanceKm, speedKmh)
-        if (isValid) {
-            saveTrackPoint(session, location, timestampMs, distanceKm, speedKmh)
+        if (previousTrackPoint == null || previousTrackPoint.timestampMs < session.lastResumedTimeMs) {
+            saveSegmentStartPoint(session, location, timestampMs)
+        } else {
+            processNormalPoint(session, previousTrackPoint, location, timestampMs)
         }
+    }
+
+    private suspend fun saveSegmentStartPoint(
+        session: Session,
+        location: Location,
+        timestampMs: Long,
+    ) {
+        val newTrackPoint = TrackPoint(
+            id = idGenerator.generate(),
+            latitude = location.latitude,
+            longitude = location.longitude,
+            timestampMs = timestampMs,
+            speedKmh = 0.0,
+            altitudeMeters = location.altitudeMeters,
+            isSegmentStart = true,
+            accuracyMeters = location.accuracyMeters,
+        )
+        val elapsedTimeMs = session.elapsedTimeMs + (timestampMs - session.lastResumedTimeMs)
+        val totalDistanceKm = session.traveledDistanceKm
+        val updatedSession = session.copy(
+            elapsedTimeMs = elapsedTimeMs,
+            lastResumedTimeMs = timestampMs,
+            traveledDistanceKm = totalDistanceKm,
+            averageSpeedKmh = if (elapsedTimeMs > 0) (totalDistanceKm / elapsedTimeMs) * MILLISECONDS_PER_HOUR else 0.0,
+            trackPoints = session.trackPoints + newTrackPoint,
+        )
+        sessionRepository.saveSession(updatedSession)
+    }
+
+    private suspend fun processNormalPoint(
+        session: Session,
+        previousTrackPoint: TrackPoint,
+        location: Location,
+        timestampMs: Long,
+    ) {
+        val distanceKm = distanceCalculator.calculateKm(
+            previousTrackPoint.latitude, previousTrackPoint.longitude, location.latitude, location.longitude,
+        )
+        val displacementMeters = distanceKm * METERS_PER_KM
+        val accuracy = location.accuracyMeters
+        if (accuracy != null && displacementMeters < accuracy) return
+        val timeDiffMs = timestampMs - previousTrackPoint.timestampMs
+        val speedKmh = if (timeDiffMs > 0) (distanceKm / timeDiffMs) * MILLISECONDS_PER_HOUR else 0.0
+        if (!isLocationValid(distanceKm, speedKmh)) return
+        saveTrackPoint(session, location, timestampMs, distanceKm, speedKmh)
     }
 
     private fun isLocationValid(distanceKm: Double, speedKmh: Double): Boolean =
@@ -59,7 +102,16 @@ internal class UpdateSessionLocationUseCaseImpl(
     ) {
         val previousTrackPoint = session.trackPoints.lastOrNull()
         val altitudeGain = altitudeCalculator.calculateGain(previousTrackPoint?.altitudeMeters, location.altitudeMeters)
-        val newTrackPoint = TrackPoint(location.latitude, location.longitude, timestampMs, speedKmh, location.altitudeMeters)
+        val newTrackPoint = TrackPoint(
+            id = idGenerator.generate(),
+            latitude = location.latitude,
+            longitude = location.longitude,
+            timestampMs = timestampMs,
+            speedKmh = speedKmh,
+            altitudeMeters = location.altitudeMeters,
+            isSegmentStart = false,
+            accuracyMeters = location.accuracyMeters,
+        )
         val totalDistanceKm = session.traveledDistanceKm + distanceKm
         val elapsedTimeMs = session.elapsedTimeMs + (timestampMs - session.lastResumedTimeMs)
         val updatedSession = session.copy(

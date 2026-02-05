@@ -57,11 +57,14 @@ internal class CreateSessionUseCaseImpl(
             status = SessionStatus.RUNNING,
             trackPoints = listOf(
                 TrackPoint(
+                    id = idGenerator.generate(),
                     latitude = startLocation.latitude,
                     longitude = startLocation.longitude,
                     timestampMs = currentTimeMs,
                     speedKmh = 0.0,
                     altitudeMeters = startLocation.altitudeMeters,
+                    isSegmentStart = true,
+                    accuracyMeters = startLocation.accuracyMeters,
                 ),
             ),
         )

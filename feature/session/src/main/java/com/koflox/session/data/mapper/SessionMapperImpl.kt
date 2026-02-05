@@ -40,12 +40,15 @@ internal class SessionMapperImpl(
     ): List<TrackPointEntity> = withContext(dispatcherDefault) {
         trackPoints.map { trackPoint ->
             TrackPointEntity(
+                id = trackPoint.id,
                 sessionId = sessionId,
                 latitude = trackPoint.latitude,
                 longitude = trackPoint.longitude,
                 timestampMs = trackPoint.timestampMs,
                 speedKmh = trackPoint.speedKmh,
                 altitudeMeters = trackPoint.altitudeMeters,
+                isSegmentStart = trackPoint.isSegmentStart,
+                accuracyMeters = trackPoint.accuracyMeters,
             )
         }
     }
@@ -72,11 +75,14 @@ internal class SessionMapperImpl(
             status = SessionStatus.valueOf(entity.status),
             trackPoints = trackPoints.map { trackPointEntity ->
                 TrackPoint(
+                    id = trackPointEntity.id,
                     latitude = trackPointEntity.latitude,
                     longitude = trackPointEntity.longitude,
                     timestampMs = trackPointEntity.timestampMs,
                     speedKmh = trackPointEntity.speedKmh,
                     altitudeMeters = trackPointEntity.altitudeMeters,
+                    isSegmentStart = trackPointEntity.isSegmentStart,
+                    accuracyMeters = trackPointEntity.accuracyMeters,
                 )
             },
         )
@@ -106,11 +112,14 @@ internal class SessionMapperImpl(
                     status = SessionStatus.valueOf(entity.status),
                     trackPoints = trackPoints.map { trackPointEntity ->
                         TrackPoint(
+                            id = trackPointEntity.id,
                             latitude = trackPointEntity.latitude,
                             longitude = trackPointEntity.longitude,
                             timestampMs = trackPointEntity.timestampMs,
                             speedKmh = trackPointEntity.speedKmh,
                             altitudeMeters = trackPointEntity.altitudeMeters,
+                            isSegmentStart = trackPointEntity.isSegmentStart,
+                            accuracyMeters = trackPointEntity.accuracyMeters,
                         )
                     },
                 )

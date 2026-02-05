@@ -47,6 +47,7 @@ internal val domainModule = module {
             distanceCalculator = get(),
             altitudeCalculator = get(),
             locationValidator = get(),
+            idGenerator = get(),
         )
     }
     factory<CalculateSessionStatsUseCase> {
