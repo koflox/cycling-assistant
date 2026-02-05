@@ -11,6 +11,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -26,6 +29,7 @@ import com.koflox.destinations.presentation.destinations.components.PreparingDes
 import com.koflox.destinations.presentation.destinations.components.RouteSlider
 import com.koflox.destinations.presentation.permission.LocationPermissionHandler
 import com.koflox.destinationsession.bridge.navigator.CyclingSessionUiNavigator
+import com.koflox.location.settings.LocationSettingsHandler
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 
@@ -197,6 +201,19 @@ private fun DestinationSelectionControls(
     viewModel: DestinationsViewModel,
     modifier: Modifier = Modifier,
 ) {
+    var shouldCheckLocation by remember { mutableStateOf(false) }
+    if (shouldCheckLocation) {
+        LocationSettingsHandler(
+            onLocationEnabled = {
+                shouldCheckLocation = false
+                viewModel.onEvent(DestinationsUiEvent.LetsGoClicked)
+            },
+            onLocationDenied = {
+                @Suppress("AssignedValueIsNeverRead")
+                shouldCheckLocation = false
+            },
+        )
+    }
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -214,7 +231,7 @@ private fun DestinationSelectionControls(
             )
         }
         LetsGoButton(
-            onClick = { viewModel.onEvent(DestinationsUiEvent.LetsGoClicked) },
+            onClick = { shouldCheckLocation = true },
             enabled = !uiState.isLoading && uiState.isPermissionGranted && uiState.areDestinationsReady,
         )
     }

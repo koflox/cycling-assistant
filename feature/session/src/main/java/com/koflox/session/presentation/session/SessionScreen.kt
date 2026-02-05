@@ -12,9 +12,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import com.koflox.location.settings.LocationSettingsHandler
 import com.koflox.session.presentation.dialog.LocationDisabledDialog
 import com.koflox.session.presentation.dialog.StopConfirmationDialog
-import com.koflox.session.presentation.permission.LocationSettingsHandler
 import com.koflox.session.presentation.session.components.SessionControlsOverlay
 import org.koin.androidx.compose.koinViewModel
 

@@ -18,8 +18,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.koflox.designsystem.theme.Spacing
 import com.koflox.location.model.Location
+import com.koflox.location.settings.LocationSettingsHandler
 import com.koflox.session.R
-import com.koflox.session.presentation.permission.LocationSettingsHandler
 import com.koflox.session.presentation.permission.NotificationPermissionHandler
 import com.koflox.session.presentation.session.SessionViewModel
 import org.koin.androidx.compose.koinViewModel

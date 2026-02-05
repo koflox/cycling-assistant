@@ -1,4 +1,4 @@
-package com.koflox.session.presentation.permission
+package com.koflox.location.settings
 
 import android.app.Activity
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -6,8 +6,6 @@ import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import com.koflox.location.settings.LocationSettingsDataSource
-import com.koflox.location.settings.LocationSettingsResult
 import org.koin.compose.koinInject
 
 @Composable
