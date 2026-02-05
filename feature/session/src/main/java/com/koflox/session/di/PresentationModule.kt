@@ -45,6 +45,7 @@ internal val presentationModule = module {
             createSessionUseCase = get(),
             updateSessionStatusUseCase = get(),
             activeSessionUseCase = get(),
+            checkLocationEnabledUseCase = get(),
             sessionServiceController = get(),
             sessionUiMapper = get(),
             errorMessageMapper = get(PresentationModuleQualifier.SessionErrorMessageMapper),

@@ -1,4 +1,4 @@
-package com.koflox.location
+package com.koflox.location.geolocation
 
 import com.koflox.location.model.Location
 import kotlinx.coroutines.flow.Flow

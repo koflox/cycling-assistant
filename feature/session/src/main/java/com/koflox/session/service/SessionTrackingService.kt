@@ -8,7 +8,8 @@ import android.os.Build
 import android.os.IBinder
 import androidx.core.app.ServiceCompat
 import com.koflox.concurrent.DispatchersQualifier
-import com.koflox.location.LocationDataSource
+import com.koflox.location.geolocation.LocationDataSource
+import com.koflox.location.settings.LocationSettingsDataSource
 import com.koflox.session.domain.model.Session
 import com.koflox.session.domain.model.SessionStatus
 import com.koflox.session.domain.usecase.ActiveSessionUseCase
@@ -40,12 +41,14 @@ class SessionTrackingService : Service() {
     private val updateSessionLocationUseCase: UpdateSessionLocationUseCase by inject()
     private val updateSessionStatusUseCase: UpdateSessionStatusUseCase by inject()
     private val locationDataSource: LocationDataSource by inject()
+    private val locationSettingsDataSource: LocationSettingsDataSource by inject()
     private val notificationManager: SessionNotificationManager by inject()
     private val dispatcherIo: CoroutineDispatcher by inject(DispatchersQualifier.Io)
 
     private val serviceScope by lazy { CoroutineScope(SupervisorJob() + dispatcherIo) }
     private var sessionObserverJob: Job? = null
     private var locationCollectionJob: Job? = null
+    private var locationMonitorJob: Job? = null
     private var timerJob: Job? = null
 
     private val androidNotificationManager by lazy {
@@ -113,17 +116,20 @@ class SessionTrackingService : Service() {
         when (session.status) {
             SessionStatus.RUNNING -> {
                 startLocationCollection()
+                startLocationMonitoring()
                 startTimer(session)
             }
 
             SessionStatus.PAUSED -> {
                 stopLocationCollection()
+                stopLocationMonitoring()
                 stopTimer()
                 updateNotificationWithSession(session, session.elapsedTimeMs)
             }
 
             SessionStatus.COMPLETED -> {
                 stopLocationCollection()
+                stopLocationMonitoring()
                 stopTimer()
                 stopSelf()
             }
@@ -149,6 +155,22 @@ class SessionTrackingService : Service() {
     private fun stopLocationCollection() {
         locationCollectionJob?.cancel()
         locationCollectionJob = null
+    }
+
+    private fun startLocationMonitoring() {
+        if (locationMonitorJob?.isActive == true) return
+        locationMonitorJob = serviceScope.launch {
+            locationSettingsDataSource.observeLocationEnabled().collect { isEnabled ->
+                if (!isEnabled) {
+                    updateSessionStatusUseCase.pause()
+                }
+            }
+        }
+    }
+
+    private fun stopLocationMonitoring() {
+        locationMonitorJob?.cancel()
+        locationMonitorJob = null
     }
 
     private fun startTimer(session: Session) {
@@ -195,6 +217,7 @@ class SessionTrackingService : Service() {
         super.onDestroy()
         sessionObserverJob?.cancel()
         locationCollectionJob?.cancel()
+        locationMonitorJob?.cancel()
         timerJob?.cancel()
     }
 

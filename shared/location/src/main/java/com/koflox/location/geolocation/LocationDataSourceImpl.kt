@@ -1,4 +1,4 @@
-package com.koflox.location
+package com.koflox.location.geolocation
 
 import android.annotation.SuppressLint
 import android.os.Looper

@@ -9,7 +9,7 @@ import com.koflox.destinations.data.source.local.PoiLocalDataSource
 import com.koflox.destinations.domain.model.Destination
 import com.koflox.destinations.domain.model.DestinationLoadingEvent
 import com.koflox.destinations.domain.repository.DestinationRepository
-import com.koflox.location.LocationDataSource
+import com.koflox.location.geolocation.LocationDataSource
 import com.koflox.location.model.Location
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
