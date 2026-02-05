@@ -73,6 +73,12 @@
     <string name="session_completion_title">Session Complete</string>
     <string name="session_completion_back">Back</string>
 
+    <!-- Location Disabled Dialog -->
+    <string name="location_disabled_title">Location Disabled</string>
+    <string name="location_disabled_message">Location services are disabled. Enable location to continue your cycling session.</string>
+    <string name="location_disabled_enable">Enable Location</string>
+    <string name="location_disabled_dismiss">Dismiss</string>
+
     <!-- Share -->
     <string name="share_image_processing_error">Image processing error encountered. Please try again.</string>
     <string name="share_preview_title">Share Session</string>

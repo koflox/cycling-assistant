@@ -17,6 +17,7 @@ internal sealed interface SessionUiState {
         val topSpeedFormatted: String,
         val altitudeGainFormatted: String,
         val currentLocation: Location?,
+        val isLocationDisabled: Boolean = false,
         val overlay: SessionOverlay? = null,
     ) : SessionUiState {
         val isPaused: Boolean get() = status == SessionStatus.PAUSED
@@ -25,5 +26,6 @@ internal sealed interface SessionUiState {
 
 internal sealed interface SessionOverlay {
     data object StopConfirmation : SessionOverlay
+    data object LocationDisabled : SessionOverlay
     data class Error(val message: String) : SessionOverlay
 }

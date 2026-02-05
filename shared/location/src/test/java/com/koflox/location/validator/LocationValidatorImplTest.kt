@@ -1,4 +1,4 @@
-package com.koflox.location
+package com.koflox.location.validator
 
 import com.koflox.location.model.Location
 import org.junit.Assert.assertFalse

@@ -11,7 +11,7 @@ import com.koflox.destinations.domain.model.DestinationLoadingEvent
 import com.koflox.destinations.testutil.createDestination
 import com.koflox.destinations.testutil.createDestinationAsset
 import com.koflox.destinations.testutil.createDestinationLocal
-import com.koflox.location.LocationDataSource
+import com.koflox.location.geolocation.LocationDataSource
 import com.koflox.location.model.Location
 import com.koflox.testing.coroutine.MainDispatcherRule
 import io.mockk.coEvery

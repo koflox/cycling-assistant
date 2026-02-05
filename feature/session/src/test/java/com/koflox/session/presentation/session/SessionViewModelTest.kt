@@ -5,6 +5,7 @@ import com.koflox.error.mapper.ErrorMessageMapper
 import com.koflox.session.domain.model.Session
 import com.koflox.session.domain.model.SessionStatus
 import com.koflox.session.domain.usecase.ActiveSessionUseCase
+import com.koflox.session.domain.usecase.CheckLocationEnabledUseCase
 import com.koflox.session.domain.usecase.CreateSessionUseCase
 import com.koflox.session.domain.usecase.UpdateSessionStatusUseCase
 import com.koflox.session.presentation.mapper.SessionUiMapper
@@ -23,6 +24,7 @@ import io.mockk.verify
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -50,6 +52,7 @@ class SessionViewModelTest {
     private val createSessionUseCase: CreateSessionUseCase = mockk()
     private val updateSessionStatusUseCase: UpdateSessionStatusUseCase = mockk()
     private val activeSessionUseCase: ActiveSessionUseCase = mockk()
+    private val checkLocationEnabledUseCase: CheckLocationEnabledUseCase = mockk()
     private val sessionServiceController: SessionServiceController = mockk(relaxed = true)
     private val sessionUiMapper: SessionUiMapper = mockk()
     private val errorMessageMapper: ErrorMessageMapper = mockk()
@@ -57,6 +60,7 @@ class SessionViewModelTest {
     private val sessionTimerFactory: SessionTimerFactory = mockk()
 
     private val activeSessionFlow = MutableStateFlow<Session?>(null)
+    private val locationEnabledFlow = MutableStateFlow(true)
 
     private lateinit var viewModel: SessionViewModel
 
@@ -76,6 +80,8 @@ class SessionViewModelTest {
         coEvery { errorMessageMapper.map(any()) } returns ERROR_MESSAGE
         coEvery { activeSessionUseCase.observeActiveSession() } returns activeSessionFlow
         every { sessionTimerFactory.create(any()) } returns sessionTimer
+        every { checkLocationEnabledUseCase.observeLocationEnabled() } returns locationEnabledFlow
+        every { checkLocationEnabledUseCase.isLocationEnabled() } returns true
     }
 
     private fun createViewModel(): SessionViewModel {
@@ -83,6 +89,7 @@ class SessionViewModelTest {
             createSessionUseCase = createSessionUseCase,
             updateSessionStatusUseCase = updateSessionStatusUseCase,
             activeSessionUseCase = activeSessionUseCase,
+            checkLocationEnabledUseCase = checkLocationEnabledUseCase,
             sessionServiceController = sessionServiceController,
             sessionUiMapper = sessionUiMapper,
             errorMessageMapper = errorMessageMapper,
@@ -147,7 +154,7 @@ class SessionViewModelTest {
             awaitItem() // Idle
             awaitItem() // Active
 
-            viewModel.onEvent(SessionUiEvent.StopClicked)
+            viewModel.onEvent(SessionUiEvent.SessionManagementEvent.StopClicked)
 
             val activeWithOverlay = awaitItem() as SessionUiState.Active
             assertEquals(SessionOverlay.StopConfirmation, activeWithOverlay.overlay)
@@ -165,10 +172,10 @@ class SessionViewModelTest {
             awaitItem() // Idle
             awaitItem() // Active
 
-            viewModel.onEvent(SessionUiEvent.StopClicked)
+            viewModel.onEvent(SessionUiEvent.SessionManagementEvent.StopClicked)
             awaitItem() // StopConfirmation
 
-            viewModel.onEvent(SessionUiEvent.StopConfirmationDismissed)
+            viewModel.onEvent(SessionUiEvent.SessionManagementEvent.StopConfirmationDismissed)
 
             val active = awaitItem() as SessionUiState.Active
             assertNull(active.overlay)
@@ -187,12 +194,12 @@ class SessionViewModelTest {
             awaitItem() // Idle
             awaitItem() // Active
 
-            viewModel.onEvent(SessionUiEvent.StopClicked)
+            viewModel.onEvent(SessionUiEvent.SessionManagementEvent.StopClicked)
             awaitItem() // StopConfirmation
         }
 
         viewModel.navigation.test {
-            viewModel.onEvent(SessionUiEvent.StopConfirmed)
+            viewModel.onEvent(SessionUiEvent.SessionManagementEvent.StopConfirmed)
             val navigation = awaitItem()
             assertEquals(SessionNavigation.ToCompletion(SESSION_ID), navigation)
         }
@@ -212,7 +219,7 @@ class SessionViewModelTest {
             awaitItem() // Idle
             awaitItem() // Active
 
-            viewModel.onEvent(SessionUiEvent.PauseClicked)
+            viewModel.onEvent(SessionUiEvent.SessionManagementEvent.PauseClicked)
             mainDispatcherRule.testDispatcher.scheduler.advanceUntilIdle()
         }
 
@@ -220,7 +227,7 @@ class SessionViewModelTest {
     }
 
     @Test
-    fun `ResumeClicked calls resume use case`() = runTest {
+    fun `ResumeClicked calls resume use case when location enabled`() = runTest {
         val session = createSession(status = SessionStatus.PAUSED)
         activeSessionFlow.value = session
         coEvery { updateSessionStatusUseCase.resume() } returns Result.success(Unit)
@@ -231,7 +238,7 @@ class SessionViewModelTest {
             awaitItem() // Idle
             awaitItem() // Active
 
-            viewModel.onEvent(SessionUiEvent.ResumeClicked)
+            viewModel.onEvent(SessionUiEvent.SessionManagementEvent.ResumeClicked)
             mainDispatcherRule.testDispatcher.scheduler.advanceUntilIdle()
         }
 
@@ -251,7 +258,7 @@ class SessionViewModelTest {
             awaitItem() // Idle
             awaitItem() // Active
 
-            viewModel.onEvent(SessionUiEvent.PauseClicked)
+            viewModel.onEvent(SessionUiEvent.SessionManagementEvent.PauseClicked)
 
             val activeWithError = awaitItem() as SessionUiState.Active
             assertTrue(activeWithError.overlay is SessionOverlay.Error)
@@ -272,10 +279,10 @@ class SessionViewModelTest {
             awaitItem() // Idle
             awaitItem() // Active
 
-            viewModel.onEvent(SessionUiEvent.PauseClicked)
+            viewModel.onEvent(SessionUiEvent.SessionManagementEvent.PauseClicked)
             awaitItem() // Error
 
-            viewModel.onEvent(SessionUiEvent.ErrorDismissed)
+            viewModel.onEvent(SessionUiEvent.SessionManagementEvent.ErrorDismissed)
 
             val active = awaitItem() as SessionUiState.Active
             assertNull(active.overlay)
@@ -412,7 +419,7 @@ class SessionViewModelTest {
             awaitItem() // Idle
             awaitItem() // Active
 
-            viewModel.onEvent(SessionUiEvent.ResumeClicked)
+            viewModel.onEvent(SessionUiEvent.SessionManagementEvent.ResumeClicked)
 
             val activeWithError = awaitItem() as SessionUiState.Active
             assertTrue(activeWithError.overlay is SessionOverlay.Error)
@@ -432,10 +439,10 @@ class SessionViewModelTest {
             awaitItem() // Idle
             awaitItem() // Active
 
-            viewModel.onEvent(SessionUiEvent.StopClicked)
+            viewModel.onEvent(SessionUiEvent.SessionManagementEvent.StopClicked)
             awaitItem() // StopConfirmation
 
-            viewModel.onEvent(SessionUiEvent.StopConfirmed)
+            viewModel.onEvent(SessionUiEvent.SessionManagementEvent.StopConfirmed)
 
             val activeWithoutOverlay = awaitItem() as SessionUiState.Active
             assertNull(activeWithoutOverlay.overlay)
@@ -528,7 +535,7 @@ class SessionViewModelTest {
             awaitItem() // Idle
             awaitItem() // Active
 
-            viewModel.onEvent(SessionUiEvent.PauseClicked)
+            viewModel.onEvent(SessionUiEvent.SessionManagementEvent.PauseClicked)
             mainDispatcherRule.testDispatcher.scheduler.advanceUntilIdle()
             val activeWithError = awaitItem() as SessionUiState.Active
             assertTrue(activeWithError.overlay is SessionOverlay.Error)
@@ -543,4 +550,202 @@ class SessionViewModelTest {
         }
     }
 
+    // Location settings tests
+
+    @Test
+    fun `location disabled sets isLocationDisabled on active session`() = runTest {
+        val session = createSession(status = SessionStatus.RUNNING)
+        activeSessionFlow.value = session
+
+        viewModel = createViewModel()
+
+        viewModel.uiState.test {
+            awaitItem() // Idle
+            val active = awaitItem() as SessionUiState.Active
+            assertFalse(active.isLocationDisabled)
+
+            locationEnabledFlow.value = false
+
+            val updated = awaitItem() as SessionUiState.Active
+            assertTrue(updated.isLocationDisabled)
+        }
+    }
+
+    @Test
+    fun `location re-enabled clears isLocationDisabled`() = runTest {
+        every { checkLocationEnabledUseCase.isLocationEnabled() } returns false
+        locationEnabledFlow.value = false
+        val session = createSession(status = SessionStatus.PAUSED)
+        activeSessionFlow.value = session
+
+        viewModel = createViewModel()
+
+        viewModel.uiState.test {
+            awaitItem() // Idle
+            val active = awaitItem() as SessionUiState.Active
+            assertTrue(active.isLocationDisabled)
+
+            every { checkLocationEnabledUseCase.isLocationEnabled() } returns true
+            locationEnabledFlow.value = true
+
+            val updated = awaitItem() as SessionUiState.Active
+            assertFalse(updated.isLocationDisabled)
+        }
+    }
+
+    @Test
+    fun `ResumeClicked with location disabled shows LocationDisabled overlay`() = runTest {
+        every { checkLocationEnabledUseCase.isLocationEnabled() } returns false
+        locationEnabledFlow.value = false
+        val session = createSession(status = SessionStatus.PAUSED)
+        activeSessionFlow.value = session
+
+        viewModel = createViewModel()
+
+        viewModel.uiState.test {
+            awaitItem() // Idle
+            awaitItem() // Active (isLocationDisabled = true)
+
+            viewModel.onEvent(SessionUiEvent.SessionManagementEvent.ResumeClicked)
+
+            val active = awaitItem() as SessionUiState.Active
+            assertEquals(SessionOverlay.LocationDisabled, active.overlay)
+        }
+
+        coVerify(exactly = 0) { updateSessionStatusUseCase.resume() }
+    }
+
+    @Test
+    fun `LocationEnabled dismisses overlay`() = runTest {
+        every { checkLocationEnabledUseCase.isLocationEnabled() } returns false
+        locationEnabledFlow.value = false
+        val session = createSession(status = SessionStatus.PAUSED)
+        activeSessionFlow.value = session
+
+        viewModel = createViewModel()
+
+        viewModel.uiState.test {
+            awaitItem() // Idle
+            awaitItem() // Active (isLocationDisabled = true)
+
+            viewModel.onEvent(SessionUiEvent.SessionManagementEvent.ResumeClicked)
+            awaitItem() // LocationDisabled overlay
+
+            viewModel.onEvent(SessionUiEvent.LocationSettingsEvent.LocationEnabled)
+
+            val active = awaitItem() as SessionUiState.Active
+            assertNull(active.overlay)
+        }
+    }
+
+    @Test
+    fun `LocationEnableDenied dismisses overlay`() = runTest {
+        every { checkLocationEnabledUseCase.isLocationEnabled() } returns false
+        locationEnabledFlow.value = false
+        val session = createSession(status = SessionStatus.PAUSED)
+        activeSessionFlow.value = session
+
+        viewModel = createViewModel()
+
+        viewModel.uiState.test {
+            awaitItem() // Idle
+            awaitItem() // Active (isLocationDisabled = true)
+
+            viewModel.onEvent(SessionUiEvent.SessionManagementEvent.ResumeClicked)
+            awaitItem() // LocationDisabled overlay
+
+            viewModel.onEvent(SessionUiEvent.LocationSettingsEvent.LocationEnableDenied)
+
+            val active = awaitItem() as SessionUiState.Active
+            assertNull(active.overlay)
+        }
+    }
+
+    @Test
+    fun `GPS-caused pause auto-resumes when location re-enabled`() = runTest {
+        val session = createSession(status = SessionStatus.RUNNING)
+        activeSessionFlow.value = session
+        coEvery { updateSessionStatusUseCase.resume() } returns Result.success(Unit)
+
+        viewModel = createViewModel()
+
+        viewModel.uiState.test {
+            awaitItem() // Idle
+            awaitItem() // Active RUNNING
+
+            // GPS goes off while RUNNING
+            locationEnabledFlow.value = false
+            awaitItem() // isLocationDisabled = true
+
+            // GPS comes back on → should auto-resume
+            locationEnabledFlow.value = true
+            awaitItem() // isLocationDisabled = false
+        }
+
+        coVerify { updateSessionStatusUseCase.resume() }
+    }
+
+    @Test
+    fun `manual pause does not auto-resume when location toggled`() = runTest {
+        val session = createSession(status = SessionStatus.RUNNING)
+        activeSessionFlow.value = session
+        coEvery { updateSessionStatusUseCase.pause() } returns Result.success(Unit)
+
+        viewModel = createViewModel()
+
+        viewModel.uiState.test {
+            awaitItem() // Idle
+            awaitItem() // Active RUNNING
+
+            // User manually pauses
+            viewModel.onEvent(SessionUiEvent.SessionManagementEvent.PauseClicked)
+            mainDispatcherRule.testDispatcher.scheduler.advanceUntilIdle()
+
+            // GPS toggles off and on
+            locationEnabledFlow.value = false
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        // resume should NOT be called (only pause was called)
+        coVerify(exactly = 0) { updateSessionStatusUseCase.resume() }
+    }
+
+    @Test
+    fun `EnableLocationClicked shows LocationDisabled overlay`() = runTest {
+        val session = createSession(status = SessionStatus.PAUSED)
+        activeSessionFlow.value = session
+
+        viewModel = createViewModel()
+
+        viewModel.uiState.test {
+            awaitItem() // Idle
+            awaitItem() // Active
+
+            viewModel.onEvent(SessionUiEvent.LocationSettingsEvent.EnableLocationClicked)
+
+            val active = awaitItem() as SessionUiState.Active
+            assertEquals(SessionOverlay.LocationDisabled, active.overlay)
+        }
+    }
+
+    @Test
+    fun `LocationDisabledDismissed clears overlay`() = runTest {
+        val session = createSession(status = SessionStatus.PAUSED)
+        activeSessionFlow.value = session
+
+        viewModel = createViewModel()
+
+        viewModel.uiState.test {
+            awaitItem() // Idle
+            awaitItem() // Active
+
+            viewModel.onEvent(SessionUiEvent.LocationSettingsEvent.EnableLocationClicked)
+            awaitItem() // LocationDisabled overlay
+
+            viewModel.onEvent(SessionUiEvent.LocationSettingsEvent.LocationDisabledDismissed)
+
+            val active = awaitItem() as SessionUiState.Active
+            assertNull(active.overlay)
+        }
+    }
 }

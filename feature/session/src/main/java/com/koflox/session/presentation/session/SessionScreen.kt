@@ -7,8 +7,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import com.koflox.location.settings.LocationSettingsHandler
+import com.koflox.session.presentation.dialog.LocationDisabledDialog
 import com.koflox.session.presentation.dialog.StopConfirmationDialog
 import com.koflox.session.presentation.session.components.SessionControlsOverlay
 import org.koin.androidx.compose.koinViewModel
@@ -32,7 +37,7 @@ fun SessionScreenRoute(
         val active = uiState as? SessionUiState.Active ?: return@LaunchedEffect
         if (active.overlay is SessionOverlay.Error) {
             Toast.makeText(context, active.overlay.message, Toast.LENGTH_SHORT).show()
-            viewModel.onEvent(SessionUiEvent.ErrorDismissed)
+            viewModel.onEvent(SessionUiEvent.SessionManagementEvent.ErrorDismissed)
         }
     }
     SessionContent(
@@ -48,22 +53,52 @@ private fun SessionContent(
     onEvent: (SessionUiEvent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    var shouldResolveLocation by remember { mutableStateOf(false) }
+    if (shouldResolveLocation) {
+        LocationSettingsHandler(
+            onLocationEnabled = {
+                shouldResolveLocation = false
+                onEvent(SessionUiEvent.LocationSettingsEvent.LocationEnabled)
+            },
+            onLocationDenied = {
+                shouldResolveLocation = false
+                onEvent(SessionUiEvent.LocationSettingsEvent.LocationEnableDenied)
+            },
+        )
+    }
     Box(modifier = modifier) {
         when (uiState) {
             SessionUiState.Idle -> Unit
             is SessionUiState.Active -> {
                 SessionControlsOverlay(
                     state = uiState,
-                    onPauseClick = { onEvent(SessionUiEvent.PauseClicked) },
-                    onResumeClick = { onEvent(SessionUiEvent.ResumeClicked) },
-                    onStopClick = { onEvent(SessionUiEvent.StopClicked) },
+                    onPauseClick = { onEvent(SessionUiEvent.SessionManagementEvent.PauseClicked) },
+                    onResumeClick = { onEvent(SessionUiEvent.SessionManagementEvent.ResumeClicked) },
+                    onStopClick = { onEvent(SessionUiEvent.SessionManagementEvent.StopClicked) },
+                    onEnableLocationClick = { onEvent(SessionUiEvent.LocationSettingsEvent.EnableLocationClicked) },
                     modifier = Modifier.fillMaxWidth(),
                 )
-                if (uiState.overlay is SessionOverlay.StopConfirmation) {
-                    StopConfirmationDialog(
-                        onConfirm = { onEvent(SessionUiEvent.StopConfirmed) },
-                        onDismiss = { onEvent(SessionUiEvent.StopConfirmationDismissed) },
-                    )
+                when (uiState.overlay) {
+                    SessionOverlay.StopConfirmation -> {
+                        StopConfirmationDialog(
+                            onConfirm = { onEvent(SessionUiEvent.SessionManagementEvent.StopConfirmed) },
+                            onDismiss = { onEvent(SessionUiEvent.SessionManagementEvent.StopConfirmationDismissed) },
+                        )
+                    }
+
+                    SessionOverlay.LocationDisabled -> {
+                        LocationDisabledDialog(
+                            onEnableClick = {
+                                shouldResolveLocation = true
+                            },
+                            onDismiss = {
+                                onEvent(SessionUiEvent.LocationSettingsEvent.LocationDisabledDismissed)
+                            },
+                        )
+                    }
+
+                    is SessionOverlay.Error -> Unit
+                    null -> Unit
                 }
             }
         }

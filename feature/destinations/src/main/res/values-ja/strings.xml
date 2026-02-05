@@ -12,4 +12,8 @@
     <string name="one_way_distance_title">片道距離</string>
     <string name="km_unit">km</string>
     <string name="preparing_destinations">目的地を準備中</string>
+
+    <!-- Location Disabled -->
+    <string name="location_disabled_message">位置情報が無効です</string>
+    <string name="location_disabled_enable">有効にする</string>
 </resources>

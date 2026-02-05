@@ -12,4 +12,8 @@
     <string name="one_way_distance_title">One way distance</string>
     <string name="km_unit">km</string>
     <string name="preparing_destinations">Preparing the destinations</string>
+
+    <!-- Location Disabled -->
+    <string name="location_disabled_message">Location services are disabled</string>
+    <string name="location_disabled_enable">Enable Location</string>
 </resources>
