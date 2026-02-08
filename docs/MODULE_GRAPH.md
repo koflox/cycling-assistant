@@ -82,6 +82,7 @@ graph LR
   :app --> :shared:id
   :app --> :shared:location
   :app --> :shared:error
+  :feature:nutrition-session:bridge:impl --> :feature:nutrition
   :feature:nutrition-session:bridge:impl --> :feature:nutrition-session:bridge:api
   :feature:nutrition-session:bridge:impl --> :feature:session
   :feature:session --> :shared:altitude
@@ -92,6 +93,7 @@ graph LR
   :feature:session --> :shared:error
   :feature:session --> :shared:id
   :feature:session --> :shared:location
+  :feature:session --> :feature:nutrition-session:bridge:api
   :feature:session --> :feature:session-settings:bridge:api
   :feature:dashboard --> :feature:destinations
   :feature:dashboard --> :feature:destination-session:bridge:api
