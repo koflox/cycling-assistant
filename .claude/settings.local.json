@@ -14,7 +14,8 @@
       "Bash(taskkill:*)",
       "Bash(timeout:*)",
       "Bash(find:*)",
-      "Bash(xargs:*)"
+      "Bash(xargs:*)",
+      "Bash(findstr:*)"
     ]
   }
 }

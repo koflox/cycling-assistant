@@ -308,7 +308,7 @@ wrapping for flows).
 
 | Type       | Scope     |
 |------------|-----------|
-| UseCase    | `factory` |
+| UseCase    | `factory` (`single` if stateful — e.g. internal buffer/smoother) |
 | DataSource | `single`  |
 | Mapper     | `single`  |
 | Repository | `single`  |

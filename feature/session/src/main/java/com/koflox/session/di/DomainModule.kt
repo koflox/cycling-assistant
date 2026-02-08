@@ -39,7 +39,9 @@ internal val domainModule = module {
             sessionRepository = get(),
         )
     }
-    factory<UpdateSessionLocationUseCase> {
+    // single: holds stateful speedBuffer and locationSmoother that must not be
+    // duplicated across injection sites. State is reset per segment in saveSegmentStartPoint().
+    single<UpdateSessionLocationUseCase> {
         UpdateSessionLocationUseCaseImpl(
             dispatcherDefault = get(DispatchersQualifier.Default),
             activeSessionUseCase = get(),
@@ -47,6 +49,7 @@ internal val domainModule = module {
             distanceCalculator = get(),
             altitudeCalculator = get(),
             locationValidator = get(),
+            locationSmoother = get(),
             idGenerator = get(),
         )
     }

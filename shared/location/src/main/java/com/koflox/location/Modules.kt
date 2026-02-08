@@ -6,6 +6,8 @@ import com.koflox.location.geolocation.LocationDataSource
 import com.koflox.location.geolocation.LocationDataSourceImpl
 import com.koflox.location.settings.LocationSettingsDataSource
 import com.koflox.location.settings.LocationSettingsDataSourceImpl
+import com.koflox.location.smoother.KalmanLocationSmoother
+import com.koflox.location.smoother.LocationSmoother
 import com.koflox.location.validator.LocationValidator
 import com.koflox.location.validator.LocationValidatorImpl
 import kotlinx.coroutines.CoroutineDispatcher
@@ -21,6 +23,9 @@ val locationModule = module {
     }
     single<LocationValidator> {
         LocationValidatorImpl()
+    }
+    factory<LocationSmoother> {
+        KalmanLocationSmoother()
     }
     single<LocationSettingsDataSource> {
         LocationSettingsDataSourceImpl(
