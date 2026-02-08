@@ -10,6 +10,7 @@ dependencies {
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.koin.core)
 
+    implementation(project(":feature:nutrition"))
     implementation(project(":feature:nutrition-session:bridge:api"))
     implementation(project(":feature:session"))
 }

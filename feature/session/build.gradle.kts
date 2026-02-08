@@ -72,6 +72,7 @@ dependencies {
     implementation(project(":shared:location"))
 
     // Feature modules
+    implementation(project(":feature:nutrition-session:bridge:api"))
     implementation(project(":feature:session-settings:bridge:api"))
 
     // Testing

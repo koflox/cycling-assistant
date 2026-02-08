@@ -28,6 +28,7 @@ internal class SessionNotificationManagerImpl(
         const val CHANNEL_ID = "cycling_session_channel"
         const val NOTIFICATION_ID = 1001
         private const val REQUEST_CODE_CONTENT = 100
+        private const val DEFAULT_NOTIFICATION_PRIORITY = NotificationCompat.PRIORITY_DEFAULT
     }
 
     private val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -37,7 +38,7 @@ internal class SessionNotificationManagerImpl(
             val channel = NotificationChannel(
                 CHANNEL_ID,
                 context.getString(R.string.notification_channel_name),
-                NotificationManager.IMPORTANCE_LOW,
+                NotificationManager.IMPORTANCE_DEFAULT,
             ).apply {
                 description = context.getString(R.string.notification_channel_description)
                 setShowBadge(false)
@@ -54,7 +55,7 @@ internal class SessionNotificationManagerImpl(
             .setOngoing(true)
             .setCategory(NotificationCompat.CATEGORY_NAVIGATION)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setPriority(DEFAULT_NOTIFICATION_PRIORITY)
             .setContentIntent(createContentPendingIntent())
             .build()
     }
@@ -82,7 +83,7 @@ internal class SessionNotificationManagerImpl(
             .setOngoing(true)
             .setCategory(NotificationCompat.CATEGORY_NAVIGATION)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setPriority(DEFAULT_NOTIFICATION_PRIORITY)
             .setContentIntent(createContentPendingIntent())
             .addAction(createPauseResumeAction(session.status))
             .addAction(createStopAction())
