@@ -1,8 +1,8 @@
 package com.koflox.session.domain.usecase
 
+import com.koflox.profilesession.bridge.api.RiderProfileUseCase
 import com.koflox.session.testutil.createSession
 import com.koflox.session.testutil.createTrackPoint
-import com.koflox.sessionsettings.bridge.api.RiderProfileUseCase
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest

@@ -1,8 +1,8 @@
 package com.koflox.session.domain.usecase
 
+import com.koflox.profilesession.bridge.api.RiderProfileUseCase
 import com.koflox.session.domain.model.SessionDerivedStats
 import com.koflox.session.domain.model.TrackPoint
-import com.koflox.sessionsettings.bridge.api.RiderProfileUseCase
 
 interface CalculateSessionStatsUseCase {
     suspend fun calculate(sessionId: String): Result<SessionDerivedStats>

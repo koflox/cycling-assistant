@@ -15,7 +15,8 @@
       "Bash(timeout:*)",
       "Bash(find:*)",
       "Bash(xargs:*)",
-      "Bash(findstr:*)"
+      "Bash(findstr:*)",
+      "Bash(dir:*)",
     ]
   }
 }

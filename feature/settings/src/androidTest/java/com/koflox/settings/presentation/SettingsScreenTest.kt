@@ -9,7 +9,7 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.koflox.locale.domain.model.AppLanguage
-import com.koflox.settingsnutrition.bridge.navigator.NutritionSettingsUiNavigator
+import com.koflox.nutritionsettings.bridge.navigator.NutritionSettingsUiNavigator
 import com.koflox.theme.domain.model.AppTheme
 import org.junit.Rule
 import org.junit.Test

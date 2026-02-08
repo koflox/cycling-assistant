@@ -25,13 +25,20 @@ real-time location updates.
 CyclingAssistant/
 ├── app/                              # Shell - navigation, theme, Koin bootstrap, Room DB
 ├── feature/
+│   ├── bridge/                       # Cross-feature communication (alphabetical pair names)
+│   │   ├── destination-nutrition/    # destinations ↔ nutrition
+│   │   ├── destination-session/      # destinations ↔ session
+│   │   ├── nutrition-session/        # nutrition ↔ session
+│   │   ├── nutrition-settings/       # nutrition ↔ settings
+│   │   └── profile-session/          # profile ↔ session
+│   │       ├── api/                  # Interfaces exposed to consumers
+│   │       └── impl/                 # Implementations wiring to provider internals
 │   ├── dashboard/                    # Main dashboard with expandable menu
 │   ├── destinations/                 # Destination selection feature
+│   ├── nutrition/                    # Nutrition tracking and reminders
+│   ├── profile/                      # Rider profile management
 │   ├── session/                      # Session tracking with foreground service
-│   ├── settings/                     # App settings (theme, language)
-│   └── destination-session/          # Bridge for cross-feature communication
-│       ├── bridge/api/               # Interfaces exposed to destinations
-│       └── bridge/impl/              # Implementations using session internals
+│   └── settings/                     # App settings (theme, language)
 └── shared/
     ├── concurrent/                   # Coroutine dispatchers, suspendRunCatching
     ├── design-system/                # UI theme, colors, spacing, components
@@ -76,10 +83,12 @@ DataSource
 
 ### Cross-Feature Communication (Bridge Pattern)
 
-Features communicate via bridge modules to maintain separation:
+Features communicate via bridge modules under `feature/bridge/`. Each bridge is named as an
+alphabetically-ordered pair of the two features it connects (e.g., `destination-session`, not
+`session-destination`).
 
 ```
-feature:destinations ──depends on──> feature:destination-session:bridge:api
+feature:destinations ──depends on──> feature:bridge:destination-session:api
                                             │
                                             │ (interface)
                                             ▼
@@ -87,7 +96,7 @@ feature:destinations ──depends on──> feature:destination-session:bridge:
                                             │
                                             │ (implemented by)
                                             ▼
-feature:session <──depends on── feature:destination-session:bridge:impl
+feature:session <──depends on── feature:bridge:destination-session:impl
 ```
 
 When feature A needs to display UI from feature B, use callback-based bridge interfaces (no
@@ -477,22 +486,23 @@ Supported languages: English (default), Russian (`values-ru`), Japanese (`values
 
 **For cross-feature communication:**
 
-1. Create bridge API module with interfaces
-2. Create bridge impl module with implementations
-3. Consumer depends on API, impl depends on provider
+1. Create bridge under `feature/bridge/<A-B>/` (A and B in alphabetical order) with `api/` and
+   `impl/` submodules
+2. Consumer depends on API, impl depends on provider
+3. DI module name follows `<aB>BridgeImplModule` pattern (e.g., `destinationSessionBridgeImplModule`)
 
 ## Key Files
 
-| Path                                                                      | Purpose                   |
-|---------------------------------------------------------------------------|---------------------------|
-| `app/navigation/AppNavHost.kt`                                            | Central navigation wiring |
-| `app/Modules.kt`                                                          | Root DI configuration     |
-| `app/data/AppDatabase.kt`                                                 | Room database             |
-| `feature/session/service/SessionTrackingService.kt`                       | Foreground service        |
-| `feature/theme/domain/usecase/ObserveThemeUseCase.kt`                     | Theme observation         |
-| `feature/destination-session/bridge/api/.../CyclingSessionUseCase.kt`     | Bridge data interface     |
-| `feature/destination-session/bridge/api/.../CyclingSessionUiNavigator.kt` | Bridge UI interface       |
-| `shared/concurrent/.../SuspendRunCatching.kt`                             | Coroutine-safe runCatching |
+| Path                                                                            | Purpose                   |
+|---------------------------------------------------------------------------------|---------------------------|
+| `app/navigation/AppNavHost.kt`                                                  | Central navigation wiring |
+| `app/Modules.kt`                                                                | Root DI configuration     |
+| `app/data/AppDatabase.kt`                                                       | Room database             |
+| `feature/session/service/SessionTrackingService.kt`                             | Foreground service        |
+| `feature/theme/domain/usecase/ObserveThemeUseCase.kt`                           | Theme observation         |
+| `feature/bridge/destination-session/api/.../CyclingSessionUseCase.kt`           | Bridge data interface     |
+| `feature/bridge/destination-session/api/.../CyclingSessionUiNavigator.kt`       | Bridge UI interface       |
+| `shared/concurrent/.../SuspendRunCatching.kt`                                   | Coroutine-safe runCatching |
 
 ## API Keys
 

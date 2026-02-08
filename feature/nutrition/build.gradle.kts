@@ -37,7 +37,7 @@ dependencies {
     implementation(libs.koin.core)
 
     // Project modules
-    implementation(project(":feature:nutrition-session:bridge:api"))
+    implementation(project(":feature:bridge:nutrition-session:api"))
     implementation(project(":shared:concurrent"))
     implementation(project(":shared:design-system"))
 

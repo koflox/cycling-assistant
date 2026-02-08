@@ -38,7 +38,7 @@ dependencies {
 
     // Feature modules
     implementation(project(":feature:destinations"))
-    implementation(project(":feature:destination-session:bridge:api"))
+    implementation(project(":feature:bridge:destination-session:api"))
 
     // Shared modules
     implementation(project(":shared:design-system"))

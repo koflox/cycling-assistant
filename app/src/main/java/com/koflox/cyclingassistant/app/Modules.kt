@@ -7,7 +7,7 @@ import com.koflox.cyclingassistant.MainViewModel
 import com.koflox.cyclingassistant.data.AppDatabase
 import com.koflox.destinationnutrition.bridge.impl.di.destinationNutritionBridgeImplModule
 import com.koflox.destinations.di.destinationsModule
-import com.koflox.destinationsession.bridge.impl.di.bridgeImplModule
+import com.koflox.destinationsession.bridge.impl.di.destinationSessionBridgeImplModule
 import com.koflox.distance.di.distanceModule
 import com.koflox.error.di.errorMapperModule
 import com.koflox.id.di.idModule
@@ -15,11 +15,11 @@ import com.koflox.locale.di.localeModule
 import com.koflox.location.locationModule
 import com.koflox.nutrition.di.nutritionModule
 import com.koflox.nutritionsession.bridge.impl.di.nutritionSessionBridgeImplModule
+import com.koflox.nutritionsettings.bridge.impl.di.nutritionSettingsBridgeImplModule
 import com.koflox.profile.di.profileModule
+import com.koflox.profilesession.bridge.impl.di.profileSessionBridgeImplModule
 import com.koflox.session.di.sessionModule
-import com.koflox.sessionsettings.bridge.impl.di.sessionSettingsBridgeImplModule
 import com.koflox.settings.di.settingsModule
-import com.koflox.settingsnutrition.bridge.impl.di.settingsNutritionBridgeImplModule
 import com.koflox.theme.di.themeModule
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModel
@@ -52,10 +52,10 @@ internal val appModule = module {
     // alphabetically sorted
     includes(
         altitudeModule,
-        bridgeImplModule,
         concurrentModule,
         databaseModule,
         destinationNutritionBridgeImplModule,
+        destinationSessionBridgeImplModule,
         destinationsModule,
         distanceModule,
         errorMapperModule,
@@ -65,11 +65,11 @@ internal val appModule = module {
         mainModule,
         nutritionModule,
         nutritionSessionBridgeImplModule,
+        nutritionSettingsBridgeImplModule,
         profileModule,
+        profileSessionBridgeImplModule,
         sessionModule,
-        sessionSettingsBridgeImplModule,
         settingsModule,
-        settingsNutritionBridgeImplModule,
         themeModule,
     )
 }
