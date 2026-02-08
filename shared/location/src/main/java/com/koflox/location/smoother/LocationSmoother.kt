@@ -15,7 +15,7 @@ interface LocationSmoother {
  * so that the filter operates in meters and the Kalman gain has physical meaning.
  *
  * **State model (per axis):**
- * - State: position in meters relative to [referenceLatitude]/[referenceLongitude].
+ * - State: position in meters relative to the first observed point (reference origin).
  * - Prediction: position is assumed constant (no velocity model);
  *   uncertainty grows over time by [PROCESS_NOISE_M2_PER_S] * dt.
  * - Measurement noise: GPS-reported accuracy squared (variance in m^2).
@@ -57,7 +57,6 @@ interface LocationSmoother {
 internal class KalmanLocationSmoother : LocationSmoother {
 
     companion object {
-        /** How fast uncertainty grows between measurements (m^2/s). */
         private const val PROCESS_NOISE_M2_PER_S = 3.0
         private const val METERS_PER_DEGREE_LAT = 111_320.0
         private const val MILLISECONDS_PER_SECOND = 1000.0
@@ -65,13 +64,11 @@ internal class KalmanLocationSmoother : LocationSmoother {
 
     private var isInitialized: Boolean = false
 
-    /** Origin of the local metric frame, set on the first measurement. */
     private var referenceLatitude: Double = 0.0
     private var referenceLongitude: Double = 0.0
     private var metersPerDegreeLon: Double = 0.0
     private var lastTimestampMs: Long = 0L
 
-    /** Filtered position (meters from reference) and its variance per axis. */
     private var xMeters: Double = 0.0
     private var xVariance: Double = 0.0
     private var yMeters: Double = 0.0
@@ -94,10 +91,6 @@ internal class KalmanLocationSmoother : LocationSmoother {
         yVariance = 0.0
     }
 
-    /**
-     * Seeds the filter with the first observation.
-     * The reference point is set here; initial variance comes from GPS accuracy.
-     */
     private fun initialize(
         location: Location,
         accuracy: Float,
@@ -116,14 +109,6 @@ internal class KalmanLocationSmoother : LocationSmoother {
         return location
     }
 
-    /**
-     * Predict-update cycle:
-     * 1. Convert new GPS fix to meters from the reference point.
-     * 2. **Predict**: grow variance by process noise proportional to elapsed time.
-     * 3. **Update**: compute Kalman gain, blend estimate with measurement,
-     *    shrink variance.
-     * 4. Convert filtered position back to lat/lon.
-     */
     private fun update(
         location: Location,
         accuracy: Float,
