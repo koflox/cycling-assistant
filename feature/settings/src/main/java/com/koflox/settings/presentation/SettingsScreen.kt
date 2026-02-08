@@ -30,8 +30,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import com.koflox.designsystem.theme.Spacing
+import com.koflox.nutritionsettings.bridge.navigator.NutritionSettingsUiNavigator
 import com.koflox.settings.R
-import com.koflox.settingsnutrition.bridge.navigator.NutritionSettingsUiNavigator
 import com.koflox.theme.domain.model.AppTheme
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject

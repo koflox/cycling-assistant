@@ -47,7 +47,7 @@ dependencies {
     implementation(project(":feature:profile"))
 
     // Bridge modules
-    implementation(project(":feature:settings-nutrition:bridge:api"))
+    implementation(project(":feature:bridge:nutrition-settings:api"))
 
     // Shared modules
     implementation(project(":shared:concurrent"))

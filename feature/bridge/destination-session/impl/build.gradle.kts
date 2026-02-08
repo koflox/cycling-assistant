@@ -4,42 +4,31 @@ plugins {
 }
 
 android {
-    namespace = "com.koflox.nutrition"
+    namespace = "com.koflox.destinationsession.bridge.impl"
     buildFeatures {
         compose = true
     }
 }
 
 dependencies {
-    // Core Android
     implementation(libs.androidx.core.ktx)
-
-    // Compose
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.ui)
     implementation(libs.androidx.material3)
-    implementation(libs.androidx.material.icons.extended)
 
-    // ViewModels & Lifecycle
-    implementation(libs.androidx.lifecycle.viewmodel.ktx)
-    implementation(libs.androidx.lifecycle.viewmodel.compose)
+    // Lifecycle
     implementation(libs.androidx.lifecycle.runtime.compose)
-
-    // DataStore
-    implementation(libs.androidx.datastore.preferences)
 
     // Coroutines
     implementation(libs.kotlinx.coroutines.core)
-
-    // Koin
     implementation(libs.koin.android)
     implementation(libs.koin.androidx.compose)
     implementation(libs.koin.core)
 
-    // Project modules
-    implementation(project(":feature:bridge:nutrition-session:api"))
-    implementation(project(":shared:concurrent"))
-    implementation(project(":shared:design-system"))
+    // Bridge API
+    implementation(project(":feature:bridge:destination-session:api"))
+    implementation(project(":feature:session"))
+    implementation(project(":shared:location"))
 
     // Testing
     testImplementation(libs.junit)
@@ -47,4 +36,5 @@ dependencies {
     testImplementation(libs.mockk)
     testImplementation(libs.turbine)
     testImplementation(project(":shared:testing"))
+    testImplementation(testFixtures(project(":feature:session")))
 }
