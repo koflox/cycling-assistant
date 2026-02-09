@@ -1,0 +1,92 @@
+name: Project Stats
+
+on:
+  workflow_dispatch:
+
+jobs:
+  stats:
+    name: Calculate Project Stats
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Calculate stats
+        id: stats
+        run: |
+          # Lines of code (Kotlin only, excluding build/generated)
+          LOC=$(find . -name '*.kt' \
+            -not -path '*/build/*' \
+            -not -path '*/generated/*' \
+            | xargs cat | wc -l)
+          echo "Lines of Kotlin code: $LOC"
+
+          # Modules count from settings.gradle.kts (include statements)
+          MODULES=$(grep -c '^include(' settings.gradle.kts)
+          echo "Modules: $MODULES"
+
+          # Screens count (Composable *Route functions, excluding private/non-composable)
+          SCREENS=$(grep -rn 'fun [A-Z][a-zA-Z]*Route(' --include='*.kt' \
+            --exclude-dir=build \
+            | grep -v 'private ' \
+            | grep -v 'fun sessionCompletionRoute' \
+            | grep -v 'fun animateCameraToRoute' \
+            | wc -l)
+          echo "Screens: $SCREENS"
+
+          # Workflows count
+          WORKFLOWS=$(ls -1 .github/workflows/*.yml 2>/dev/null | wc -l)
+          echo "Workflows: $WORKFLOWS"
+
+          # Format LOC with K suffix
+          if [ "$LOC" -ge 1000 ]; then
+            LOC_DISPLAY="$(echo "scale=1; $LOC / 1000" | bc)K"
+          else
+            LOC_DISPLAY="$LOC"
+          fi
+
+          echo "loc=$LOC_DISPLAY" >> $GITHUB_OUTPUT
+          echo "modules=$MODULES" >> $GITHUB_OUTPUT
+          echo "screens=$SCREENS" >> $GITHUB_OUTPUT
+          echo "workflows=$WORKFLOWS" >> $GITHUB_OUTPUT
+
+      - name: Update Lines of Code badge
+        uses: schneegans/dynamic-badges-action@v1.7.0
+        with:
+          auth: ${{ secrets.GIST_TOKEN }}
+          gistID: ${{ vars.COVERAGE_GIST_ID }}
+          filename: loc.json
+          label: lines of code
+          message: ${{ steps.stats.outputs.loc }}
+          color: blue
+
+      - name: Update Modules badge
+        uses: schneegans/dynamic-badges-action@v1.7.0
+        with:
+          auth: ${{ secrets.GIST_TOKEN }}
+          gistID: ${{ vars.COVERAGE_GIST_ID }}
+          filename: modules.json
+          label: modules
+          message: ${{ steps.stats.outputs.modules }}
+          color: blue
+
+      - name: Update Screens badge
+        uses: schneegans/dynamic-badges-action@v1.7.0
+        with:
+          auth: ${{ secrets.GIST_TOKEN }}
+          gistID: ${{ vars.COVERAGE_GIST_ID }}
+          filename: screens.json
+          label: screens
+          message: ${{ steps.stats.outputs.screens }}
+          color: blue
+
+      - name: Update Workflows badge
+        uses: schneegans/dynamic-badges-action@v1.7.0
+        with:
+          auth: ${{ secrets.GIST_TOKEN }}
+          gistID: ${{ vars.COVERAGE_GIST_ID }}
+          filename: workflows.json
+          label: CI workflows
+          message: ${{ steps.stats.outputs.workflows }}
+          color: blue
