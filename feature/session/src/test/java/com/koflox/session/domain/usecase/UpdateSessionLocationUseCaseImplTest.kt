@@ -483,6 +483,26 @@ class UpdateSessionLocationUseCaseImplTest {
         verify(exactly = 1) { locationSmoother.reset() }
     }
 
+    @Test
+    fun `update clamps speed spike via acceleration limit`() = runTest {
+        val intervalMs = 3000L
+        val spikeDistanceKm = 0.060
+        val rawSpikeSpeedKmh = (spikeDistanceKm / intervalMs) * MILLISECONDS_PER_HOUR
+        val session = createTestSession()
+        val sessionSlot = slot<Session>()
+        coEvery { activeSessionUseCase.getActiveSession() } returns session
+        every { distanceCalculator.calculateKm(any(), any(), any(), any()) } returns spikeDistanceKm
+        coEvery { sessionRepository.saveSession(capture(sessionSlot)) } returns Result.success(Unit)
+
+        useCase.update(createNewLocation(), START_TIME_MS + intervalMs)
+
+        val clampedSpeed = sessionSlot.captured.trackPoints.last().speedKmh
+        assertTrue(
+            "Clamped speed ($clampedSpeed) should be less than raw spike ($rawSpikeSpeedKmh)",
+            clampedSpeed < rawSpikeSpeedKmh,
+        )
+    }
+
     private fun createNewLocation() = Location(
         latitude = NEW_LAT,
         longitude = NEW_LONG,
