@@ -1,6 +1,7 @@
 package com.koflox.session.presentation.share
 
 import android.graphics.Bitmap
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -28,10 +29,12 @@ import androidx.compose.ui.graphics.layer.GraphicsLayer
 import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.koflox.designsystem.theme.Spacing
+import com.koflox.designsystem.theme.SurfaceAlpha
 import com.koflox.session.R
 import com.koflox.session.presentation.completion.components.RouteMapView
 import com.koflox.session.presentation.completion.components.SessionSummaryCard
@@ -169,15 +172,25 @@ private fun SharePreviewContent(
         color = MaterialTheme.colorScheme.surface,
     ) {
         Column {
-            RouteMapView(
-                routePoints = data.routePoints,
-                startMarkerRotation = data.startMarkerRotation,
-                endMarkerRotation = data.endMarkerRotation,
-                onMapLoaded = onMapLoaded,
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(1f),
-            )
+                    .weight(2f),
+            ) {
+                RouteMapView(
+                    routePoints = data.routePoints,
+                    startMarkerRotation = data.startMarkerRotation,
+                    endMarkerRotation = data.endMarkerRotation,
+                    isSharePreview = true,
+                    onMapLoaded = onMapLoaded,
+                    modifier = Modifier.matchParentSize(),
+                )
+                MapHeaderOverlay(
+                    destinationName = data.destinationName,
+                    startDate = data.startDateFormatted,
+                    modifier = Modifier.align(Alignment.BottomCenter),
+                )
+            }
             SessionSummaryCard(
                 startDate = data.startDateFormatted,
                 elapsedTime = data.elapsedTimeFormatted,
@@ -189,9 +202,36 @@ private fun SharePreviewContent(
                 altitudeGain = data.altitudeGainFormatted,
                 altitudeLoss = data.altitudeLossFormatted,
                 calories = data.caloriesFormatted,
-                destinationName = data.destinationName,
+                isCompact = true,
                 modifier = Modifier.fillMaxWidth(),
             )
         }
+    }
+}
+
+@Composable
+private fun MapHeaderOverlay(
+    destinationName: String,
+    startDate: String,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surface.copy(alpha = SurfaceAlpha.Transparant))
+            .padding(horizontal = Spacing.Medium, vertical = Spacing.Small),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Text(
+            text = destinationName,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+        Text(
+            text = startDate,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }
