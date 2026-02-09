@@ -7,6 +7,7 @@ internal data class DestinationUiModel(
     val title: String,
     val location: Location,
     val distanceKm: Double,
+    val distanceFormatted: String,
     val isMain: Boolean,
 )
 

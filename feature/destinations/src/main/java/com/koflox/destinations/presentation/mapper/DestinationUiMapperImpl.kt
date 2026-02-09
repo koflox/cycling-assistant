@@ -1,5 +1,7 @@
 package com.koflox.destinations.presentation.mapper
 
+import android.content.Context
+import com.koflox.destinations.R
 import com.koflox.destinations.domain.model.Destination
 import com.koflox.destinations.domain.model.Destinations
 import com.koflox.destinations.presentation.destinations.model.DestinationUiModel
@@ -8,10 +10,12 @@ import com.koflox.distance.DistanceCalculator
 import com.koflox.location.model.Location
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
+import java.util.Locale
 
 internal class DestinationUiMapperImpl(
     private val dispatcherDefault: CoroutineDispatcher,
     private val distanceCalculator: DistanceCalculator,
+    private val context: Context,
 ) : DestinationUiMapper {
     override suspend fun toUiModel(
         destinations: Destinations,
@@ -48,6 +52,11 @@ internal class DestinationUiMapperImpl(
             longitude = d.longitude,
         ),
         distanceKm = distance,
+        distanceFormatted = String.format(
+            Locale.getDefault(),
+            context.getString(R.string.distance_to_dest_desc),
+            distance,
+        ),
         isMain = isMain,
     )
 

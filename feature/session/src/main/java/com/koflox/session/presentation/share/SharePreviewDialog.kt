@@ -171,6 +171,8 @@ private fun SharePreviewContent(
         Column {
             RouteMapView(
                 routePoints = data.routePoints,
+                startMarkerRotation = data.startMarkerRotation,
+                endMarkerRotation = data.endMarkerRotation,
                 onMapLoaded = onMapLoaded,
                 modifier = Modifier
                     .fillMaxWidth()

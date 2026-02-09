@@ -1,6 +1,7 @@
 package com.koflox.destinations.presentation.destinations
 
 import android.net.Uri
+import com.google.android.gms.maps.model.LatLng
 import com.koflox.destinations.presentation.destinations.model.DestinationUiModel
 import com.koflox.location.model.Location
 
@@ -13,6 +14,7 @@ internal data class DestinationsUiState(
     val otherValidDestinations: List<DestinationUiModel> = emptyList(),
     val userLocation: Location? = null,
     val cameraFocusLocation: Location? = null,
+    val curvePoints: List<LatLng> = emptyList(),
     val routeDistanceKm: Double = DEFAULT_ROUTE_DISTANCE_KM,
     val toleranceKm: Double = DEFAULT_TOLERANCE_KM,
     val error: String? = null,
