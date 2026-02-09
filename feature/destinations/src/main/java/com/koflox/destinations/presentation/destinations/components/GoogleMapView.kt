@@ -27,6 +27,7 @@ import com.google.android.gms.maps.model.MapStyleOptions
 import com.google.maps.android.compose.CameraPositionState
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
+import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerInfoWindow
 import com.google.maps.android.compose.Polyline
@@ -117,6 +118,9 @@ private fun Map(
             density = density,
         )
     }
+    val uiSettings = remember {
+        MapUiSettings(zoomControlsEnabled = false)
+    }
     val mapProperties = remember(isDarkTheme) {
         MapProperties(
             mapStyleOptions = if (isDarkTheme) {
@@ -129,6 +133,7 @@ private fun Map(
     GoogleMap(
         modifier = modifier,
         cameraPositionState = cameraPositionState,
+        uiSettings = uiSettings,
         properties = mapProperties,
         onMapLoaded = onMapLoaded,
     ) {

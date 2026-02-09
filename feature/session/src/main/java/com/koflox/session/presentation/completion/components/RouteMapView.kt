@@ -46,6 +46,7 @@ internal fun RouteMapView(
     startMarkerRotation: Float,
     endMarkerRotation: Float,
     modifier: Modifier = Modifier,
+    isSharePreview: Boolean = false,
     onMapLoaded: (() -> Unit)? = null,
 ) {
     val isDarkTheme = LocalDarkTheme.current
@@ -55,10 +56,14 @@ internal fun RouteMapView(
     LaunchedEffect(routePoints) {
         animateCameraToRoute(routePoints, cameraPositionState)
     }
-    val uiSettings = remember {
+    val uiSettings = remember(isSharePreview) {
         MapUiSettings(
             zoomControlsEnabled = false,
             mapToolbarEnabled = false,
+            scrollGesturesEnabled = !isSharePreview,
+            zoomGesturesEnabled = !isSharePreview,
+            tiltGesturesEnabled = !isSharePreview,
+            rotationGesturesEnabled = !isSharePreview,
         )
     }
     val mapProperties = remember(isDarkTheme) {
