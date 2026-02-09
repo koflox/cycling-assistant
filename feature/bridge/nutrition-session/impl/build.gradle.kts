@@ -13,4 +13,10 @@ dependencies {
     implementation(project(":feature:nutrition"))
     implementation(project(":feature:bridge:nutrition-session:api"))
     implementation(project(":feature:session"))
+
+    // Testing
+    testImplementation(libs.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.mockk)
+    testImplementation(libs.turbine)
 }
