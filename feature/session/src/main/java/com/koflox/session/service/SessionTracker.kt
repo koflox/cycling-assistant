@@ -46,6 +46,7 @@ internal class SessionTrackerImpl(
 
     companion object {
         internal const val LOCATION_INTERVAL_MS = 3000L
+        internal const val MIN_UPDATE_DISTANCE_METERS = 5F
         internal const val TIMER_UPDATE_INTERVAL_MS = 1000L
     }
 
@@ -146,15 +147,14 @@ internal class SessionTrackerImpl(
     private fun startLocationCollection() {
         if (locationCollectionJob?.isActive == true) return
         locationCollectionJob = scope?.launch {
-            while (isActive) {
-                delay(LOCATION_INTERVAL_MS)
-                locationDataSource.getCurrentLocation()
-                    .onSuccess { location ->
-                        updateSessionLocationUseCase.update(
-                            location = location,
-                            timestampMs = currentTimeProvider(),
-                        )
-                    }
+            locationDataSource.observeLocationUpdates(
+                intervalMs = LOCATION_INTERVAL_MS,
+                inUpdateDistanceMeters = MIN_UPDATE_DISTANCE_METERS,
+            ).collect { location ->
+                updateSessionLocationUseCase.update(
+                    location = location,
+                    timestampMs = currentTimeProvider(),
+                )
             }
         }
     }
