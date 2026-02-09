@@ -51,12 +51,6 @@ internal fun RouteMapView(
     val context = LocalContext.current
     val cameraPositionState = rememberCameraPositionState()
     val markerSizePx = with(LocalDensity.current) { 24.dp.toPx().toInt() }
-    val startMarkerIcon = remember(routePoints, markerSizePx) {
-        if (routePoints.isNotEmpty()) createStartMarkerIcon(routePoints, markerSizePx) else null
-    }
-    val endMarkerIcon = remember(routePoints, markerSizePx) {
-        if (routePoints.size >= 2) createEndMarkerIcon(routePoints, markerSizePx) else null
-    }
     LaunchedEffect(routePoints) {
         animateCameraToRoute(routePoints, cameraPositionState)
     }
@@ -82,6 +76,12 @@ internal fun RouteMapView(
         properties = mapProperties,
         onMapLoaded = onMapLoaded,
     ) {
+        val startMarkerIcon = remember(routePoints, markerSizePx) {
+            if (routePoints.isNotEmpty()) createStartMarkerIcon(routePoints, markerSizePx) else null
+        }
+        val endMarkerIcon = remember(routePoints, markerSizePx) {
+            if (routePoints.size >= 2) createEndMarkerIcon(routePoints, markerSizePx) else null
+        }
         if (routePoints.isNotEmpty() && startMarkerIcon != null) {
             Marker(
                 state = rememberUpdatedMarkerState(position = routePoints.first()),

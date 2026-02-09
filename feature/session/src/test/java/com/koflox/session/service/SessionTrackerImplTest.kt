@@ -49,6 +49,7 @@ class SessionTrackerImplTest {
     private var currentTimeMs = LAST_RESUMED_TIME_MS
 
     private val sessionFlow = MutableStateFlow<Session?>(null)
+    private val locationFlow = MutableSharedFlow<Location>()
     private val locationEnabledFlow = MutableStateFlow(true)
     private val nutritionFlow = MutableSharedFlow<Unit>()
 
@@ -63,9 +64,7 @@ class SessionTrackerImplTest {
         coEvery { updateSessionStatusUseCase.pause() } returns Result.success(Unit)
         coEvery { updateSessionStatusUseCase.resume() } returns Result.success(Unit)
         coEvery { updateSessionStatusUseCase.stop() } returns Result.success(Unit)
-        coEvery { locationDataSource.getCurrentLocation() } returns Result.success(
-            Location(latitude = TEST_LATITUDE, longitude = TEST_LONGITUDE),
-        )
+        every { locationDataSource.observeLocationUpdates(any(), any()) } returns locationFlow
         tracker = createTracker()
     }
 
@@ -91,9 +90,9 @@ class SessionTrackerImplTest {
         val session = createTestSession(status = SessionStatus.RUNNING)
         sessionFlow.value = session
         tracker.startTracking(delegate)
-        advanceTimeBy(SessionTrackerImpl.LOCATION_INTERVAL_MS + 1)
+        advanceTimeBy(1)
 
-        coVerify { locationDataSource.getCurrentLocation() }
+        verify { locationDataSource.observeLocationUpdates(any(), any()) }
     }
 
     @Test
@@ -121,11 +120,11 @@ class SessionTrackerImplTest {
         val runningSession = createTestSession(status = SessionStatus.RUNNING)
         sessionFlow.value = runningSession
         tracker.startTracking(delegate)
-        advanceTimeBy(SessionTrackerImpl.LOCATION_INTERVAL_MS + 1)
+        advanceTimeBy(1)
 
         val pausedSession = createTestSession(status = SessionStatus.PAUSED)
         sessionFlow.value = pausedSession
-        advanceTimeBy(SessionTrackerImpl.LOCATION_INTERVAL_MS * 2)
+        advanceTimeBy(1)
 
         verify { delegate.onNotificationUpdate(pausedSession, ELAPSED_TIME_MS) }
     }
@@ -145,13 +144,20 @@ class SessionTrackerImplTest {
     }
 
     @Test
-    fun `location collection polls every 3 seconds`() = runTrackerTest {
+    fun `location collection processes each emitted location`() = runTrackerTest {
         val session = createTestSession(status = SessionStatus.RUNNING)
         sessionFlow.value = session
         tracker.startTracking(delegate)
-        advanceTimeBy(SessionTrackerImpl.LOCATION_INTERVAL_MS * 3 + 1)
+        advanceTimeBy(1)
 
-        coVerify(atLeast = 3) { locationDataSource.getCurrentLocation() }
+        locationFlow.emit(Location(latitude = TEST_LATITUDE, longitude = TEST_LONGITUDE))
+        advanceTimeBy(1)
+        locationFlow.emit(Location(latitude = TEST_LATITUDE, longitude = TEST_LONGITUDE))
+        advanceTimeBy(1)
+        locationFlow.emit(Location(latitude = TEST_LATITUDE, longitude = TEST_LONGITUDE))
+        advanceTimeBy(1)
+
+        coVerify(exactly = 3) { updateSessionLocationUseCase.update(any(), any()) }
     }
 
     @Test
@@ -159,7 +165,10 @@ class SessionTrackerImplTest {
         val session = createTestSession(status = SessionStatus.RUNNING)
         sessionFlow.value = session
         tracker.startTracking(delegate)
-        advanceTimeBy(SessionTrackerImpl.LOCATION_INTERVAL_MS + 1)
+        advanceTimeBy(1)
+
+        locationFlow.emit(Location(latitude = TEST_LATITUDE, longitude = TEST_LONGITUDE))
+        advanceTimeBy(1)
 
         coVerify { updateSessionLocationUseCase.update(any(), any()) }
     }
@@ -225,12 +234,14 @@ class SessionTrackerImplTest {
         val session = createTestSession(status = SessionStatus.RUNNING)
         sessionFlow.value = session
         tracker.startTracking(delegate)
-        advanceTimeBy(SessionTrackerImpl.LOCATION_INTERVAL_MS + 1)
+        advanceTimeBy(1)
+
+        locationFlow.emit(Location(latitude = TEST_LATITUDE, longitude = TEST_LONGITUDE))
+        advanceTimeBy(1)
 
         tracker.stopTracking()
-        advanceTimeBy(SessionTrackerImpl.LOCATION_INTERVAL_MS * 3)
 
-        coVerify(atMost = 1) { locationDataSource.getCurrentLocation() }
+        coVerify(exactly = 1) { updateSessionLocationUseCase.update(any(), any()) }
     }
 
     @Test

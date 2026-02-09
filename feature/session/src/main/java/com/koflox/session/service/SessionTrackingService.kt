@@ -63,6 +63,7 @@ class SessionTrackingService : Service(), SessionTrackingDelegate {
     }
 
     override fun onStopService() {
+        stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
     }
 
