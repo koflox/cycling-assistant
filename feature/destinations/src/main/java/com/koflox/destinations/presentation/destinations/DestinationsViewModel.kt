@@ -5,6 +5,7 @@ import android.content.pm.PackageManager
 import androidx.core.net.toUri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.android.gms.maps.model.LatLng
 import com.koflox.destinationnutrition.bridge.model.NutritionBreakEvent
 import com.koflox.destinationnutrition.bridge.usecase.ObserveNutritionBreakUseCase
 import com.koflox.destinations.R
@@ -20,6 +21,8 @@ import com.koflox.destinations.presentation.destinations.model.DestinationUiMode
 import com.koflox.destinations.presentation.mapper.DestinationUiMapper
 import com.koflox.destinationsession.bridge.usecase.CyclingSessionUseCase
 import com.koflox.distance.DistanceCalculator
+import com.koflox.graphics.curves.createCurvePoints
+import com.koflox.graphics.primitives.Point
 import com.koflox.location.model.Location
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Job
@@ -180,6 +183,7 @@ internal class DestinationsViewModel(
                 isLoading = true,
                 selectedDestination = null,
                 otherValidDestinations = emptyList(),
+                curvePoints = emptyList(),
             )
         }
         getUserLocationUseCase.getLocation()
@@ -250,11 +254,13 @@ internal class DestinationsViewModel(
     ) {
         result.onSuccess { destinations ->
             val uiModel = uiMapper.toUiModel(destinations, location)
+            val curvePoints = computeCurvePoints(location, uiModel.selected)
             _uiState.update {
                 it.copy(
                     isLoading = false,
                     selectedDestination = uiModel.selected,
                     otherValidDestinations = uiModel.otherValidDestinations,
+                    curvePoints = curvePoints,
                     isSessionActive = isSessionActive,
                     routeDistanceKm = if (isSessionRecovery) uiModel.selected.distanceKm.roundToInt().toDouble() else it.routeDistanceKm,
                 )
@@ -329,6 +335,9 @@ internal class DestinationsViewModel(
                     currentFocus = currentState.cameraFocusLocation,
                     newLocation = newLocation,
                 )
+                val updatedCurvePoints = currentState.selectedDestination?.let {
+                    computeCurvePoints(newLocation, it)
+                } ?: currentState.curvePoints
                 _uiState.update {
                     it.copy(
                         userLocation = newLocation,
@@ -337,6 +346,7 @@ internal class DestinationsViewModel(
                         } else {
                             it.cameraFocusLocation
                         },
+                        curvePoints = updatedCurvePoints,
                     )
                 }
                 checkAndReloadDestinationsIfNeeded(newLocation)
@@ -431,4 +441,10 @@ internal class DestinationsViewModel(
     private fun dismissNutritionPopup() {
         _uiState.update { it.copy(nutritionSuggestionTimeMs = null) }
     }
+
+    private fun computeCurvePoints(userLocation: Location, destination: DestinationUiModel): List<LatLng> =
+        createCurvePoints(
+            start = Point(userLocation.latitude, userLocation.longitude),
+            end = Point(destination.location.latitude, destination.location.longitude),
+        ).map { LatLng(it.x, it.y) }
 }

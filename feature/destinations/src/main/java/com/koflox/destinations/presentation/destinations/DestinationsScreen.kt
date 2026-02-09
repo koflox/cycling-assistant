@@ -126,6 +126,7 @@ private fun DestinationsContent(
             otherDestinations = if (uiState.isSessionActive) emptyList() else uiState.otherValidDestinations,
             userLocation = uiState.userLocation,
             cameraFocusLocation = uiState.cameraFocusLocation,
+            curvePoints = uiState.curvePoints,
             isSessionActive = uiState.isSessionActive,
             onSelectedMarkerInfoClick = { viewModel.onEvent(DestinationsUiEvent.SelectedMarkerInfoClicked) },
         )

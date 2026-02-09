@@ -31,7 +31,6 @@ import com.google.maps.android.compose.Polyline
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberUpdatedMarkerState
 import com.koflox.designsystem.theme.LocalDarkTheme
-import kotlin.math.atan2
 import com.koflox.designsystem.R as DesignSystemR
 
 private const val MAP_PADDING = 100
@@ -44,6 +43,8 @@ private val END_MARKER_COLOR = Color(0xFFE84940)
 @Composable
 internal fun RouteMapView(
     routePoints: List<LatLng>,
+    startMarkerRotation: Float,
+    endMarkerRotation: Float,
     modifier: Modifier = Modifier,
     onMapLoaded: (() -> Unit)? = null,
 ) {
@@ -76,11 +77,11 @@ internal fun RouteMapView(
         properties = mapProperties,
         onMapLoaded = onMapLoaded,
     ) {
-        val startMarkerIcon = remember(routePoints, markerSizePx) {
-            if (routePoints.isNotEmpty()) createStartMarkerIcon(routePoints, markerSizePx) else null
+        val startMarkerIcon = remember(startMarkerRotation, markerSizePx) {
+            if (routePoints.isNotEmpty()) createArrowBitmap(markerSizePx, START_MARKER_COLOR, startMarkerRotation) else null
         }
-        val endMarkerIcon = remember(routePoints, markerSizePx) {
-            if (routePoints.size >= 2) createEndMarkerIcon(routePoints, markerSizePx) else null
+        val endMarkerIcon = remember(endMarkerRotation, markerSizePx) {
+            if (routePoints.size >= 2) createArrowBitmap(markerSizePx, END_MARKER_COLOR, endMarkerRotation) else null
         }
         if (routePoints.isNotEmpty() && startMarkerIcon != null) {
             Marker(
@@ -100,22 +101,6 @@ internal fun RouteMapView(
             )
         }
     }
-}
-
-private fun createStartMarkerIcon(routePoints: List<LatLng>, sizePx: Int): BitmapDescriptor {
-    val rotation = if (routePoints.size >= 2) {
-        calculateRotation(routePoints[0], routePoints[1])
-    } else {
-        0f
-    }
-    return createArrowBitmap(sizePx, START_MARKER_COLOR, rotation)
-}
-
-private fun createEndMarkerIcon(routePoints: List<LatLng>, sizePx: Int): BitmapDescriptor? {
-    if (routePoints.size < 2) return null
-    val lastIndex = routePoints.lastIndex
-    val rotation = calculateRotation(routePoints[lastIndex - 1], routePoints[lastIndex])
-    return createArrowBitmap(sizePx, END_MARKER_COLOR, rotation)
 }
 
 private fun animateCameraToRoute(
@@ -163,15 +148,4 @@ private fun createArrowBitmap(
         drawPath(path, paint)
     }
     return BitmapDescriptorFactory.fromBitmap(bitmap)
-}
-
-private fun calculateRotation(from: LatLng, to: LatLng): Float {
-    val deltaLat = to.latitude - from.latitude
-    val deltaLon = to.longitude - from.longitude
-    // atan2 with (deltaLon, deltaLat) gives angle from North, but we need angle from East (right)
-    // since the arrow is drawn pointing right at 0° rotation
-    val angleRadians = atan2(deltaLat, deltaLon)
-    val angleDegrees = Math.toDegrees(angleRadians)
-    // Canvas rotation is clockwise, but atan2 is counter-clockwise, so negate
-    return (-angleDegrees).toFloat()
 }

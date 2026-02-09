@@ -228,7 +228,7 @@ class SessionCompletionViewModelTest {
             viewModel.onEvent(SessionCompletionUiEvent.ShareClicked)
 
             val updatedContent = awaitItem() as SessionCompletionUiState.Content
-            assertEquals(Overlay.ShareDialog, updatedContent.overlay)
+            assertTrue(updatedContent.overlay is Overlay.ShareDialog)
         }
     }
 
@@ -272,7 +272,7 @@ class SessionCompletionViewModelTest {
             viewModel.onEvent(SessionCompletionUiEvent.ShareConfirmed(bitmap, DESTINATION_NAME))
 
             val sharingState = awaitItem() as SessionCompletionUiState.Content
-            assertEquals(Overlay.Sharing, sharingState.overlay)
+            assertTrue(sharingState.overlay is Overlay.Sharing)
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -344,7 +344,7 @@ class SessionCompletionViewModelTest {
 
             awaitItem() // Sharing
             val state = awaitItem() as SessionCompletionUiState.Content
-            assertEquals(Overlay.ShareDialog, state.overlay)
+            assertTrue(state.overlay is Overlay.ShareDialog)
         }
     }
 
@@ -396,7 +396,7 @@ class SessionCompletionViewModelTest {
             viewModel.onEvent(SessionCompletionUiEvent.ErrorDismissed)
 
             val content = awaitItem() as SessionCompletionUiState.Content
-            assertEquals(Overlay.ShareDialog, content.overlay)
+            assertTrue(content.overlay is Overlay.ShareDialog)
         }
     }
 
@@ -414,14 +414,14 @@ class SessionCompletionViewModelTest {
 
             viewModel.onEvent(SessionCompletionUiEvent.ShareClicked)
             val shareDialogState = awaitItem() as SessionCompletionUiState.Content
-            assertEquals(Overlay.ShareDialog, shareDialogState.overlay)
+            assertTrue(shareDialogState.overlay is Overlay.ShareDialog)
 
             viewModel.onEvent(SessionCompletionUiEvent.ErrorDismissed)
 
             // No new emission expected since overlay stays ShareDialog
             expectNoEvents()
             // Verify the state still has ShareDialog
-            assertEquals(Overlay.ShareDialog, (viewModel.uiState.value as SessionCompletionUiState.Content).overlay)
+            assertTrue((viewModel.uiState.value as SessionCompletionUiState.Content).overlay is Overlay.ShareDialog)
         }
     }
 }

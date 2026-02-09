@@ -29,7 +29,6 @@ import com.koflox.session.R
 import com.koflox.session.presentation.completion.components.RouteMapView
 import com.koflox.session.presentation.completion.components.SessionSummaryCard
 import com.koflox.session.presentation.completion.components.calculateCardAlignment
-import com.koflox.session.presentation.share.SharePreviewData
 import com.koflox.session.presentation.share.SharePreviewDialog
 import org.koin.androidx.compose.koinViewModel
 
@@ -82,24 +81,15 @@ internal fun SessionCompletionContent(
     modifier: Modifier = Modifier,
 ) {
     val content = uiState as? SessionCompletionUiState.Content
-    if (content != null && content.overlay != null && content.overlay !is Overlay.ShareReady) {
+    val sharePreviewData = when (val overlay = content?.overlay) {
+        is Overlay.ShareDialog -> overlay.sharePreviewData
+        is Overlay.Sharing -> overlay.sharePreviewData
+        else -> null
+    }
+    if (sharePreviewData != null) {
         SharePreviewDialog(
-            data = SharePreviewData(
-                sessionId = content.sessionId,
-                destinationName = content.destinationName,
-                startDateFormatted = content.startDateFormatted,
-                elapsedTimeFormatted = content.elapsedTimeFormatted,
-                movingTimeFormatted = content.movingTimeFormatted,
-                idleTimeFormatted = content.idleTimeFormatted,
-                traveledDistanceFormatted = content.traveledDistanceFormatted,
-                averageSpeedFormatted = content.averageSpeedFormatted,
-                topSpeedFormatted = content.topSpeedFormatted,
-                altitudeGainFormatted = content.altitudeGainFormatted,
-                altitudeLossFormatted = content.altitudeLossFormatted,
-                caloriesFormatted = content.caloriesFormatted,
-                routePoints = content.routePoints,
-            ),
-            isSharing = content.overlay is Overlay.Sharing,
+            data = sharePreviewData,
+            isSharing = content?.overlay is Overlay.Sharing,
             onShareClick = { bitmap, destinationName ->
                 onEvent(SessionCompletionUiEvent.ShareConfirmed(bitmap, destinationName))
             },
@@ -174,7 +164,12 @@ private fun SessionCompletionBody(
             is SessionCompletionUiState.Content -> {
                 val cardAlignment = calculateCardAlignment(uiState.routePoints)
                 if (uiState.routePoints.isNotEmpty()) {
-                    RouteMapView(routePoints = uiState.routePoints, modifier = Modifier.fillMaxSize())
+                    RouteMapView(
+                        routePoints = uiState.routePoints,
+                        startMarkerRotation = uiState.startMarkerRotation,
+                        endMarkerRotation = uiState.endMarkerRotation,
+                        modifier = Modifier.fillMaxSize(),
+                    )
                 }
                 SessionSummaryCard(
                     startDate = uiState.startDateFormatted,

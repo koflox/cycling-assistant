@@ -6,6 +6,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.android.gms.maps.model.LatLng
 import com.koflox.error.mapper.ErrorMessageMapper
+import com.koflox.location.bearing.calculateBearingDegrees
+import com.koflox.location.model.Location
 import com.koflox.session.domain.model.SessionStatus
 import com.koflox.session.domain.usecase.CalculateSessionStatsUseCase
 import com.koflox.session.domain.usecase.GetSessionByIdUseCase
@@ -13,6 +15,7 @@ import com.koflox.session.navigation.SESSION_ID_ARG
 import com.koflox.session.presentation.mapper.SessionUiMapper
 import com.koflox.session.presentation.share.SessionImageSharer
 import com.koflox.session.presentation.share.ShareErrorMapper
+import com.koflox.session.presentation.share.SharePreviewData
 import com.koflox.session.presentation.share.ShareResult
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.channels.Channel
@@ -64,7 +67,9 @@ internal class SessionCompletionViewModel(
     }
 
     private fun showShareDialog() {
-        updateContent { it.copy(overlay = Overlay.ShareDialog) }
+        updateContent { content ->
+            content.copy(overlay = Overlay.ShareDialog(buildSharePreviewData(content)))
+        }
     }
 
     private fun dismissShareDialog() {
@@ -72,14 +77,20 @@ internal class SessionCompletionViewModel(
     }
 
     private suspend fun shareImage(bitmap: Bitmap, destinationName: String) {
-        updateContent { it.copy(overlay = Overlay.Sharing) }
+        updateContent { it.copy(overlay = Overlay.Sharing(buildSharePreviewData(it))) }
         val result = imageSharer.shareImage(bitmap, destinationName)
         updateContent { content ->
             when (result) {
                 is ShareResult.Success -> content.copy(overlay = Overlay.ShareReady(result.intent))
                 else -> {
                     val errorMessage = shareErrorMapper.map(result)
-                    content.copy(overlay = if (errorMessage != null) Overlay.ShareError(errorMessage) else Overlay.ShareDialog)
+                    content.copy(
+                        overlay = if (errorMessage != null) {
+                            Overlay.ShareError(errorMessage)
+                        } else {
+                            Overlay.ShareDialog(buildSharePreviewData(content))
+                        },
+                    )
                 }
             }
         }
@@ -91,7 +102,11 @@ internal class SessionCompletionViewModel(
 
     private fun clearOverlayError() {
         updateContent { content ->
-            val newOverlay = if (content.overlay is Overlay.ShareError) Overlay.ShareDialog else content.overlay
+            val newOverlay = if (content.overlay is Overlay.ShareError) {
+                Overlay.ShareDialog(buildSharePreviewData(content))
+            } else {
+                content.overlay
+            }
             content.copy(overlay = newOverlay)
         }
     }
@@ -108,6 +123,23 @@ internal class SessionCompletionViewModel(
                 val routePoints = session.trackPoints.map { trackPoint ->
                     LatLng(trackPoint.latitude, trackPoint.longitude)
                 }
+                val trackPoints = session.trackPoints
+                val startRotation = if (trackPoints.size >= 2) {
+                    calculateBearingDegrees(
+                        from = Location(trackPoints[0].latitude, trackPoints[0].longitude),
+                        to = Location(trackPoints[1].latitude, trackPoints[1].longitude),
+                    )
+                } else {
+                    0f
+                }
+                val endRotation = if (trackPoints.size >= 2) {
+                    calculateBearingDegrees(
+                        from = Location(trackPoints[trackPoints.lastIndex - 1].latitude, trackPoints[trackPoints.lastIndex - 1].longitude),
+                        to = Location(trackPoints.last().latitude, trackPoints.last().longitude),
+                    )
+                } else {
+                    0f
+                }
                 _uiState.value = SessionCompletionUiState.Content(
                     sessionId = sessionId,
                     destinationName = session.destinationName,
@@ -122,6 +154,8 @@ internal class SessionCompletionViewModel(
                     altitudeLossFormatted = sessionUiMapper.formatAltitudeGain(derivedStats.altitudeLossMeters),
                     caloriesFormatted = derivedStats.caloriesBurned?.let { sessionUiMapper.formatCalories(it) },
                     routePoints = routePoints,
+                    startMarkerRotation = startRotation,
+                    endMarkerRotation = endRotation,
                 )
             }
             .onFailure { error ->
@@ -136,4 +170,22 @@ internal class SessionCompletionViewModel(
             _uiState.value = transform(current)
         }
     }
+
+    private fun buildSharePreviewData(content: SessionCompletionUiState.Content) = SharePreviewData(
+        sessionId = content.sessionId,
+        destinationName = content.destinationName,
+        startDateFormatted = content.startDateFormatted,
+        elapsedTimeFormatted = content.elapsedTimeFormatted,
+        movingTimeFormatted = content.movingTimeFormatted,
+        idleTimeFormatted = content.idleTimeFormatted,
+        traveledDistanceFormatted = content.traveledDistanceFormatted,
+        averageSpeedFormatted = content.averageSpeedFormatted,
+        topSpeedFormatted = content.topSpeedFormatted,
+        altitudeGainFormatted = content.altitudeGainFormatted,
+        altitudeLossFormatted = content.altitudeLossFormatted,
+        caloriesFormatted = content.caloriesFormatted,
+        routePoints = content.routePoints,
+        startMarkerRotation = content.startMarkerRotation,
+        endMarkerRotation = content.endMarkerRotation,
+    )
 }

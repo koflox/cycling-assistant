@@ -37,11 +37,8 @@ import com.koflox.designsystem.theme.LocalDarkTheme
 import com.koflox.designsystem.theme.Spacing
 import com.koflox.destinations.R
 import com.koflox.destinations.presentation.destinations.model.DestinationUiModel
-import com.koflox.graphics.curves.createCurvePoints
 import com.koflox.graphics.figures.createCircleBitmap
-import com.koflox.graphics.primitives.Point
 import com.koflox.location.model.Location
-import java.util.Locale
 import android.graphics.Color as AndroidColor
 import com.koflox.designsystem.R as DesignSystemR
 
@@ -58,6 +55,7 @@ internal fun GoogleMapView(
     otherDestinations: List<DestinationUiModel>,
     userLocation: Location?,
     cameraFocusLocation: Location?,
+    curvePoints: List<LatLng>,
     isSessionActive: Boolean,
     onSelectedMarkerInfoClick: () -> Unit,
 ) {
@@ -87,6 +85,7 @@ internal fun GoogleMapView(
         selectedDestination = selectedDestination,
         context = context,
         otherDestinations = otherDestinations,
+        curvePoints = curvePoints,
         isSessionActive = isSessionActive,
         onSelectedMarkerInfoClick = onSelectedMarkerInfoClick,
         isDarkTheme = isDarkTheme,
@@ -102,6 +101,7 @@ private fun Map(
     selectedDestination: DestinationUiModel?,
     context: Context,
     otherDestinations: List<DestinationUiModel>,
+    curvePoints: List<LatLng>,
     isSessionActive: Boolean,
     onSelectedMarkerInfoClick: () -> Unit,
     isDarkTheme: Boolean,
@@ -148,11 +148,7 @@ private fun Map(
         selectedDestination?.let { destination ->
             Destinations(destination, otherDestinations, isSessionActive, onSelectedMarkerInfoClick)
         }
-        if (userLocation != null && selectedDestination != null) {
-            val curvePoints = createCurvePoints(
-                start = Point(userLocation.latitude, userLocation.longitude),
-                end = Point(selectedDestination.location.latitude, selectedDestination.location.longitude),
-            ).map { LatLng(it.x, it.y) }
+        if (curvePoints.isNotEmpty()) {
             @Suppress("COMPOSE_APPLIER_CALL_MISMATCH")
             Polyline(
                 points = curvePoints,
@@ -233,11 +229,7 @@ private fun SelectedDestinationInfoWindow(
             color = MaterialTheme.colorScheme.onSurface,
         )
         Text(
-            text = String.format(
-                Locale.getDefault(),
-                stringResource(R.string.distance_to_dest_desc),
-                destination.distanceKm,
-            ),
+            text = destination.distanceFormatted,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(top = Spacing.Tiny),
@@ -270,11 +262,7 @@ private fun OtherDestinationInfoWindow(destination: DestinationUiModel) {
             color = MaterialTheme.colorScheme.onSurface,
         )
         Text(
-            text = String.format(
-                Locale.getDefault(),
-                stringResource(R.string.distance_to_dest_desc),
-                destination.distanceKm,
-            ),
+            text = destination.distanceFormatted,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(top = Spacing.Tiny),
