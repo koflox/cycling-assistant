@@ -1,21 +1,70 @@
-# Add project specific ProGuard rules here.
-# You can control the set of applied configuration files using the
-# proguardFiles setting in build.gradle.
-#
-# For more details, see
-#   http://developer.android.com/guide/developing/tools/proguard.html
+# ============================================
+# Debugging - preserve source file and line numbers
+# ============================================
+-keepattributes SourceFile,LineNumberTable
+-renamesourcefileattribute SourceFile
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+# ============================================
+# Kotlin
+# ============================================
+-keepattributes *Annotation*
+-keepattributes Signature
+-keepattributes InnerClasses,EnclosingMethod
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
+# Kotlin Metadata (required by Koin for reflection)
+-keep class kotlin.Metadata { *; }
+-keepclassmembers class kotlin.Metadata { *; }
 
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
+# ============================================
+# Kotlin Serialization
+# ============================================
+-keepattributes RuntimeVisibleAnnotations
+
+# Keep @Serializable classes and their generated serializers
+-if @kotlinx.serialization.Serializable class **
+-keepclassmembers class <1> {
+    static <1>$Companion Companion;
+}
+-if @kotlinx.serialization.Serializable class ** {
+    static **$* *;
+}
+-keepclassmembers class <2>$<3> {
+    kotlinx.serialization.KSerializer serializer(...);
+}
+-if @kotlinx.serialization.Serializable class ** {
+    public static ** INSTANCE;
+}
+-keepclassmembers class <1> {
+    public static ** INSTANCE;
+    kotlinx.serialization.KSerializer serializer(...);
+}
+
+# Keep serializer() on companion objects
+-keepclasseswithmembers class **$Companion {
+    kotlinx.serialization.KSerializer serializer(...);
+}
+
+# ============================================
+# Room
+# ============================================
+-keep class * extends androidx.room.RoomDatabase
+-keep @androidx.room.Entity class *
+-keep @androidx.room.Dao class *
+-keepclassmembers @androidx.room.Entity class * { *; }
+
+# ============================================
+# Google Play Services / Maps
+# ============================================
+-keep class com.google.android.gms.maps.** { *; }
+-keep class com.google.android.gms.location.** { *; }
+-keep interface com.google.android.gms.maps.** { *; }
+
+# ============================================
+# Coroutines
+# ============================================
+-dontwarn kotlinx.coroutines.**
+
+# ============================================
+# Compose
+# ============================================
+-dontwarn androidx.compose.**

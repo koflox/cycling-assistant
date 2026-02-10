@@ -1,4 +1,4 @@
-name: Build Cache
+name: Build & Release
 
 on:
   push:
@@ -46,3 +46,71 @@ jobs:
 
       - name: Build project
         run: gradle buildDebug --build-cache -x test
+
+  release:
+    name: Release APK
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up JDK
+        uses: actions/setup-java@v5
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v5
+        with:
+          gradle-version: "9.3.1"
+
+      - name: Restore Android build cache
+        uses: actions/cache@v5
+        with:
+          path: |
+            ~/.android/build-cache
+            **/build/intermediates
+            **/build/generated
+            **/build/tmp
+          key: android-build-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', 'gradle/libs.versions.toml') }}
+          restore-keys: |
+            android-build-${{ runner.os }}-
+
+      - name: Read version
+        id: version
+        run: |
+          VERSION_CODE=$(grep 'versionCode' version.properties | cut -d'=' -f2 | tr -d '[:space:]')
+          VERSION_NAME=$(grep 'versionName' version.properties | cut -d'=' -f2 | tr -d '[:space:]')
+          echo "code=$VERSION_CODE" >> "$GITHUB_OUTPUT"
+          echo "name=$VERSION_NAME" >> "$GITHUB_OUTPUT"
+          echo "Version: $VERSION_NAME ($VERSION_CODE)"
+
+      - name: Decode release keystore
+        run: |
+          echo "${{ secrets.RELEASE_KEYSTORE_BASE64 }}" | base64 -d > app/release.jks
+
+      - name: Build release APK
+        env:
+          RELEASE_KEYSTORE_PATH: release.jks
+          RELEASE_KEYSTORE_PASSWORD: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
+          RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
+          RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
+        run: gradle assembleRelease --build-cache
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.name }}
+          name: v${{ steps.version.outputs.name }}
+          generate_release_notes: true
+          files: app/build/outputs/apk/release/app-release.apk
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release-v${{ steps.version.outputs.name }}
+          path: app/build/outputs/apk/release/app-release.apk
+          retention-days: 30

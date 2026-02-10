@@ -7,14 +7,18 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 }
 
+val versionProperties = Properties().apply {
+    load(rootProject.file("version.properties").inputStream())
+}
+
 android {
     namespace = "com.koflox.cyclingassistant"
 
     defaultConfig {
         applicationId = "com.koflox.cyclingassistant"
         targetSdk = libs.versions.targetSdk.get().toInt()
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = versionProperties.getProperty("versionCode").toInt()
+        versionName = versionProperties.getProperty("versionName")
 
         val secretsProperties = Properties()
         val secretsPropertiesFile = rootProject.file("secrets.properties")
@@ -26,6 +30,42 @@ android {
 
         ksp {
             arg("room.schemaLocation", "${rootProject.projectDir}/schemas/app")
+        }
+    }
+
+    signingConfigs {
+        create("release") {
+            val keystorePropertiesFile = rootProject.file("keystore.properties")
+            if (keystorePropertiesFile.exists()) {
+                val keystoreProperties = Properties().apply {
+                    load(keystorePropertiesFile.inputStream())
+                }
+                storeFile = file(keystoreProperties.getProperty("storeFile"))
+                storePassword = keystoreProperties.getProperty("storePassword")
+                keyAlias = keystoreProperties.getProperty("keyAlias")
+                keyPassword = keystoreProperties.getProperty("keyPassword")
+            } else {
+                storeFile = file(System.getenv("RELEASE_KEYSTORE_PATH") ?: "release.jks")
+                storePassword = System.getenv("RELEASE_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("RELEASE_KEY_ALIAS")
+                keyPassword = System.getenv("RELEASE_KEY_PASSWORD")
+            }
+        }
+    }
+
+    buildTypes {
+        debug {
+            applicationIdSuffix = ".debug"
+            versionNameSuffix = ".debug"
+        }
+        release {
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
+            signingConfig = signingConfigs.getByName("release")
         }
     }
 
