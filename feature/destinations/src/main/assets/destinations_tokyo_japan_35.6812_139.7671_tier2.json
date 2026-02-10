@@ -1,0 +1,61 @@
+[
+  { "id": "tokyo-051", "title": "Inokashira Park (井の頭公園)", "lat": 35.6996, "long": 139.5750 },
+  { "id": "tokyo-052", "title": "Koganei Park", "lat": 35.7009, "long": 139.5217 },
+  { "id": "tokyo-053", "title": "Zenpukuji River Greenway", "lat": 35.7100, "long": 139.5990 },
+  { "id": "tokyo-054", "title": "Showa Kinen Park (昭和記念公園)", "lat": 35.7076, "long": 139.4137 },
+  { "id": "tokyo-055", "title": "Todoroki Valley (等々力渓谷)", "lat": 35.6147, "long": 139.6460 },
+
+  { "id": "tokyo-056", "title": "Kinuta Park", "lat": 35.6299, "long": 139.6277 },
+  { "id": "tokyo-057", "title": "Tamagawa River Cycling Road (Futako-Tamagawa)", "lat": 35.6100, "long": 139.6267 },
+  { "id": "tokyo-058", "title": "Komazawa Olympic Park", "lat": 35.6330, "long": 139.6618 },
+  { "id": "tokyo-059", "title": "Shimokitazawa Streets (下北沢)", "lat": 35.6615, "long": 139.6680 },
+  { "id": "tokyo-060", "title": "Gotokuji Temple (豪徳寺)", "lat": 35.6492, "long": 139.6473 },
+
+  { "id": "tokyo-061", "title": "Musashino Forest Park", "lat": 35.6683, "long": 139.5284 },
+  { "id": "tokyo-062", "title": "Mitaka Ghibli Museum Area", "lat": 35.6963, "long": 139.5704 },
+  { "id": "tokyo-063", "title": "Chofu Airfield Park", "lat": 35.6537, "long": 139.5370 },
+  { "id": "tokyo-064", "title": "Tama River Cycling Road (Chofu–Fuchu)", "lat": 35.6542, "long": 139.4863 },
+  { "id": "tokyo-065", "title": "Fuchu Forest Park (府中の森公園)", "lat": 35.6726, "long": 139.4792 },
+
+  { "id": "tokyo-066", "title": "Mizumoto Park (水元公園)", "lat": 35.7851, "long": 139.8661 },
+  { "id": "tokyo-067", "title": "Toneri Park", "lat": 35.7890, "long": 139.7890 },
+  { "id": "tokyo-068", "title": "Nishi-Arai Daishi Temple (西新井大師)", "lat": 35.7763, "long": 139.7872 },
+  { "id": "tokyo-069", "title": "Shakujii Park (石神井公園)", "lat": 35.7360, "long": 139.6001 },
+  { "id": "tokyo-070", "title": "Hikarigaoka Park", "lat": 35.7580, "long": 139.6230 },
+
+  { "id": "tokyo-071", "title": "Musashino Central Park", "lat": 35.7050, "long": 139.5660 },
+  { "id": "tokyo-072", "title": "Nogawa Park", "lat": 35.6665, "long": 139.5310 },
+  { "id": "tokyo-073", "title": "Jindai Botanical Garden (神代植物公園)", "lat": 35.6649, "long": 139.5574 },
+  { "id": "tokyo-074", "title": "Tama New Town Cycling Path", "lat": 35.6239, "long": 139.4242 },
+  { "id": "tokyo-075", "title": "Tachikawa Area", "lat": 35.6948, "long": 139.4138 },
+
+  { "id": "tokyo-076", "title": "Kunitachi University Avenue", "lat": 35.6838, "long": 139.4403 },
+  { "id": "tokyo-077", "title": "Okunitama Shrine (大國魂神社)", "lat": 35.6670, "long": 139.4770 },
+  { "id": "tokyo-078", "title": "Tama Zoo Area", "lat": 35.6438, "long": 139.3992 },
+  { "id": "tokyo-079", "title": "Harajuku Back Streets (裏原宿)", "lat": 35.6698, "long": 139.7052 },
+  { "id": "tokyo-080", "title": "Shin-Okubo Korea Town", "lat": 35.7019, "long": 139.7019 },
+
+  { "id": "tokyo-081", "title": "Akatsuka Park (赤塚公園)", "lat": 35.7741, "long": 139.6456 },
+  { "id": "tokyo-082", "title": "Johoku Central Park", "lat": 35.7596, "long": 139.6519 },
+  { "id": "tokyo-083", "title": "Arakawa Cycling Path (Toda Bridge)", "lat": 35.8088, "long": 139.6750 },
+  { "id": "tokyo-084", "title": "Shin-Kiba Seaside Area", "lat": 35.6430, "long": 139.8260 },
+  { "id": "tokyo-085", "title": "Wakasu Seaside Park", "lat": 35.6330, "long": 139.8290 },
+
+  { "id": "tokyo-086", "title": "Tatsumi no Mori Seaside Park", "lat": 35.6395, "long": 139.8135 },
+  { "id": "tokyo-087", "title": "Ariake Tennis Forest Park", "lat": 35.6350, "long": 139.7900 },
+  { "id": "tokyo-088", "title": "Toyosu Market Area", "lat": 35.6459, "long": 139.7823 },
+  { "id": "tokyo-089", "title": "Shimizu-ike Park (清水池公園)", "lat": 35.7507, "long": 139.5948 },
+  { "id": "tokyo-090", "title": "Oizumi Anime Gate Area", "lat": 35.7542, "long": 139.5826 },
+
+  { "id": "tokyo-091", "title": "Hamura Intake Weir (羽村取水堰)", "lat": 35.7600, "long": 139.3140 },
+  { "id": "tokyo-092", "title": "Higashimurayama Kitayama Park", "lat": 35.7697, "long": 139.4545 },
+  { "id": "tokyo-093", "title": "Sayama Hills (Totoro Forest)", "lat": 35.7650, "long": 139.4200 },
+  { "id": "tokyo-094", "title": "Setagaya Line Tramway Route", "lat": 35.6414, "long": 139.6540 },
+  { "id": "tokyo-095", "title": "Takaido & Naritahigashi Cycling Area", "lat": 35.6849, "long": 139.6068 },
+
+  { "id": "tokyo-096", "title": "Ome Kaido Avenue Route", "lat": 35.7280, "long": 139.3510 },
+  { "id": "tokyo-097", "title": "Kichijoji Sun Road Area", "lat": 35.7034, "long": 139.5797 },
+  { "id": "tokyo-098", "title": "Nishi-Tokyo Greenway (Hana-Koganei)", "lat": 35.7230, "long": 139.5120 },
+  { "id": "tokyo-099", "title": "Tamarokuto Science Center Area", "lat": 35.7320, "long": 139.5150 },
+  { "id": "tokyo-100", "title": "Hamura Animal Park Riverside", "lat": 35.7650, "long": 139.3080 }
+]

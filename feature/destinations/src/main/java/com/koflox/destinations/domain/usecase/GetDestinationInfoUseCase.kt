@@ -7,6 +7,7 @@ import com.koflox.distance.DistanceCalculator
 import com.koflox.location.model.Location
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
+import kotlin.math.abs
 
 class NoSuitableDestinationException : Exception("No suitable destination found")
 
@@ -14,64 +15,42 @@ interface GetDestinationInfoUseCase {
     suspend fun getRandomDestinations(
         userLocation: Location,
         targetDistanceKm: Double,
-        toleranceKm: Double,
     ): Result<Destinations>
 
     suspend fun getDestinations(
         userLocation: Location,
         destinationId: String,
-        toleranceKm: Double,
     ): Result<Destinations>
 }
 
 internal class GetDestinationInfoUseCaseImpl(
     private val dispatcherDefault: CoroutineDispatcher,
     private val repository: DestinationRepository,
+    private val getNearbyDestinationsUseCase: GetNearbyDestinationsUseCase,
     private val distanceCalculator: DistanceCalculator,
+    private val toleranceCalculator: ToleranceCalculator,
 ) : GetDestinationInfoUseCase {
+
+    companion object {
+        private const val MAX_SEARCH_RADIUS_KM = 150.0
+    }
+
     override suspend fun getRandomDestinations(
         userLocation: Location,
         targetDistanceKm: Double,
-        toleranceKm: Double,
     ): Result<Destinations> = withContext(dispatcherDefault) {
         getDestinations(
             userLocation = userLocation,
             targetDistanceKm = targetDistanceKm,
-            toleranceKm = toleranceKm,
             getMainDestination = { destinations ->
                 destinations.random()
             },
         )
     }
 
-    private suspend fun getDestinations(
-        userLocation: Location,
-        targetDistanceKm: Double,
-        toleranceKm: Double,
-        getMainDestination: (List<Destination>) -> Destination,
-    ): Result<Destinations> = repository.getAllDestinations()
-        .mapCatching { destinations ->
-            val validDestinations = destinations.filter { destination ->
-                val distance = distanceCalculator.calculateKm(
-                    lat1 = userLocation.latitude,
-                    lon1 = userLocation.longitude,
-                    lat2 = destination.latitude,
-                    lon2 = destination.longitude,
-                )
-                distance in targetDistanceKm - toleranceKm..targetDistanceKm + toleranceKm
-            }
-            if (validDestinations.isEmpty()) throw NoSuitableDestinationException()
-            val mainDestination = getMainDestination(validDestinations)
-            Destinations(
-                mainDestination = mainDestination,
-                otherValidDestinations = validDestinations - mainDestination,
-            )
-        }
-
     override suspend fun getDestinations(
         userLocation: Location,
         destinationId: String,
-        toleranceKm: Double,
     ): Result<Destinations> {
         val destination = repository.getDestinationById(destinationId).getOrNull() ?: throw NoSuitableDestinationException()
         val targetDistanceKm = distanceCalculator.calculateKm(
@@ -83,11 +62,55 @@ internal class GetDestinationInfoUseCaseImpl(
         return getDestinations(
             userLocation = userLocation,
             targetDistanceKm = targetDistanceKm,
-            toleranceKm = toleranceKm,
             getMainDestination = { _ ->
                 destination
             },
         )
     }
 
+    private suspend fun getDestinations(
+        userLocation: Location,
+        targetDistanceKm: Double,
+        getMainDestination: (List<Destination>) -> Destination,
+    ): Result<Destinations> {
+        val toleranceKm = toleranceCalculator.calculateKm(targetDistanceKm)
+        return getNearbyDestinationsUseCase.getDestinations(
+            userLocation = userLocation,
+            minDistanceKm = targetDistanceKm - toleranceKm,
+            maxDistanceKm = targetDistanceKm + toleranceKm,
+        ).mapCatching { destinations ->
+            if (destinations.isNotEmpty()) {
+                val mainDestination = getMainDestination(destinations)
+                Destinations(
+                    mainDestination = mainDestination,
+                    otherValidDestinations = destinations - mainDestination,
+                )
+            } else {
+                val nearest = findNearestDestination(userLocation, targetDistanceKm)
+                    ?: throw NoSuitableDestinationException()
+                Destinations(
+                    mainDestination = nearest,
+                    otherValidDestinations = emptyList(),
+                )
+            }
+        }
+    }
+
+    private suspend fun findNearestDestination(
+        userLocation: Location,
+        targetDistanceKm: Double,
+    ): Destination? = getNearbyDestinationsUseCase.getDestinations(
+        userLocation = userLocation,
+        minDistanceKm = 0.0,
+        maxDistanceKm = MAX_SEARCH_RADIUS_KM,
+    ).getOrNull()?.minByOrNull { destination ->
+        abs(
+            distanceCalculator.calculateKm(
+                lat1 = userLocation.latitude,
+                lon1 = userLocation.longitude,
+                lat2 = destination.latitude,
+                lon2 = destination.longitude,
+            ) - targetDistanceKm,
+        )
+    }
 }
