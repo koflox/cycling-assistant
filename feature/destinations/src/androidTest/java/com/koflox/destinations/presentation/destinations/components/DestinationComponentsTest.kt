@@ -12,15 +12,17 @@ class DestinationComponentsTest {
     companion object {
         private const val DISTANCE_KM = 15.0
         private const val TOLERANCE_KM = 2.5
+        private const val MIN_DISTANCE_KM = 5.0
+        private const val MAX_DISTANCE_KM = 30.0
     }
 
     @get:Rule
     val composeTestRule = createComposeRule()
 
     @Test
-    fun preparingDestinationsCard_displaysPreparingText() {
+    fun statusCard_displaysMessage() {
         composeTestRule.setContent {
-            PreparingDestinationsCard()
+            StatusCard(message = "Preparing the destinations")
         }
 
         composeTestRule.onNodeWithText("Preparing the destinations").assertIsDisplayed()
@@ -32,6 +34,8 @@ class DestinationComponentsTest {
             RouteSlider(
                 distanceKm = DISTANCE_KM,
                 toleranceKm = TOLERANCE_KM,
+                minDistanceKm = MIN_DISTANCE_KM,
+                maxDistanceKm = MAX_DISTANCE_KM,
                 onDistanceChanged = {},
             )
         }
@@ -45,6 +49,8 @@ class DestinationComponentsTest {
             RouteSlider(
                 distanceKm = DISTANCE_KM,
                 toleranceKm = TOLERANCE_KM,
+                minDistanceKm = MIN_DISTANCE_KM,
+                maxDistanceKm = MAX_DISTANCE_KM,
                 onDistanceChanged = {},
             )
         }

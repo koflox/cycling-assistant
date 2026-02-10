@@ -51,9 +51,14 @@ internal class DestinationRepositoryImpl(
             }
         }.flowOn(dispatcherDefault)
 
-    override suspend fun getAllDestinations(): Result<List<Destination>> = withContext(dispatcherDefault) {
+    override suspend fun getDestinationsInArea(
+        minLat: Double,
+        maxLat: Double,
+        minLon: Double,
+        maxLon: Double,
+    ): Result<List<Destination>> = withContext(dispatcherDefault) {
         suspendRunCatching {
-            poiLocalDataSource.getAllDestinations().map {
+            poiLocalDataSource.getDestinationsInArea(minLat, maxLat, minLon, maxLon).map {
                 mapper.toDomain(it)
             }
         }

@@ -17,17 +17,19 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.koflox.designsystem.theme.Spacing
 import com.koflox.destinationnutrition.bridge.navigator.NutritionUiNavigator
+import com.koflox.destinations.R
 import com.koflox.destinations.presentation.destinations.components.GoogleMapView
 import com.koflox.destinations.presentation.destinations.components.LetsGoButton
 import com.koflox.destinations.presentation.destinations.components.LoadingOverlay
 import com.koflox.destinations.presentation.destinations.components.LocationRetryCard
-import com.koflox.destinations.presentation.destinations.components.PreparingDestinationsCard
 import com.koflox.destinations.presentation.destinations.components.RouteSlider
+import com.koflox.destinations.presentation.destinations.components.StatusCard
 import com.koflox.destinations.presentation.permission.LocationPermissionHandler
 import com.koflox.destinationsession.bridge.navigator.CyclingSessionUiNavigator
 import com.koflox.location.settings.LocationSettingsHandler
@@ -245,21 +247,34 @@ private fun DestinationSelectionControls(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        if (uiState.areDestinationsReady) {
-            RouteSlider(
+        when {
+            uiState.isPreparingDestinations -> StatusCard(
+                message = stringResource(R.string.preparing_destinations),
+                isLoading = true,
+                modifier = Modifier.padding(bottom = Spacing.Large),
+            )
+            uiState.isCalculatingBounds -> StatusCard(
+                message = stringResource(R.string.destination_calculating_bounds),
+                isLoading = true,
+                modifier = Modifier.padding(bottom = Spacing.Large),
+            )
+            uiState.distanceBounds != null -> RouteSlider(
                 distanceKm = uiState.routeDistanceKm,
                 toleranceKm = uiState.toleranceKm,
+                minDistanceKm = uiState.distanceBounds.minKm,
+                maxDistanceKm = uiState.distanceBounds.maxKm,
                 onDistanceChanged = { viewModel.onEvent(DestinationsUiEvent.RouteDistanceChanged(it)) },
                 modifier = Modifier.padding(bottom = Spacing.Large),
             )
-        } else {
-            PreparingDestinationsCard(
+            else -> StatusCard(
+                message = stringResource(R.string.destination_no_destinations_in_area),
+                isLoading = false,
                 modifier = Modifier.padding(bottom = Spacing.Large),
             )
         }
         LetsGoButton(
             onClick = { shouldCheckLocation = true },
-            enabled = !uiState.isLoading && uiState.isPermissionGranted && uiState.areDestinationsReady,
+            enabled = !uiState.isLoading && uiState.isPermissionGranted && uiState.areDistanceBoundsReady,
         )
     }
 }

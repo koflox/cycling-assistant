@@ -10,8 +10,13 @@ internal class PoiLocalDataSourceImpl(
     private val dao: DestinationDao,
 ) : PoiLocalDataSource {
 
-    override suspend fun getAllDestinations(): List<DestinationLocal> = withContext(dispatcherIo) {
-        dao.getAllDestinations()
+    override suspend fun getDestinationsInArea(
+        minLat: Double,
+        maxLat: Double,
+        minLon: Double,
+        maxLon: Double,
+    ): List<DestinationLocal> = withContext(dispatcherIo) {
+        dao.getDestinationsInArea(minLat, maxLat, minLon, maxLon)
     }
 
     override suspend fun getDestinationById(id: String): DestinationLocal? = withContext(dispatcherIo) {

@@ -8,8 +8,15 @@ import com.koflox.destinations.data.source.local.entity.DestinationLocal
 
 @Dao
 interface DestinationDao {
-    @Query("SELECT * FROM destinations")
-    suspend fun getAllDestinations(): List<DestinationLocal>
+    @Query(
+        "SELECT * FROM destinations WHERE latitude BETWEEN :minLat AND :maxLat AND longitude BETWEEN :minLon AND :maxLon",
+    )
+    suspend fun getDestinationsInArea(
+        minLat: Double,
+        maxLat: Double,
+        minLon: Double,
+        maxLon: Double,
+    ): List<DestinationLocal>
 
     @Query("SELECT * FROM destinations WHERE id = :id")
     suspend fun getDestinationById(id: String): DestinationLocal?

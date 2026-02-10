@@ -1,0 +1,61 @@
+[
+  { "id": "tokyo-101", "title": "Yamashita Park (山下公園) Yokohama", "lat": 35.4434, "long": 139.6511 },
+  { "id": "tokyo-102", "title": "Yokohama Red Brick Warehouse", "lat": 35.4513, "long": 139.6430 },
+  { "id": "tokyo-103", "title": "Minato Mirai 21", "lat": 35.4576, "long": 139.6326 },
+  { "id": "tokyo-104", "title": "Yokohama Chinatown (横浜中華街)", "lat": 35.4422, "long": 139.6455 },
+  { "id": "tokyo-105", "title": "Sankeien Garden (三溪園)", "lat": 35.4132, "long": 139.6571 },
+
+  { "id": "tokyo-106", "title": "Negishi Forest Park (Yokohama)", "lat": 35.4250, "long": 139.6430 },
+  { "id": "tokyo-107", "title": "Tsurumi River Cycling Road", "lat": 35.4900, "long": 139.6750 },
+  { "id": "tokyo-108", "title": "Kawasaki Daishi Temple (川崎大師)", "lat": 35.5323, "long": 139.7300 },
+  { "id": "tokyo-109", "title": "Musashi Kosugi Area", "lat": 35.5726, "long": 139.6596 },
+  { "id": "tokyo-110", "title": "Kawasaki Industrial Night View Spot", "lat": 35.5210, "long": 139.7520 },
+
+  { "id": "tokyo-111", "title": "Omiya Park (大宮公園)", "lat": 35.9058, "long": 139.6297 },
+  { "id": "tokyo-112", "title": "Hikawa Shrine (氷川神社) Omiya", "lat": 35.9060, "long": 139.6285 },
+  { "id": "tokyo-113", "title": "Saitama Shintoshin", "lat": 35.8927, "long": 139.6318 },
+  { "id": "tokyo-114", "title": "Arakawa River Cycling Road (Akigase Bridge)", "lat": 35.8525, "long": 139.6100 },
+  { "id": "tokyo-115", "title": "Wako-shi Area (理化学研究所)", "lat": 35.7900, "long": 139.6000 },
+
+  { "id": "tokyo-116", "title": "Makuhari Messe Area", "lat": 35.6487, "long": 140.0316 },
+  { "id": "tokyo-117", "title": "Inage Seaside Park (稲毛海浜公園)", "lat": 35.6223, "long": 140.0590 },
+  { "id": "tokyo-118", "title": "Funabashi Andersen Park", "lat": 35.7710, "long": 140.0240 },
+  { "id": "tokyo-119", "title": "Ichikawa Satomi Park", "lat": 35.7380, "long": 139.9190 },
+  { "id": "tokyo-120", "title": "Edogawa Cycling Road (Chiba Side)", "lat": 35.7100, "long": 139.8910 },
+
+  { "id": "tokyo-121", "title": "Mt. Takao Base (高尾山口)", "lat": 35.6312, "long": 139.2698 },
+  { "id": "tokyo-122", "title": "Sagamiko Lake Area", "lat": 35.5950, "long": 139.2500 },
+  { "id": "tokyo-123", "title": "Okutama Lake (奥多摩湖)", "lat": 35.8080, "long": 139.0530 },
+  { "id": "tokyo-124", "title": "Ome Riverside Trail (御岳渓谷)", "lat": 35.7980, "long": 139.1860 },
+  { "id": "tokyo-125", "title": "Hachioji Castle Ruins (八王子城跡)", "lat": 35.6590, "long": 139.2558 },
+
+  { "id": "tokyo-126", "title": "Enoshima Island (江ノ島)", "lat": 35.3004, "long": 139.4799 },
+  { "id": "tokyo-127", "title": "Shonan Beach Cycling Path", "lat": 35.3180, "long": 139.4800 },
+  { "id": "tokyo-128", "title": "Kamakura Great Buddha (鎌倉大仏)", "lat": 35.3167, "long": 139.5357 },
+  { "id": "tokyo-129", "title": "Tsurugaoka Hachiman-gu (鶴岡八幡宮)", "lat": 35.3258, "long": 139.5564 },
+  { "id": "tokyo-130", "title": "Zushi Beach (逗子海岸)", "lat": 35.2960, "long": 139.5720 },
+
+  { "id": "tokyo-131", "title": "Kawagoe Little Edo Streets (川越)", "lat": 35.9192, "long": 139.4842 },
+  { "id": "tokyo-132", "title": "Iruma River Cycling Road", "lat": 35.9040, "long": 139.4500 },
+  { "id": "tokyo-133", "title": "Chichibu Shrine Area (秩父神社)", "lat": 35.9908, "long": 139.0849 },
+  { "id": "tokyo-134", "title": "Nagatoro Valley (長瀞渓谷)", "lat": 36.0940, "long": 139.1030 },
+  { "id": "tokyo-135", "title": "Musashi Hills Green Road", "lat": 35.8050, "long": 139.4300 },
+
+  { "id": "tokyo-136", "title": "Yokosuka Verny Park", "lat": 35.2789, "long": 139.6741 },
+  { "id": "tokyo-137", "title": "Hayama Marina (葉山)", "lat": 35.2714, "long": 139.5867 },
+  { "id": "tokyo-138", "title": "Miura Misaki Lighthouse", "lat": 35.1400, "long": 139.6240 },
+  { "id": "tokyo-139", "title": "Machida Yakushi Ike Park", "lat": 35.5500, "long": 139.4600 },
+  { "id": "tokyo-140", "title": "JAXA Sagamihara Campus", "lat": 35.5603, "long": 139.3968 },
+
+  { "id": "tokyo-141", "title": "Miyagase Dam (宮ヶ瀬ダム)", "lat": 35.5350, "long": 139.2300 },
+  { "id": "tokyo-142", "title": "Sagamihara Park", "lat": 35.5660, "long": 139.3760 },
+  { "id": "tokyo-143", "title": "Lake Tanzawa (丹沢湖)", "lat": 35.4290, "long": 139.0760 },
+  { "id": "tokyo-144", "title": "Hakone Old Highway Entrance", "lat": 35.2320, "long": 139.1070 },
+  { "id": "tokyo-145", "title": "Odawara Castle (小田原城)", "lat": 35.2505, "long": 139.1530 },
+
+  { "id": "tokyo-146", "title": "Shonan Hiratsuka Beach Park", "lat": 35.3250, "long": 139.3400 },
+  { "id": "tokyo-147", "title": "Yokohama Bay Bridge Viewpoint", "lat": 35.4540, "long": 139.6720 },
+  { "id": "tokyo-148", "title": "Rinko Park Yokohama", "lat": 35.4580, "long": 139.6420 },
+  { "id": "tokyo-149", "title": "Motomachi Shopping Street (元町)", "lat": 35.4399, "long": 139.6520 },
+  { "id": "tokyo-150", "title": "Chiba Port Tower Area", "lat": 35.5987, "long": 140.0860 }
+]

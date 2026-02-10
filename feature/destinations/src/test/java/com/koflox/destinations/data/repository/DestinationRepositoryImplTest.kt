@@ -201,56 +201,71 @@ class DestinationRepositoryImplTest {
     }
 
     @Test
-    fun `getAllDestinations fetches from poiLocalDataSource`() = runTest {
-        coEvery { poiLocalDataSource.getAllDestinations() } returns emptyList()
-
-        repository.getAllDestinations()
-
-        coVerify { poiLocalDataSource.getAllDestinations() }
-    }
-
-    @Test
-    fun `getAllDestinations maps entities to domain`() = runTest {
+    fun `getDestinationsInArea delegates to poiLocalDataSource`() = runTest {
         val entity = createDestinationLocal(id = TEST_ID, title = TEST_TITLE, latitude = TEST_LAT, longitude = TEST_LONG)
         val domain = createDestination(id = TEST_ID, title = TEST_TITLE, latitude = TEST_LAT, longitude = TEST_LONG)
-        coEvery { poiLocalDataSource.getAllDestinations() } returns listOf(entity)
+        coEvery { poiLocalDataSource.getDestinationsInArea(any(), any(), any(), any()) } returns listOf(entity)
         coEvery { mapper.toDomain(entity) } returns domain
 
-        repository.getAllDestinations()
-
-        coVerify { mapper.toDomain(entity) }
-    }
-
-    @Test
-    fun `getAllDestinations returns mapped destinations`() = runTest {
-        val entity = createDestinationLocal(id = TEST_ID, title = TEST_TITLE, latitude = TEST_LAT, longitude = TEST_LONG)
-        val domain = createDestination(id = TEST_ID, title = TEST_TITLE, latitude = TEST_LAT, longitude = TEST_LONG)
-        coEvery { poiLocalDataSource.getAllDestinations() } returns listOf(entity)
-        coEvery { mapper.toDomain(entity) } returns domain
-
-        val result = repository.getAllDestinations()
+        val result = repository.getDestinationsInArea(minLat = 50.0, maxLat = 55.0, minLon = 10.0, maxLon = 15.0)
 
         assertTrue(result.isSuccess)
         assertEquals(1, result.getOrNull()?.size)
         assertEquals(domain, result.getOrNull()?.get(0))
+        coVerify { poiLocalDataSource.getDestinationsInArea(50.0, 55.0, 10.0, 15.0) }
     }
 
     @Test
-    fun `getAllDestinations returns empty list when no destinations`() = runTest {
-        coEvery { poiLocalDataSource.getAllDestinations() } returns emptyList()
+    fun `getDestinationsInArea returns empty list when no destinations`() = runTest {
+        coEvery { poiLocalDataSource.getDestinationsInArea(any(), any(), any(), any()) } returns emptyList()
 
-        val result = repository.getAllDestinations()
+        val result = repository.getDestinationsInArea(minLat = 50.0, maxLat = 55.0, minLon = 10.0, maxLon = 15.0)
 
         assertTrue(result.isSuccess)
         assertEquals(0, result.getOrNull()?.size)
     }
 
     @Test
-    fun `getAllDestinations returns failure on error`() = runTest {
+    fun `getDestinationsInArea returns failure on error`() = runTest {
         val exception = RuntimeException("Database error")
-        coEvery { poiLocalDataSource.getAllDestinations() } throws exception
+        coEvery { poiLocalDataSource.getDestinationsInArea(any(), any(), any(), any()) } throws exception
 
-        val result = repository.getAllDestinations()
+        val result = repository.getDestinationsInArea(minLat = 50.0, maxLat = 55.0, minLon = 10.0, maxLon = 15.0)
+
+        assertTrue(result.isFailure)
+        assertEquals(exception, result.exceptionOrNull())
+    }
+
+    @Test
+    fun `getDestinationById delegates to poiLocalDataSource and maps to domain`() = runTest {
+        val entity = createDestinationLocal(id = TEST_ID, title = TEST_TITLE, latitude = TEST_LAT, longitude = TEST_LONG)
+        val domain = createDestination(id = TEST_ID, title = TEST_TITLE, latitude = TEST_LAT, longitude = TEST_LONG)
+        coEvery { poiLocalDataSource.getDestinationById(TEST_ID) } returns entity
+        coEvery { mapper.toDomain(entity) } returns domain
+
+        val result = repository.getDestinationById(TEST_ID)
+
+        assertTrue(result.isSuccess)
+        assertEquals(domain, result.getOrNull())
+        coVerify { poiLocalDataSource.getDestinationById(TEST_ID) }
+    }
+
+    @Test
+    fun `getDestinationById returns null when not found`() = runTest {
+        coEvery { poiLocalDataSource.getDestinationById(any()) } returns null
+
+        val result = repository.getDestinationById("missing")
+
+        assertTrue(result.isSuccess)
+        assertEquals(null, result.getOrNull())
+    }
+
+    @Test
+    fun `getDestinationById returns failure on error`() = runTest {
+        val exception = RuntimeException("Database error")
+        coEvery { poiLocalDataSource.getDestinationById(any()) } throws exception
+
+        val result = repository.getDestinationById(TEST_ID)
 
         assertTrue(result.isFailure)
         assertEquals(exception, result.exceptionOrNull())

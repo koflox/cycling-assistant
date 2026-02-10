@@ -16,11 +16,13 @@ internal val presentationModule = module {
             observeUserLocationUseCase = get(),
             initializeDatabaseUseCase = get(),
             getDestinationInfoUseCase = get(),
+            getDistanceBoundsUseCase = get(),
             distanceCalculator = get(),
             uiMapper = get(),
             application = androidApplication(),
             cyclingSessionUseCase = get(),
             observeNutritionBreakUseCase = get(),
+            toleranceCalculator = get(),
             dispatcherDefault = get(DispatchersQualifier.Default),
         )
     }
