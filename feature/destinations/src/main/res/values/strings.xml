@@ -12,6 +12,8 @@
     <string name="one_way_distance_title">One way distance</string>
     <string name="km_unit">km</string>
     <string name="preparing_destinations">Preparing the destinations</string>
+    <string name="destination_calculating_bounds">Searching for suitable distance range</string>
+    <string name="destination_no_destinations_in_area">No destinations found in this area. Available destinations depend on your location</string>
 
     <!-- Location Disabled -->
     <string name="location_disabled_message">Location services are disabled</string>
