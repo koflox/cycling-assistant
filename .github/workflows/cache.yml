@@ -90,6 +90,9 @@ jobs:
           echo "name=$VERSION_NAME" >> "$GITHUB_OUTPUT"
           echo "Version: $VERSION_NAME ($VERSION_CODE)"
 
+      - name: Create secrets.properties
+        run: echo "MAPS_API_KEY=${{ secrets.MAPS_API_KEY }}" > secrets.properties
+
       - name: Decode release keystore
         run: |
           echo "${{ secrets.RELEASE_KEYSTORE_BASE64 }}" | base64 -d > app/release.jks
