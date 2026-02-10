@@ -13,15 +13,15 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.koflox.designsystem.theme.Spacing
 import com.koflox.designsystem.theme.SurfaceAlpha
-import com.koflox.destinations.R
 
 @Composable
-internal fun PreparingDestinationsCard(
+internal fun StatusCard(
+    message: String,
     modifier: Modifier = Modifier,
+    isLoading: Boolean = true,
 ) {
     Card(
         modifier = modifier,
@@ -34,14 +34,16 @@ internal fun PreparingDestinationsCard(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
-                text = stringResource(R.string.preparing_destinations),
+                text = message,
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            Spacer(modifier = Modifier.height(Spacing.Small))
-            LinearProgressIndicator(
-                modifier = Modifier.width(200.dp),
-            )
+            if (isLoading) {
+                Spacer(modifier = Modifier.height(Spacing.Small))
+                LinearProgressIndicator(
+                    modifier = Modifier.width(200.dp),
+                )
+            }
         }
     }
 }
