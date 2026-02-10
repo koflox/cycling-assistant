@@ -1,0 +1,61 @@
+[
+  { "id": "hiroshima-001", "title": "Peace Memorial Park (平和記念公園)", "lat": 34.3915, "long": 132.4536 },
+  { "id": "hiroshima-002", "title": "Atomic Bomb Dome (原爆ドーム)", "lat": 34.3955, "long": 132.4536 },
+  { "id": "hiroshima-003", "title": "Hiroshima Castle (広島城)", "lat": 34.4015, "long": 132.4596 },
+  { "id": "hiroshima-004", "title": "Shukkeien Garden (縮景園)", "lat": 34.3981, "long": 132.4680 },
+  { "id": "hiroshima-005", "title": "Honkawa River Promenade", "lat": 34.3940, "long": 132.4480 },
+
+  { "id": "hiroshima-006", "title": "Motoyasu River Cycling Path", "lat": 34.3850, "long": 132.4530 },
+  { "id": "hiroshima-007", "title": "Enko River Greenway (猿猴川)", "lat": 34.3910, "long": 132.4750 },
+  { "id": "hiroshima-008", "title": "Kyobashi River Promenade (京橋川)", "lat": 34.3900, "long": 132.4660 },
+  { "id": "hiroshima-009", "title": "Ota River Delta Cycling Loop (太田川)", "lat": 34.3970, "long": 132.4420 },
+  { "id": "hiroshima-010", "title": "Tenma River Riverside (天満川)", "lat": 34.3880, "long": 132.4440 },
+
+  { "id": "hiroshima-011", "title": "Hijiyama Park (比治山公園)", "lat": 34.3830, "long": 132.4680 },
+  { "id": "hiroshima-012", "title": "Hiroshima Museum of Art Area", "lat": 34.3940, "long": 132.4580 },
+  { "id": "hiroshima-013", "title": "Hondori Shopping Arcade", "lat": 34.3905, "long": 132.4590 },
+  { "id": "hiroshima-014", "title": "Kamiyacho & Hatchobori Area", "lat": 34.3935, "long": 132.4620 },
+  { "id": "hiroshima-015", "title": "Hiroshima Station South Area", "lat": 34.3975, "long": 132.4753 },
+
+  { "id": "hiroshima-016", "title": "Itsukushima Shrine Ferry Terminal (宮島口)", "lat": 34.3490, "long": 132.3150 },
+  { "id": "hiroshima-017", "title": "Hatsukaichi Seaside (廿日市)", "lat": 34.3500, "long": 132.3310 },
+  { "id": "hiroshima-018", "title": "Ono Seto Inland Sea Viewpoint", "lat": 34.3340, "long": 132.2800 },
+  { "id": "hiroshima-019", "title": "Hiroshima Port Ujina Area (宇品)", "lat": 34.3590, "long": 132.4610 },
+  { "id": "hiroshima-020", "title": "Minami Ward Marina Hop", "lat": 34.3530, "long": 132.4710 },
+
+  { "id": "hiroshima-021", "title": "Ushita Yama Area (牛田山)", "lat": 34.4120, "long": 132.4700 },
+  { "id": "hiroshima-022", "title": "Futabanosato Historical Area", "lat": 34.4080, "long": 132.4680 },
+  { "id": "hiroshima-023", "title": "Mitaki-dera Temple (三瀧寺)", "lat": 34.4170, "long": 132.4380 },
+  { "id": "hiroshima-024", "title": "Asa Zoo Area (安佐動物公園)", "lat": 34.4820, "long": 132.4530 },
+  { "id": "hiroshima-025", "title": "Asakita Ota River Upstream Path", "lat": 34.4950, "long": 132.4600 },
+
+  { "id": "hiroshima-026", "title": "Seno–Kaidaichi Cycling Route", "lat": 34.3890, "long": 132.5410 },
+  { "id": "hiroshima-027", "title": "Saijo Sake Brewery District (西条酒蔵通り)", "lat": 34.4270, "long": 132.7440 },
+  { "id": "hiroshima-028", "title": "Kagamiyama Park (鏡山公園)", "lat": 34.4360, "long": 132.7530 },
+  { "id": "hiroshima-029", "title": "Takehara Townscape (たけはらの町並み)", "lat": 34.3390, "long": 132.9090 },
+  { "id": "hiroshima-030", "title": "Kure Yamato Museum Area (呉)", "lat": 34.2430, "long": 132.5650 },
+
+  { "id": "hiroshima-031", "title": "Ondo Seto Bridge Viewpoint (音戸大橋)", "lat": 34.2110, "long": 132.5340 },
+  { "id": "hiroshima-032", "title": "Etajima Island Coastal Road (江田島)", "lat": 34.2280, "long": 132.4500 },
+  { "id": "hiroshima-033", "title": "Tobishima Kaido Start (とびしま海道)", "lat": 34.2050, "long": 132.5580 },
+  { "id": "hiroshima-034", "title": "Shimanami Kaido Entrance (しまなみ海道)", "lat": 34.3990, "long": 133.0700 },
+  { "id": "hiroshima-035", "title": "Innoshima Island (因島)", "lat": 34.3680, "long": 133.1680 },
+
+  { "id": "hiroshima-036", "title": "Onomichi Waterfront (尾道水道)", "lat": 34.4090, "long": 133.2050 },
+  { "id": "hiroshima-037", "title": "Senkoji Park Hillside (千光寺公園)", "lat": 34.4100, "long": 133.1980 },
+  { "id": "hiroshima-038", "title": "Fukuyama Castle Area (福山城)", "lat": 34.4870, "long": 133.3630 },
+  { "id": "hiroshima-039", "title": "Tomonoura Port (鞆の浦)", "lat": 34.3830, "long": 133.3830 },
+  { "id": "hiroshima-040", "title": "Mihara Sunagatani Viewpoint", "lat": 34.3990, "long": 133.0830 },
+
+  { "id": "hiroshima-041", "title": "Chuo Park (中央公園)", "lat": 34.3980, "long": 132.4530 },
+  { "id": "hiroshima-042", "title": "Hiroshima Big Arch Stadium Area", "lat": 34.4440, "long": 132.3860 },
+  { "id": "hiroshima-043", "title": "Inokuchi Marina Park", "lat": 34.3780, "long": 132.3820 },
+  { "id": "hiroshima-044", "title": "Itsukaichi Seaside (五日市)", "lat": 34.3610, "long": 132.3620 },
+  { "id": "hiroshima-045", "title": "Numata Riverside Area", "lat": 34.4540, "long": 132.4230 },
+
+  { "id": "hiroshima-046", "title": "Nishi-Hiroshima Hills Loop", "lat": 34.4200, "long": 132.3950 },
+  { "id": "hiroshima-047", "title": "Saka Town Seaside (坂町)", "lat": 34.3380, "long": 132.5050 },
+  { "id": "hiroshima-048", "title": "Kaita Bay Area (海田湾)", "lat": 34.3650, "long": 132.5280 },
+  { "id": "hiroshima-049", "title": "Fuchu-cho Temple District (府中町)", "lat": 34.3930, "long": 132.5020 },
+  { "id": "hiroshima-050", "title": "Mazda Zoom-Zoom Stadium Area", "lat": 34.3922, "long": 132.4845 }
+]

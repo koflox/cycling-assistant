@@ -24,15 +24,14 @@ import com.koflox.designsystem.theme.Spacing
 import com.koflox.designsystem.theme.SurfaceAlpha
 import com.koflox.destinations.R
 
-// TODO: distance values should come from VM
-private const val MIN_DISTANCE = 5f
-private const val MAX_DISTANCE = 30f
 private const val TOLERANCE_FONT_SIZE_RATIO = 0.7f
 
 @Composable
 internal fun RouteSlider(
     distanceKm: Double,
     toleranceKm: Double,
+    minDistanceKm: Double,
+    maxDistanceKm: Double,
     onDistanceChanged: (Double) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -79,7 +78,7 @@ internal fun RouteSlider(
             Slider(
                 value = distanceKm.toFloat(),
                 onValueChange = { onDistanceChanged(it.toDouble()) },
-                valueRange = MIN_DISTANCE..MAX_DISTANCE,
+                valueRange = minDistanceKm.toFloat()..maxDistanceKm.toFloat(),
                 modifier = Modifier.widthIn(min = 250.dp),
             )
         }
