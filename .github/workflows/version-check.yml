@@ -1,0 +1,89 @@
+name: Version Check
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  check-version:
+    name: Verify Version Bump
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@v6
+
+      - name: Read PR version
+        id: pr_version
+        run: |
+          PR_VERSION_CODE=$(grep 'versionCode' version.properties | cut -d'=' -f2 | tr -d '[:space:]')
+          PR_VERSION_NAME=$(grep 'versionName' version.properties | cut -d'=' -f2 | tr -d '[:space:]')
+          echo "code=$PR_VERSION_CODE" >> "$GITHUB_OUTPUT"
+          echo "name=$PR_VERSION_NAME" >> "$GITHUB_OUTPUT"
+          echo "PR versionCode: $PR_VERSION_CODE"
+          echo "PR versionName: $PR_VERSION_NAME"
+
+      - name: Checkout main branch (sparse)
+        uses: actions/checkout@v6
+        with:
+          ref: main
+          path: main-branch
+          sparse-checkout: version.properties
+          sparse-checkout-cone-mode: false
+
+      - name: Read main version
+        id: main_version
+        run: |
+          if [ -f main-branch/version.properties ]; then
+            MAIN_VERSION_CODE=$(grep 'versionCode' main-branch/version.properties | cut -d'=' -f2 | tr -d '[:space:]')
+            MAIN_VERSION_NAME=$(grep 'versionName' main-branch/version.properties | cut -d'=' -f2 | tr -d '[:space:]')
+          else
+            echo "version.properties not found on main, assuming initial release."
+            MAIN_VERSION_CODE=0
+            MAIN_VERSION_NAME=""
+          fi
+          echo "code=$MAIN_VERSION_CODE" >> "$GITHUB_OUTPUT"
+          echo "name=$MAIN_VERSION_NAME" >> "$GITHUB_OUTPUT"
+          echo "Main versionCode: $MAIN_VERSION_CODE"
+          echo "Main versionName: $MAIN_VERSION_NAME"
+
+      - name: Verify versionCode increment
+        run: |
+          PR_CODE=${{ steps.pr_version.outputs.code }}
+          MAIN_CODE=${{ steps.main_version.outputs.code }}
+          EXPECTED=$((MAIN_CODE + 1))
+
+          echo "Main versionCode: $MAIN_CODE"
+          echo "PR versionCode:   $PR_CODE"
+          echo "Expected:         $EXPECTED"
+
+          if [ "$PR_CODE" != "$EXPECTED" ]; then
+            echo "::error::versionCode must be incremented by 1. Expected $EXPECTED but got $PR_CODE."
+            exit 1
+          fi
+
+          echo "versionCode check passed."
+
+      - name: Verify versionName bump
+        run: |
+          PR_NAME="${{ steps.pr_version.outputs.name }}"
+          MAIN_NAME="${{ steps.main_version.outputs.name }}"
+
+          echo "Main versionName: $MAIN_NAME"
+          echo "PR versionName:   $PR_NAME"
+
+          if [ -z "$MAIN_NAME" ]; then
+            echo "No versionName on main, skipping check (initial release)."
+            exit 0
+          fi
+
+          IFS='.' read -r PR_MAJOR PR_MINOR PR_PATCH <<< "$PR_NAME"
+          IFS='.' read -r MAIN_MAJOR MAIN_MINOR MAIN_PATCH <<< "$MAIN_NAME"
+
+          if [ "$PR_MAJOR" -gt "$MAIN_MAJOR" ] || [ "$PR_MINOR" -gt "$MAIN_MINOR" ] || [ "$PR_PATCH" -gt "$MAIN_PATCH" ]; then
+            echo "versionName check passed."
+          else
+            echo "::error::versionName must have at least one part bumped. Main: $MAIN_NAME, PR: $PR_NAME."
+            exit 1
+          fi
