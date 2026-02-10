@@ -15,13 +15,11 @@ interface GetDestinationInfoUseCase {
     suspend fun getRandomDestinations(
         userLocation: Location,
         targetDistanceKm: Double,
-        toleranceKm: Double,
     ): Result<Destinations>
 
     suspend fun getDestinations(
         userLocation: Location,
         destinationId: String,
-        toleranceKm: Double,
     ): Result<Destinations>
 }
 
@@ -30,6 +28,7 @@ internal class GetDestinationInfoUseCaseImpl(
     private val repository: DestinationRepository,
     private val getNearbyDestinationsUseCase: GetNearbyDestinationsUseCase,
     private val distanceCalculator: DistanceCalculator,
+    private val toleranceCalculator: ToleranceCalculator,
 ) : GetDestinationInfoUseCase {
 
     companion object {
@@ -39,12 +38,10 @@ internal class GetDestinationInfoUseCaseImpl(
     override suspend fun getRandomDestinations(
         userLocation: Location,
         targetDistanceKm: Double,
-        toleranceKm: Double,
     ): Result<Destinations> = withContext(dispatcherDefault) {
         getDestinations(
             userLocation = userLocation,
             targetDistanceKm = targetDistanceKm,
-            toleranceKm = toleranceKm,
             getMainDestination = { destinations ->
                 destinations.random()
             },
@@ -54,7 +51,6 @@ internal class GetDestinationInfoUseCaseImpl(
     override suspend fun getDestinations(
         userLocation: Location,
         destinationId: String,
-        toleranceKm: Double,
     ): Result<Destinations> {
         val destination = repository.getDestinationById(destinationId).getOrNull() ?: throw NoSuitableDestinationException()
         val targetDistanceKm = distanceCalculator.calculateKm(
@@ -66,7 +62,6 @@ internal class GetDestinationInfoUseCaseImpl(
         return getDestinations(
             userLocation = userLocation,
             targetDistanceKm = targetDistanceKm,
-            toleranceKm = toleranceKm,
             getMainDestination = { _ ->
                 destination
             },
@@ -76,26 +71,28 @@ internal class GetDestinationInfoUseCaseImpl(
     private suspend fun getDestinations(
         userLocation: Location,
         targetDistanceKm: Double,
-        toleranceKm: Double,
         getMainDestination: (List<Destination>) -> Destination,
-    ): Result<Destinations> = getNearbyDestinationsUseCase.getDestinations(
-        userLocation = userLocation,
-        minDistanceKm = targetDistanceKm - toleranceKm,
-        maxDistanceKm = targetDistanceKm + toleranceKm,
-    ).mapCatching { destinations ->
-        if (destinations.isNotEmpty()) {
-            val mainDestination = getMainDestination(destinations)
-            Destinations(
-                mainDestination = mainDestination,
-                otherValidDestinations = destinations - mainDestination,
-            )
-        } else {
-            val nearest = findNearestDestination(userLocation, targetDistanceKm)
-                ?: throw NoSuitableDestinationException()
-            Destinations(
-                mainDestination = nearest,
-                otherValidDestinations = emptyList(),
-            )
+    ): Result<Destinations> {
+        val toleranceKm = toleranceCalculator.calculateKm(targetDistanceKm)
+        return getNearbyDestinationsUseCase.getDestinations(
+            userLocation = userLocation,
+            minDistanceKm = targetDistanceKm - toleranceKm,
+            maxDistanceKm = targetDistanceKm + toleranceKm,
+        ).mapCatching { destinations ->
+            if (destinations.isNotEmpty()) {
+                val mainDestination = getMainDestination(destinations)
+                Destinations(
+                    mainDestination = mainDestination,
+                    otherValidDestinations = destinations - mainDestination,
+                )
+            } else {
+                val nearest = findNearestDestination(userLocation, targetDistanceKm)
+                    ?: throw NoSuitableDestinationException()
+                Destinations(
+                    mainDestination = nearest,
+                    otherValidDestinations = emptyList(),
+                )
+            }
         }
     }
 

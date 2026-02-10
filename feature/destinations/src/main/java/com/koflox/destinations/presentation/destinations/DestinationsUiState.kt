@@ -17,7 +17,7 @@ internal data class DestinationsUiState(
     val cameraFocusLocation: Location? = null,
     val curvePoints: List<LatLng> = emptyList(),
     val routeDistanceKm: Double = 0.0,
-    val toleranceKm: Double = DEFAULT_TOLERANCE_KM,
+    val toleranceKm: Double = 0.0,
     val distanceBounds: DistanceBounds? = null,
     val isCalculatingBounds: Boolean = false,
     val error: String? = null,
@@ -29,10 +29,6 @@ internal data class DestinationsUiState(
     val nutritionSuggestionTimeMs: Long? = null,
     val isLocationDisabled: Boolean = false,
 ) {
-    companion object {
-        const val DEFAULT_TOLERANCE_KM = 2.5
-    }
-
     val areDistanceBoundsReady: Boolean
         get() = distanceBounds != null && !isCalculatingBounds
 
