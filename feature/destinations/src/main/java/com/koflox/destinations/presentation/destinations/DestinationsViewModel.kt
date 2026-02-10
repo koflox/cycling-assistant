@@ -13,6 +13,7 @@ import com.koflox.destinations.domain.model.DestinationLoadingEvent
 import com.koflox.destinations.domain.model.Destinations
 import com.koflox.destinations.domain.usecase.CheckLocationEnabledUseCase
 import com.koflox.destinations.domain.usecase.GetDestinationInfoUseCase
+import com.koflox.destinations.domain.usecase.GetDistanceBoundsUseCase
 import com.koflox.destinations.domain.usecase.GetUserLocationUseCase
 import com.koflox.destinations.domain.usecase.InitializeDatabaseUseCase
 import com.koflox.destinations.domain.usecase.NoSuitableDestinationException
@@ -40,6 +41,7 @@ internal class DestinationsViewModel(
     private val observeUserLocationUseCase: ObserveUserLocationUseCase,
     private val initializeDatabaseUseCase: InitializeDatabaseUseCase,
     private val getDestinationInfoUseCase: GetDestinationInfoUseCase,
+    private val getDistanceBoundsUseCase: GetDistanceBoundsUseCase,
     private val distanceCalculator: DistanceCalculator,
     private val uiMapper: DestinationUiMapper,
     private val application: Application,
@@ -51,6 +53,7 @@ internal class DestinationsViewModel(
     companion object {
         private const val CAMERA_MOVEMENT_THRESHOLD_METERS = 50.0
         private const val DESTINATION_RELOAD_THRESHOLD_KM = 50.0 // TODO: should be unified with DestinationFileResolverImpl
+        private const val BOUNDS_RECALCULATION_THRESHOLD_KM = 1.0
         private const val METERS_IN_KILOMETER = 1000.0
         private const val GOOGLE_MAPS_PACKAGE = "com.google.android.apps.maps"
     }
@@ -61,6 +64,7 @@ internal class DestinationsViewModel(
     private var locationObservationJob: Job? = null
     private var isScreenVisible = false
     private val lastDestinationLoadLocation = AtomicReference<Location?>(null)
+    private val lastBoundsCalculationLocation = AtomicReference<Location?>(null)
 
     init {
         initialize()
@@ -120,6 +124,7 @@ internal class DestinationsViewModel(
                                 areDestinationsReady = true,
                             )
                         }
+                        calculateDistanceBounds(location)
                     }
 
                     is DestinationLoadingEvent.Error -> {
@@ -133,6 +138,36 @@ internal class DestinationsViewModel(
                 }
             }
         }
+    }
+
+    private suspend fun calculateDistanceBounds(location: Location) {
+        _uiState.update { it.copy(isCalculatingBounds = true) }
+        getDistanceBoundsUseCase.getBounds(location)
+            .onSuccess { bounds ->
+                _uiState.update { state ->
+                    if (bounds != null) {
+                        val routeDistance = if (state.routeDistanceKm == 0.0) {
+                            (bounds.minKm + bounds.maxKm) / 4
+                        } else {
+                            state.routeDistanceKm.coerceIn(bounds.minKm, bounds.maxKm)
+                        }
+                        state.copy(
+                            distanceBounds = bounds,
+                            routeDistanceKm = routeDistance,
+                            isCalculatingBounds = false,
+                        )
+                    } else {
+                        state.copy(
+                            distanceBounds = null,
+                            isCalculatingBounds = false,
+                        )
+                    }
+                }
+                lastBoundsCalculationLocation.set(location)
+            }
+            .onFailure {
+                _uiState.update { it.copy(isCalculatingBounds = false) }
+            }
     }
 
     private suspend fun checkActiveSession() {
@@ -350,6 +385,7 @@ internal class DestinationsViewModel(
                     )
                 }
                 checkAndReloadDestinationsIfNeeded(newLocation)
+                checkAndRecalculateBoundsIfNeeded(newLocation)
             }
         }
     }
@@ -371,6 +407,20 @@ internal class DestinationsViewModel(
         )
         if (distanceKm >= DESTINATION_RELOAD_THRESHOLD_KM) {
             startDestinationLoading(newLocation)
+        }
+    }
+
+    private suspend fun checkAndRecalculateBoundsIfNeeded(newLocation: Location) {
+        if (_uiState.value.isCalculatingBounds) return
+        val lastLocation = lastBoundsCalculationLocation.get() ?: return
+        val distanceKm = distanceCalculator.calculateKm(
+            lat1 = lastLocation.latitude,
+            lon1 = lastLocation.longitude,
+            lat2 = newLocation.latitude,
+            lon2 = newLocation.longitude,
+        )
+        if (distanceKm >= BOUNDS_RECALCULATION_THRESHOLD_KM) {
+            calculateDistanceBounds(newLocation)
         }
     }
 
@@ -430,6 +480,7 @@ internal class DestinationsViewModel(
                     is NutritionBreakEvent.BreakRequired -> {
                         _uiState.update { it.copy(nutritionSuggestionTimeMs = event.suggestionTimeMs) }
                     }
+
                     NutritionBreakEvent.ChecksStopped -> {
                         _uiState.update { it.copy(nutritionSuggestionTimeMs = null) }
                     }

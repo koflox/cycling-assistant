@@ -38,36 +38,62 @@ class PoiLocalDataSourceImplTest {
     }
 
     @Test
-    fun `getAllDestinations delegates to dao`() = runTest {
-        coEvery { dao.getAllDestinations() } returns emptyList()
+    fun `getDestinationsInArea delegates to dao`() = runTest {
+        coEvery { dao.getDestinationsInArea(any(), any(), any(), any()) } returns emptyList()
 
-        dataSource.getAllDestinations()
+        dataSource.getDestinationsInArea(
+            minLat = 50.0,
+            maxLat = 55.0,
+            minLon = 10.0,
+            maxLon = 15.0,
+        )
 
-        coVerify { dao.getAllDestinations() }
+        coVerify {
+            dao.getDestinationsInArea(
+                minLat = 50.0,
+                maxLat = 55.0,
+                minLon = 10.0,
+                maxLon = 15.0,
+            )
+        }
     }
 
     @Test
-    fun `getAllDestinations returns empty list when dao returns empty`() = runTest {
-        coEvery { dao.getAllDestinations() } returns emptyList()
-
-        val result = dataSource.getAllDestinations()
-
-        assertEquals(0, result.size)
-    }
-
-    @Test
-    fun `getAllDestinations returns destinations from dao`() = runTest {
+    fun `getDestinationsInArea returns destinations from dao`() = runTest {
         val destinations = listOf(
             createDestinationLocal(id = "1", title = TEST_TITLE, latitude = TEST_LAT, longitude = TEST_LONG),
-            createDestinationLocal(id = "2", title = TEST_TITLE, latitude = TEST_LAT, longitude = TEST_LONG),
         )
-        coEvery { dao.getAllDestinations() } returns destinations
+        coEvery { dao.getDestinationsInArea(any(), any(), any(), any()) } returns destinations
 
-        val result = dataSource.getAllDestinations()
+        val result = dataSource.getDestinationsInArea(
+            minLat = 50.0,
+            maxLat = 55.0,
+            minLon = 10.0,
+            maxLon = 15.0,
+        )
 
-        assertEquals(2, result.size)
+        assertEquals(1, result.size)
         assertEquals("1", result[0].id)
-        assertEquals("2", result[1].id)
+    }
+
+    @Test
+    fun `getDestinationById delegates to dao`() = runTest {
+        val destination = createDestinationLocal(id = TEST_ID, title = TEST_TITLE, latitude = TEST_LAT, longitude = TEST_LONG)
+        coEvery { dao.getDestinationById(TEST_ID) } returns destination
+
+        val result = dataSource.getDestinationById(TEST_ID)
+
+        assertEquals(destination, result)
+        coVerify { dao.getDestinationById(TEST_ID) }
+    }
+
+    @Test
+    fun `getDestinationById returns null when not found`() = runTest {
+        coEvery { dao.getDestinationById(any()) } returns null
+
+        val result = dataSource.getDestinationById("missing")
+
+        assertEquals(null, result)
     }
 
     @Test

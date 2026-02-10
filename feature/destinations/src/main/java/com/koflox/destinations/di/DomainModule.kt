@@ -5,6 +5,10 @@ import com.koflox.destinations.domain.usecase.CheckLocationEnabledUseCase
 import com.koflox.destinations.domain.usecase.CheckLocationEnabledUseCaseImpl
 import com.koflox.destinations.domain.usecase.GetDestinationInfoUseCase
 import com.koflox.destinations.domain.usecase.GetDestinationInfoUseCaseImpl
+import com.koflox.destinations.domain.usecase.GetDistanceBoundsUseCase
+import com.koflox.destinations.domain.usecase.GetDistanceBoundsUseCaseImpl
+import com.koflox.destinations.domain.usecase.GetNearbyDestinationsUseCase
+import com.koflox.destinations.domain.usecase.GetNearbyDestinationsUseCaseImpl
 import com.koflox.destinations.domain.usecase.GetUserLocationUseCase
 import com.koflox.destinations.domain.usecase.GetUserLocationUseCaseImpl
 import com.koflox.destinations.domain.usecase.InitializeDatabaseUseCase
@@ -19,10 +23,17 @@ internal val domainModule = module {
             locationSettingsDataSource = get(),
         )
     }
+    factory<GetNearbyDestinationsUseCase> {
+        GetNearbyDestinationsUseCaseImpl(
+            repository = get(),
+            distanceCalculator = get(),
+        )
+    }
     factory<GetDestinationInfoUseCase> {
         GetDestinationInfoUseCaseImpl(
             dispatcherDefault = get(DispatchersQualifier.Default),
             repository = get(),
+            getNearbyDestinationsUseCase = get(),
             distanceCalculator = get(),
         )
     }
@@ -39,6 +50,13 @@ internal val domainModule = module {
     factory<ObserveUserLocationUseCase> {
         ObserveUserLocationUseCaseImpl(
             repository = get(),
+        )
+    }
+    factory<GetDistanceBoundsUseCase> {
+        GetDistanceBoundsUseCaseImpl(
+            dispatcherDefault = get(DispatchersQualifier.Default),
+            getNearbyDestinationsUseCase = get(),
+            distanceCalculator = get(),
         )
     }
 }

@@ -2,6 +2,7 @@ package com.koflox.destinations.presentation.destinations
 
 import android.net.Uri
 import com.google.android.gms.maps.model.LatLng
+import com.koflox.destinations.domain.model.DistanceBounds
 import com.koflox.destinations.presentation.destinations.model.DestinationUiModel
 import com.koflox.location.model.Location
 
@@ -15,8 +16,10 @@ internal data class DestinationsUiState(
     val userLocation: Location? = null,
     val cameraFocusLocation: Location? = null,
     val curvePoints: List<LatLng> = emptyList(),
-    val routeDistanceKm: Double = DEFAULT_ROUTE_DISTANCE_KM,
+    val routeDistanceKm: Double = 0.0,
     val toleranceKm: Double = DEFAULT_TOLERANCE_KM,
+    val distanceBounds: DistanceBounds? = null,
+    val isCalculatingBounds: Boolean = false,
     val error: String? = null,
     val isPermissionGranted: Boolean = false,
     val navigationAction: NavigationAction? = null,
@@ -27,9 +30,11 @@ internal data class DestinationsUiState(
     val isLocationDisabled: Boolean = false,
 ) {
     companion object {
-        const val DEFAULT_ROUTE_DISTANCE_KM = 15.0
         const val DEFAULT_TOLERANCE_KM = 2.5
     }
+
+    val areDistanceBoundsReady: Boolean
+        get() = distanceBounds != null && !isCalculatingBounds
 
     val isReady: Boolean
         get() = !isInitializing && isActiveSessionChecked && isPermissionGranted
