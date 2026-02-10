@@ -15,6 +15,8 @@ import com.koflox.destinations.domain.usecase.InitializeDatabaseUseCase
 import com.koflox.destinations.domain.usecase.InitializeDatabaseUseCaseImpl
 import com.koflox.destinations.domain.usecase.ObserveUserLocationUseCase
 import com.koflox.destinations.domain.usecase.ObserveUserLocationUseCaseImpl
+import com.koflox.destinations.domain.usecase.ToleranceCalculator
+import com.koflox.destinations.domain.usecase.ToleranceCalculatorImpl
 import org.koin.dsl.module
 
 internal val domainModule = module {
@@ -29,12 +31,14 @@ internal val domainModule = module {
             distanceCalculator = get(),
         )
     }
+    single<ToleranceCalculator> { ToleranceCalculatorImpl() }
     factory<GetDestinationInfoUseCase> {
         GetDestinationInfoUseCaseImpl(
             dispatcherDefault = get(DispatchersQualifier.Default),
             repository = get(),
             getNearbyDestinationsUseCase = get(),
             distanceCalculator = get(),
+            toleranceCalculator = get(),
         )
     }
     factory<GetUserLocationUseCase> {

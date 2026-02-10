@@ -18,6 +18,7 @@ import com.koflox.destinations.domain.usecase.GetUserLocationUseCase
 import com.koflox.destinations.domain.usecase.InitializeDatabaseUseCase
 import com.koflox.destinations.domain.usecase.NoSuitableDestinationException
 import com.koflox.destinations.domain.usecase.ObserveUserLocationUseCase
+import com.koflox.destinations.domain.usecase.ToleranceCalculator
 import com.koflox.destinations.presentation.destinations.model.DestinationUiModel
 import com.koflox.destinations.presentation.mapper.DestinationUiMapper
 import com.koflox.destinationsession.bridge.usecase.CyclingSessionUseCase
@@ -47,6 +48,7 @@ internal class DestinationsViewModel(
     private val application: Application,
     private val cyclingSessionUseCase: CyclingSessionUseCase,
     private val observeNutritionBreakUseCase: ObserveNutritionBreakUseCase,
+    private val toleranceCalculator: ToleranceCalculator,
     private val dispatcherDefault: CoroutineDispatcher,
 ) : AndroidViewModel(application) {
 
@@ -154,6 +156,7 @@ internal class DestinationsViewModel(
                         state.copy(
                             distanceBounds = bounds,
                             routeDistanceKm = routeDistance,
+                            toleranceKm = toleranceCalculator.calculateKm(routeDistance),
                             isCalculatingBounds = false,
                         )
                     } else {
@@ -250,12 +253,10 @@ internal class DestinationsViewModel(
     }
 
     private suspend fun selectRandomDestination(location: Location) {
-        val currentState = _uiState.value
         handleDestinationsResult(
             result = getDestinationInfoUseCase.getRandomDestinations(
                 userLocation = location,
-                targetDistanceKm = currentState.routeDistanceKm,
-                toleranceKm = currentState.toleranceKm,
+                targetDistanceKm = _uiState.value.routeDistanceKm,
             ),
             location = location,
             isSessionActive = false,
@@ -272,8 +273,7 @@ internal class DestinationsViewModel(
         handleDestinationsResult(
             result = getDestinationInfoUseCase.getDestinations(
                 userLocation = location,
-                toleranceKm = _uiState.value.toleranceKm,
-                destinationId = destinationId
+                destinationId = destinationId,
             ),
             location = location,
             isSessionActive = isSessionActive,
@@ -298,6 +298,11 @@ internal class DestinationsViewModel(
                     curvePoints = curvePoints,
                     isSessionActive = isSessionActive,
                     routeDistanceKm = if (isSessionRecovery) uiModel.selected.distanceKm.roundToInt().toDouble() else it.routeDistanceKm,
+                    toleranceKm = if (isSessionRecovery) {
+                        toleranceCalculator.calculateKm(uiModel.selected.distanceKm.roundToInt().toDouble())
+                    } else {
+                        it.toleranceKm
+                    },
                 )
             }
         }.onFailure { error ->
@@ -319,7 +324,12 @@ internal class DestinationsViewModel(
     }
 
     private fun updateRouteDistance(distanceKm: Double) {
-        _uiState.update { it.copy(routeDistanceKm = distanceKm) }
+        _uiState.update {
+            it.copy(
+                routeDistanceKm = distanceKm,
+                toleranceKm = toleranceCalculator.calculateKm(distanceKm),
+            )
+        }
     }
 
     private fun onPermissionGranted() {

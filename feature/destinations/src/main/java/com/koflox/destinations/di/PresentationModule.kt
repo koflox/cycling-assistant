@@ -22,6 +22,7 @@ internal val presentationModule = module {
             application = androidApplication(),
             cyclingSessionUseCase = get(),
             observeNutritionBreakUseCase = get(),
+            toleranceCalculator = get(),
             dispatcherDefault = get(DispatchersQualifier.Default),
         )
     }

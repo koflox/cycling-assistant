@@ -21,6 +21,7 @@ class GetDestinationInfoUseCaseTest {
     companion object {
         private const val DEFAULT_LON = 13.405
         private const val TEST_TITLE_PREFIX = "Destination "
+        private const val TOLERANCE_KM = 4.0
     }
 
     @get:Rule
@@ -29,17 +30,20 @@ class GetDestinationInfoUseCaseTest {
     private val repository: DestinationRepository = mockk()
     private val getNearbyDestinationsUseCase: GetNearbyDestinationsUseCase = mockk()
     private val distanceCalculator: DistanceCalculator = mockk()
+    private val toleranceCalculator: ToleranceCalculator = mockk()
     private lateinit var useCase: GetDestinationInfoUseCaseImpl
 
     private val userLocation = Location(latitude = 52.52, longitude = DEFAULT_LON)
 
     @Before
     fun setup() {
+        every { toleranceCalculator.calculateKm(any()) } returns TOLERANCE_KM
         useCase = GetDestinationInfoUseCaseImpl(
             dispatcherDefault = mainDispatcherRule.testDispatcher,
             repository = repository,
             getNearbyDestinationsUseCase = getNearbyDestinationsUseCase,
             distanceCalculator = distanceCalculator,
+            toleranceCalculator = toleranceCalculator,
         )
     }
 
@@ -51,7 +55,6 @@ class GetDestinationInfoUseCaseTest {
         useCase.getRandomDestinations(
             userLocation = userLocation,
             targetDistanceKm = 15.0,
-            toleranceKm = 4.0,
         )
 
         coVerify(exactly = 1) {
@@ -73,7 +76,6 @@ class GetDestinationInfoUseCaseTest {
         val result = useCase.getRandomDestinations(
             userLocation = userLocation,
             targetDistanceKm = 15.0,
-            toleranceKm = 4.0,
         )
 
         assertTrue(result.isSuccess)
@@ -93,7 +95,6 @@ class GetDestinationInfoUseCaseTest {
         val result = useCase.getRandomDestinations(
             userLocation = userLocation,
             targetDistanceKm = 15.0,
-            toleranceKm = 4.0,
         )
 
         assertTrue(result.isSuccess)
@@ -119,7 +120,6 @@ class GetDestinationInfoUseCaseTest {
         val result = useCase.getRandomDestinations(
             userLocation = userLocation,
             targetDistanceKm = 15.0,
-            toleranceKm = 4.0,
         )
 
         assertTrue(result.isSuccess)
@@ -144,7 +144,6 @@ class GetDestinationInfoUseCaseTest {
         val result = useCase.getRandomDestinations(
             userLocation = userLocation,
             targetDistanceKm = 45.0,
-            toleranceKm = 4.0,
         )
 
         assertTrue(result.isSuccess)
@@ -158,7 +157,6 @@ class GetDestinationInfoUseCaseTest {
         val result = useCase.getRandomDestinations(
             userLocation = userLocation,
             targetDistanceKm = 15.0,
-            toleranceKm = 4.0,
         )
 
         assertTrue(result.isFailure)
@@ -173,7 +171,6 @@ class GetDestinationInfoUseCaseTest {
         val result = useCase.getRandomDestinations(
             userLocation = userLocation,
             targetDistanceKm = 15.0,
-            toleranceKm = 4.0,
         )
 
         assertTrue(result.isFailure)
@@ -189,14 +186,13 @@ class GetDestinationInfoUseCaseTest {
         useCase.getRandomDestinations(
             userLocation = userLocation,
             targetDistanceKm = 20.0,
-            toleranceKm = 5.0,
         )
 
         coVerify {
             getNearbyDestinationsUseCase.getDestinations(
                 userLocation = userLocation,
-                minDistanceKm = 15.0,
-                maxDistanceKm = 25.0,
+                minDistanceKm = 16.0,
+                maxDistanceKm = 24.0,
             )
         }
     }
@@ -220,7 +216,6 @@ class GetDestinationInfoUseCaseTest {
         val result = useCase.getDestinations(
             userLocation = userLocation,
             destinationId = "dest-1",
-            toleranceKm = 5.0,
         )
 
         assertTrue(result.isSuccess)
@@ -228,8 +223,8 @@ class GetDestinationInfoUseCaseTest {
         coVerify {
             getNearbyDestinationsUseCase.getDestinations(
                 userLocation = userLocation,
-                minDistanceKm = 25.0,
-                maxDistanceKm = 35.0,
+                minDistanceKm = 26.0,
+                maxDistanceKm = 34.0,
             )
         }
     }
@@ -242,7 +237,6 @@ class GetDestinationInfoUseCaseTest {
             useCase.getDestinations(
                 userLocation = userLocation,
                 destinationId = "missing",
-                toleranceKm = 5.0,
             )
         }
 
