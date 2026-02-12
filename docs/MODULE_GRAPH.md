@@ -104,6 +104,7 @@ graph LR
   :feature:nutrition --> :shared:design-system
   :feature:bridge:destination-session:impl --> :feature:bridge:destination-session:api
   :feature:bridge:destination-session:impl --> :feature:session
+  :feature:bridge:destination-session:impl --> :shared:concurrent
   :feature:bridge:destination-session:impl --> :shared:location
   :shared:concurrent --> :shared:di
   :feature:bridge:nutrition-session:impl --> :feature:nutrition
