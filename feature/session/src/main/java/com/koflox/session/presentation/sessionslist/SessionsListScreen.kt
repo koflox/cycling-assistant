@@ -203,7 +203,7 @@ private fun SessionListItem(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    text = session.destinationName,
+                    text = session.destinationName ?: stringResource(R.string.session_free_roam_title),
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.weight(1f),
                 )

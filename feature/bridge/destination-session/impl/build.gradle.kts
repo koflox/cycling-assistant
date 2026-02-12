@@ -28,6 +28,7 @@ dependencies {
     // Bridge API
     implementation(project(":feature:bridge:destination-session:api"))
     implementation(project(":feature:session"))
+    implementation(project(":shared:concurrent"))
     implementation(project(":shared:location"))
 
     // Testing

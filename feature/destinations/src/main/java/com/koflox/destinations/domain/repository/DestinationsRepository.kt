@@ -5,7 +5,7 @@ import com.koflox.destinations.domain.model.DestinationLoadingEvent
 import com.koflox.location.model.Location
 import kotlinx.coroutines.flow.Flow
 
-internal interface DestinationRepository {
+internal interface DestinationsRepository {
     fun loadDestinationsForLocation(location: Location): Flow<DestinationLoadingEvent>
     suspend fun getDestinationsInArea(
         minLat: Double,
@@ -14,6 +14,4 @@ internal interface DestinationRepository {
         maxLon: Double,
     ): Result<List<Destination>>
     suspend fun getDestinationById(id: String): Result<Destination?>
-    suspend fun getUserLocation(): Result<Location>
-    fun observeUserLocation(): Flow<Location>
 }

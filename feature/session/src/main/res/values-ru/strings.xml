@@ -58,7 +58,7 @@
     <!-- Sessions List -->
     <string name="sessions_list_title">Сессии</string>
     <string name="sessions_list_back">Назад</string>
-    <string name="sessions_list_empty_hint">Вы можете начать сессию, выбрав пункт назначения!</string>
+    <string name="sessions_list_empty_hint">Начните свободную поездку или выберите направление!</string>
     <string name="sessions_list_status_running">В процессе</string>
     <string name="sessions_list_status_paused">На паузе</string>
     <string name="sessions_list_status_completed">Завершено</string>
@@ -79,11 +79,15 @@
     <string name="location_disabled_enable">Включить</string>
     <string name="location_disabled_dismiss">Закрыть</string>
 
+    <!-- Free Roam -->
+    <string name="session_free_roam_title">Свободная езда</string>
+
     <!-- Share -->
     <string name="share_image_processing_error">Ошибка обработки изображения. Попробуйте ещё раз.</string>
     <string name="share_preview_title">Поделиться сессией</string>
     <string name="share_button">Поделиться</string>
     <string name="share_text">Посмотрите мою велосессию до %1$s!</string>
+    <string name="share_text_free_roam">Посмотрите мою свободную велосессию!</string>
     <string name="share_chooser_title">Поделиться сессией</string>
     <string name="share_content_description">Поделиться</string>
     <string name="share_no_app_available">Нет приложения для отправки</string>

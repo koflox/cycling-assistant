@@ -77,7 +77,7 @@ internal class SessionNotificationManagerImpl(
 
         return NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_notification_cycling)
-            .setContentTitle(session.destinationName)
+            .setContentTitle(session.destinationName ?: context.getString(R.string.session_free_roam_title))
             .setContentText(contentText)
             .setStyle(NotificationCompat.BigTextStyle().bigText(expandedText))
             .setOngoing(true)

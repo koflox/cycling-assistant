@@ -6,6 +6,7 @@ import com.koflox.session.domain.model.Session
 import com.koflox.session.domain.model.SessionStatus
 import com.koflox.session.domain.usecase.ActiveSessionUseCase
 import com.koflox.session.domain.usecase.CheckLocationEnabledUseCase
+import com.koflox.session.domain.usecase.CreateSessionParams
 import com.koflox.session.domain.usecase.CreateSessionUseCase
 import com.koflox.session.domain.usecase.UpdateSessionStatusUseCase
 import com.koflox.session.presentation.mapper.SessionUiMapper
@@ -341,19 +342,15 @@ class SessionViewModelTest {
         viewModel.uiState.test {
             awaitItem() // Idle
 
-            viewModel.startSession(
-                destinationId = DESTINATION_ID,
-                destinationName = DESTINATION_NAME,
-                destinationLatitude = DESTINATION_LATITUDE,
-                destinationLongitude = DESTINATION_LONGITUDE,
-            )
+            viewModel.startSession(createTestParams())
             mainDispatcherRule.testDispatcher.scheduler.advanceUntilIdle()
         }
 
         coVerify {
             createSessionUseCase.create(
                 match {
-                    it.destinationId == DESTINATION_ID &&
+                    it is CreateSessionParams.Destination &&
+                        it.destinationId == DESTINATION_ID &&
                         it.destinationName == DESTINATION_NAME &&
                         it.destinationLatitude == DESTINATION_LATITUDE &&
                         it.destinationLongitude == DESTINATION_LONGITUDE
@@ -374,12 +371,7 @@ class SessionViewModelTest {
             awaitItem() // Idle
             awaitItem() // Active
 
-            viewModel.startSession(
-                destinationId = DESTINATION_ID,
-                destinationName = DESTINATION_NAME,
-                destinationLatitude = DESTINATION_LATITUDE,
-                destinationLongitude = DESTINATION_LONGITUDE,
-            )
+            viewModel.startSession(createTestParams())
         }
 
         coVerify(exactly = 0) { createSessionUseCase.create(any()) }
@@ -395,12 +387,7 @@ class SessionViewModelTest {
         viewModel.uiState.test {
             awaitItem() // Idle
 
-            viewModel.startSession(
-                destinationId = DESTINATION_ID,
-                destinationName = DESTINATION_NAME,
-                destinationLatitude = DESTINATION_LATITUDE,
-                destinationLongitude = DESTINATION_LONGITUDE,
-            )
+            viewModel.startSession(createTestParams())
         }
 
         verify(exactly = 0) { sessionServiceController.startSessionTracking() }
@@ -499,8 +486,8 @@ class SessionViewModelTest {
         viewModel.uiState.test {
             awaitItem() // Idle
             val active = awaitItem() as SessionUiState.Active
-            assertEquals(DESTINATION_LATITUDE, active.destinationLocation.latitude, 0.0)
-            assertEquals(DESTINATION_LONGITUDE, active.destinationLocation.longitude, 0.0)
+            assertEquals(DESTINATION_LATITUDE, active.destinationLocation!!.latitude, 0.0)
+            assertEquals(DESTINATION_LONGITUDE, active.destinationLocation!!.longitude, 0.0)
         }
     }
 
@@ -748,4 +735,49 @@ class SessionViewModelTest {
             assertNull(active.overlay)
         }
     }
+
+    @Test
+    fun `free roam session has null destinationName and destinationLocation`() = runTest {
+        val session = createSession(
+            id = SESSION_ID,
+            destinationId = null,
+            destinationName = null,
+            destinationLatitude = null,
+            destinationLongitude = null,
+        )
+        activeSessionFlow.value = session
+
+        viewModel = createViewModel()
+
+        viewModel.uiState.test {
+            awaitItem() // Idle
+            val active = awaitItem() as SessionUiState.Active
+            assertNull(active.destinationName)
+            assertNull(active.destinationLocation)
+        }
+    }
+
+    @Test
+    fun `startSession with FreeRoam creates session and starts tracking`() = runTest {
+        coEvery { createSessionUseCase.create(any()) } returns Result.success(SESSION_ID)
+
+        viewModel = createViewModel()
+
+        viewModel.uiState.test {
+            awaitItem() // Idle
+
+            viewModel.startSession(CreateSessionParams.FreeRoam)
+            mainDispatcherRule.testDispatcher.scheduler.advanceUntilIdle()
+        }
+
+        coVerify { createSessionUseCase.create(CreateSessionParams.FreeRoam) }
+        verify { sessionServiceController.startSessionTracking() }
+    }
+
+    private fun createTestParams() = CreateSessionParams.Destination(
+        destinationId = DESTINATION_ID,
+        destinationName = DESTINATION_NAME,
+        destinationLatitude = DESTINATION_LATITUDE,
+        destinationLongitude = DESTINATION_LONGITUDE,
+    )
 }

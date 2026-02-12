@@ -15,12 +15,15 @@ interface CreateSessionUseCase {
     suspend fun create(params: CreateSessionParams): Result<String>
 }
 
-data class CreateSessionParams(
-    val destinationId: String,
-    val destinationName: String,
-    val destinationLatitude: Double,
-    val destinationLongitude: Double,
-)
+sealed class CreateSessionParams {
+    data object FreeRoam : CreateSessionParams()
+    data class Destination(
+        val destinationId: String,
+        val destinationName: String,
+        val destinationLatitude: Double,
+        val destinationLongitude: Double,
+    ) : CreateSessionParams()
+}
 
 internal class CreateSessionUseCaseImpl(
     private val sessionRepository: SessionRepository,
@@ -38,12 +41,13 @@ internal class CreateSessionUseCaseImpl(
         val startLocation = getValidLocation()
             ?: return Result.failure(LocationUnavailableException())
         val currentTimeMs = System.currentTimeMillis()
+        val destination = params as? CreateSessionParams.Destination
         val session = Session(
             id = idGenerator.generate(),
-            destinationId = params.destinationId,
-            destinationName = params.destinationName,
-            destinationLatitude = params.destinationLatitude,
-            destinationLongitude = params.destinationLongitude,
+            destinationId = destination?.destinationId,
+            destinationName = destination?.destinationName,
+            destinationLatitude = destination?.destinationLatitude,
+            destinationLongitude = destination?.destinationLongitude,
             startLatitude = startLocation.latitude,
             startLongitude = startLocation.longitude,
             startTimeMs = currentTimeMs,

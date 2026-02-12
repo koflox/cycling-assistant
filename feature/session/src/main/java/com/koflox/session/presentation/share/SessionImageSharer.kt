@@ -12,7 +12,7 @@ import java.io.File
 import java.io.IOException
 
 interface SessionImageSharer {
-    suspend fun shareImage(bitmap: Bitmap, destinationName: String): ShareResult
+    suspend fun shareImage(bitmap: Bitmap, destinationName: String?): ShareResult
 }
 
 sealed interface ShareResult {
@@ -26,7 +26,7 @@ internal class SessionImageSharerImpl(
     private val dispatcherIo: CoroutineDispatcher,
 ) : SessionImageSharer {
 
-    override suspend fun shareImage(bitmap: Bitmap, destinationName: String): ShareResult {
+    override suspend fun shareImage(bitmap: Bitmap, destinationName: String?): ShareResult {
         val uri = try {
             saveBitmapToCache(bitmap)
         } catch (_: IOException) {
@@ -50,11 +50,16 @@ internal class SessionImageSharerImpl(
         FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
     }
 
-    private fun createShareIntent(uri: Uri, destinationName: String): Intent {
+    private fun createShareIntent(uri: Uri, destinationName: String?): Intent {
+        val shareText = if (destinationName != null) {
+            context.getString(R.string.share_text, destinationName)
+        } else {
+            context.getString(R.string.share_text_free_roam)
+        }
         return Intent(Intent.ACTION_SEND).apply {
             type = "image/png"
             putExtra(Intent.EXTRA_STREAM, uri)
-            putExtra(Intent.EXTRA_TEXT, context.getString(R.string.share_text, destinationName))
+            putExtra(Intent.EXTRA_TEXT, shareText)
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
     }

@@ -2,10 +2,10 @@ package com.koflox.session.domain.model
 
 data class Session(
     val id: String,
-    val destinationId: String,
-    val destinationName: String,
-    val destinationLatitude: Double,
-    val destinationLongitude: Double,
+    val destinationId: String?,
+    val destinationName: String?,
+    val destinationLatitude: Double?,
+    val destinationLongitude: Double?,
     val startLatitude: Double,
     val startLongitude: Double,
     val startTimeMs: Long,

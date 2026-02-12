@@ -48,7 +48,7 @@ internal fun SessionControlsOverlay(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
-                text = state.destinationName,
+                text = state.destinationName ?: stringResource(R.string.session_free_roam_title),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface,
             )
