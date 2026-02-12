@@ -8,7 +8,8 @@ import com.koflox.location.validator.LocationValidator
 import com.koflox.session.domain.model.Session
 import com.koflox.session.domain.model.SessionStatus
 import com.koflox.session.domain.repository.SessionRepository
-import com.koflox.session.testutil.createCreateSessionParams
+import com.koflox.session.testutil.createDestinationSessionParams
+import com.koflox.session.testutil.createFreeRoamSessionParams
 import com.koflox.testing.coroutine.MainDispatcherRule
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -17,6 +18,7 @@ import io.mockk.mockk
 import io.mockk.slot
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -81,8 +83,8 @@ class CreateSessionUseCaseImplTest {
 
         assertEquals(DESTINATION_ID, sessionSlot.captured.destinationId)
         assertEquals(DESTINATION_NAME, sessionSlot.captured.destinationName)
-        assertEquals(DESTINATION_LAT, sessionSlot.captured.destinationLatitude, 0.0)
-        assertEquals(DESTINATION_LONG, sessionSlot.captured.destinationLongitude, 0.0)
+        assertEquals(DESTINATION_LAT, sessionSlot.captured.destinationLatitude!!, 0.0)
+        assertEquals(DESTINATION_LONG, sessionSlot.captured.destinationLongitude!!, 0.0)
     }
 
     @Test
@@ -217,6 +219,19 @@ class CreateSessionUseCaseImplTest {
     }
 
     @Test
+    fun `create with FreeRoam saves session with null destination fields`() = runTest {
+        val sessionSlot = slot<Session>()
+        coEvery { sessionRepository.saveSession(capture(sessionSlot)) } returns Result.success(Unit)
+
+        useCase.create(createFreeRoamSessionParams())
+
+        assertNull(sessionSlot.captured.destinationId)
+        assertNull(sessionSlot.captured.destinationName)
+        assertNull(sessionSlot.captured.destinationLatitude)
+        assertNull(sessionSlot.captured.destinationLongitude)
+    }
+
+    @Test
     fun `create returns failure with LocationUnavailableException when location cannot be obtained`() = runTest {
         coEvery { locationDataSource.getCurrentLocation() } returns Result.failure(RuntimeException("GPS error"))
 
@@ -226,7 +241,7 @@ class CreateSessionUseCaseImplTest {
         assertTrue(result.exceptionOrNull() is LocationUnavailableException)
     }
 
-    private fun createTestParams() = createCreateSessionParams(
+    private fun createTestParams() = createDestinationSessionParams(
         destinationId = DESTINATION_ID,
         destinationName = DESTINATION_NAME,
         destinationLatitude = DESTINATION_LAT,

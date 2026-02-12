@@ -2,7 +2,7 @@ package com.koflox.destinations.domain.usecase
 
 import app.cash.turbine.test
 import com.koflox.destinations.domain.model.DestinationLoadingEvent
-import com.koflox.destinations.domain.repository.DestinationRepository
+import com.koflox.destinations.domain.repository.DestinationsRepository
 import com.koflox.location.model.Location
 import io.mockk.every
 import io.mockk.mockk
@@ -20,7 +20,7 @@ class InitializeDatabaseUseCaseTest {
         private const val TEST_LON = 139.7671
     }
 
-    private val repository: DestinationRepository = mockk()
+    private val repository: DestinationsRepository = mockk()
     private lateinit var useCase: InitializeDatabaseUseCaseImpl
 
     @Before

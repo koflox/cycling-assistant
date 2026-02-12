@@ -24,7 +24,7 @@ internal sealed interface SessionsListOverlay {
 
 data class SessionListItemUiModel(
     val id: String,
-    val destinationName: String,
+    val destinationName: String?,
     val dateFormatted: String,
     val distanceFormatted: String,
     val status: SessionListItemStatus,

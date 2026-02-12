@@ -1,7 +1,7 @@
 package com.koflox.destinations.domain.usecase
 
 import app.cash.turbine.test
-import com.koflox.destinations.domain.repository.DestinationRepository
+import com.koflox.destinations.domain.repository.UserLocationRepository
 import com.koflox.location.model.Location
 import io.mockk.every
 import io.mockk.mockk
@@ -20,7 +20,7 @@ class ObserveUserLocationUseCaseTest {
         private const val DEFAULT_LONG = 13.405
     }
 
-    private val repository: DestinationRepository = mockk()
+    private val repository: UserLocationRepository = mockk()
     private lateinit var useCase: ObserveUserLocationUseCaseImpl
 
     @Before

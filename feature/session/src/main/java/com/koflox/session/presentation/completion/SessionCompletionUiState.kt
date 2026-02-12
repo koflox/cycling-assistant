@@ -10,7 +10,7 @@ internal sealed interface SessionCompletionUiState {
 
     data class Content(
         val sessionId: String,
-        val destinationName: String,
+        val destinationName: String?,
         val startDateFormatted: String,
         val elapsedTimeFormatted: String,
         val movingTimeFormatted: String,

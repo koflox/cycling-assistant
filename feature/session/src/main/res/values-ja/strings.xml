@@ -58,7 +58,7 @@
     <!-- Sessions List -->
     <string name="sessions_list_title">セッション</string>
     <string name="sessions_list_back">戻る</string>
-    <string name="sessions_list_empty_hint">目的地を選択してセッションを開始できます！</string>
+    <string name="sessions_list_empty_hint">フリーライドを開始するか、目的地を選択してください！</string>
     <string name="sessions_list_status_running">走行中</string>
     <string name="sessions_list_status_paused">一時停止中</string>
     <string name="sessions_list_status_completed">完了</string>
@@ -79,11 +79,15 @@
     <string name="location_disabled_enable">有効にする</string>
     <string name="location_disabled_dismiss">閉じる</string>
 
+    <!-- Free Roam -->
+    <string name="session_free_roam_title">フリーライド</string>
+
     <!-- Share -->
     <string name="share_image_processing_error">画像処理エラーが発生しました。もう一度お試しください。</string>
     <string name="share_preview_title">セッションを共有</string>
     <string name="share_button">共有</string>
     <string name="share_text">%1$sへのサイクリングセッションをチェック！</string>
+    <string name="share_text_free_roam">フリーライドのサイクリングセッションをチェック！</string>
     <string name="share_chooser_title">セッションを共有</string>
     <string name="share_content_description">共有</string>
     <string name="share_no_app_available">共有できるアプリがありません</string>

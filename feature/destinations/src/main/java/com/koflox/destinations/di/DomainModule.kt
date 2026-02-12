@@ -13,10 +13,14 @@ import com.koflox.destinations.domain.usecase.GetUserLocationUseCase
 import com.koflox.destinations.domain.usecase.GetUserLocationUseCaseImpl
 import com.koflox.destinations.domain.usecase.InitializeDatabaseUseCase
 import com.koflox.destinations.domain.usecase.InitializeDatabaseUseCaseImpl
+import com.koflox.destinations.domain.usecase.ObserveRidingModeUseCase
+import com.koflox.destinations.domain.usecase.ObserveRidingModeUseCaseImpl
 import com.koflox.destinations.domain.usecase.ObserveUserLocationUseCase
 import com.koflox.destinations.domain.usecase.ObserveUserLocationUseCaseImpl
 import com.koflox.destinations.domain.usecase.ToleranceCalculator
 import com.koflox.destinations.domain.usecase.ToleranceCalculatorImpl
+import com.koflox.destinations.domain.usecase.UpdateRidingModeUseCase
+import com.koflox.destinations.domain.usecase.UpdateRidingModeUseCaseImpl
 import org.koin.dsl.module
 
 internal val domainModule = module {
@@ -61,6 +65,16 @@ internal val domainModule = module {
             dispatcherDefault = get(DispatchersQualifier.Default),
             getNearbyDestinationsUseCase = get(),
             distanceCalculator = get(),
+        )
+    }
+    factory<ObserveRidingModeUseCase> {
+        ObserveRidingModeUseCaseImpl(
+            repository = get(),
+        )
+    }
+    factory<UpdateRidingModeUseCase> {
+        UpdateRidingModeUseCaseImpl(
+            repository = get(),
         )
     }
 }
