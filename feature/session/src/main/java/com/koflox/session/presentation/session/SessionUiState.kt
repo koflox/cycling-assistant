@@ -8,8 +8,8 @@ internal sealed interface SessionUiState {
 
     data class Active(
         val sessionId: String,
-        val destinationName: String,
-        val destinationLocation: Location,
+        val destinationName: String?,
+        val destinationLocation: Location?,
         val status: SessionStatus,
         val elapsedTimeFormatted: String,
         val traveledDistanceFormatted: String,

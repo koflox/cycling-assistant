@@ -20,6 +20,7 @@ import com.koflox.designsystem.theme.Spacing
 import com.koflox.location.model.Location
 import com.koflox.location.settings.LocationSettingsHandler
 import com.koflox.session.R
+import com.koflox.session.domain.usecase.CreateSessionParams
 import com.koflox.session.presentation.permission.NotificationPermissionHandler
 import com.koflox.session.presentation.session.SessionViewModel
 import org.koin.androidx.compose.koinViewModel
@@ -54,10 +55,12 @@ fun DestinationOptionsRoute(
         NotificationPermissionHandler { isGranted ->
             if (isGranted) {
                 viewModel.startSession(
-                    destinationId = destinationId,
-                    destinationName = destinationName,
-                    destinationLatitude = destinationLocation.latitude,
-                    destinationLongitude = destinationLocation.longitude,
+                    CreateSessionParams.Destination(
+                        destinationId = destinationId,
+                        destinationName = destinationName,
+                        destinationLatitude = destinationLocation.latitude,
+                        destinationLongitude = destinationLocation.longitude,
+                    ),
                 )
                 onDismiss()
             }

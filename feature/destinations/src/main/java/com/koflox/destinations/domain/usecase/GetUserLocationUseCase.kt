@@ -1,6 +1,6 @@
 package com.koflox.destinations.domain.usecase
 
-import com.koflox.destinations.domain.repository.DestinationRepository
+import com.koflox.destinations.domain.repository.UserLocationRepository
 import com.koflox.location.model.Location
 
 interface GetUserLocationUseCase {
@@ -8,7 +8,7 @@ interface GetUserLocationUseCase {
 }
 
 internal class GetUserLocationUseCaseImpl(
-    private val repository: DestinationRepository,
+    private val repository: UserLocationRepository,
 ) : GetUserLocationUseCase {
     override suspend fun getLocation(): Result<Location> = repository.getUserLocation()
 }

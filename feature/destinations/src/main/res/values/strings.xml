@@ -15,6 +15,11 @@
     <string name="destination_calculating_bounds">Searching for suitable distance range</string>
     <string name="destination_no_destinations_in_area">No destinations found in this area. Available destinations depend on your location</string>
 
+    <!-- Riding Mode -->
+    <string name="ride_mode_free_roam">Free Roam</string>
+    <string name="ride_mode_destination">Destination</string>
+    <string name="ride_start_ride">Start Ride</string>
+
     <!-- Location Disabled -->
     <string name="location_disabled_message">Location services are disabled</string>
     <string name="location_disabled_enable">Enable Location</string>

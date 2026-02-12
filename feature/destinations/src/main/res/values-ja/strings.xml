@@ -15,6 +15,11 @@
     <string name="destination_calculating_bounds">適切な距離範囲を検索中</string>
     <string name="destination_no_destinations_in_area">このエリアには目的地が見つかりません。利用可能な目的地は現在地に依存します</string>
 
+    <!-- Riding Mode -->
+    <string name="ride_mode_free_roam">フリー</string>
+    <string name="ride_mode_destination">目的地</string>
+    <string name="ride_start_ride">出発</string>
+
     <!-- Location Disabled -->
     <string name="location_disabled_message">位置情報が無効です</string>
     <string name="location_disabled_enable">有効にする</string>

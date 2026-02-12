@@ -16,7 +16,7 @@ interface CyclingSessionUiNavigator {
      */
     @Composable
     fun SessionScreen(
-        destinationLocation: Location,
+        destinationLocation: Location?,
         modifier: Modifier,
         onNavigateToCompletion: (sessionId: String) -> Unit,
     )

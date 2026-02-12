@@ -118,7 +118,7 @@ private fun SessionCompletionTopBar(
     onShareClick: () -> Unit,
 ) {
     val title = when (uiState) {
-        is SessionCompletionUiState.Content -> uiState.destinationName
+        is SessionCompletionUiState.Content -> uiState.destinationName ?: stringResource(R.string.session_free_roam_title)
         else -> stringResource(R.string.session_completion_title)
     }
     TopAppBar(

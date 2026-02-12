@@ -7,10 +7,10 @@ import androidx.room.PrimaryKey
 data class SessionEntity(
     @PrimaryKey
     val id: String,
-    val destinationId: String,
-    val destinationName: String,
-    val destinationLatitude: Double,
-    val destinationLongitude: Double,
+    val destinationId: String?,
+    val destinationName: String?,
+    val destinationLatitude: Double?,
+    val destinationLongitude: Double?,
     val startLatitude: Double,
     val startLongitude: Double,
     val startTimeMs: Long,

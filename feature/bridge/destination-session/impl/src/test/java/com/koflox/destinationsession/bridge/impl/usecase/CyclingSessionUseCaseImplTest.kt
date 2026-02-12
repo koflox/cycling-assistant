@@ -2,7 +2,9 @@ package com.koflox.destinationsession.bridge.impl.usecase
 
 import app.cash.turbine.test
 import com.koflox.session.domain.usecase.ActiveSessionUseCase
+import com.koflox.session.domain.usecase.CreateSessionUseCase
 import com.koflox.session.domain.usecase.NoActiveSessionException
+import com.koflox.session.service.SessionServiceController
 import com.koflox.session.testutil.createSession
 import com.koflox.testing.coroutine.MainDispatcherRule
 import io.mockk.coEvery
@@ -30,11 +32,17 @@ class CyclingSessionUseCaseImplTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     private val activeSessionUseCase: ActiveSessionUseCase = mockk()
+    private val createSessionUseCase: CreateSessionUseCase = mockk()
+    private val sessionServiceController: SessionServiceController = mockk()
     private lateinit var useCase: CyclingSessionUseCaseImpl
 
     @Before
     fun setup() {
-        useCase = CyclingSessionUseCaseImpl(activeSessionUseCase)
+        useCase = CyclingSessionUseCaseImpl(
+            activeSessionUseCase = activeSessionUseCase,
+            createSessionUseCase = createSessionUseCase,
+            sessionServiceController = sessionServiceController,
+        )
     }
 
     @Suppress("UnusedFlow")

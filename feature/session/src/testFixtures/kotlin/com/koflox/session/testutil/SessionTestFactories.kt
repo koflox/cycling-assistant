@@ -135,12 +135,14 @@ fun createSessionWithTrackPoints(
     trackPoints = trackPoints,
 )
 
-fun createCreateSessionParams(
+fun createFreeRoamSessionParams(): CreateSessionParams = CreateSessionParams.FreeRoam
+
+fun createDestinationSessionParams(
     destinationId: String = "",
     destinationName: String = "",
     destinationLatitude: Double = 0.0,
     destinationLongitude: Double = 0.0,
-) = CreateSessionParams(
+) = CreateSessionParams.Destination(
     destinationId = destinationId,
     destinationName = destinationName,
     destinationLatitude = destinationLatitude,

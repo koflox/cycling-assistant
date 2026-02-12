@@ -2,7 +2,7 @@ package com.koflox.destinations.domain.usecase
 
 import com.koflox.destinations.domain.model.Destination
 import com.koflox.destinations.domain.model.Destinations
-import com.koflox.destinations.domain.repository.DestinationRepository
+import com.koflox.destinations.domain.repository.DestinationsRepository
 import com.koflox.distance.DistanceCalculator
 import com.koflox.location.model.Location
 import kotlinx.coroutines.CoroutineDispatcher
@@ -25,7 +25,7 @@ interface GetDestinationInfoUseCase {
 
 internal class GetDestinationInfoUseCaseImpl(
     private val dispatcherDefault: CoroutineDispatcher,
-    private val repository: DestinationRepository,
+    private val repository: DestinationsRepository,
     private val getNearbyDestinationsUseCase: GetNearbyDestinationsUseCase,
     private val distanceCalculator: DistanceCalculator,
     private val toleranceCalculator: ToleranceCalculator,

@@ -4,6 +4,9 @@
 # Java class files
 *.class
 
+# Android App Bundle
+*.aab
+
 # Generated files
 bin/
 gen/

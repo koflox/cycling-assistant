@@ -101,7 +101,7 @@ internal class SessionsListViewModel(
         updateContent { it.copy(overlay = null) }
     }
 
-    private suspend fun shareImage(bitmap: Bitmap, destinationName: String) {
+    private suspend fun shareImage(bitmap: Bitmap, destinationName: String?) {
         val previewData = when (val currentOverlay = (_uiState.value as? SessionsListUiState.Content)?.overlay) {
             is SessionsListOverlay.SharePreview -> currentOverlay.data
             is SessionsListOverlay.ShareError -> currentOverlay.data

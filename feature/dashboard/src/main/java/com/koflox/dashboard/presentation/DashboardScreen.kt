@@ -17,7 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.koflox.dashboard.presentation.components.ExpandableMenuButton
 import com.koflox.designsystem.theme.Spacing
-import com.koflox.destinations.presentation.destinations.DestinationsScreen
+import com.koflox.destinations.presentation.destinations.RideMapScreen
 
 @Composable
 internal fun DashboardScreen(
@@ -28,7 +28,7 @@ internal fun DashboardScreen(
 ) {
     var isMenuExpanded by remember { mutableStateOf(false) }
     Box(modifier = modifier.fillMaxSize()) {
-        DestinationsScreen(
+        RideMapScreen(
             onNavigateToSessionCompletion = onNavigateToSessionCompletion,
             modifier = Modifier.fillMaxSize(),
         )

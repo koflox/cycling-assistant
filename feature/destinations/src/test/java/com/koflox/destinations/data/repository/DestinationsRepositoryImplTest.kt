@@ -11,16 +11,13 @@ import com.koflox.destinations.domain.model.DestinationLoadingEvent
 import com.koflox.destinations.testutil.createDestination
 import com.koflox.destinations.testutil.createDestinationAsset
 import com.koflox.destinations.testutil.createDestinationLocal
-import com.koflox.location.geolocation.LocationDataSource
 import com.koflox.location.model.Location
 import com.koflox.testing.coroutine.MainDispatcherRule
+import io.mockk.Ordering
 import io.mockk.coEvery
 import io.mockk.coJustRun
 import io.mockk.coVerify
-import io.mockk.every
 import io.mockk.mockk
-import io.mockk.verify
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -29,7 +26,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
-class DestinationRepositoryImplTest {
+class DestinationsRepositoryImplTest {
 
     companion object {
         private const val TEST_ID = "test-1"
@@ -44,19 +41,17 @@ class DestinationRepositoryImplTest {
 
     private val poiLocalDataSource: PoiLocalDataSource = mockk()
     private val poiAssetDataSource: PoiAssetDataSource = mockk()
-    private val locationDataSource: LocationDataSource = mockk()
     private val destinationFilesLocalDataSource: DestinationFilesLocalDataSource = mockk()
     private val destinationFileResolver: DestinationFileResolver = mockk()
     private val mapper: DestinationMapper = mockk()
-    private lateinit var repository: DestinationRepositoryImpl
+    private lateinit var repository: DestinationsRepositoryImpl
 
     @Before
     fun setup() {
-        repository = DestinationRepositoryImpl(
+        repository = DestinationsRepositoryImpl(
             dispatcherDefault = mainDispatcherRule.testDispatcher,
             poiLocalDataSource = poiLocalDataSource,
             poiAssetDataSource = poiAssetDataSource,
-            locationDataSource = locationDataSource,
             destinationFilesLocalDataSource = destinationFilesLocalDataSource,
             destinationFileResolver = destinationFileResolver,
             mapper = mapper,
@@ -164,7 +159,7 @@ class DestinationRepositoryImplTest {
             awaitComplete()
         }
 
-        coVerify(ordering = io.mockk.Ordering.ORDERED) {
+        coVerify(ordering = Ordering.ORDERED) {
             poiAssetDataSource.readDestinationsJson("tier1.json")
             poiAssetDataSource.readDestinationsJson("tier2.json")
         }
@@ -269,59 +264,5 @@ class DestinationRepositoryImplTest {
 
         assertTrue(result.isFailure)
         assertEquals(exception, result.exceptionOrNull())
-    }
-
-    @Test
-    fun `getUserLocation delegates to locationDataSource`() = runTest {
-        val location = Location(TEST_LAT, TEST_LONG)
-        coEvery { locationDataSource.getCurrentLocation() } returns Result.success(location)
-
-        repository.getUserLocation()
-
-        coVerify { locationDataSource.getCurrentLocation() }
-    }
-
-    @Test
-    fun `getUserLocation returns location on success`() = runTest {
-        val location = Location(TEST_LAT, TEST_LONG)
-        coEvery { locationDataSource.getCurrentLocation() } returns Result.success(location)
-
-        val result = repository.getUserLocation()
-
-        assertTrue(result.isSuccess)
-        assertEquals(location, result.getOrNull())
-    }
-
-    @Test
-    fun `getUserLocation returns failure on error`() = runTest {
-        val exception = RuntimeException("Location unavailable")
-        coEvery { locationDataSource.getCurrentLocation() } returns Result.failure(exception)
-
-        val result = repository.getUserLocation()
-
-        assertTrue(result.isFailure)
-        assertEquals(exception, result.exceptionOrNull())
-    }
-
-    @Suppress("UnusedFlow")
-    @Test
-    fun `observeUserLocation delegates to locationDataSource`() = runTest {
-        val location = Location(TEST_LAT, TEST_LONG)
-        every { locationDataSource.observeLocationUpdates(any(), any()) } returns flowOf(location)
-
-        repository.observeUserLocation()
-
-        verify { locationDataSource.observeLocationUpdates() }
-    }
-
-    @Test
-    fun `observeUserLocation returns flow from locationDataSource`() = runTest {
-        val location = Location(TEST_LAT, TEST_LONG)
-        val flow = flowOf(location)
-        every { locationDataSource.observeLocationUpdates(any(), any()) } returns flow
-
-        val result = repository.observeUserLocation()
-
-        assertEquals(flow, result)
     }
 }

@@ -45,7 +45,7 @@ import kotlinx.coroutines.launch
 fun SharePreviewDialog(
     data: SharePreviewData,
     isSharing: Boolean,
-    onShareClick: (bitmap: Bitmap, destinationName: String) -> Unit,
+    onShareClick: (bitmap: Bitmap, destinationName: String?) -> Unit,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -211,7 +211,7 @@ private fun SharePreviewContent(
 
 @Composable
 private fun MapHeaderOverlay(
-    destinationName: String,
+    destinationName: String?,
     startDate: String,
     modifier: Modifier = Modifier,
 ) {
@@ -223,7 +223,7 @@ private fun MapHeaderOverlay(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            text = destinationName,
+            text = destinationName ?: stringResource(R.string.session_free_roam_title),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onSurface,
