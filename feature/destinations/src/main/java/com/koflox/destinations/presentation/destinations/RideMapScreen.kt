@@ -3,9 +3,13 @@ package com.koflox.destinations.presentation.destinations
 import android.content.Context
 import android.content.Intent
 import android.widget.Toast
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -184,16 +188,30 @@ private fun BoxScope.RideMapOverlay(
 
 @Composable
 private fun BoxScope.IdleOverlay(uiState: RideMapUiState.FreeRoamIdle, viewModel: RideMapViewModel) {
-    FreeRoamControls(
-        uiState = uiState,
-        viewModel = viewModel,
-        modifier = Modifier.align(Alignment.BottomCenter).padding(Spacing.Large),
-    )
-    RidingModeToggle(
-        selectedMode = RidingMode.FREE_ROAM,
-        onModeSelected = { viewModel.onEvent(RideMapUiEvent.ModeEvent.ModeSelected(it)) },
-        modifier = Modifier.align(Alignment.BottomStart).padding(Spacing.Large),
-    )
+    var isModeExpanded by remember { mutableStateOf(false) }
+    ModeToggleDismissOverlay(isModeExpanded) { isModeExpanded = false }
+    Row(
+        modifier = Modifier
+            .align(Alignment.BottomCenter)
+            .fillMaxWidth()
+            .padding(Spacing.Large),
+        verticalAlignment = Alignment.Bottom,
+    ) {
+        Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.BottomCenter) {
+            RidingModeToggle(
+                selectedMode = RidingMode.FREE_ROAM,
+                isExpanded = isModeExpanded,
+                onToggleExpand = { isModeExpanded = !isModeExpanded },
+                onModeSelected = {
+                    isModeExpanded = false
+                    viewModel.onEvent(RideMapUiEvent.ModeEvent.ModeSelected(it))
+                },
+                modifier = Modifier.padding(end = Spacing.Large),
+            )
+        }
+        FreeRoamControls(uiState = uiState, viewModel = viewModel)
+        Spacer(modifier = Modifier.weight(1f))
+    }
     if (uiState.isStartingFreeRoam) {
         LoadingOverlay()
     }
@@ -201,16 +219,36 @@ private fun BoxScope.IdleOverlay(uiState: RideMapUiState.FreeRoamIdle, viewModel
 
 @Composable
 private fun BoxScope.IdleOverlay(uiState: RideMapUiState.DestinationIdle, viewModel: RideMapViewModel) {
-    DestinationSelectionControls(
-        uiState = uiState,
-        viewModel = viewModel,
-        modifier = Modifier.align(Alignment.BottomCenter).padding(Spacing.Large),
-    )
-    RidingModeToggle(
-        selectedMode = RidingMode.DESTINATION,
-        onModeSelected = { viewModel.onEvent(RideMapUiEvent.ModeEvent.ModeSelected(it)) },
-        modifier = Modifier.align(Alignment.BottomStart).padding(Spacing.Large),
-    )
+    var isModeExpanded by remember { mutableStateOf(false) }
+    ModeToggleDismissOverlay(isModeExpanded) { isModeExpanded = false }
+    Column(
+        modifier = Modifier
+            .align(Alignment.BottomCenter)
+            .fillMaxWidth()
+            .padding(Spacing.Large),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        DestinationStatusContent(uiState, viewModel)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.Bottom,
+        ) {
+            Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.BottomCenter) {
+                RidingModeToggle(
+                    selectedMode = RidingMode.DESTINATION,
+                    isExpanded = isModeExpanded,
+                    onToggleExpand = { isModeExpanded = !isModeExpanded },
+                    onModeSelected = {
+                        isModeExpanded = false
+                        viewModel.onEvent(RideMapUiEvent.ModeEvent.ModeSelected(it))
+                    },
+                    modifier = Modifier.padding(end = Spacing.Large),
+                )
+            }
+            DestinationActionButton(uiState, viewModel)
+            Spacer(modifier = Modifier.weight(1f))
+        }
+    }
     if (uiState.isLoading) {
         LoadingOverlay()
     }
@@ -296,7 +334,39 @@ private fun FreeRoamControls(
 }
 
 @Composable
-private fun DestinationSelectionControls(
+private fun DestinationStatusContent(
+    uiState: RideMapUiState.DestinationIdle,
+    viewModel: RideMapViewModel,
+) {
+    when {
+        uiState.isPreparingDestinations -> StatusCard(
+            message = stringResource(R.string.preparing_destinations),
+            isLoading = true,
+            modifier = Modifier.padding(bottom = Spacing.Large),
+        )
+        uiState.isCalculatingBounds -> StatusCard(
+            message = stringResource(R.string.destination_calculating_bounds),
+            isLoading = true,
+            modifier = Modifier.padding(bottom = Spacing.Large),
+        )
+        uiState.distanceBounds != null -> RouteSlider(
+            distanceKm = uiState.routeDistanceKm,
+            toleranceKm = uiState.toleranceKm,
+            minDistanceKm = uiState.distanceBounds.minKm,
+            maxDistanceKm = uiState.distanceBounds.maxKm,
+            onDistanceChanged = { viewModel.onEvent(RideMapUiEvent.DestinationEvent.RouteDistanceChanged(it)) },
+            modifier = Modifier.padding(bottom = Spacing.Large),
+        )
+        else -> StatusCard(
+            message = stringResource(R.string.destination_no_destinations_in_area),
+            isLoading = false,
+            modifier = Modifier.padding(bottom = Spacing.Large),
+        )
+    }
+}
+
+@Composable
+private fun DestinationActionButton(
     uiState: RideMapUiState.DestinationIdle,
     viewModel: RideMapViewModel,
     modifier: Modifier = Modifier,
@@ -314,38 +384,23 @@ private fun DestinationSelectionControls(
             },
         )
     }
-    Column(
+    LetsGoButton(
+        onClick = { shouldCheckLocation = true },
+        enabled = !uiState.isLoading && uiState.areDistanceBoundsReady,
         modifier = modifier,
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        when {
-            uiState.isPreparingDestinations -> StatusCard(
-                message = stringResource(R.string.preparing_destinations),
-                isLoading = true,
-                modifier = Modifier.padding(bottom = Spacing.Large),
-            )
-            uiState.isCalculatingBounds -> StatusCard(
-                message = stringResource(R.string.destination_calculating_bounds),
-                isLoading = true,
-                modifier = Modifier.padding(bottom = Spacing.Large),
-            )
-            uiState.distanceBounds != null -> RouteSlider(
-                distanceKm = uiState.routeDistanceKm,
-                toleranceKm = uiState.toleranceKm,
-                minDistanceKm = uiState.distanceBounds.minKm,
-                maxDistanceKm = uiState.distanceBounds.maxKm,
-                onDistanceChanged = { viewModel.onEvent(RideMapUiEvent.DestinationEvent.RouteDistanceChanged(it)) },
-                modifier = Modifier.padding(bottom = Spacing.Large),
-            )
-            else -> StatusCard(
-                message = stringResource(R.string.destination_no_destinations_in_area),
-                isLoading = false,
-                modifier = Modifier.padding(bottom = Spacing.Large),
-            )
-        }
-        LetsGoButton(
-            onClick = { shouldCheckLocation = true },
-            enabled = !uiState.isLoading && uiState.areDistanceBoundsReady,
+    )
+}
+
+@Composable
+private fun ModeToggleDismissOverlay(isVisible: Boolean, onDismiss: () -> Unit) {
+    if (isVisible) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .clickable(
+                    indication = null,
+                    interactionSource = remember { MutableInteractionSource() },
+                ) { onDismiss() },
         )
     }
 }
