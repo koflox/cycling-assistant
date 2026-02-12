@@ -27,6 +27,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -45,16 +46,17 @@ internal fun RidingModeToggle(
     modifier: Modifier = Modifier,
 ) {
     val otherModes = remember(selectedMode) { RidingMode.entries.filter { it != selectedMode } }
-    Column(
-        modifier = modifier.width(IntrinsicSize.Max),
-        verticalArrangement = Arrangement.spacedBy(Spacing.Tiny),
-    ) {
+    Column(modifier = modifier.width(IntrinsicSize.Max)) {
         AnimatedVisibility(
             visible = isExpanded,
             enter = fadeIn() + scaleIn(),
             exit = fadeOut() + scaleOut(),
+            modifier = Modifier.overlayAbove(),
         ) {
-            Column(verticalArrangement = Arrangement.spacedBy(Spacing.Tiny)) {
+            Column(
+                modifier = Modifier.padding(bottom = Spacing.Tiny),
+                verticalArrangement = Arrangement.spacedBy(Spacing.Tiny),
+            ) {
                 otherModes.forEach { mode ->
                     ModeOption(
                         label = stringResource(mode.labelRes()),
@@ -124,6 +126,13 @@ private fun ModeOption(
             .clickable(onClick = onClick)
             .padding(horizontal = Spacing.Small, vertical = Spacing.Small),
     )
+}
+
+private fun Modifier.overlayAbove(): Modifier = layout { measurable, constraints ->
+    val placeable = measurable.measure(constraints)
+    layout(placeable.width, 0) {
+        placeable.place(0, -placeable.height)
+    }
 }
 
 @StringRes
