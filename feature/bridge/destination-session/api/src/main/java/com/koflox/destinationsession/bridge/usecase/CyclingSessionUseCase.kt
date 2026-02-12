@@ -14,8 +14,13 @@ interface CyclingSessionUseCase {
 
     /**
      * Get the destination of the active session.
-     * Returns null when there's no active session.
+     * Returns null when there's no active session or the session is free roam.
      */
     suspend fun getActiveSessionDestination(): ActiveSessionDestination?
+
+    /**
+     * Start a free roam session without a destination.
+     */
+    suspend fun startFreeRoamSession(): Result<Unit>
 
 }

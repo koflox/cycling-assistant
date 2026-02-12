@@ -58,7 +58,7 @@
     <!-- Sessions List -->
     <string name="sessions_list_title">Sessions</string>
     <string name="sessions_list_back">Back</string>
-    <string name="sessions_list_empty_hint">You can start a session by selecting a destination!</string>
+    <string name="sessions_list_empty_hint">Start a free roam ride or select a destination!</string>
     <string name="sessions_list_status_running">Running</string>
     <string name="sessions_list_status_paused">Paused</string>
     <string name="sessions_list_status_completed">Completed</string>
@@ -79,11 +79,15 @@
     <string name="location_disabled_enable">Enable Location</string>
     <string name="location_disabled_dismiss">Dismiss</string>
 
+    <!-- Free Roam -->
+    <string name="session_free_roam_title">Free Roam</string>
+
     <!-- Share -->
     <string name="share_image_processing_error">Image processing error encountered. Please try again.</string>
     <string name="share_preview_title">Share Session</string>
     <string name="share_button">Share</string>
     <string name="share_text">Check out my cycling session to %1$s!</string>
+    <string name="share_text_free_roam">Check out my free roam cycling session!</string>
     <string name="share_chooser_title">Share session</string>
     <string name="share_content_description">Share</string>
     <string name="share_no_app_available">No app available to share</string>

@@ -66,8 +66,8 @@ class SessionMapperImplTest {
 
         assertEquals(DESTINATION_ID, entity.destinationId)
         assertEquals(DESTINATION_NAME, entity.destinationName)
-        assertEquals(DESTINATION_LAT, entity.destinationLatitude, 0.0)
-        assertEquals(DESTINATION_LONG, entity.destinationLongitude, 0.0)
+        assertEquals(DESTINATION_LAT, entity.destinationLatitude!!, 0.0)
+        assertEquals(DESTINATION_LONG, entity.destinationLongitude!!, 0.0)
     }
 
     @Test
@@ -213,8 +213,8 @@ class SessionMapperImplTest {
 
         assertEquals(DESTINATION_ID, session.destinationId)
         assertEquals(DESTINATION_NAME, session.destinationName)
-        assertEquals(DESTINATION_LAT, session.destinationLatitude, 0.0)
-        assertEquals(DESTINATION_LONG, session.destinationLongitude, 0.0)
+        assertEquals(DESTINATION_LAT, session.destinationLatitude!!, 0.0)
+        assertEquals(DESTINATION_LONG, session.destinationLongitude!!, 0.0)
     }
 
     @Test

@@ -16,10 +16,10 @@ interface CreateSessionUseCase {
 }
 
 data class CreateSessionParams(
-    val destinationId: String,
-    val destinationName: String,
-    val destinationLatitude: Double,
-    val destinationLongitude: Double,
+    val destinationId: String? = null,
+    val destinationName: String? = null,
+    val destinationLatitude: Double? = null,
+    val destinationLongitude: Double? = null,
 )
 
 internal class CreateSessionUseCaseImpl(

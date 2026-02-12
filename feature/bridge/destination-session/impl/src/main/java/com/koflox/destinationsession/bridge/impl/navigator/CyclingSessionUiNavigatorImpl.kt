@@ -11,7 +11,7 @@ internal class CyclingSessionUiNavigatorImpl : CyclingSessionUiNavigator {
 
     @Composable
     override fun SessionScreen(
-        destinationLocation: Location,
+        destinationLocation: Location?,
         modifier: Modifier,
         onNavigateToCompletion: (sessionId: String) -> Unit,
     ) {

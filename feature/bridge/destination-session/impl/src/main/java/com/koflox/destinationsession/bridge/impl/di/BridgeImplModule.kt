@@ -13,6 +13,8 @@ val destinationSessionBridgeImplModule = module {
     factory<CyclingSessionUseCase> {
         CyclingSessionUseCaseImpl(
             activeSessionUseCase = get(),
+            createSessionUseCase = get(),
+            sessionServiceController = get(),
         )
     }
 }

@@ -81,8 +81,8 @@ class CreateSessionUseCaseImplTest {
 
         assertEquals(DESTINATION_ID, sessionSlot.captured.destinationId)
         assertEquals(DESTINATION_NAME, sessionSlot.captured.destinationName)
-        assertEquals(DESTINATION_LAT, sessionSlot.captured.destinationLatitude, 0.0)
-        assertEquals(DESTINATION_LONG, sessionSlot.captured.destinationLongitude, 0.0)
+        assertEquals(DESTINATION_LAT, sessionSlot.captured.destinationLatitude!!, 0.0)
+        assertEquals(DESTINATION_LONG, sessionSlot.captured.destinationLongitude!!, 0.0)
     }
 
     @Test

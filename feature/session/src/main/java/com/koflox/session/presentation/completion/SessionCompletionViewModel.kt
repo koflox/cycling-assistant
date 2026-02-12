@@ -76,7 +76,7 @@ internal class SessionCompletionViewModel(
         updateContent { it.copy(overlay = null) }
     }
 
-    private suspend fun shareImage(bitmap: Bitmap, destinationName: String) {
+    private suspend fun shareImage(bitmap: Bitmap, destinationName: String?) {
         updateContent { it.copy(overlay = Overlay.Sharing(buildSharePreviewData(it))) }
         val result = imageSharer.shareImage(bitmap, destinationName)
         updateContent { content ->

@@ -3,10 +3,12 @@ package com.koflox.destinations.presentation.destinations
 import android.net.Uri
 import com.google.android.gms.maps.model.LatLng
 import com.koflox.destinations.domain.model.DistanceBounds
+import com.koflox.destinations.domain.model.RidingMode
 import com.koflox.destinations.presentation.destinations.model.DestinationUiModel
 import com.koflox.location.model.Location
 
-internal data class DestinationsUiState(
+internal data class RideMapUiState(
+    val ridingMode: RidingMode = RidingMode.FREE_ROAM,
     val isInitializing: Boolean = true,
     val isPreparingDestinations: Boolean = false,
     val areDestinationsReady: Boolean = false,
@@ -28,7 +30,11 @@ internal data class DestinationsUiState(
     val isActiveSessionChecked: Boolean = false,
     val nutritionSuggestionTimeMs: Long? = null,
     val isLocationDisabled: Boolean = false,
+    val isStartingFreeRoam: Boolean = false,
 ) {
+    val isFreeRoam: Boolean
+        get() = ridingMode == RidingMode.FREE_ROAM
+
     val areDistanceBoundsReady: Boolean
         get() = distanceBounds != null && !isCalculatingBounds
 
@@ -36,7 +42,10 @@ internal data class DestinationsUiState(
         get() = !isInitializing && isActiveSessionChecked && isPermissionGranted
 
     val isLocationRetryNeeded: Boolean
-        get() = isLocationDisabled && !areDestinationsReady && !isPreparingDestinations
+        get() = isLocationDisabled && !isSessionActive && userLocation == null
+
+    val isShowingLoadingOverlay: Boolean
+        get() = (isInitializing || isLoading || isStartingFreeRoam) && !isLocationRetryNeeded
 }
 
 internal sealed interface NavigationAction {

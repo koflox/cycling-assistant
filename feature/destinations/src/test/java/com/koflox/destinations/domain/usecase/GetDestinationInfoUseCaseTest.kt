@@ -1,6 +1,6 @@
 package com.koflox.destinations.domain.usecase
 
-import com.koflox.destinations.domain.repository.DestinationRepository
+import com.koflox.destinations.domain.repository.DestinationsRepository
 import com.koflox.destinations.testutil.createDestination
 import com.koflox.distance.DistanceCalculator
 import com.koflox.location.model.Location
@@ -27,7 +27,7 @@ class GetDestinationInfoUseCaseTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private val repository: DestinationRepository = mockk()
+    private val repository: DestinationsRepository = mockk()
     private val getNearbyDestinationsUseCase: GetNearbyDestinationsUseCase = mockk()
     private val distanceCalculator: DistanceCalculator = mockk()
     private val toleranceCalculator: ToleranceCalculator = mockk()

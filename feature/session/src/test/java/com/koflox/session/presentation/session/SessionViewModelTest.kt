@@ -499,8 +499,8 @@ class SessionViewModelTest {
         viewModel.uiState.test {
             awaitItem() // Idle
             val active = awaitItem() as SessionUiState.Active
-            assertEquals(DESTINATION_LATITUDE, active.destinationLocation.latitude, 0.0)
-            assertEquals(DESTINATION_LONGITUDE, active.destinationLocation.longitude, 0.0)
+            assertEquals(DESTINATION_LATITUDE, active.destinationLocation!!.latitude, 0.0)
+            assertEquals(DESTINATION_LONGITUDE, active.destinationLocation!!.longitude, 0.0)
         }
     }
 

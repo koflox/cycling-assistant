@@ -1,6 +1,6 @@
 package com.koflox.destinations.domain.usecase
 
-import com.koflox.destinations.domain.repository.DestinationRepository
+import com.koflox.destinations.domain.repository.UserLocationRepository
 import com.koflox.location.model.Location
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -18,7 +18,7 @@ class GetUserLocationUseCaseTest {
         private const val DEFAULT_LONG = 13.405
     }
 
-    private val repository: DestinationRepository = mockk()
+    private val repository: UserLocationRepository = mockk()
     private lateinit var useCase: GetUserLocationUseCaseImpl
 
     @Before

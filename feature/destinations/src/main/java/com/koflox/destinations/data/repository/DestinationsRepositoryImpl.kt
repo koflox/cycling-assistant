@@ -8,8 +8,7 @@ import com.koflox.destinations.data.source.local.DestinationFilesLocalDataSource
 import com.koflox.destinations.data.source.local.PoiLocalDataSource
 import com.koflox.destinations.domain.model.Destination
 import com.koflox.destinations.domain.model.DestinationLoadingEvent
-import com.koflox.destinations.domain.repository.DestinationRepository
-import com.koflox.location.geolocation.LocationDataSource
+import com.koflox.destinations.domain.repository.DestinationsRepository
 import com.koflox.location.model.Location
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
@@ -19,16 +18,15 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
-internal class DestinationRepositoryImpl(
+internal class DestinationsRepositoryImpl(
     private val dispatcherDefault: CoroutineDispatcher,
     private val poiLocalDataSource: PoiLocalDataSource,
     private val poiAssetDataSource: PoiAssetDataSource,
-    private val locationDataSource: LocationDataSource,
     private val destinationFilesLocalDataSource: DestinationFilesLocalDataSource,
     private val destinationFileResolver: DestinationFileResolver,
     private val mapper: DestinationMapper,
     private val mutex: Mutex,
-) : DestinationRepository {
+) : DestinationsRepository {
 
     override fun loadDestinationsForLocation(location: Location): Flow<DestinationLoadingEvent> =
         flow {
@@ -69,10 +67,4 @@ internal class DestinationRepositoryImpl(
             poiLocalDataSource.getDestinationById(id)?.let { mapper.toDomain(it) }
         }
     }
-
-    override suspend fun getUserLocation(): Result<Location> = withContext(dispatcherDefault) {
-        locationDataSource.getCurrentLocation()
-    }
-
-    override fun observeUserLocation(): Flow<Location> = locationDataSource.observeLocationUpdates()
 }
