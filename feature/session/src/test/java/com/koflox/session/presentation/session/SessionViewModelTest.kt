@@ -736,6 +736,44 @@ class SessionViewModelTest {
         }
     }
 
+    @Test
+    fun `free roam session has null destinationName and destinationLocation`() = runTest {
+        val session = createSession(
+            id = SESSION_ID,
+            destinationId = null,
+            destinationName = null,
+            destinationLatitude = null,
+            destinationLongitude = null,
+        )
+        activeSessionFlow.value = session
+
+        viewModel = createViewModel()
+
+        viewModel.uiState.test {
+            awaitItem() // Idle
+            val active = awaitItem() as SessionUiState.Active
+            assertNull(active.destinationName)
+            assertNull(active.destinationLocation)
+        }
+    }
+
+    @Test
+    fun `startSession with FreeRoam creates session and starts tracking`() = runTest {
+        coEvery { createSessionUseCase.create(any()) } returns Result.success(SESSION_ID)
+
+        viewModel = createViewModel()
+
+        viewModel.uiState.test {
+            awaitItem() // Idle
+
+            viewModel.startSession(CreateSessionParams.FreeRoam)
+            mainDispatcherRule.testDispatcher.scheduler.advanceUntilIdle()
+        }
+
+        coVerify { createSessionUseCase.create(CreateSessionParams.FreeRoam) }
+        verify { sessionServiceController.startSessionTracking() }
+    }
+
     private fun createTestParams() = CreateSessionParams.Destination(
         destinationId = DESTINATION_ID,
         destinationName = DESTINATION_NAME,
