@@ -15,6 +15,65 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
 
+      - name: Set up JDK
+        uses: actions/setup-java@v5
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v5
+        with:
+          gradle-version: "9.3.1"
+
+      - name: Restore Android build cache
+        uses: actions/cache/restore@v5
+        with:
+          path: |
+            ~/.android/build-cache
+            **/build/intermediates
+            **/build/generated
+            **/build/tmp
+          key: android-build-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', 'gradle/libs.versions.toml') }}
+          restore-keys: |
+            android-build-${{ runner.os }}-
+
+      - name: Run tests with coverage
+        run: gradle koverXmlReport --build-cache
+
+      - name: Extract coverage percentage
+        id: coverage
+        run: |
+          COVERED=$(grep -oP 'LINE.*?covered="\K[0-9]+' build/reports/kover/report.xml | tail -1)
+          MISSED=$(grep -oP 'LINE.*?missed="\K[0-9]+' build/reports/kover/report.xml | tail -1)
+          TOTAL=$((COVERED + MISSED))
+          if [ $TOTAL -gt 0 ]; then
+            PERCENT=$((COVERED * 100 / TOTAL))
+          else
+            PERCENT=0
+          fi
+          echo "Coverage: ${PERCENT}%"
+          echo "percentage=$PERCENT" >> $GITHUB_OUTPUT
+          if [ $PERCENT -ge 60 ]; then
+            echo "color=brightgreen" >> $GITHUB_OUTPUT
+          elif [ $PERCENT -ge 45 ]; then
+            echo "color=green" >> $GITHUB_OUTPUT
+          elif [ $PERCENT -ge 30 ]; then
+            echo "color=yellow" >> $GITHUB_OUTPUT
+          else
+            echo "color=red" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Update Coverage badge
+        uses: schneegans/dynamic-badges-action@v1.7.0
+        with:
+          auth: ${{ secrets.GIST_TOKEN }}
+          gistID: ${{ vars.COVERAGE_GIST_ID }}
+          filename: coverage.json
+          label: coverage
+          message: ${{ steps.coverage.outputs.percentage }}%
+          color: ${{ steps.coverage.outputs.color }}
+
       - name: Calculate stats
         id: stats
         run: |
