@@ -156,23 +156,11 @@ internal class SessionViewModel(
         }
     }
 
-    fun startSession(
-        destinationId: String,
-        destinationName: String,
-        destinationLatitude: Double,
-        destinationLongitude: Double,
-    ) {
+    fun startSession(params: CreateSessionParams) {
         viewModelScope.launch(dispatcherDefault) {
             val hasActiveSession = activeSessionUseCase.observeActiveSession().first() != null
             if (hasActiveSession) return@launch
-            createSessionUseCase.create(
-                CreateSessionParams(
-                    destinationId = destinationId,
-                    destinationName = destinationName,
-                    destinationLatitude = destinationLatitude,
-                    destinationLongitude = destinationLongitude,
-                ),
-            )
+            createSessionUseCase.create(params)
                 .onSuccess { sessionServiceController.startSessionTracking() }
                 .onFailure { showError(it) }
         }
@@ -226,13 +214,15 @@ internal class SessionViewModel(
     private fun updateUiFromSession(session: Session) {
         val formattedData = sessionUiMapper.toSessionUiModel(session)
         val currentOverlay = (_uiState.value as? SessionUiState.Active)?.overlay
+        val destinationLocation = if (session.destinationLatitude != null && session.destinationLongitude != null) {
+            Location(latitude = session.destinationLatitude, longitude = session.destinationLongitude)
+        } else {
+            null
+        }
         _uiState.value = SessionUiState.Active(
             sessionId = session.id,
             destinationName = session.destinationName,
-            destinationLocation = Location(
-                latitude = session.destinationLatitude,
-                longitude = session.destinationLongitude,
-            ),
+            destinationLocation = destinationLocation,
             status = session.status,
             elapsedTimeFormatted = formattedData.elapsedTimeFormatted,
             traveledDistanceFormatted = formattedData.traveledDistanceFormatted,

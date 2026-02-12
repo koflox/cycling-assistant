@@ -4,7 +4,7 @@ import com.google.android.gms.maps.model.LatLng
 
 data class SharePreviewData(
     val sessionId: String,
-    val destinationName: String,
+    val destinationName: String?,
     val startDateFormatted: String,
     val elapsedTimeFormatted: String,
     val movingTimeFormatted: String,

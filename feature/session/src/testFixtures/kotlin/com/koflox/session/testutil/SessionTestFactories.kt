@@ -13,10 +13,10 @@ import com.koflox.session.presentation.sessionslist.SessionListItemUiModel
 
 fun createSession(
     id: String = "",
-    destinationId: String = "",
-    destinationName: String = "",
-    destinationLatitude: Double = 0.0,
-    destinationLongitude: Double = 0.0,
+    destinationId: String? = "",
+    destinationName: String? = "",
+    destinationLatitude: Double? = 0.0,
+    destinationLongitude: Double? = 0.0,
     startLatitude: Double = 0.0,
     startLongitude: Double = 0.0,
     startTimeMs: Long = 0L,
@@ -71,10 +71,10 @@ fun createTrackPoint(
 
 fun createSessionEntity(
     id: String = "",
-    destinationId: String = "",
-    destinationName: String = "",
-    destinationLatitude: Double = 0.0,
-    destinationLongitude: Double = 0.0,
+    destinationId: String? = "",
+    destinationName: String? = "",
+    destinationLatitude: Double? = 0.0,
+    destinationLongitude: Double? = 0.0,
     startLatitude: Double = 0.0,
     startLongitude: Double = 0.0,
     startTimeMs: Long = 0L,
@@ -135,12 +135,14 @@ fun createSessionWithTrackPoints(
     trackPoints = trackPoints,
 )
 
-fun createCreateSessionParams(
+fun createFreeRoamSessionParams(): CreateSessionParams = CreateSessionParams.FreeRoam
+
+fun createDestinationSessionParams(
     destinationId: String = "",
     destinationName: String = "",
     destinationLatitude: Double = 0.0,
     destinationLongitude: Double = 0.0,
-) = CreateSessionParams(
+) = CreateSessionParams.Destination(
     destinationId = destinationId,
     destinationName = destinationName,
     destinationLatitude = destinationLatitude,
