@@ -4,7 +4,7 @@ import com.koflox.concurrent.DispatchersQualifier
 import com.koflox.destinations.data.mapper.DestinationMapper
 import com.koflox.destinations.data.mapper.DestinationMapperImpl
 import com.koflox.destinations.data.repository.DestinationsRepositoryImpl
-import com.koflox.destinations.data.repository.RidingModeRepositoryImpl
+import com.koflox.destinations.data.repository.RidePreferencesRepositoryImpl
 import com.koflox.destinations.data.repository.UserLocationRepositoryImpl
 import com.koflox.destinations.data.source.asset.DestinationFileResolver
 import com.koflox.destinations.data.source.asset.DestinationFileResolverImpl
@@ -17,7 +17,7 @@ import com.koflox.destinations.data.source.local.PoiLocalDataSourceImpl
 import com.koflox.destinations.data.source.local.RidingModeLocalDataSource
 import com.koflox.destinations.data.source.local.RidingModeLocalDataSourceImpl
 import com.koflox.destinations.domain.repository.DestinationsRepository
-import com.koflox.destinations.domain.repository.RidingModeRepository
+import com.koflox.destinations.domain.repository.RidePreferencesRepository
 import com.koflox.destinations.domain.repository.UserLocationRepository
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.sync.Mutex
@@ -86,8 +86,8 @@ private val repoModule = module {
             locationDataSource = get(),
         )
     }
-    single<RidingModeRepository> {
-        RidingModeRepositoryImpl(
+    single<RidePreferencesRepository> {
+        RidePreferencesRepositoryImpl(
             localDataSource = get(),
         )
     }

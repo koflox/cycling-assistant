@@ -24,22 +24,24 @@ import com.koflox.distance.DistanceCalculator
 import com.koflox.location.model.Location
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 internal class RideMapViewModel(
     private val checkLocationEnabledUseCase: CheckLocationEnabledUseCase,
-    getUserLocationUseCase: GetUserLocationUseCase,
-    observeUserLocationUseCase: ObserveUserLocationUseCase,
-    initializeDatabaseUseCase: InitializeDatabaseUseCase,
-    getDestinationInfoUseCase: GetDestinationInfoUseCase,
-    getDistanceBoundsUseCase: GetDistanceBoundsUseCase,
-    distanceCalculator: DistanceCalculator,
-    uiMapper: DestinationUiMapper,
-    toleranceCalculator: ToleranceCalculator,
+    private val getUserLocationUseCase: GetUserLocationUseCase,
+    private val observeUserLocationUseCase: ObserveUserLocationUseCase,
+    private val initializeDatabaseUseCase: InitializeDatabaseUseCase,
+    private val getDestinationInfoUseCase: GetDestinationInfoUseCase,
+    private val getDistanceBoundsUseCase: GetDistanceBoundsUseCase,
+    private val distanceCalculator: DistanceCalculator,
+    private val uiMapper: DestinationUiMapper,
+    private val toleranceCalculator: ToleranceCalculator,
     private val application: Application,
     private val cyclingSessionUseCase: CyclingSessionUseCase,
     private val observeNutritionBreakUseCase: ObserveNutritionBreakUseCase,
@@ -48,32 +50,39 @@ internal class RideMapViewModel(
     private val dispatcherDefault: CoroutineDispatcher,
 ) : AndroidViewModel(application) {
 
-    private val _uiState = MutableStateFlow(RideMapUiState())
-    val uiState: StateFlow<RideMapUiState> = _uiState.asStateFlow()
+    private val _internalState = MutableStateFlow(RideMapInternalState())
+
+    val uiState: StateFlow<RideMapUiState> = _internalState
+        .map { deriveUiState(it) }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, RideMapUiState.Loading)
 
     private var isScreenVisible = false
 
-    private val locationDelegate = LocationDelegate(
-        getUserLocationUseCase = getUserLocationUseCase,
-        observeUserLocationUseCase = observeUserLocationUseCase,
-        distanceCalculator = distanceCalculator,
-        uiState = _uiState,
-        scope = viewModelScope,
-        onLocationUpdated = ::onLocationUpdated,
-    )
+    private val locationDelegate by lazy {
+        LocationDelegate(
+            getUserLocationUseCase = getUserLocationUseCase,
+            observeUserLocationUseCase = observeUserLocationUseCase,
+            distanceCalculator = distanceCalculator,
+            uiState = _internalState,
+            scope = viewModelScope,
+            onLocationUpdated = ::onLocationUpdated,
+        )
+    }
 
-    private val destinationDelegate = DestinationDelegate(
-        initializeDatabaseUseCase = initializeDatabaseUseCase,
-        getDestinationInfoUseCase = getDestinationInfoUseCase,
-        getDistanceBoundsUseCase = getDistanceBoundsUseCase,
-        getUserLocationUseCase = getUserLocationUseCase,
-        distanceCalculator = distanceCalculator,
-        uiMapper = uiMapper,
-        toleranceCalculator = toleranceCalculator,
-        application = application,
-        uiState = _uiState,
-        scope = viewModelScope,
-    )
+    private val destinationDelegate by lazy {
+        DestinationDelegate(
+            initializeDatabaseUseCase = initializeDatabaseUseCase,
+            getDestinationInfoUseCase = getDestinationInfoUseCase,
+            getDistanceBoundsUseCase = getDistanceBoundsUseCase,
+            getUserLocationUseCase = getUserLocationUseCase,
+            distanceCalculator = distanceCalculator,
+            uiMapper = uiMapper,
+            toleranceCalculator = toleranceCalculator,
+            application = application,
+            uiState = _internalState,
+            scope = viewModelScope,
+        )
+    }
 
     init {
         initialize()
@@ -87,13 +96,13 @@ internal class RideMapViewModel(
 
     private fun initializeInternal() {
         viewModelScope.launch(dispatcherDefault) {
-            _uiState.update { it.copy(isInitializing = true) }
+            _internalState.update { it.copy(isInitializing = true) }
             val location = locationDelegate.fetchInitialLocation()
-            if (location != null && _uiState.value.ridingMode == RidingMode.DESTINATION) {
+            if (location != null && _internalState.value.ridingMode == RidingMode.DESTINATION) {
                 destinationDelegate.startDestinationLoading(location)
             }
             checkActiveSession()
-            _uiState.update { it.copy(isInitializing = false) }
+            _internalState.update { it.copy(isInitializing = false) }
             listenToActiveSession()
             observeNutritionEvents()
         }
@@ -102,7 +111,7 @@ internal class RideMapViewModel(
     private fun observeLocationEnabled() {
         viewModelScope.launch(dispatcherDefault) {
             checkLocationEnabledUseCase.observeLocationEnabled().collect { isEnabled ->
-                _uiState.update { it.copy(isLocationDisabled = !isEnabled) }
+                _internalState.update { it.copy(isLocationDisabled = !isEnabled) }
             }
         }
     }
@@ -110,7 +119,7 @@ internal class RideMapViewModel(
     private fun observeRidingMode() {
         viewModelScope.launch(dispatcherDefault) {
             observeRidingModeUseCase.observe().collect { mode ->
-                _uiState.update { it.copy(ridingMode = mode) }
+                _internalState.update { it.copy(ridingMode = mode) }
             }
         }
     }
@@ -118,7 +127,7 @@ internal class RideMapViewModel(
     private suspend fun checkActiveSession() {
         val isActive = cyclingSessionUseCase.observeHasActiveSession().first()
         val activeDestination = if (isActive) cyclingSessionUseCase.getActiveSessionDestination() else null
-        _uiState.update {
+        _internalState.update {
             it.copy(
                 isActiveSessionChecked = true,
                 isSessionActive = isActive,
@@ -130,7 +139,18 @@ internal class RideMapViewModel(
     private fun listenToActiveSession() {
         viewModelScope.launch(dispatcherDefault) {
             cyclingSessionUseCase.observeHasActiveSession().collect { isActive ->
-                _uiState.update { it.copy(isSessionActive = isActive) }
+                _internalState.update {
+                    if (isActive) {
+                        it.copy(isSessionActive = true)
+                    } else {
+                        it.copy(
+                            isSessionActive = false,
+                            selectedDestination = null,
+                            curvePoints = emptyList(),
+                            showSelectedMarkerOptionsDialog = false,
+                        )
+                    }
+                }
             }
         }
     }
@@ -187,22 +207,24 @@ internal class RideMapViewModel(
 
     private fun handleCommonEvent(event: RideMapUiEvent.CommonEvent) {
         when (event) {
-            RideMapUiEvent.CommonEvent.ErrorDismissed -> _uiState.update { it.copy(error = null) }
-            RideMapUiEvent.CommonEvent.NavigationActionHandled -> _uiState.update { it.copy(navigationAction = null) }
-            RideMapUiEvent.CommonEvent.NutritionPopupDismissed -> _uiState.update { it.copy(nutritionSuggestionTimeMs = null) }
+            RideMapUiEvent.CommonEvent.ErrorDismissed -> _internalState.update { it.copy(error = null) }
+            RideMapUiEvent.CommonEvent.NavigationActionHandled -> _internalState.update { it.copy(navigationAction = null) }
+            RideMapUiEvent.CommonEvent.NutritionPopupDismissed -> _internalState.update {
+                it.copy(nutritionSuggestionTimeMs = null)
+            }
         }
     }
 
     private suspend fun onModeSelected(mode: RidingMode) {
         updateRidingModeUseCase.update(mode)
-        val location = _uiState.value.userLocation
-        if (mode == RidingMode.DESTINATION && location != null && !_uiState.value.areDestinationsReady) {
+        val location = _internalState.value.userLocation
+        if (mode == RidingMode.DESTINATION && location != null && !_internalState.value.areDestinationsReady) {
             destinationDelegate.startDestinationLoading(location)
         }
     }
 
     private fun onPermissionGranted() {
-        _uiState.update { it.copy(isPermissionGranted = true) }
+        _internalState.update { it.copy(isPermissionGranted = true) }
         fetchInitialLocationAndStartLoading()
         if (isScreenVisible) {
             locationDelegate.startLocationObservation()
@@ -212,19 +234,19 @@ internal class RideMapViewModel(
     private fun fetchInitialLocationAndStartLoading() {
         viewModelScope.launch(dispatcherDefault) {
             val location = locationDelegate.fetchInitialLocation()
-            if (location != null && _uiState.value.ridingMode == RidingMode.DESTINATION) {
+            if (location != null && _internalState.value.ridingMode == RidingMode.DESTINATION) {
                 destinationDelegate.checkAndReloadDestinationsIfNeeded(location)
             }
         }
     }
 
     private fun onPermissionDenied() {
-        _uiState.update { it.copy(error = application.getString(R.string.error_location_permission_denied)) }
+        _internalState.update { it.copy(error = application.getString(R.string.error_location_permission_denied)) }
     }
 
     private fun onScreenResumed() {
         isScreenVisible = true
-        if (_uiState.value.isPermissionGranted) {
+        if (_internalState.value.isPermissionGranted) {
             locationDelegate.startLocationObservation()
         }
     }
@@ -235,7 +257,7 @@ internal class RideMapViewModel(
     }
 
     private fun onLocationUpdated(newLocation: Location) {
-        if (_uiState.value.ridingMode == RidingMode.DESTINATION) {
+        if (_internalState.value.ridingMode == RidingMode.DESTINATION) {
             destinationDelegate.updateCurvePointsForLocation(newLocation)
             destinationDelegate.checkAndReloadDestinationsIfNeeded(newLocation)
             viewModelScope.launch(dispatcherDefault) {
@@ -245,10 +267,10 @@ internal class RideMapViewModel(
     }
 
     private suspend fun startFreeRoamSession() {
-        _uiState.update { it.copy(isStartingFreeRoam = true) }
+        _internalState.update { it.copy(isStartingFreeRoam = true) }
         cyclingSessionUseCase.startFreeRoamSession()
             .onFailure {
-                _uiState.update {
+                _internalState.update {
                     it.copy(
                         isStartingFreeRoam = false,
                         error = application.getString(R.string.error_not_handled),
@@ -256,7 +278,7 @@ internal class RideMapViewModel(
                 }
             }
             .onSuccess {
-                _uiState.update { it.copy(isStartingFreeRoam = false) }
+                _internalState.update { it.copy(isStartingFreeRoam = false) }
             }
     }
 
@@ -265,13 +287,51 @@ internal class RideMapViewModel(
             observeNutritionBreakUseCase.observeNutritionBreakEvents().collect { event ->
                 when (event) {
                     is NutritionBreakEvent.BreakRequired -> {
-                        _uiState.update { it.copy(nutritionSuggestionTimeMs = event.suggestionTimeMs) }
+                        _internalState.update { it.copy(nutritionSuggestionTimeMs = event.suggestionTimeMs) }
                     }
                     NutritionBreakEvent.ChecksStopped -> {
-                        _uiState.update { it.copy(nutritionSuggestionTimeMs = null) }
+                        _internalState.update { it.copy(nutritionSuggestionTimeMs = null) }
                     }
                 }
             }
         }
+    }
+
+    private fun deriveUiState(state: RideMapInternalState): RideMapUiState = when {
+        state.isLocationRetryNeeded -> RideMapUiState.LocationDisabled
+        state.isSessionActive && state.isReady -> RideMapUiState.ActiveSession(
+            userLocation = state.userLocation,
+            cameraFocusLocation = state.cameraFocusLocation,
+            selectedDestination = if (state.isFreeRoam) null else state.selectedDestination,
+            curvePoints = if (state.isFreeRoam) emptyList() else state.curvePoints,
+            showSelectedMarkerOptionsDialog = if (state.isFreeRoam) false else state.showSelectedMarkerOptionsDialog,
+            error = state.error,
+            navigationAction = state.navigationAction,
+            nutritionSuggestionTimeMs = state.nutritionSuggestionTimeMs,
+        )
+        state.isReady && state.isFreeRoam -> RideMapUiState.FreeRoamIdle(
+            userLocation = state.userLocation,
+            cameraFocusLocation = state.cameraFocusLocation,
+            isStartingFreeRoam = state.isStartingFreeRoam,
+            error = state.error,
+        )
+        state.isReady -> RideMapUiState.DestinationIdle(
+            userLocation = state.userLocation,
+            cameraFocusLocation = state.cameraFocusLocation,
+            selectedDestination = state.selectedDestination,
+            otherValidDestinations = state.otherValidDestinations,
+            curvePoints = state.curvePoints,
+            routeDistanceKm = state.routeDistanceKm,
+            toleranceKm = state.toleranceKm,
+            distanceBounds = state.distanceBounds,
+            isPreparingDestinations = state.isPreparingDestinations,
+            isCalculatingBounds = state.isCalculatingBounds,
+            areDistanceBoundsReady = state.areDistanceBoundsReady,
+            isLoading = state.isLoading,
+            showSelectedMarkerOptionsDialog = state.showSelectedMarkerOptionsDialog,
+            error = state.error,
+            navigationAction = state.navigationAction,
+        )
+        else -> RideMapUiState.Loading
     }
 }

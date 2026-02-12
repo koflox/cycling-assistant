@@ -2,7 +2,7 @@ package com.koflox.destinations.presentation.destinations.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
@@ -24,7 +24,7 @@ internal fun RidingModeToggle(
     modifier: Modifier = Modifier,
 ) {
     val shape = RoundedCornerShape(CornerRadius.Medium)
-    Row(
+    Column(
         modifier = modifier
             .clip(shape)
             .background(MaterialTheme.colorScheme.surface.copy(alpha = SurfaceAlpha.Standard)),

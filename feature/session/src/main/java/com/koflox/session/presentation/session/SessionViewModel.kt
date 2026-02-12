@@ -156,23 +156,11 @@ internal class SessionViewModel(
         }
     }
 
-    fun startSession(
-        destinationId: String? = null,
-        destinationName: String? = null,
-        destinationLatitude: Double? = null,
-        destinationLongitude: Double? = null,
-    ) {
+    fun startSession(params: CreateSessionParams) {
         viewModelScope.launch(dispatcherDefault) {
             val hasActiveSession = activeSessionUseCase.observeActiveSession().first() != null
             if (hasActiveSession) return@launch
-            createSessionUseCase.create(
-                CreateSessionParams(
-                    destinationId = destinationId,
-                    destinationName = destinationName,
-                    destinationLatitude = destinationLatitude,
-                    destinationLongitude = destinationLongitude,
-                ),
-            )
+            createSessionUseCase.create(params)
                 .onSuccess { sessionServiceController.startSessionTracking() }
                 .onFailure { showError(it) }
         }

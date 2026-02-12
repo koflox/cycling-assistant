@@ -14,7 +14,7 @@ import com.koflox.destinations.domain.usecase.InitializeDatabaseUseCase
 import com.koflox.destinations.domain.usecase.NoSuitableDestinationException
 import com.koflox.destinations.domain.usecase.ToleranceCalculator
 import com.koflox.destinations.presentation.destinations.NavigationAction
-import com.koflox.destinations.presentation.destinations.RideMapUiState
+import com.koflox.destinations.presentation.destinations.RideMapInternalState
 import com.koflox.destinations.presentation.destinations.model.DestinationUiModel
 import com.koflox.destinations.presentation.mapper.DestinationUiMapper
 import com.koflox.distance.DistanceCalculator
@@ -37,7 +37,7 @@ internal class DestinationDelegate(
     private val uiMapper: DestinationUiMapper,
     private val toleranceCalculator: ToleranceCalculator,
     private val application: Application,
-    private val uiState: MutableStateFlow<RideMapUiState>,
+    private val uiState: MutableStateFlow<RideMapInternalState>,
     private val scope: CoroutineScope,
 ) {
 

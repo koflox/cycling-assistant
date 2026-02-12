@@ -2,7 +2,7 @@ package com.koflox.destinations.presentation.destinations.delegate
 
 import com.koflox.destinations.domain.usecase.GetUserLocationUseCase
 import com.koflox.destinations.domain.usecase.ObserveUserLocationUseCase
-import com.koflox.destinations.presentation.destinations.RideMapUiState
+import com.koflox.destinations.presentation.destinations.RideMapInternalState
 import com.koflox.distance.DistanceCalculator
 import com.koflox.location.model.Location
 import kotlinx.coroutines.CoroutineScope
@@ -15,7 +15,7 @@ internal class LocationDelegate(
     private val getUserLocationUseCase: GetUserLocationUseCase,
     private val observeUserLocationUseCase: ObserveUserLocationUseCase,
     private val distanceCalculator: DistanceCalculator,
-    private val uiState: MutableStateFlow<RideMapUiState>,
+    private val uiState: MutableStateFlow<RideMapInternalState>,
     private val scope: CoroutineScope,
     private val onLocationUpdated: (Location) -> Unit,
 ) {

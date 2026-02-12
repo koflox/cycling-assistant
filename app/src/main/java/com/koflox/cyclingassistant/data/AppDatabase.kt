@@ -1,6 +1,5 @@
 package com.koflox.cyclingassistant.data
 
-import androidx.room.AutoMigration
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import com.koflox.destinations.data.source.local.database.dao.DestinationDao
@@ -16,8 +15,7 @@ import com.koflox.session.data.source.local.entity.TrackPointEntity
         SessionEntity::class,
         TrackPointEntity::class,
     ],
-    version = 2,
-    autoMigrations = [AutoMigration(from = 1, to = 2)],
+    version = 1,
     exportSchema = true,
 )
 abstract class AppDatabase : RoomDatabase() {

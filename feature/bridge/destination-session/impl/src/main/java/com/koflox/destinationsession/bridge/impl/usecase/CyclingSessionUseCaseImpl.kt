@@ -26,7 +26,7 @@ internal class CyclingSessionUseCaseImpl(
     }
 
     override suspend fun startFreeRoamSession(): Result<Unit> = suspendRunCatching {
-        createSessionUseCase.create(CreateSessionParams())
+        createSessionUseCase.create(CreateSessionParams.FreeRoam)
             .onSuccess { sessionServiceController.startSessionTracking() }
             .getOrThrow()
         Unit

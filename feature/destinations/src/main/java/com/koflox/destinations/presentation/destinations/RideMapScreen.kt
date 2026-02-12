@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.widget.Toast
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -24,6 +25,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.koflox.designsystem.theme.Spacing
 import com.koflox.destinationnutrition.bridge.navigator.NutritionUiNavigator
 import com.koflox.destinations.R
+import com.koflox.destinations.domain.model.RidingMode
 import com.koflox.destinations.presentation.destinations.components.GoogleMapView
 import com.koflox.destinations.presentation.destinations.components.LetsGoButton
 import com.koflox.destinations.presentation.destinations.components.LoadingOverlay
@@ -32,6 +34,7 @@ import com.koflox.destinations.presentation.destinations.components.RidingModeTo
 import com.koflox.destinations.presentation.destinations.components.RouteSlider
 import com.koflox.destinations.presentation.destinations.components.StartRideButton
 import com.koflox.destinations.presentation.destinations.components.StatusCard
+import com.koflox.destinations.presentation.destinations.model.DestinationUiModel
 import com.koflox.destinations.presentation.permission.LocationPermissionHandler
 import com.koflox.destinationsession.bridge.navigator.CyclingSessionUiNavigator
 import com.koflox.location.settings.LocationSettingsHandler
@@ -115,85 +118,120 @@ private fun NavigationEffect(action: NavigationAction?, context: Context, viewMo
 
 @Composable
 private fun RideMapContent(
+    uiState: RideMapUiState,
+    viewModel: RideMapViewModel,
+    sessionUiNavigator: CyclingSessionUiNavigator,
+    nutritionUiNavigator: NutritionUiNavigator,
+    onNavigateToSessionCompletion: (sessionId: String) -> Unit,
     modifier: Modifier = Modifier,
+) {
+    Box(modifier = modifier.fillMaxSize()) {
+        GoogleMapView(
+            modifier = Modifier.fillMaxSize(),
+            selectedDestination = uiState.selectedDestination,
+            otherDestinations = (uiState as? RideMapUiState.DestinationIdle)?.otherValidDestinations ?: emptyList(),
+            userLocation = uiState.userLocation,
+            cameraFocusLocation = uiState.cameraFocusLocation,
+            curvePoints = uiState.curvePoints,
+            isSessionActive = uiState is RideMapUiState.ActiveSession,
+            onSelectedMarkerInfoClick = { viewModel.onEvent(RideMapUiEvent.DestinationEvent.SelectedMarkerInfoClicked) },
+        )
+        RideMapOverlay(uiState, viewModel, sessionUiNavigator, nutritionUiNavigator, onNavigateToSessionCompletion)
+    }
+    when (uiState) {
+        is RideMapUiState.DestinationIdle -> DestinationOptionsDialog(
+            showDialog = uiState.showSelectedMarkerOptionsDialog,
+            selectedDestination = uiState.selectedDestination,
+            viewModel = viewModel,
+            sessionUiNavigator = sessionUiNavigator,
+        )
+        is RideMapUiState.ActiveSession -> DestinationOptionsDialog(
+            showDialog = uiState.showSelectedMarkerOptionsDialog,
+            selectedDestination = uiState.selectedDestination,
+            viewModel = viewModel,
+            sessionUiNavigator = sessionUiNavigator,
+        )
+        else -> Unit
+    }
+}
+
+@Composable
+private fun BoxScope.RideMapOverlay(
     uiState: RideMapUiState,
     viewModel: RideMapViewModel,
     sessionUiNavigator: CyclingSessionUiNavigator,
     nutritionUiNavigator: NutritionUiNavigator,
     onNavigateToSessionCompletion: (sessionId: String) -> Unit,
 ) {
-    Box(modifier = modifier.fillMaxSize()) {
-        GoogleMapView(
-            modifier = Modifier.fillMaxSize(),
-            selectedDestination = uiState.selectedDestination,
-            otherDestinations = if (uiState.isSessionActive) emptyList() else uiState.otherValidDestinations,
-            userLocation = uiState.userLocation,
-            cameraFocusLocation = uiState.cameraFocusLocation,
-            curvePoints = uiState.curvePoints,
-            isSessionActive = uiState.isSessionActive,
-            onSelectedMarkerInfoClick = { viewModel.onEvent(RideMapUiEvent.DestinationEvent.SelectedMarkerInfoClicked) },
+    when (uiState) {
+        RideMapUiState.Loading -> LoadingOverlay()
+        RideMapUiState.LocationDisabled -> LocationRetryOverlay(
+            viewModel = viewModel,
+            modifier = Modifier.align(Alignment.BottomCenter).padding(Spacing.Large),
         )
-        if (uiState.isReady) {
-            if (uiState.isSessionActive) {
-                ActiveSessionControls(
-                    uiState = uiState,
-                    viewModel = viewModel,
-                    sessionUiNavigator = sessionUiNavigator,
-                    nutritionUiNavigator = nutritionUiNavigator,
-                    onNavigateToSessionCompletion = onNavigateToSessionCompletion,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .align(Alignment.BottomCenter),
-                )
-            } else if (!uiState.isLocationRetryNeeded) {
-                InactiveSessionControls(
-                    uiState = uiState,
-                    viewModel = viewModel,
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .padding(Spacing.Large),
-                )
-            }
-        }
-        if (!uiState.isSessionActive && uiState.isReady && !uiState.isLocationRetryNeeded) {
-            RidingModeToggle(
-                selectedMode = uiState.ridingMode,
-                onModeSelected = { viewModel.onEvent(RideMapUiEvent.ModeEvent.ModeSelected(it)) },
-                modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .padding(Spacing.Large),
-            )
-        }
-        if (uiState.isShowingLoadingOverlay) {
-            LoadingOverlay()
-        }
-        if (uiState.isLocationRetryNeeded) {
-            LocationRetryOverlay(
-                viewModel = viewModel,
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(Spacing.Large),
-            )
-        }
+        is RideMapUiState.FreeRoamIdle -> IdleOverlay(uiState, viewModel)
+        is RideMapUiState.DestinationIdle -> IdleOverlay(uiState, viewModel)
+        is RideMapUiState.ActiveSession -> ActiveSessionControls(
+            uiState = uiState,
+            viewModel = viewModel,
+            sessionUiNavigator = sessionUiNavigator,
+            nutritionUiNavigator = nutritionUiNavigator,
+            onNavigateToSessionCompletion = onNavigateToSessionCompletion,
+            modifier = Modifier.fillMaxWidth().align(Alignment.BottomCenter),
+        )
     }
-    DestinationOptionsDialog(uiState, viewModel, sessionUiNavigator)
+}
+
+@Composable
+private fun BoxScope.IdleOverlay(uiState: RideMapUiState.FreeRoamIdle, viewModel: RideMapViewModel) {
+    FreeRoamControls(
+        uiState = uiState,
+        viewModel = viewModel,
+        modifier = Modifier.align(Alignment.BottomCenter).padding(Spacing.Large),
+    )
+    RidingModeToggle(
+        selectedMode = RidingMode.FREE_ROAM,
+        onModeSelected = { viewModel.onEvent(RideMapUiEvent.ModeEvent.ModeSelected(it)) },
+        modifier = Modifier.align(Alignment.BottomStart).padding(Spacing.Large),
+    )
+    if (uiState.isStartingFreeRoam) {
+        LoadingOverlay()
+    }
+}
+
+@Composable
+private fun BoxScope.IdleOverlay(uiState: RideMapUiState.DestinationIdle, viewModel: RideMapViewModel) {
+    DestinationSelectionControls(
+        uiState = uiState,
+        viewModel = viewModel,
+        modifier = Modifier.align(Alignment.BottomCenter).padding(Spacing.Large),
+    )
+    RidingModeToggle(
+        selectedMode = RidingMode.DESTINATION,
+        onModeSelected = { viewModel.onEvent(RideMapUiEvent.ModeEvent.ModeSelected(it)) },
+        modifier = Modifier.align(Alignment.BottomStart).padding(Spacing.Large),
+    )
+    if (uiState.isLoading) {
+        LoadingOverlay()
+    }
 }
 
 @Composable
 private fun DestinationOptionsDialog(
-    uiState: RideMapUiState,
+    showDialog: Boolean,
+    selectedDestination: DestinationUiModel?,
     viewModel: RideMapViewModel,
     sessionUiNavigator: CyclingSessionUiNavigator,
 ) {
-    if (uiState.showSelectedMarkerOptionsDialog && uiState.selectedDestination != null && uiState.userLocation != null) {
+    if (showDialog && selectedDestination != null) {
         sessionUiNavigator.DestinationOptions(
-            destinationId = uiState.selectedDestination.id,
-            destinationName = uiState.selectedDestination.title,
-            destinationLocation = uiState.selectedDestination.location,
-            distanceKm = uiState.selectedDestination.distanceKm,
+            destinationId = selectedDestination.id,
+            destinationName = selectedDestination.title,
+            destinationLocation = selectedDestination.location,
+            distanceKm = selectedDestination.distanceKm,
             onNavigateClick = {
                 viewModel.onEvent(RideMapUiEvent.DestinationEvent.SelectedMarkerOptionsDialogDismissed)
-                viewModel.onEvent(RideMapUiEvent.DestinationEvent.OpenInGoogleMaps(uiState.selectedDestination))
+                viewModel.onEvent(RideMapUiEvent.DestinationEvent.OpenInGoogleMaps(selectedDestination))
             },
             onDismiss = { viewModel.onEvent(RideMapUiEvent.DestinationEvent.SelectedMarkerOptionsDialogDismissed) },
         )
@@ -202,7 +240,7 @@ private fun DestinationOptionsDialog(
 
 @Composable
 private fun ActiveSessionControls(
-    uiState: RideMapUiState,
+    uiState: RideMapUiState.ActiveSession,
     viewModel: RideMapViewModel,
     sessionUiNavigator: CyclingSessionUiNavigator,
     nutritionUiNavigator: NutritionUiNavigator,
@@ -232,29 +270,8 @@ private fun ActiveSessionControls(
 }
 
 @Composable
-private fun InactiveSessionControls(
-    uiState: RideMapUiState,
-    viewModel: RideMapViewModel,
-    modifier: Modifier = Modifier,
-) {
-    if (uiState.isFreeRoam) {
-        FreeRoamControls(
-            uiState = uiState,
-            viewModel = viewModel,
-            modifier = modifier,
-        )
-    } else {
-        DestinationSelectionControls(
-            uiState = uiState,
-            viewModel = viewModel,
-            modifier = modifier,
-        )
-    }
-}
-
-@Composable
 private fun FreeRoamControls(
-    uiState: RideMapUiState,
+    uiState: RideMapUiState.FreeRoamIdle,
     viewModel: RideMapViewModel,
     modifier: Modifier = Modifier,
 ) {
@@ -273,14 +290,14 @@ private fun FreeRoamControls(
     }
     StartRideButton(
         onClick = { shouldCheckLocation = true },
-        enabled = !uiState.isStartingFreeRoam && uiState.isPermissionGranted,
+        enabled = !uiState.isStartingFreeRoam,
         modifier = modifier,
     )
 }
 
 @Composable
 private fun DestinationSelectionControls(
-    uiState: RideMapUiState,
+    uiState: RideMapUiState.DestinationIdle,
     viewModel: RideMapViewModel,
     modifier: Modifier = Modifier,
 ) {
@@ -328,7 +345,7 @@ private fun DestinationSelectionControls(
         }
         LetsGoButton(
             onClick = { shouldCheckLocation = true },
-            enabled = !uiState.isLoading && uiState.isPermissionGranted && uiState.areDistanceBoundsReady,
+            enabled = !uiState.isLoading && uiState.areDistanceBoundsReady,
         )
     }
 }

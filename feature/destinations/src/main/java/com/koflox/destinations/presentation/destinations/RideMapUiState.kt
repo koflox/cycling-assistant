@@ -3,51 +3,94 @@ package com.koflox.destinations.presentation.destinations
 import android.net.Uri
 import com.google.android.gms.maps.model.LatLng
 import com.koflox.destinations.domain.model.DistanceBounds
-import com.koflox.destinations.domain.model.RidingMode
 import com.koflox.destinations.presentation.destinations.model.DestinationUiModel
 import com.koflox.location.model.Location
 
-internal data class RideMapUiState(
-    val ridingMode: RidingMode = RidingMode.FREE_ROAM,
-    val isInitializing: Boolean = true,
-    val isPreparingDestinations: Boolean = false,
-    val areDestinationsReady: Boolean = false,
-    val isLoading: Boolean = false,
-    val selectedDestination: DestinationUiModel? = null,
-    val otherValidDestinations: List<DestinationUiModel> = emptyList(),
-    val userLocation: Location? = null,
-    val cameraFocusLocation: Location? = null,
-    val curvePoints: List<LatLng> = emptyList(),
-    val routeDistanceKm: Double = 0.0,
-    val toleranceKm: Double = 0.0,
-    val distanceBounds: DistanceBounds? = null,
-    val isCalculatingBounds: Boolean = false,
-    val error: String? = null,
-    val isPermissionGranted: Boolean = false,
-    val navigationAction: NavigationAction? = null,
-    val showSelectedMarkerOptionsDialog: Boolean = false,
-    val isSessionActive: Boolean = false,
-    val isActiveSessionChecked: Boolean = false,
-    val nutritionSuggestionTimeMs: Long? = null,
-    val isLocationDisabled: Boolean = false,
-    val isStartingFreeRoam: Boolean = false,
-) {
-    val isFreeRoam: Boolean
-        get() = ridingMode == RidingMode.FREE_ROAM
+internal sealed interface RideMapUiState {
+    data object Loading : RideMapUiState
+    data object LocationDisabled : RideMapUiState
+    data class FreeRoamIdle(
+        val userLocation: Location?,
+        val cameraFocusLocation: Location?,
+        val isStartingFreeRoam: Boolean,
+        val error: String?,
+    ) : RideMapUiState
 
-    val areDistanceBoundsReady: Boolean
-        get() = distanceBounds != null && !isCalculatingBounds
+    data class DestinationIdle(
+        val userLocation: Location?,
+        val cameraFocusLocation: Location?,
+        val selectedDestination: DestinationUiModel?,
+        val otherValidDestinations: List<DestinationUiModel>,
+        val curvePoints: List<LatLng>,
+        val routeDistanceKm: Double,
+        val toleranceKm: Double,
+        val distanceBounds: DistanceBounds?,
+        val isPreparingDestinations: Boolean,
+        val isCalculatingBounds: Boolean,
+        val areDistanceBoundsReady: Boolean,
+        val isLoading: Boolean,
+        val showSelectedMarkerOptionsDialog: Boolean,
+        val error: String?,
+        val navigationAction: NavigationAction?,
+    ) : RideMapUiState
 
-    val isReady: Boolean
-        get() = !isInitializing && isActiveSessionChecked && isPermissionGranted
-
-    val isLocationRetryNeeded: Boolean
-        get() = isLocationDisabled && !isSessionActive && userLocation == null
-
-    val isShowingLoadingOverlay: Boolean
-        get() = (isInitializing || isLoading || isStartingFreeRoam) && !isLocationRetryNeeded
+    data class ActiveSession(
+        val userLocation: Location?,
+        val cameraFocusLocation: Location?,
+        val selectedDestination: DestinationUiModel?,
+        val curvePoints: List<LatLng>,
+        val showSelectedMarkerOptionsDialog: Boolean,
+        val error: String?,
+        val navigationAction: NavigationAction?,
+        val nutritionSuggestionTimeMs: Long?,
+    ) : RideMapUiState
 }
 
 internal sealed interface NavigationAction {
     data class OpenGoogleMaps(val uri: Uri) : NavigationAction
 }
+
+internal val RideMapUiState.error: String?
+    get() = when (this) {
+        is RideMapUiState.FreeRoamIdle -> error
+        is RideMapUiState.DestinationIdle -> error
+        is RideMapUiState.ActiveSession -> error
+        RideMapUiState.Loading, RideMapUiState.LocationDisabled -> null
+    }
+
+internal val RideMapUiState.navigationAction: NavigationAction?
+    get() = when (this) {
+        is RideMapUiState.DestinationIdle -> navigationAction
+        is RideMapUiState.ActiveSession -> navigationAction
+        else -> null
+    }
+
+internal val RideMapUiState.userLocation: Location?
+    get() = when (this) {
+        is RideMapUiState.FreeRoamIdle -> userLocation
+        is RideMapUiState.DestinationIdle -> userLocation
+        is RideMapUiState.ActiveSession -> userLocation
+        RideMapUiState.Loading, RideMapUiState.LocationDisabled -> null
+    }
+
+internal val RideMapUiState.cameraFocusLocation: Location?
+    get() = when (this) {
+        is RideMapUiState.FreeRoamIdle -> cameraFocusLocation
+        is RideMapUiState.DestinationIdle -> cameraFocusLocation
+        is RideMapUiState.ActiveSession -> cameraFocusLocation
+        RideMapUiState.Loading, RideMapUiState.LocationDisabled -> null
+    }
+
+internal val RideMapUiState.selectedDestination: DestinationUiModel?
+    get() = when (this) {
+        is RideMapUiState.DestinationIdle -> selectedDestination
+        is RideMapUiState.ActiveSession -> selectedDestination
+        else -> null
+    }
+
+internal val RideMapUiState.curvePoints: List<LatLng>
+    get() = when (this) {
+        is RideMapUiState.DestinationIdle -> curvePoints
+        is RideMapUiState.ActiveSession -> curvePoints
+        else -> emptyList()
+    }

@@ -1,7 +1,7 @@
 package com.koflox.destinations.domain.usecase
 
 import com.koflox.destinations.domain.model.RidingMode
-import com.koflox.destinations.domain.repository.RidingModeRepository
+import com.koflox.destinations.domain.repository.RidePreferencesRepository
 import kotlinx.coroutines.flow.Flow
 
 internal interface ObserveRidingModeUseCase {
@@ -9,7 +9,7 @@ internal interface ObserveRidingModeUseCase {
 }
 
 internal class ObserveRidingModeUseCaseImpl(
-    private val repository: RidingModeRepository,
+    private val repository: RidePreferencesRepository,
 ) : ObserveRidingModeUseCase {
     override fun observe(): Flow<RidingMode> = repository.observeRidingMode()
 }
