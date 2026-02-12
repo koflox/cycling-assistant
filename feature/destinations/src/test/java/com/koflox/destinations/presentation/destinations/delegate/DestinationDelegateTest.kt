@@ -101,8 +101,6 @@ class DestinationDelegateTest {
         scope = testScope,
     )
 
-    // startDestinationLoading tests
-
     @Test
     fun `startDestinationLoading sets isPreparingDestinations on loading event`() = runTest {
         every { initializeDatabaseUseCase.init(any()) } returns flowOf(DestinationLoadingEvent.Loading)
@@ -143,8 +141,6 @@ class DestinationDelegateTest {
         assertNotNull(uiState.value.error)
         assertFalse(uiState.value.isPreparingDestinations)
     }
-
-    // calculateDistanceBounds tests
 
     @Test
     fun `calculateDistanceBounds updates bounds on success`() = runTest {
@@ -197,8 +193,6 @@ class DestinationDelegateTest {
 
         assertFalse(uiState.value.isCalculatingBounds)
     }
-
-    // findDestination tests
 
     @Test
     fun `findDestination selects random destination on success`() = runTest {
@@ -263,8 +257,6 @@ class DestinationDelegateTest {
         assertNotNull(uiState.value.error)
     }
 
-    // updateRouteDistance tests
-
     @Test
     fun `updateRouteDistance updates state`() = runTest {
         delegate.updateRouteDistance(ROUTE_DISTANCE_KM)
@@ -272,8 +264,6 @@ class DestinationDelegateTest {
         assertEquals(ROUTE_DISTANCE_KM, uiState.value.routeDistanceKm, 0.0)
         assertEquals(TOLERANCE_KM, uiState.value.toleranceKm, 0.0)
     }
-
-    // checkAndReloadDestinationsIfNeeded tests
 
     @Test
     fun `checkAndReloadDestinationsIfNeeded loads when no previous location`() = runTest {
@@ -294,8 +284,6 @@ class DestinationDelegateTest {
         assertTrue(uiState.value.isPreparingDestinations)
     }
 
-    // checkAndRecalculateBoundsIfNeeded tests
-
     @Test
     fun `checkAndRecalculateBoundsIfNeeded skips when already calculating`() = runTest {
         uiState.value = uiState.value.copy(isCalculatingBounds = true)
@@ -304,8 +292,6 @@ class DestinationDelegateTest {
 
         assertTrue(uiState.value.isCalculatingBounds)
     }
-
-    // showMarkerOptionsDialog / dismissSelectedMarkerOptionsDialog
 
     @Test
     fun `showMarkerOptionsDialog sets flag to true`() = runTest {
@@ -322,8 +308,6 @@ class DestinationDelegateTest {
 
         assertFalse(uiState.value.showSelectedMarkerOptionsDialog)
     }
-
-    // openInGoogleMaps tests
 
     @Test
     fun `openInGoogleMaps sets navigation action when maps installed`() = runTest {
