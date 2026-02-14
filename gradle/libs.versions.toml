@@ -39,7 +39,7 @@ room = "2.8.4"
 datastore = "1.2.0"
 
 # Google Maps Compose
-mapsCompose = "8.0.0"
+mapsCompose = "8.1.0"
 playServicesLocation = "21.3.0"
 playServicesMaps = "20.0.0"
 
