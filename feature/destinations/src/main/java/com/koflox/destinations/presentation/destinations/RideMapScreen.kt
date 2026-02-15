@@ -2,6 +2,8 @@ package com.koflox.destinations.presentation.destinations
 
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
+import android.provider.Settings
 import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -16,6 +18,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -26,6 +29,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.koflox.designsystem.component.ActionCard
+import com.koflox.designsystem.component.StatusCard
 import com.koflox.designsystem.theme.Spacing
 import com.koflox.destinationnutrition.bridge.navigator.NutritionUiNavigator
 import com.koflox.destinations.R
@@ -37,7 +42,6 @@ import com.koflox.destinations.presentation.destinations.components.LocationRetr
 import com.koflox.destinations.presentation.destinations.components.RidingModeToggle
 import com.koflox.destinations.presentation.destinations.components.RouteSlider
 import com.koflox.destinations.presentation.destinations.components.StartRideButton
-import com.koflox.destinations.presentation.destinations.components.StatusCard
 import com.koflox.destinations.presentation.destinations.model.DestinationUiModel
 import com.koflox.destinations.presentation.permission.LocationPermissionHandler
 import com.koflox.destinationsession.bridge.navigator.CyclingSessionUiNavigator
@@ -68,12 +72,16 @@ internal fun RideMapRoute(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    var retryTrigger by remember { mutableIntStateOf(0) }
     ScreenLifecycleEffects(viewModel)
     ErrorEffect(uiState.error, context, viewModel)
     NavigationEffect(uiState.navigationAction, context, viewModel)
     LocationPermissionHandler(
         onPermissionGranted = { viewModel.onEvent(RideMapUiEvent.PermissionEvent.PermissionGranted) },
-        onPermissionDenied = { viewModel.onEvent(RideMapUiEvent.PermissionEvent.PermissionDenied) },
+        onPermissionDenied = { isRationaleAvailable ->
+            viewModel.onEvent(RideMapUiEvent.PermissionEvent.PermissionDenied(isRationaleAvailable))
+        },
+        retryTrigger = retryTrigger,
     ) {
         RideMapContent(
             uiState = uiState,
@@ -82,6 +90,7 @@ internal fun RideMapRoute(
             nutritionUiNavigator = nutritionUiNavigator,
             modifier = modifier,
             onNavigateToSessionCompletion = onNavigateToSessionCompletion,
+            onRetryPermission = { retryTrigger++ },
         )
     }
 }
@@ -127,6 +136,7 @@ private fun RideMapContent(
     sessionUiNavigator: CyclingSessionUiNavigator,
     nutritionUiNavigator: NutritionUiNavigator,
     onNavigateToSessionCompletion: (sessionId: String) -> Unit,
+    onRetryPermission: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Box(modifier = modifier.fillMaxSize()) {
@@ -141,7 +151,7 @@ private fun RideMapContent(
             onSelectedMarkerInfoClick = { viewModel.onEvent(RideMapUiEvent.DestinationEvent.SelectedMarkerInfoClicked) },
             onMapLoaded = { viewModel.onEvent(RideMapUiEvent.MapEvent.MapLoaded) },
         )
-        RideMapOverlay(uiState, viewModel, sessionUiNavigator, nutritionUiNavigator, onNavigateToSessionCompletion)
+        RideMapOverlay(uiState, viewModel, sessionUiNavigator, nutritionUiNavigator, onNavigateToSessionCompletion, onRetryPermission)
     }
     when (uiState) {
         is RideMapUiState.DestinationIdle -> DestinationOptionsDialog(
@@ -167,6 +177,7 @@ private fun BoxScope.RideMapOverlay(
     sessionUiNavigator: CyclingSessionUiNavigator,
     nutritionUiNavigator: NutritionUiNavigator,
     onNavigateToSessionCompletion: (sessionId: String) -> Unit,
+    onRetryPermission: () -> Unit,
 ) {
     when (uiState) {
         is RideMapUiState.Loading -> {
@@ -179,6 +190,11 @@ private fun BoxScope.RideMapOverlay(
         }
         RideMapUiState.LocationDisabled -> LocationRetryOverlay(
             viewModel = viewModel,
+            modifier = Modifier.align(Alignment.BottomCenter).padding(Spacing.Large),
+        )
+        is RideMapUiState.PermissionDenied -> PermissionDeniedOverlay(
+            isRationaleAvailable = uiState.isRationaleAvailable,
+            onRetryPermission = onRetryPermission,
             modifier = Modifier.align(Alignment.BottomCenter).padding(Spacing.Large),
         )
         is RideMapUiState.FreeRoamIdle -> IdleOverlay(uiState, viewModel)
@@ -450,6 +466,40 @@ private fun LocationRetryOverlay(
     }
     LocationRetryCard(
         onEnableLocationClick = { shouldCheckLocation = true },
+        modifier = modifier,
+    )
+}
+
+@Composable
+private fun PermissionDeniedOverlay(
+    isRationaleAvailable: Boolean,
+    onRetryPermission: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val context = LocalContext.current
+    val message = if (isRationaleAvailable) {
+        stringResource(R.string.permission_location_required)
+    } else {
+        stringResource(R.string.permission_location_open_settings)
+    }
+    val buttonLabel = if (isRationaleAvailable) {
+        stringResource(R.string.permission_button_grant)
+    } else {
+        stringResource(R.string.permission_button_open_settings)
+    }
+    ActionCard(
+        message = message,
+        buttonLabel = buttonLabel,
+        onButtonClick = {
+            if (isRationaleAvailable) {
+                onRetryPermission()
+            } else {
+                val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                    data = Uri.fromParts("package", context.packageName, null)
+                }
+                context.startActivity(intent)
+            }
+        },
         modifier = modifier,
     )
 }

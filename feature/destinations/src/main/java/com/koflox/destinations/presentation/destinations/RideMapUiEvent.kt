@@ -17,7 +17,7 @@ internal sealed interface RideMapUiEvent {
 
     sealed interface PermissionEvent : RideMapUiEvent {
         data object PermissionGranted : PermissionEvent
-        data object PermissionDenied : PermissionEvent
+        data class PermissionDenied(val isRationaleAvailable: Boolean) : PermissionEvent
     }
 
     sealed interface DestinationEvent : RideMapUiEvent {
