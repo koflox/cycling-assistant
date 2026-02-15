@@ -422,6 +422,55 @@ class RideMapViewModelTest {
         assertEquals(false, state.isStartingFreeRoam)
     }
 
+    @Test
+    fun `initial location fetch failure stays Loading after permission and map loaded`() = runTest {
+        coEvery { getUserLocationUseCase.getLocation() } returns Result.failure(RuntimeException("No GPS"))
+
+        viewModel = createViewModel()
+        advanceUntilIdle()
+        sendMapLoaded()
+        viewModel.onEvent(RideMapUiEvent.PermissionEvent.PermissionGranted)
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertTrue("Expected Loading but was $state", state is RideMapUiState.Loading)
+    }
+
+    @Test
+    fun `initial location fetch failure transitions after observation delivers location`() = runTest {
+        coEvery { getUserLocationUseCase.getLocation() } returns Result.failure(RuntimeException("No GPS"))
+        val locationFlow = MutableSharedFlow<Location>()
+        every { observeUserLocationUseCase.observe() } returns locationFlow
+
+        viewModel = createViewModel()
+        advanceUntilIdle()
+        sendMapLoaded()
+        viewModel.onEvent(RideMapUiEvent.LifecycleEvent.ScreenResumed)
+        viewModel.onEvent(RideMapUiEvent.PermissionEvent.PermissionGranted)
+        advanceUntilIdle()
+
+        assertTrue(viewModel.uiState.value is RideMapUiState.Loading)
+
+        locationFlow.emit(createUserLocation())
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertTrue("Expected FreeRoamIdle but was $state", state is RideMapUiState.FreeRoamIdle)
+        assertEquals(createUserLocation(), (state as RideMapUiState.FreeRoamIdle).cameraFocusLocation)
+    }
+
+    @Test
+    fun `FreeRoamIdle always has non-null cameraFocusLocation`() = runTest {
+        viewModel = createViewModel()
+        advanceUntilIdle()
+        sendMapLoaded()
+        viewModel.onEvent(RideMapUiEvent.PermissionEvent.PermissionGranted)
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value as RideMapUiState.FreeRoamIdle
+        assertNotNull(state.cameraFocusLocation)
+    }
+
     private fun sendMapLoaded() {
         viewModel.onEvent(RideMapUiEvent.MapEvent.MapLoaded)
     }

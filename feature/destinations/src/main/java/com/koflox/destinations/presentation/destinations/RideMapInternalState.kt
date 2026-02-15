@@ -41,7 +41,7 @@ internal data class RideMapInternalState(
         get() = distanceBounds != null && !isCalculatingBounds
 
     val isReady: Boolean
-        get() = !isInitializing && isActiveSessionChecked && isPermissionGranted
+        get() = !isInitializing && isActiveSessionChecked && isPermissionGranted && userLocation != null
 
     val isLocationRetryNeeded: Boolean
         get() = isLocationDisabled && !isSessionActive && userLocation == null
