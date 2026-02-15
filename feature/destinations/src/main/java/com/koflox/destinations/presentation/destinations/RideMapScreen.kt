@@ -139,6 +139,7 @@ private fun RideMapContent(
             curvePoints = uiState.curvePoints,
             isSessionActive = uiState is RideMapUiState.ActiveSession,
             onSelectedMarkerInfoClick = { viewModel.onEvent(RideMapUiEvent.DestinationEvent.SelectedMarkerInfoClicked) },
+            onMapLoaded = { viewModel.onEvent(RideMapUiEvent.MapEvent.MapLoaded) },
         )
         RideMapOverlay(uiState, viewModel, sessionUiNavigator, nutritionUiNavigator, onNavigateToSessionCompletion)
     }
@@ -168,7 +169,14 @@ private fun BoxScope.RideMapOverlay(
     onNavigateToSessionCompletion: (sessionId: String) -> Unit,
 ) {
     when (uiState) {
-        RideMapUiState.Loading -> LoadingOverlay()
+        is RideMapUiState.Loading -> {
+            LoadingStatusCard(
+                items = uiState.items,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(Spacing.Large),
+            )
+        }
         RideMapUiState.LocationDisabled -> LocationRetryOverlay(
             viewModel = viewModel,
             modifier = Modifier.align(Alignment.BottomCenter).padding(Spacing.Large),
@@ -403,6 +411,23 @@ private fun ModeToggleDismissOverlay(isVisible: Boolean, onDismiss: () -> Unit) 
                 ) { onDismiss() },
         )
     }
+}
+
+@Composable
+private fun LoadingStatusCard(items: Set<LoadingItem>, modifier: Modifier = Modifier) {
+    val mapLabel = stringResource(R.string.loading_item_map)
+    val locationLabel = stringResource(R.string.loading_item_location)
+    val label = items.joinToString { item ->
+        when (item) {
+            LoadingItem.Map -> mapLabel
+            LoadingItem.UserLocation -> locationLabel
+        }
+    }
+    StatusCard(
+        message = stringResource(R.string.loading_prefix, label),
+        isLoading = true,
+        modifier = modifier,
+    )
 }
 
 @Composable

@@ -37,4 +37,8 @@ internal sealed interface RideMapUiEvent {
         data object NavigationActionHandled : CommonEvent
         data object NutritionPopupDismissed : CommonEvent
     }
+
+    sealed interface MapEvent : RideMapUiEvent {
+        data object MapLoaded : MapEvent
+    }
 }

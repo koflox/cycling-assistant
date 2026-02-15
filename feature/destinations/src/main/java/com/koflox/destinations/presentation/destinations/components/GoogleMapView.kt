@@ -59,6 +59,7 @@ internal fun GoogleMapView(
     curvePoints: List<LatLng>,
     isSessionActive: Boolean,
     onSelectedMarkerInfoClick: () -> Unit,
+    onMapLoaded: (() -> Unit)? = null,
 ) {
     val isDarkTheme = LocalDarkTheme.current
     val cameraPositionState = rememberCameraPositionState()
@@ -90,7 +91,10 @@ internal fun GoogleMapView(
         isSessionActive = isSessionActive,
         onSelectedMarkerInfoClick = onSelectedMarkerInfoClick,
         isDarkTheme = isDarkTheme,
-        onMapLoaded = { isMapLoaded = true },
+        onMapLoaded = {
+            isMapLoaded = true
+            onMapLoaded?.invoke()
+        },
     )
 }
 

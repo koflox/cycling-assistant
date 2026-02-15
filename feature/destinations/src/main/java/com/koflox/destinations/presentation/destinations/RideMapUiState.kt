@@ -7,7 +7,7 @@ import com.koflox.destinations.presentation.destinations.model.DestinationUiMode
 import com.koflox.location.model.Location
 
 internal sealed interface RideMapUiState {
-    data object Loading : RideMapUiState
+    data class Loading(val items: Set<LoadingItem>) : RideMapUiState
     data object LocationDisabled : RideMapUiState
     data class FreeRoamIdle(
         val userLocation: Location?,
@@ -55,7 +55,7 @@ internal val RideMapUiState.error: String?
         is RideMapUiState.FreeRoamIdle -> error
         is RideMapUiState.DestinationIdle -> error
         is RideMapUiState.ActiveSession -> error
-        RideMapUiState.Loading, RideMapUiState.LocationDisabled -> null
+        is RideMapUiState.Loading, RideMapUiState.LocationDisabled -> null
     }
 
 internal val RideMapUiState.navigationAction: NavigationAction?
@@ -70,7 +70,7 @@ internal val RideMapUiState.userLocation: Location?
         is RideMapUiState.FreeRoamIdle -> userLocation
         is RideMapUiState.DestinationIdle -> userLocation
         is RideMapUiState.ActiveSession -> userLocation
-        RideMapUiState.Loading, RideMapUiState.LocationDisabled -> null
+        is RideMapUiState.Loading, RideMapUiState.LocationDisabled -> null
     }
 
 internal val RideMapUiState.cameraFocusLocation: Location?
@@ -78,7 +78,7 @@ internal val RideMapUiState.cameraFocusLocation: Location?
         is RideMapUiState.FreeRoamIdle -> cameraFocusLocation
         is RideMapUiState.DestinationIdle -> cameraFocusLocation
         is RideMapUiState.ActiveSession -> cameraFocusLocation
-        RideMapUiState.Loading, RideMapUiState.LocationDisabled -> null
+        is RideMapUiState.Loading, RideMapUiState.LocationDisabled -> null
     }
 
 internal val RideMapUiState.selectedDestination: DestinationUiModel?

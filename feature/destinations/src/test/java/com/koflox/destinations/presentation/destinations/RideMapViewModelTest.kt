@@ -135,6 +135,7 @@ class RideMapViewModelTest {
         viewModel.uiState.test {
             awaitItem() // Loading
 
+            sendMapLoaded()
             viewModel.onEvent(RideMapUiEvent.PermissionEvent.PermissionGranted)
             advanceUntilIdle()
 
@@ -149,6 +150,7 @@ class RideMapViewModelTest {
         viewModel = createViewModel()
         advanceUntilIdle()
 
+        sendMapLoaded()
         viewModel.onEvent(RideMapUiEvent.PermissionEvent.PermissionGranted)
         advanceUntilIdle()
 
@@ -173,6 +175,7 @@ class RideMapViewModelTest {
     fun `ErrorDismissed clears error`() = runTest {
         viewModel = createViewModel()
         advanceUntilIdle()
+        sendMapLoaded()
         viewModel.onEvent(RideMapUiEvent.PermissionEvent.PermissionGranted)
         advanceUntilIdle()
 
@@ -216,6 +219,7 @@ class RideMapViewModelTest {
 
         viewModel = createViewModel()
         advanceUntilIdle()
+        sendMapLoaded()
         viewModel.onEvent(RideMapUiEvent.PermissionEvent.PermissionGranted)
         advanceUntilIdle()
         assertTrue(viewModel.uiState.value is RideMapUiState.ActiveSession)
@@ -232,6 +236,7 @@ class RideMapViewModelTest {
 
         viewModel = createViewModel()
         advanceUntilIdle()
+        sendMapLoaded()
         viewModel.onEvent(RideMapUiEvent.PermissionEvent.PermissionGranted)
         advanceUntilIdle()
 
@@ -247,6 +252,7 @@ class RideMapViewModelTest {
 
         viewModel = createViewModel()
         advanceUntilIdle()
+        sendMapLoaded()
         viewModel.onEvent(RideMapUiEvent.PermissionEvent.PermissionGranted)
         advanceUntilIdle()
 
@@ -274,6 +280,7 @@ class RideMapViewModelTest {
     fun `observeRidingMode updates internal state`() = runTest {
         viewModel = createViewModel()
         advanceUntilIdle()
+        sendMapLoaded()
         viewModel.onEvent(RideMapUiEvent.PermissionEvent.PermissionGranted)
         advanceUntilIdle()
 
@@ -310,6 +317,7 @@ class RideMapViewModelTest {
     fun `NavigationActionHandled clears navigation action`() = runTest {
         viewModel = createViewModel()
         advanceUntilIdle()
+        sendMapLoaded()
         viewModel.onEvent(RideMapUiEvent.PermissionEvent.PermissionGranted)
         advanceUntilIdle()
 
@@ -326,6 +334,7 @@ class RideMapViewModelTest {
 
         viewModel = createViewModel()
         advanceUntilIdle()
+        sendMapLoaded()
         viewModel.onEvent(RideMapUiEvent.PermissionEvent.PermissionGranted)
         advanceUntilIdle()
         viewModel.onEvent(RideMapUiEvent.LifecycleEvent.ScreenResumed)
@@ -338,6 +347,7 @@ class RideMapViewModelTest {
 
         viewModel = createViewModel()
         advanceUntilIdle()
+        sendMapLoaded()
         viewModel.onEvent(RideMapUiEvent.PermissionEvent.PermissionGranted)
         advanceUntilIdle()
         viewModel.onEvent(RideMapUiEvent.LifecycleEvent.ScreenResumed)
@@ -375,11 +385,16 @@ class RideMapViewModelTest {
     fun `startFreeRoamSession not starting shows no loading indicator`() = runTest {
         viewModel = createViewModel()
         advanceUntilIdle()
+        sendMapLoaded()
         viewModel.onEvent(RideMapUiEvent.PermissionEvent.PermissionGranted)
         advanceUntilIdle()
 
         val state = viewModel.uiState.value as RideMapUiState.FreeRoamIdle
         assertEquals(false, state.isStartingFreeRoam)
+    }
+
+    private fun sendMapLoaded() {
+        viewModel.onEvent(RideMapUiEvent.MapEvent.MapLoaded)
     }
 
     private fun createUserLocation() = Location(USER_LAT, USER_LONG)
