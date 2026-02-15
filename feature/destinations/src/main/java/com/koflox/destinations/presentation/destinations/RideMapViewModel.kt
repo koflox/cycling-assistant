@@ -54,7 +54,11 @@ internal class RideMapViewModel(
 
     val uiState: StateFlow<RideMapUiState> = _internalState
         .map { deriveUiState(it) }
-        .stateIn(viewModelScope, SharingStarted.Eagerly, RideMapUiState.Loading)
+        .stateIn(
+            viewModelScope,
+            SharingStarted.Eagerly,
+            RideMapUiState.Loading(items = setOf(LoadingItem.Map, LoadingItem.UserLocation)),
+        )
 
     private var isScreenVisible = false
 
@@ -164,6 +168,7 @@ internal class RideMapViewModel(
                 is RideMapUiEvent.DestinationEvent -> handleDestinationEvent(event)
                 is RideMapUiEvent.SessionEvent -> handleSessionEvent(event)
                 is RideMapUiEvent.CommonEvent -> handleCommonEvent(event)
+                is RideMapUiEvent.MapEvent -> handleMapEvent(event)
             }
         }
     }
@@ -212,6 +217,12 @@ internal class RideMapViewModel(
             RideMapUiEvent.CommonEvent.NutritionPopupDismissed -> _internalState.update {
                 it.copy(nutritionSuggestionTimeMs = null)
             }
+        }
+    }
+
+    private fun handleMapEvent(event: RideMapUiEvent.MapEvent) {
+        when (event) {
+            RideMapUiEvent.MapEvent.MapLoaded -> _internalState.update { it.copy(isMapLoaded = true) }
         }
     }
 
@@ -309,13 +320,13 @@ internal class RideMapViewModel(
             navigationAction = state.navigationAction,
             nutritionSuggestionTimeMs = state.nutritionSuggestionTimeMs,
         )
-        state.isReady && state.isFreeRoam -> RideMapUiState.FreeRoamIdle(
+        state.isReady && state.isMapLoaded && state.isFreeRoam -> RideMapUiState.FreeRoamIdle(
             userLocation = state.userLocation,
             cameraFocusLocation = state.cameraFocusLocation,
             isStartingFreeRoam = state.isStartingFreeRoam,
             error = state.error,
         )
-        state.isReady -> RideMapUiState.DestinationIdle(
+        state.isReady && state.isMapLoaded -> RideMapUiState.DestinationIdle(
             userLocation = state.userLocation,
             cameraFocusLocation = state.cameraFocusLocation,
             selectedDestination = state.selectedDestination,
@@ -332,6 +343,11 @@ internal class RideMapViewModel(
             error = state.error,
             navigationAction = state.navigationAction,
         )
-        else -> RideMapUiState.Loading
+        else -> RideMapUiState.Loading(
+            items = buildSet {
+                if (!state.isMapLoaded) add(LoadingItem.Map)
+                if (!state.isReady) add(LoadingItem.UserLocation)
+            },
+        )
     }
 }

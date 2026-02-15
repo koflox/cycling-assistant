@@ -15,6 +15,11 @@
     <string name="destination_calculating_bounds">Поиск подходящего диапазона расстояний</string>
     <string name="destination_no_destinations_in_area">В этой области локации не найдены. Доступные локации зависят от вашего местоположения</string>
 
+    <!-- Loading -->
+    <string name="loading_prefix">Инициализация: %s</string>
+    <string name="loading_item_map">карта</string>
+    <string name="loading_item_location">локация</string>
+
     <!-- Riding Mode -->
     <string name="ride_mode_free_roam">Свободная</string>
     <string name="ride_mode_destination">К точке</string>

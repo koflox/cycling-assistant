@@ -30,6 +30,7 @@ internal data class RideMapInternalState(
     val nutritionSuggestionTimeMs: Long? = null,
     val isLocationDisabled: Boolean = false,
     val isStartingFreeRoam: Boolean = false,
+    val isMapLoaded: Boolean = false,
 ) {
     val isFreeRoam: Boolean
         get() = ridingMode == RidingMode.FREE_ROAM
