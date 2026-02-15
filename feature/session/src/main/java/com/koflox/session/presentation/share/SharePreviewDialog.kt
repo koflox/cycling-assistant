@@ -176,7 +176,7 @@ private fun SharePreviewContent(
                     .weight(2f),
             ) {
                 RouteMapView(
-                    routePoints = data.routePoints,
+                    routeDisplayData = data.routeDisplayData,
                     startMarkerRotation = data.startMarkerRotation,
                     endMarkerRotation = data.endMarkerRotation,
                     isSharePreview = true,

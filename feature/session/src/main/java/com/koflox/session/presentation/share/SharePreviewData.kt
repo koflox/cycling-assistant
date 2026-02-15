@@ -1,6 +1,6 @@
 package com.koflox.session.presentation.share
 
-import com.google.android.gms.maps.model.LatLng
+import com.koflox.session.presentation.completion.components.RouteDisplayData
 
 data class SharePreviewData(
     val sessionId: String,
@@ -15,7 +15,7 @@ data class SharePreviewData(
     val altitudeGainFormatted: String,
     val altitudeLossFormatted: String,
     val caloriesFormatted: String?,
-    val routePoints: List<LatLng>,
+    val routeDisplayData: RouteDisplayData,
     val startMarkerRotation: Float = 0f,
     val endMarkerRotation: Float = 0f,
 )

@@ -177,9 +177,9 @@ private fun SessionCompletionLayout(
                 .fillMaxWidth()
                 .weight(2f),
         ) {
-            if (uiState.routePoints.isNotEmpty()) {
+            if (uiState.routeDisplayData.allPoints.isNotEmpty()) {
                 RouteMapView(
-                    routePoints = uiState.routePoints,
+                    routeDisplayData = uiState.routeDisplayData,
                     startMarkerRotation = uiState.startMarkerRotation,
                     endMarkerRotation = uiState.endMarkerRotation,
                     modifier = Modifier.matchParentSize(),
