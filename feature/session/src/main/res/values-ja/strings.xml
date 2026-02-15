@@ -73,6 +73,15 @@
     <string name="session_completion_title">セッション完了</string>
     <string name="session_completion_back">戻る</string>
 
+    <!-- Map Legend -->
+    <string name="map_legend_content_description">ルート凡例</string>
+    <string name="map_legend_title">凡例</string>
+    <string name="map_legend_normal_speed">通常速度 (&lt; 30 km/h)</string>
+    <string name="map_legend_fast_speed">高速 (≥ 30 km/h)</string>
+    <string name="map_legend_gap">一時停止</string>
+    <string name="map_legend_start">スタート</string>
+    <string name="map_legend_finish">ゴール</string>
+
     <!-- Location Disabled Dialog -->
     <string name="location_disabled_title">位置情報が無効</string>
     <string name="location_disabled_message">位置情報サービスが無効です。サイクリングセッションを続けるには位置情報を有効にしてください。</string>

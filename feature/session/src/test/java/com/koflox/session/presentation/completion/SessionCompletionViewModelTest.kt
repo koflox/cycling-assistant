@@ -133,13 +133,13 @@ class SessionCompletionViewModelTest {
     }
 
     @Test
-    fun `loadSession success maps track points to route points`() = runTest {
+    fun `loadSession success maps track points to route display data`() = runTest {
         val session = createSession(
             id = SESSION_ID,
             status = SessionStatus.COMPLETED,
             trackPoints = listOf(
-                createTrackPoint(latitude = 52.51, longitude = 13.41),
-                createTrackPoint(latitude = 52.52, longitude = 13.42),
+                createTrackPoint(latitude = 52.51, longitude = 13.41, speedKmh = 15.0, isSegmentStart = true),
+                createTrackPoint(latitude = 52.52, longitude = 13.42, speedKmh = 20.0),
             ),
         )
         coEvery { getSessionByIdUseCase.getSession(SESSION_ID) } returns Result.success(session)
@@ -149,11 +149,65 @@ class SessionCompletionViewModelTest {
         viewModel.uiState.test {
             awaitItem() // Loading
             val content = awaitItem() as SessionCompletionUiState.Content
-            assertEquals(2, content.routePoints.size)
-            assertEquals(52.51, content.routePoints[0].latitude, 0.0)
-            assertEquals(13.41, content.routePoints[0].longitude, 0.0)
-            assertEquals(52.52, content.routePoints[1].latitude, 0.0)
-            assertEquals(13.42, content.routePoints[1].longitude, 0.0)
+            val displayData = content.routeDisplayData
+            assertEquals(2, displayData.allPoints.size)
+            assertEquals(52.51, displayData.allPoints[0].latitude, 0.0)
+            assertEquals(13.41, displayData.allPoints[0].longitude, 0.0)
+            assertEquals(52.52, displayData.allPoints[1].latitude, 0.0)
+            assertEquals(13.42, displayData.allPoints[1].longitude, 0.0)
+            assertTrue(displayData.segments.isNotEmpty())
+            assertTrue(displayData.gapPolylines.isEmpty())
+        }
+    }
+
+    @Test
+    fun `loadSession splits track points into multiple segments with gap polylines`() = runTest {
+        val session = createSession(
+            id = SESSION_ID,
+            status = SessionStatus.COMPLETED,
+            trackPoints = listOf(
+                createTrackPoint(latitude = 52.51, longitude = 13.41, isSegmentStart = true),
+                createTrackPoint(latitude = 52.52, longitude = 13.42),
+                createTrackPoint(latitude = 52.53, longitude = 13.43, isSegmentStart = true),
+                createTrackPoint(latitude = 52.54, longitude = 13.44),
+            ),
+        )
+        coEvery { getSessionByIdUseCase.getSession(SESSION_ID) } returns Result.success(session)
+
+        viewModel = createViewModel()
+
+        viewModel.uiState.test {
+            awaitItem() // Loading
+            val content = awaitItem() as SessionCompletionUiState.Content
+            val displayData = content.routeDisplayData
+            assertEquals(4, displayData.allPoints.size)
+            assertEquals(1, displayData.gapPolylines.size)
+            assertEquals(52.52, displayData.gapPolylines[0][0].latitude, 0.0)
+            assertEquals(52.53, displayData.gapPolylines[0][1].latitude, 0.0)
+        }
+    }
+
+    @Test
+    fun `loadSession filters out segments with fewer than two points`() = runTest {
+        val session = createSession(
+            id = SESSION_ID,
+            status = SessionStatus.COMPLETED,
+            trackPoints = listOf(
+                createTrackPoint(latitude = 52.51, longitude = 13.41, isSegmentStart = true),
+                createTrackPoint(latitude = 52.52, longitude = 13.42),
+                createTrackPoint(latitude = 52.53, longitude = 13.43, isSegmentStart = true),
+            ),
+        )
+        coEvery { getSessionByIdUseCase.getSession(SESSION_ID) } returns Result.success(session)
+
+        viewModel = createViewModel()
+
+        viewModel.uiState.test {
+            awaitItem() // Loading
+            val content = awaitItem() as SessionCompletionUiState.Content
+            val displayData = content.routeDisplayData
+            assertEquals(2, displayData.allPoints.size)
+            assertTrue(displayData.gapPolylines.isEmpty())
         }
     }
 

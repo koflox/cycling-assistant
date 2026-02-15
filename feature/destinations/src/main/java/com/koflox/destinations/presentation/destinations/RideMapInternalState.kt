@@ -23,6 +23,8 @@ internal data class RideMapInternalState(
     val isCalculatingBounds: Boolean = false,
     val error: String? = null,
     val isPermissionGranted: Boolean = false,
+    val isPermissionDenied: Boolean = false,
+    val isRationaleAvailable: Boolean = false,
     val navigationAction: NavigationAction? = null,
     val showSelectedMarkerOptionsDialog: Boolean = false,
     val isSessionActive: Boolean = false,
@@ -30,6 +32,7 @@ internal data class RideMapInternalState(
     val nutritionSuggestionTimeMs: Long? = null,
     val isLocationDisabled: Boolean = false,
     val isStartingFreeRoam: Boolean = false,
+    val isMapLoaded: Boolean = false,
 ) {
     val isFreeRoam: Boolean
         get() = ridingMode == RidingMode.FREE_ROAM
@@ -38,7 +41,7 @@ internal data class RideMapInternalState(
         get() = distanceBounds != null && !isCalculatingBounds
 
     val isReady: Boolean
-        get() = !isInitializing && isActiveSessionChecked && isPermissionGranted
+        get() = !isInitializing && isActiveSessionChecked && isPermissionGranted && userLocation != null
 
     val isLocationRetryNeeded: Boolean
         get() = isLocationDisabled && !isSessionActive && userLocation == null

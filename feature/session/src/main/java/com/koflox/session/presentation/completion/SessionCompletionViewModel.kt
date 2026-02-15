@@ -4,7 +4,6 @@ import android.graphics.Bitmap
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.android.gms.maps.model.LatLng
 import com.koflox.error.mapper.ErrorMessageMapper
 import com.koflox.location.bearing.calculateBearingDegrees
 import com.koflox.location.model.Location
@@ -12,6 +11,7 @@ import com.koflox.session.domain.model.SessionStatus
 import com.koflox.session.domain.usecase.CalculateSessionStatsUseCase
 import com.koflox.session.domain.usecase.GetSessionByIdUseCase
 import com.koflox.session.navigation.SESSION_ID_ARG
+import com.koflox.session.presentation.completion.components.buildRouteDisplayData
 import com.koflox.session.presentation.mapper.SessionUiMapper
 import com.koflox.session.presentation.share.SessionImageSharer
 import com.koflox.session.presentation.share.ShareErrorMapper
@@ -120,22 +120,20 @@ internal class SessionCompletionViewModel(
                 }
                 val formattedData = sessionUiMapper.toSessionUiModel(session)
                 val derivedStats = calculateSessionStatsUseCase.calculate(sessionId).getOrNull() ?: return@onSuccess
-                val routePoints = session.trackPoints.map { trackPoint ->
-                    LatLng(trackPoint.latitude, trackPoint.longitude)
-                }
-                val trackPoints = session.trackPoints
-                val startRotation = if (trackPoints.size >= 2) {
+                val routeDisplayData = buildRouteDisplayData(session.trackPoints)
+                val allPoints = routeDisplayData.allPoints
+                val startRotation = if (allPoints.size >= 2) {
                     calculateBearingDegrees(
-                        from = Location(trackPoints[0].latitude, trackPoints[0].longitude),
-                        to = Location(trackPoints[1].latitude, trackPoints[1].longitude),
+                        from = Location(allPoints[0].latitude, allPoints[0].longitude),
+                        to = Location(allPoints[1].latitude, allPoints[1].longitude),
                     )
                 } else {
                     0f
                 }
-                val endRotation = if (trackPoints.size >= 2) {
+                val endRotation = if (allPoints.size >= 2) {
                     calculateBearingDegrees(
-                        from = Location(trackPoints[trackPoints.lastIndex - 1].latitude, trackPoints[trackPoints.lastIndex - 1].longitude),
-                        to = Location(trackPoints.last().latitude, trackPoints.last().longitude),
+                        from = Location(allPoints[allPoints.lastIndex - 1].latitude, allPoints[allPoints.lastIndex - 1].longitude),
+                        to = Location(allPoints.last().latitude, allPoints.last().longitude),
                     )
                 } else {
                     0f
@@ -153,7 +151,7 @@ internal class SessionCompletionViewModel(
                     altitudeGainFormatted = formattedData.altitudeGainFormatted,
                     altitudeLossFormatted = sessionUiMapper.formatAltitudeGain(derivedStats.altitudeLossMeters),
                     caloriesFormatted = derivedStats.caloriesBurned?.let { sessionUiMapper.formatCalories(it) },
-                    routePoints = routePoints,
+                    routeDisplayData = routeDisplayData,
                     startMarkerRotation = startRotation,
                     endMarkerRotation = endRotation,
                 )
@@ -184,7 +182,7 @@ internal class SessionCompletionViewModel(
         altitudeGainFormatted = content.altitudeGainFormatted,
         altitudeLossFormatted = content.altitudeLossFormatted,
         caloriesFormatted = content.caloriesFormatted,
-        routePoints = content.routePoints,
+        routeDisplayData = content.routeDisplayData,
         startMarkerRotation = content.startMarkerRotation,
         endMarkerRotation = content.endMarkerRotation,
     )
