@@ -23,6 +23,8 @@ internal data class RideMapInternalState(
     val isCalculatingBounds: Boolean = false,
     val error: String? = null,
     val isPermissionGranted: Boolean = false,
+    val isPermissionDenied: Boolean = false,
+    val isRationaleAvailable: Boolean = false,
     val navigationAction: NavigationAction? = null,
     val showSelectedMarkerOptionsDialog: Boolean = false,
     val isSessionActive: Boolean = false,

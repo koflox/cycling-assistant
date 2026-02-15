@@ -160,15 +160,46 @@ class RideMapViewModelTest {
     }
 
     @Test
-    fun `PermissionDenied sets error`() = runTest {
+    fun `PermissionDenied shows PermissionDenied state with rationale`() = runTest {
         viewModel = createViewModel()
         advanceUntilIdle()
 
-        viewModel.onEvent(RideMapUiEvent.PermissionEvent.PermissionDenied)
+        viewModel.onEvent(RideMapUiEvent.PermissionEvent.PermissionDenied(isRationaleAvailable = true))
         advanceUntilIdle()
 
-        // Still Loading since isPermissionGranted remains false, but error is set in internal state
-        assertTrue(viewModel.uiState.value is RideMapUiState.Loading)
+        val state = viewModel.uiState.value
+        assertTrue("Expected PermissionDenied but was $state", state is RideMapUiState.PermissionDenied)
+        assertTrue((state as RideMapUiState.PermissionDenied).isRationaleAvailable)
+    }
+
+    @Test
+    fun `PermissionDenied permanently shows PermissionDenied state without rationale`() = runTest {
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.onEvent(RideMapUiEvent.PermissionEvent.PermissionDenied(isRationaleAvailable = false))
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertTrue("Expected PermissionDenied but was $state", state is RideMapUiState.PermissionDenied)
+        assertEquals(false, (state as RideMapUiState.PermissionDenied).isRationaleAvailable)
+    }
+
+    @Test
+    fun `PermissionGranted after denial clears denied state`() = runTest {
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.onEvent(RideMapUiEvent.PermissionEvent.PermissionDenied(isRationaleAvailable = true))
+        advanceUntilIdle()
+        assertTrue(viewModel.uiState.value is RideMapUiState.PermissionDenied)
+
+        sendMapLoaded()
+        viewModel.onEvent(RideMapUiEvent.PermissionEvent.PermissionGranted)
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertTrue("Expected FreeRoamIdle but was $state", state is RideMapUiState.FreeRoamIdle)
     }
 
     @Test
@@ -179,8 +210,6 @@ class RideMapViewModelTest {
         viewModel.onEvent(RideMapUiEvent.PermissionEvent.PermissionGranted)
         advanceUntilIdle()
 
-        viewModel.onEvent(RideMapUiEvent.PermissionEvent.PermissionDenied)
-        advanceUntilIdle()
         viewModel.onEvent(RideMapUiEvent.CommonEvent.ErrorDismissed)
         advanceUntilIdle()
 

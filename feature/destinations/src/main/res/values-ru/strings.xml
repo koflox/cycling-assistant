@@ -28,4 +28,10 @@
     <!-- Location Disabled -->
     <string name="location_disabled_message">Геолокация отключена</string>
     <string name="location_disabled_enable">Включить</string>
+
+    <!-- Permission -->
+    <string name="permission_location_required">Для работы приложения необходим доступ к геолокации</string>
+    <string name="permission_location_open_settings">Предоставьте доступ к геолокации в настройках приложения</string>
+    <string name="permission_button_grant">Предоставить</string>
+    <string name="permission_button_open_settings">Открыть настройки</string>
 </resources>

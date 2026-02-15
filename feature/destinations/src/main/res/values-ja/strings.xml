@@ -28,4 +28,10 @@
     <!-- Location Disabled -->
     <string name="location_disabled_message">位置情報が無効です</string>
     <string name="location_disabled_enable">有効にする</string>
+
+    <!-- Permission -->
+    <string name="permission_location_required">このアプリには位置情報の許可が必要です</string>
+    <string name="permission_location_open_settings">アプリ設定で位置情報の許可を付与してください</string>
+    <string name="permission_button_grant">許可する</string>
+    <string name="permission_button_open_settings">設定を開く</string>
 </resources>
