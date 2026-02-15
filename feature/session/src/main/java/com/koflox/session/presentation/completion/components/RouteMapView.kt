@@ -39,13 +39,9 @@ import com.koflox.designsystem.theme.LocalDarkTheme
 import com.koflox.designsystem.R as DesignSystemR
 
 private const val MAP_PADDING = 100
-private const val ROUTE_WIDTH = 10f
 private const val DASH_LENGTH = 20f
 private const val GAP_LENGTH = 15f
-private val START_MARKER_COLOR = Color(0xFF5A6BD5)
 private val MARKER_SIZE_DP = 24.dp
-private val END_MARKER_COLOR = Color(0xFFE84940)
-private val GAP_COLOR = Color(0xFFBDBDBD)
 private val GAP_PATTERN = listOf(Dash(DASH_LENGTH), Gap(GAP_LENGTH))
 
 @Composable
@@ -95,10 +91,10 @@ private fun RouteMapContent(
     val allPoints = routeDisplayData.allPoints
     val markerSizePx = with(LocalDensity.current) { MARKER_SIZE_DP.toPx().toInt() }
     val startMarkerIcon = remember(startMarkerRotation, markerSizePx) {
-        if (allPoints.isNotEmpty()) createArrowBitmap(markerSizePx, START_MARKER_COLOR, startMarkerRotation) else null
+        if (allPoints.isNotEmpty()) createArrowBitmap(markerSizePx, RouteColors.StartMarker, startMarkerRotation) else null
     }
     val endMarkerIcon = remember(endMarkerRotation, markerSizePx) {
-        if (allPoints.size >= 2) createArrowBitmap(markerSizePx, END_MARKER_COLOR, endMarkerRotation) else null
+        if (allPoints.size >= 2) createArrowBitmap(markerSizePx, RouteColors.EndMarker, endMarkerRotation) else null
     }
     if (allPoints.isNotEmpty() && startMarkerIcon != null) {
         Marker(
@@ -121,7 +117,7 @@ private fun RouteMapContent(
     routeDisplayData.gapPolylines.forEach { points ->
         Polyline(
             points = points,
-            color = GAP_COLOR,
+            color = RouteColors.Gap,
             width = ROUTE_WIDTH,
             pattern = GAP_PATTERN,
         )
@@ -174,15 +170,12 @@ private fun createArrowBitmap(
         style = Paint.Style.FILL
         isAntiAlias = true
     }
+    val vertices = computeArrowVertices(sizePx.toFloat())
     canvas.withRotation(rotationDegrees, sizePx / 2f, sizePx / 2f) {
         val path = Path().apply {
-            val centerX = sizePx / 2f
-            val centerY = sizePx / 2f
-            val arrowWidth = sizePx * 0.6f
-            val arrowHeight = sizePx * 0.8f
-            moveTo(centerX + arrowHeight / 2, centerY)
-            lineTo(centerX - arrowHeight / 2, centerY - arrowWidth / 2)
-            lineTo(centerX - arrowHeight / 2, centerY + arrowWidth / 2)
+            moveTo(vertices.tipX, vertices.tipY)
+            lineTo(vertices.baseUpperX, vertices.baseUpperY)
+            lineTo(vertices.baseLowerX, vertices.baseLowerY)
             close()
         }
         drawPath(path, paint)

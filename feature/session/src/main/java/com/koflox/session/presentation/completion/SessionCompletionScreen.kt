@@ -27,8 +27,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import com.koflox.designsystem.theme.Spacing
 import com.koflox.session.R
 import com.koflox.session.presentation.completion.components.MapHeaderOverlay
+import com.koflox.session.presentation.completion.components.MapLegendButton
 import com.koflox.session.presentation.completion.components.RouteMapView
 import com.koflox.session.presentation.completion.components.SessionSummaryCard
 import com.koflox.session.presentation.share.SharePreviewDialog
@@ -155,11 +157,13 @@ private fun SessionCompletionBody(
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
             }
         }
+
         is SessionCompletionUiState.Error -> {
             Box(modifier = modifier) {
                 Text(text = uiState.message, modifier = Modifier.align(Alignment.Center))
             }
         }
+
         is SessionCompletionUiState.Content -> {
             SessionCompletionLayout(uiState = uiState, modifier = modifier)
         }
@@ -189,6 +193,11 @@ private fun SessionCompletionLayout(
                 destinationName = uiState.destinationName,
                 startDate = uiState.startDateFormatted,
                 modifier = Modifier.align(Alignment.BottomCenter),
+            )
+            MapLegendButton(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(Spacing.Small)
             )
         }
         SessionSummaryCard(

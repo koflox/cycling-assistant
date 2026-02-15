@@ -1,5 +1,6 @@
 package com.koflox.session.presentation.completion.components
 
+import androidx.compose.ui.graphics.toArgb
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.StrokeStyle
 import com.google.android.gms.maps.model.StyleSpan
@@ -20,8 +21,8 @@ data class SegmentDisplayData(
 )
 
 private const val SPEED_THRESHOLD_FAST = 30.0
-private const val SPEED_COLOR_NORMAL = 0xFF42A5F5.toInt()
-private const val SPEED_COLOR_FAST = 0xFF7C4DFF.toInt()
+private val SPEED_COLOR_NORMAL_ARGB = RouteColors.NormalSpeed.toArgb()
+private val SPEED_COLOR_FAST_ARGB = RouteColors.FastSpeed.toArgb()
 private const val SPEED_SMOOTHING_WINDOW = 5
 private const val GRADIENT_HALF_WIDTH = 3
 
@@ -77,7 +78,7 @@ private fun smoothSpeedColors(points: List<RoutePoint>): List<Int> {
     }
 }
 
-private fun speedToColor(speedKmh: Double): Int = if (speedKmh < SPEED_THRESHOLD_FAST) SPEED_COLOR_NORMAL else SPEED_COLOR_FAST
+private fun speedToColor(speedKmh: Double): Int = if (speedKmh < SPEED_THRESHOLD_FAST) SPEED_COLOR_NORMAL_ARGB else SPEED_COLOR_FAST_ARGB
 
 private fun buildSpans(pointColors: List<Int>): List<StyleSpan> {
     val edgeCount = pointColors.size - 1
