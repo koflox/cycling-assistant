@@ -1,7 +1,7 @@
 package com.koflox.session.presentation.completion
 
 import android.content.Intent
-import com.google.android.gms.maps.model.LatLng
+import com.koflox.session.presentation.completion.components.RouteDisplayData
 import com.koflox.session.presentation.share.SharePreviewData
 
 internal sealed interface SessionCompletionUiState {
@@ -21,7 +21,7 @@ internal sealed interface SessionCompletionUiState {
         val altitudeGainFormatted: String,
         val altitudeLossFormatted: String,
         val caloriesFormatted: String?,
-        val routePoints: List<LatLng>,
+        val routeDisplayData: RouteDisplayData,
         val startMarkerRotation: Float = 0f,
         val endMarkerRotation: Float = 0f,
         val overlay: Overlay? = null,

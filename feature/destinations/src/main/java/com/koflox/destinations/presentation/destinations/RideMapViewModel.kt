@@ -54,7 +54,11 @@ internal class RideMapViewModel(
 
     val uiState: StateFlow<RideMapUiState> = _internalState
         .map { deriveUiState(it) }
-        .stateIn(viewModelScope, SharingStarted.Eagerly, RideMapUiState.Loading)
+        .stateIn(
+            viewModelScope,
+            SharingStarted.Eagerly,
+            RideMapUiState.Loading(items = setOf(LoadingItem.Map, LoadingItem.UserLocation)),
+        )
 
     private var isScreenVisible = false
 
@@ -164,6 +168,7 @@ internal class RideMapViewModel(
                 is RideMapUiEvent.DestinationEvent -> handleDestinationEvent(event)
                 is RideMapUiEvent.SessionEvent -> handleSessionEvent(event)
                 is RideMapUiEvent.CommonEvent -> handleCommonEvent(event)
+                is RideMapUiEvent.MapEvent -> handleMapEvent(event)
             }
         }
     }
@@ -185,7 +190,7 @@ internal class RideMapViewModel(
     private fun handlePermissionEvent(event: RideMapUiEvent.PermissionEvent) {
         when (event) {
             RideMapUiEvent.PermissionEvent.PermissionGranted -> onPermissionGranted()
-            RideMapUiEvent.PermissionEvent.PermissionDenied -> onPermissionDenied()
+            is RideMapUiEvent.PermissionEvent.PermissionDenied -> onPermissionDenied(event)
         }
     }
 
@@ -215,6 +220,12 @@ internal class RideMapViewModel(
         }
     }
 
+    private fun handleMapEvent(event: RideMapUiEvent.MapEvent) {
+        when (event) {
+            RideMapUiEvent.MapEvent.MapLoaded -> _internalState.update { it.copy(isMapLoaded = true) }
+        }
+    }
+
     private suspend fun onModeSelected(mode: RidingMode) {
         updateRidingModeUseCase.update(mode)
         val location = _internalState.value.userLocation
@@ -224,7 +235,7 @@ internal class RideMapViewModel(
     }
 
     private fun onPermissionGranted() {
-        _internalState.update { it.copy(isPermissionGranted = true) }
+        _internalState.update { it.copy(isPermissionGranted = true, isPermissionDenied = false) }
         fetchInitialLocationAndStartLoading()
         if (isScreenVisible) {
             locationDelegate.startLocationObservation()
@@ -240,8 +251,10 @@ internal class RideMapViewModel(
         }
     }
 
-    private fun onPermissionDenied() {
-        _internalState.update { it.copy(error = application.getString(R.string.error_location_permission_denied)) }
+    private fun onPermissionDenied(event: RideMapUiEvent.PermissionEvent.PermissionDenied) {
+        _internalState.update {
+            it.copy(isPermissionDenied = true, isRationaleAvailable = event.isRationaleAvailable)
+        }
     }
 
     private fun onScreenResumed() {
@@ -299,6 +312,9 @@ internal class RideMapViewModel(
 
     private fun deriveUiState(state: RideMapInternalState): RideMapUiState = when {
         state.isLocationRetryNeeded -> RideMapUiState.LocationDisabled
+        state.isPermissionDenied && !state.isPermissionGranted -> RideMapUiState.PermissionDenied(
+            isRationaleAvailable = state.isRationaleAvailable,
+        )
         state.isSessionActive && state.isReady -> RideMapUiState.ActiveSession(
             userLocation = state.userLocation,
             cameraFocusLocation = state.cameraFocusLocation,
@@ -309,13 +325,13 @@ internal class RideMapViewModel(
             navigationAction = state.navigationAction,
             nutritionSuggestionTimeMs = state.nutritionSuggestionTimeMs,
         )
-        state.isReady && state.isFreeRoam -> RideMapUiState.FreeRoamIdle(
+        state.isReady && state.isMapLoaded && state.isFreeRoam -> RideMapUiState.FreeRoamIdle(
             userLocation = state.userLocation,
             cameraFocusLocation = state.cameraFocusLocation,
             isStartingFreeRoam = state.isStartingFreeRoam,
             error = state.error,
         )
-        state.isReady -> RideMapUiState.DestinationIdle(
+        state.isReady && state.isMapLoaded -> RideMapUiState.DestinationIdle(
             userLocation = state.userLocation,
             cameraFocusLocation = state.cameraFocusLocation,
             selectedDestination = state.selectedDestination,
@@ -332,6 +348,11 @@ internal class RideMapViewModel(
             error = state.error,
             navigationAction = state.navigationAction,
         )
-        else -> RideMapUiState.Loading
+        else -> RideMapUiState.Loading(
+            items = buildSet {
+                if (!state.isMapLoaded) add(LoadingItem.Map)
+                if (!state.isReady) add(LoadingItem.UserLocation)
+            },
+        )
     }
 }

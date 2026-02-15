@@ -2,8 +2,10 @@ package com.koflox.session.presentation.completion
 
 import android.widget.Toast
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -25,10 +27,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import com.koflox.designsystem.theme.Spacing
 import com.koflox.session.R
+import com.koflox.session.presentation.completion.components.MapHeaderOverlay
+import com.koflox.session.presentation.completion.components.MapLegendButton
 import com.koflox.session.presentation.completion.components.RouteMapView
 import com.koflox.session.presentation.completion.components.SessionSummaryCard
-import com.koflox.session.presentation.completion.components.calculateCardAlignment
 import com.koflox.session.presentation.share.SharePreviewDialog
 import org.koin.androidx.compose.koinViewModel
 
@@ -144,47 +148,70 @@ private fun SessionCompletionBody(
     uiState: SessionCompletionUiState,
     paddingValues: PaddingValues,
 ) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(paddingValues),
-    ) {
-        when (uiState) {
-            SessionCompletionUiState.Loading -> {
+    val modifier = Modifier
+        .fillMaxSize()
+        .padding(paddingValues)
+    when (uiState) {
+        SessionCompletionUiState.Loading -> {
+            Box(modifier = modifier) {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
             }
+        }
 
-            is SessionCompletionUiState.Error -> {
-                Text(
-                    text = uiState.message,
-                    modifier = Modifier.align(Alignment.Center),
-                )
-            }
-
-            is SessionCompletionUiState.Content -> {
-                val cardAlignment = calculateCardAlignment(uiState.routePoints)
-                if (uiState.routePoints.isNotEmpty()) {
-                    RouteMapView(
-                        routePoints = uiState.routePoints,
-                        startMarkerRotation = uiState.startMarkerRotation,
-                        endMarkerRotation = uiState.endMarkerRotation,
-                        modifier = Modifier.fillMaxSize(),
-                    )
-                }
-                SessionSummaryCard(
-                    startDate = uiState.startDateFormatted,
-                    elapsedTime = uiState.elapsedTimeFormatted,
-                    movingTime = uiState.movingTimeFormatted,
-                    idleTime = uiState.idleTimeFormatted,
-                    distance = uiState.traveledDistanceFormatted,
-                    averageSpeed = uiState.averageSpeedFormatted,
-                    topSpeed = uiState.topSpeedFormatted,
-                    altitudeGain = uiState.altitudeGainFormatted,
-                    altitudeLoss = uiState.altitudeLossFormatted,
-                    calories = uiState.caloriesFormatted,
-                    modifier = Modifier.align(cardAlignment),
-                )
+        is SessionCompletionUiState.Error -> {
+            Box(modifier = modifier) {
+                Text(text = uiState.message, modifier = Modifier.align(Alignment.Center))
             }
         }
+
+        is SessionCompletionUiState.Content -> {
+            SessionCompletionLayout(uiState = uiState, modifier = modifier)
+        }
+    }
+}
+
+@Composable
+private fun SessionCompletionLayout(
+    uiState: SessionCompletionUiState.Content,
+    modifier: Modifier = Modifier,
+) {
+    Column(modifier = modifier) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(2f),
+        ) {
+            if (uiState.routeDisplayData.allPoints.isNotEmpty()) {
+                RouteMapView(
+                    routeDisplayData = uiState.routeDisplayData,
+                    startMarkerRotation = uiState.startMarkerRotation,
+                    endMarkerRotation = uiState.endMarkerRotation,
+                    modifier = Modifier.matchParentSize(),
+                )
+            }
+            MapHeaderOverlay(
+                destinationName = uiState.destinationName,
+                startDate = uiState.startDateFormatted,
+                modifier = Modifier.align(Alignment.BottomCenter),
+            )
+            MapLegendButton(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(Spacing.Small)
+            )
+        }
+        SessionSummaryCard(
+            startDate = uiState.startDateFormatted,
+            elapsedTime = uiState.elapsedTimeFormatted,
+            movingTime = uiState.movingTimeFormatted,
+            idleTime = uiState.idleTimeFormatted,
+            distance = uiState.traveledDistanceFormatted,
+            averageSpeed = uiState.averageSpeedFormatted,
+            topSpeed = uiState.topSpeedFormatted,
+            altitudeGain = uiState.altitudeGainFormatted,
+            altitudeLoss = uiState.altitudeLossFormatted,
+            calories = uiState.caloriesFormatted,
+            modifier = Modifier.fillMaxWidth(),
+        )
     }
 }

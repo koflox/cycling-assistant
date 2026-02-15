@@ -135,6 +135,7 @@ class RideMapViewModelTest {
         viewModel.uiState.test {
             awaitItem() // Loading
 
+            sendMapLoaded()
             viewModel.onEvent(RideMapUiEvent.PermissionEvent.PermissionGranted)
             advanceUntilIdle()
 
@@ -149,6 +150,7 @@ class RideMapViewModelTest {
         viewModel = createViewModel()
         advanceUntilIdle()
 
+        sendMapLoaded()
         viewModel.onEvent(RideMapUiEvent.PermissionEvent.PermissionGranted)
         advanceUntilIdle()
 
@@ -158,26 +160,56 @@ class RideMapViewModelTest {
     }
 
     @Test
-    fun `PermissionDenied sets error`() = runTest {
+    fun `PermissionDenied shows PermissionDenied state with rationale`() = runTest {
         viewModel = createViewModel()
         advanceUntilIdle()
 
-        viewModel.onEvent(RideMapUiEvent.PermissionEvent.PermissionDenied)
+        viewModel.onEvent(RideMapUiEvent.PermissionEvent.PermissionDenied(isRationaleAvailable = true))
         advanceUntilIdle()
 
-        // Still Loading since isPermissionGranted remains false, but error is set in internal state
-        assertTrue(viewModel.uiState.value is RideMapUiState.Loading)
+        val state = viewModel.uiState.value
+        assertTrue("Expected PermissionDenied but was $state", state is RideMapUiState.PermissionDenied)
+        assertTrue((state as RideMapUiState.PermissionDenied).isRationaleAvailable)
+    }
+
+    @Test
+    fun `PermissionDenied permanently shows PermissionDenied state without rationale`() = runTest {
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.onEvent(RideMapUiEvent.PermissionEvent.PermissionDenied(isRationaleAvailable = false))
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertTrue("Expected PermissionDenied but was $state", state is RideMapUiState.PermissionDenied)
+        assertEquals(false, (state as RideMapUiState.PermissionDenied).isRationaleAvailable)
+    }
+
+    @Test
+    fun `PermissionGranted after denial clears denied state`() = runTest {
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.onEvent(RideMapUiEvent.PermissionEvent.PermissionDenied(isRationaleAvailable = true))
+        advanceUntilIdle()
+        assertTrue(viewModel.uiState.value is RideMapUiState.PermissionDenied)
+
+        sendMapLoaded()
+        viewModel.onEvent(RideMapUiEvent.PermissionEvent.PermissionGranted)
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertTrue("Expected FreeRoamIdle but was $state", state is RideMapUiState.FreeRoamIdle)
     }
 
     @Test
     fun `ErrorDismissed clears error`() = runTest {
         viewModel = createViewModel()
         advanceUntilIdle()
+        sendMapLoaded()
         viewModel.onEvent(RideMapUiEvent.PermissionEvent.PermissionGranted)
         advanceUntilIdle()
 
-        viewModel.onEvent(RideMapUiEvent.PermissionEvent.PermissionDenied)
-        advanceUntilIdle()
         viewModel.onEvent(RideMapUiEvent.CommonEvent.ErrorDismissed)
         advanceUntilIdle()
 
@@ -216,6 +248,7 @@ class RideMapViewModelTest {
 
         viewModel = createViewModel()
         advanceUntilIdle()
+        sendMapLoaded()
         viewModel.onEvent(RideMapUiEvent.PermissionEvent.PermissionGranted)
         advanceUntilIdle()
         assertTrue(viewModel.uiState.value is RideMapUiState.ActiveSession)
@@ -232,6 +265,7 @@ class RideMapViewModelTest {
 
         viewModel = createViewModel()
         advanceUntilIdle()
+        sendMapLoaded()
         viewModel.onEvent(RideMapUiEvent.PermissionEvent.PermissionGranted)
         advanceUntilIdle()
 
@@ -247,6 +281,7 @@ class RideMapViewModelTest {
 
         viewModel = createViewModel()
         advanceUntilIdle()
+        sendMapLoaded()
         viewModel.onEvent(RideMapUiEvent.PermissionEvent.PermissionGranted)
         advanceUntilIdle()
 
@@ -274,6 +309,7 @@ class RideMapViewModelTest {
     fun `observeRidingMode updates internal state`() = runTest {
         viewModel = createViewModel()
         advanceUntilIdle()
+        sendMapLoaded()
         viewModel.onEvent(RideMapUiEvent.PermissionEvent.PermissionGranted)
         advanceUntilIdle()
 
@@ -310,6 +346,7 @@ class RideMapViewModelTest {
     fun `NavigationActionHandled clears navigation action`() = runTest {
         viewModel = createViewModel()
         advanceUntilIdle()
+        sendMapLoaded()
         viewModel.onEvent(RideMapUiEvent.PermissionEvent.PermissionGranted)
         advanceUntilIdle()
 
@@ -326,6 +363,7 @@ class RideMapViewModelTest {
 
         viewModel = createViewModel()
         advanceUntilIdle()
+        sendMapLoaded()
         viewModel.onEvent(RideMapUiEvent.PermissionEvent.PermissionGranted)
         advanceUntilIdle()
         viewModel.onEvent(RideMapUiEvent.LifecycleEvent.ScreenResumed)
@@ -338,6 +376,7 @@ class RideMapViewModelTest {
 
         viewModel = createViewModel()
         advanceUntilIdle()
+        sendMapLoaded()
         viewModel.onEvent(RideMapUiEvent.PermissionEvent.PermissionGranted)
         advanceUntilIdle()
         viewModel.onEvent(RideMapUiEvent.LifecycleEvent.ScreenResumed)
@@ -375,11 +414,65 @@ class RideMapViewModelTest {
     fun `startFreeRoamSession not starting shows no loading indicator`() = runTest {
         viewModel = createViewModel()
         advanceUntilIdle()
+        sendMapLoaded()
         viewModel.onEvent(RideMapUiEvent.PermissionEvent.PermissionGranted)
         advanceUntilIdle()
 
         val state = viewModel.uiState.value as RideMapUiState.FreeRoamIdle
         assertEquals(false, state.isStartingFreeRoam)
+    }
+
+    @Test
+    fun `initial location fetch failure stays Loading after permission and map loaded`() = runTest {
+        coEvery { getUserLocationUseCase.getLocation() } returns Result.failure(RuntimeException("No GPS"))
+
+        viewModel = createViewModel()
+        advanceUntilIdle()
+        sendMapLoaded()
+        viewModel.onEvent(RideMapUiEvent.PermissionEvent.PermissionGranted)
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertTrue("Expected Loading but was $state", state is RideMapUiState.Loading)
+    }
+
+    @Test
+    fun `initial location fetch failure transitions after observation delivers location`() = runTest {
+        coEvery { getUserLocationUseCase.getLocation() } returns Result.failure(RuntimeException("No GPS"))
+        val locationFlow = MutableSharedFlow<Location>()
+        every { observeUserLocationUseCase.observe() } returns locationFlow
+
+        viewModel = createViewModel()
+        advanceUntilIdle()
+        sendMapLoaded()
+        viewModel.onEvent(RideMapUiEvent.LifecycleEvent.ScreenResumed)
+        viewModel.onEvent(RideMapUiEvent.PermissionEvent.PermissionGranted)
+        advanceUntilIdle()
+
+        assertTrue(viewModel.uiState.value is RideMapUiState.Loading)
+
+        locationFlow.emit(createUserLocation())
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertTrue("Expected FreeRoamIdle but was $state", state is RideMapUiState.FreeRoamIdle)
+        assertEquals(createUserLocation(), (state as RideMapUiState.FreeRoamIdle).cameraFocusLocation)
+    }
+
+    @Test
+    fun `FreeRoamIdle always has non-null cameraFocusLocation`() = runTest {
+        viewModel = createViewModel()
+        advanceUntilIdle()
+        sendMapLoaded()
+        viewModel.onEvent(RideMapUiEvent.PermissionEvent.PermissionGranted)
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value as RideMapUiState.FreeRoamIdle
+        assertNotNull(state.cameraFocusLocation)
+    }
+
+    private fun sendMapLoaded() {
+        viewModel.onEvent(RideMapUiEvent.MapEvent.MapLoaded)
     }
 
     private fun createUserLocation() = Location(USER_LAT, USER_LONG)

@@ -3,11 +3,11 @@ package com.koflox.session.presentation.sessionslist
 import android.graphics.Bitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.android.gms.maps.model.LatLng
 import com.koflox.error.mapper.ErrorMessageMapper
 import com.koflox.session.domain.usecase.CalculateSessionStatsUseCase
 import com.koflox.session.domain.usecase.GetAllSessionsUseCase
 import com.koflox.session.domain.usecase.GetSessionByIdUseCase
+import com.koflox.session.presentation.completion.components.buildRouteDisplayData
 import com.koflox.session.presentation.mapper.SessionUiMapper
 import com.koflox.session.presentation.share.SessionImageSharer
 import com.koflox.session.presentation.share.ShareErrorMapper
@@ -67,9 +67,7 @@ internal class SessionsListViewModel(
                 val session = sessionResult.getOrThrow()
                 val derivedStats = statsResult.getOrThrow()
                 val formattedData = sessionUiMapper.toSessionUiModel(session)
-                val routePoints = session.trackPoints.map { trackPoint ->
-                    LatLng(trackPoint.latitude, trackPoint.longitude)
-                }
+                val routeDisplayData = buildRouteDisplayData(session.trackPoints)
                 val previewData = SharePreviewData(
                     sessionId = session.id,
                     destinationName = session.destinationName,
@@ -83,7 +81,7 @@ internal class SessionsListViewModel(
                     altitudeGainFormatted = formattedData.altitudeGainFormatted,
                     altitudeLossFormatted = sessionUiMapper.formatAltitudeGain(derivedStats.altitudeLossMeters),
                     caloriesFormatted = derivedStats.caloriesBurned?.let { sessionUiMapper.formatCalories(it) },
-                    routePoints = routePoints,
+                    routeDisplayData = routeDisplayData,
                 )
                 updateContent { it.copy(overlay = SessionsListOverlay.SharePreview(previewData)) }
             }
