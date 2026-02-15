@@ -5,6 +5,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import com.koflox.session.presentation.completion.components.RouteDisplayData
 import org.junit.Rule
 import org.junit.Test
 
@@ -174,7 +175,7 @@ class SessionCompletionScreenTest {
         altitudeGainFormatted = ALTITUDE_GAIN,
         altitudeLossFormatted = ALTITUDE_LOSS,
         caloriesFormatted = CALORIES,
-        routePoints = emptyList(), // Empty to avoid Google Maps initialization issues in tests
+        routeDisplayData = RouteDisplayData.EMPTY, // Empty to avoid Google Maps initialization issues in tests
         overlay = overlay,
     )
 }

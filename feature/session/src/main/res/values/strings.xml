@@ -73,6 +73,15 @@
     <string name="session_completion_title">Session Complete</string>
     <string name="session_completion_back">Back</string>
 
+    <!-- Map Legend -->
+    <string name="map_legend_content_description">Route legend</string>
+    <string name="map_legend_title">Route Legend</string>
+    <string name="map_legend_normal_speed">Normal speed (&lt; 30 km/h)</string>
+    <string name="map_legend_fast_speed">Fast speed (≥ 30 km/h)</string>
+    <string name="map_legend_gap">Pause</string>
+    <string name="map_legend_start">Start</string>
+    <string name="map_legend_finish">Finish</string>
+
     <!-- Location Disabled Dialog -->
     <string name="location_disabled_title">Location Disabled</string>
     <string name="location_disabled_message">Location services are disabled. Enable location to continue your cycling session.</string>

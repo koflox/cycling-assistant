@@ -1,7 +1,6 @@
 package com.koflox.session.presentation.share
 
 import android.graphics.Bitmap
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -29,13 +28,12 @@ import androidx.compose.ui.graphics.layer.GraphicsLayer
 import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.koflox.designsystem.theme.Spacing
-import com.koflox.designsystem.theme.SurfaceAlpha
 import com.koflox.session.R
+import com.koflox.session.presentation.completion.components.MapHeaderOverlay
 import com.koflox.session.presentation.completion.components.RouteMapView
 import com.koflox.session.presentation.completion.components.SessionSummaryCard
 import kotlinx.coroutines.launch
@@ -178,7 +176,7 @@ private fun SharePreviewContent(
                     .weight(2f),
             ) {
                 RouteMapView(
-                    routePoints = data.routePoints,
+                    routeDisplayData = data.routeDisplayData,
                     startMarkerRotation = data.startMarkerRotation,
                     endMarkerRotation = data.endMarkerRotation,
                     isSharePreview = true,
@@ -202,36 +200,8 @@ private fun SharePreviewContent(
                 altitudeGain = data.altitudeGainFormatted,
                 altitudeLoss = data.altitudeLossFormatted,
                 calories = data.caloriesFormatted,
-                isCompact = true,
                 modifier = Modifier.fillMaxWidth(),
             )
         }
-    }
-}
-
-@Composable
-private fun MapHeaderOverlay(
-    destinationName: String?,
-    startDate: String,
-    modifier: Modifier = Modifier,
-) {
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surface.copy(alpha = SurfaceAlpha.Transparant))
-            .padding(horizontal = Spacing.Medium, vertical = Spacing.Small),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Text(
-            text = destinationName ?: stringResource(R.string.session_free_roam_title),
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurface,
-        )
-        Text(
-            text = startDate,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
     }
 }
