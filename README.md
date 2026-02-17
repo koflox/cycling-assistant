@@ -29,7 +29,7 @@ Built as an experiment in developing a production-ready application from scratch
 
 ## Documentation
 
-Full documentation is available at the [docs site](https://koflox.github.io/CyclingAssistant/), including architecture details, feature guides, and contribution instructions.
+Full documentation is available at the [docs site](https://koflox.github.io/cycling-assistant/), including architecture details, feature guides, and contribution instructions.
 
 ## License
 
