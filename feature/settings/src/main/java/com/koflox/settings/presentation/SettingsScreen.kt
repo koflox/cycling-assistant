@@ -29,6 +29,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
+import com.koflox.designsystem.component.LocalizedExposedDropdownMenu
 import com.koflox.designsystem.theme.Spacing
 import com.koflox.nutritionsettings.bridge.navigator.NutritionSettingsUiNavigator
 import com.koflox.settings.R
@@ -236,7 +237,7 @@ private fun <T> SettingDropdown(
                     .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
                     .fillMaxWidth(),
             )
-            ExposedDropdownMenu(
+            LocalizedExposedDropdownMenu(
                 expanded = isExpanded,
                 onDismissRequest = onDismiss,
             ) {

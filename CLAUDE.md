@@ -478,6 +478,13 @@ Supported languages: English (default), Russian (`values-ru`), Japanese (`values
 
 - All user-facing strings in `res/values/strings.xml`, never hardcoded
 - Always add translations to all supported locales when adding/modifying strings
+- **Popup locale rule:** `Dialog`, `AlertDialog`, `DropdownMenu`, and `ExposedDropdownMenu` create
+  new windows that don't inherit the app-selected locale from `LocalizedContent`. Always use the
+  `Localized*` wrappers from `shared/design-system/component/`:
+  - `LocalizedDialog` instead of `Dialog`
+  - `LocalizedAlertDialog` instead of `AlertDialog`
+  - `LocalizedDropdownMenu` instead of `DropdownMenu`
+  - `LocalizedExposedDropdownMenu` instead of `ExposedDropdownMenu`
 
 ## Adding New Features
 
