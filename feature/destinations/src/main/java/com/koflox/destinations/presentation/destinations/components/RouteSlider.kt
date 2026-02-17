@@ -70,7 +70,7 @@ internal fun RouteSlider(
                             baselineShift = BaselineShift((1 - TOLERANCE_FONT_SIZE_RATIO) / 2),
                         ),
                     ) {
-                        append(" (±$toleranceKm)")
+                        append(stringResource(R.string.tolerance_format, toleranceKm.toString()))
                     }
                 },
                 style = headlineStyle,

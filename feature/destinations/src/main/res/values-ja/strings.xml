@@ -11,6 +11,7 @@
     <string name="find_destination">出発！</string>
     <string name="one_way_distance_title">片道距離</string>
     <string name="km_unit">km</string>
+    <string name="tolerance_format"> (\u00B1%s)</string>
     <string name="preparing_destinations">目的地を準備中</string>
     <string name="destination_calculating_bounds">適切な距離範囲を検索中</string>
     <string name="destination_no_destinations_in_area">このエリアには目的地が見つかりません。利用可能な目的地は現在地に依存します</string>

@@ -73,9 +73,10 @@ internal class SessionNotificationManagerImpl(
         val distanceFormatted = sessionUiMapper.formatDistance(session.traveledDistanceKm)
 
         val contentText = "$statusText | $elapsedTimeFormatted"
+        val distanceWithUnit = localizedContext.getString(R.string.session_stat_value_km, distanceFormatted)
         val expandedText = buildString {
             appendLine("${localizedContext.getString(R.string.notification_time)}: $elapsedTimeFormatted")
-            append("${localizedContext.getString(R.string.notification_distance)}: $distanceFormatted km")
+            append("${localizedContext.getString(R.string.notification_distance)}: $distanceWithUnit")
         }
 
         return NotificationCompat.Builder(context, CHANNEL_ID)

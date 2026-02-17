@@ -22,7 +22,7 @@ internal class SessionsListUiMapperImpl : SessionsListUiMapper {
             id = session.id,
             destinationName = session.destinationName,
             dateFormatted = dateFormat.format(Date(session.startTimeMs)),
-            distanceFormatted = String.format(Locale.getDefault(), "%.2f km", session.traveledDistanceKm),
+            distanceFormatted = String.format(Locale.getDefault(), "%.2f", session.traveledDistanceKm),
             status = when (session.status) {
                 SessionStatus.RUNNING -> SessionListItemStatus.RUNNING
                 SessionStatus.PAUSED -> SessionListItemStatus.PAUSED
