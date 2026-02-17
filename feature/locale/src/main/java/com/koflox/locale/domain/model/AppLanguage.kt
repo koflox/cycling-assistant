@@ -6,5 +6,10 @@ enum class AppLanguage(
 ) {
     ENGLISH("en", "English"),
     RUSSIAN("ru", "Русский"),
-    JAPANESE("ja", "日本語"),
+    JAPANESE("ja", "日本語");
+
+    companion object {
+        val DEFAULT = ENGLISH
+    }
+
 }

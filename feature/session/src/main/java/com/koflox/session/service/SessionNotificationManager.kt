@@ -8,6 +8,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import androidx.core.app.NotificationCompat
+import com.koflox.designsystem.context.LocalizedContextProvider
 import com.koflox.session.R
 import com.koflox.session.domain.model.Session
 import com.koflox.session.domain.model.SessionStatus
@@ -21,6 +22,7 @@ internal interface SessionNotificationManager {
 
 internal class SessionNotificationManagerImpl(
     private val context: Context,
+    private val localizedContextProvider: LocalizedContextProvider,
     private val sessionUiMapper: SessionUiMapper,
 ) : SessionNotificationManager {
 
@@ -32,15 +34,16 @@ internal class SessionNotificationManagerImpl(
     }
 
     private val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+    private val localizedContext: Context get() = localizedContextProvider.getLocalizedContext()
 
     override fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 CHANNEL_ID,
-                context.getString(R.string.notification_channel_name),
+                localizedContext.getString(R.string.notification_channel_name),
                 NotificationManager.IMPORTANCE_DEFAULT,
             ).apply {
-                description = context.getString(R.string.notification_channel_description)
+                description = localizedContext.getString(R.string.notification_channel_description)
                 setShowBadge(false)
             }
             notificationManager.createNotificationChannel(channel)
@@ -50,8 +53,8 @@ internal class SessionNotificationManagerImpl(
     override fun createInitialNotification(): Notification {
         return NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_notification_cycling)
-            .setContentTitle(context.getString(R.string.notification_title_session_active))
-            .setContentText(context.getString(R.string.notification_text_starting))
+            .setContentTitle(localizedContext.getString(R.string.notification_title_session_active))
+            .setContentText(localizedContext.getString(R.string.notification_text_starting))
             .setOngoing(true)
             .setCategory(NotificationCompat.CATEGORY_NAVIGATION)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
@@ -62,22 +65,22 @@ internal class SessionNotificationManagerImpl(
 
     override fun buildNotification(session: Session, currentElapsedMs: Long): Notification {
         val statusText = when (session.status) {
-            SessionStatus.RUNNING -> context.getString(R.string.notification_status_running)
-            SessionStatus.PAUSED -> context.getString(R.string.notification_status_paused)
-            SessionStatus.COMPLETED -> context.getString(R.string.notification_status_paused)
+            SessionStatus.RUNNING -> localizedContext.getString(R.string.notification_status_running)
+            SessionStatus.PAUSED -> localizedContext.getString(R.string.notification_status_paused)
+            SessionStatus.COMPLETED -> localizedContext.getString(R.string.notification_status_paused)
         }
         val elapsedTimeFormatted = sessionUiMapper.formatElapsedTime(currentElapsedMs)
         val distanceFormatted = sessionUiMapper.formatDistance(session.traveledDistanceKm)
 
         val contentText = "$statusText | $elapsedTimeFormatted"
         val expandedText = buildString {
-            appendLine("${context.getString(R.string.notification_time)}: $elapsedTimeFormatted")
-            append("${context.getString(R.string.notification_distance)}: $distanceFormatted km")
+            appendLine("${localizedContext.getString(R.string.notification_time)}: $elapsedTimeFormatted")
+            append("${localizedContext.getString(R.string.notification_distance)}: $distanceFormatted km")
         }
 
         return NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_notification_cycling)
-            .setContentTitle(session.destinationName ?: context.getString(R.string.session_free_roam_title))
+            .setContentTitle(session.destinationName ?: localizedContext.getString(R.string.session_free_roam_title))
             .setContentText(contentText)
             .setStyle(NotificationCompat.BigTextStyle().bigText(expandedText))
             .setOngoing(true)
@@ -105,13 +108,13 @@ internal class SessionNotificationManagerImpl(
         return if (status == SessionStatus.RUNNING) {
             NotificationCompat.Action.Builder(
                 R.drawable.ic_notification_pause,
-                context.getString(R.string.notification_action_pause),
+                localizedContext.getString(R.string.notification_action_pause),
                 createActionPendingIntent(SessionTrackingService.ACTION_PAUSE),
             ).build()
         } else {
             NotificationCompat.Action.Builder(
                 R.drawable.ic_notification_resume,
-                context.getString(R.string.notification_action_resume),
+                localizedContext.getString(R.string.notification_action_resume),
                 createActionPendingIntent(SessionTrackingService.ACTION_RESUME),
             ).build()
         }
@@ -120,7 +123,7 @@ internal class SessionNotificationManagerImpl(
     private fun createStopAction(): NotificationCompat.Action {
         return NotificationCompat.Action.Builder(
             R.drawable.ic_notification_stop,
-            context.getString(R.string.notification_action_stop),
+            localizedContext.getString(R.string.notification_action_stop),
             createActionPendingIntent(SessionTrackingService.ACTION_STOP),
         ).build()
     }

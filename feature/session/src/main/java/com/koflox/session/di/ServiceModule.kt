@@ -15,6 +15,7 @@ internal val serviceModule = module {
     single<SessionNotificationManager> {
         SessionNotificationManagerImpl(
             context = androidContext(),
+            localizedContextProvider = get(),
             sessionUiMapper = get(),
         )
     }
