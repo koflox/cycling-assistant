@@ -118,10 +118,16 @@ kover {
                     "*ComposableSingletons\$*",
                     "*_Impl",
                     "*_Impl\$*",
+                    "*Activity",
+                    "*Activity\$*",
+                    "*DataStore",
+                    "*DataStore\$*",
+                    "*LocalizedContextProviderImpl",
                 )
                 packages(
                     "*.di",
                     "*.navigation",
+                    "*.dialog",
                 )
                 annotatedBy(
                     "androidx.compose.runtime.Composable",
