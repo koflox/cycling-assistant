@@ -53,7 +53,7 @@ class SessionsListUiMapperImplTest {
 
         val result = mapper.toUiModel(session)
 
-        assertEquals(String.format(Locale.getDefault(), "%.2f km", DISTANCE_KM), result.distanceFormatted)
+        assertEquals(String.format(Locale.getDefault(), "%.2f", DISTANCE_KM), result.distanceFormatted)
     }
 
     @Test

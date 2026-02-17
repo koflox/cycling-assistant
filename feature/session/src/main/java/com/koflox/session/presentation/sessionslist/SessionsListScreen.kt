@@ -230,7 +230,7 @@ private fun SessionListItem(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Text(
-                    text = session.distanceFormatted,
+                    text = stringResource(R.string.session_stat_value_km, session.distanceFormatted),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

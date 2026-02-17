@@ -32,19 +32,19 @@ fun SessionStatsDisplay(
         )
         StatItem(
             label = stringResource(R.string.session_stat_distance),
-            value = "$distance km",
+            value = stringResource(R.string.session_stat_value_km, distance),
         )
         StatItem(
             label = stringResource(R.string.session_stat_avg_speed),
-            value = "$averageSpeed km/h",
+            value = stringResource(R.string.session_stat_value_kmh, averageSpeed),
         )
         StatItem(
             label = stringResource(R.string.session_stat_top_speed),
-            value = "$topSpeed km/h",
+            value = stringResource(R.string.session_stat_value_kmh, topSpeed),
         )
         StatItem(
             label = stringResource(R.string.session_stat_altitude_gain),
-            value = "$altitudeGain m",
+            value = stringResource(R.string.session_stat_value_m, altitudeGain),
         )
     }
 }
