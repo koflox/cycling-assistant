@@ -1,22 +1,18 @@
 {
   "permissions": {
     "allow": [
-      "Bash(./gradlew *compile*)",
-      "Bash(./gradlew --stop)",
-      "Bash(./gradlew *test*)",
-      "Bash(./gradlew *assemble*)",
-      "Bash(./gradlew *build*)",
-      "Bash(./gradlew *clean*)",
-      "Bash(./gradlew *detektRun*)",
-      "Bash(taskkill)",
-      "Bash(./gradlew:*)",
-      "Bash(./gradlew clean:*)",
-      "Bash(taskkill:*)",
-      "Bash(timeout:*)",
-      "Bash(find:*)",
-      "Bash(xargs:*)",
-      "Bash(findstr:*)",
-      "Bash(dir:*)",
+      "Bash(./gradlew *)",
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git branch)",
+      "Bash(git branch -a)",
+      "Bash(git branch -r)",
+      "Bash(git branch -v*)",
+      "Bash(git branch --list*)",
+      "Bash(git show*)",
+      "Bash(git rev-parse*)",
+      "Bash(taskkill *)"
     ]
   }
 }
