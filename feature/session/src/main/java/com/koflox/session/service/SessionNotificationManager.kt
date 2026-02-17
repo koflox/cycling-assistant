@@ -81,6 +81,7 @@ internal class SessionNotificationManagerImpl(
             .setContentText(contentText)
             .setStyle(NotificationCompat.BigTextStyle().bigText(expandedText))
             .setOngoing(true)
+            .setOnlyAlertOnce(true)
             .setCategory(NotificationCompat.CATEGORY_NAVIGATION)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setPriority(DEFAULT_NOTIFICATION_PRIORITY)
