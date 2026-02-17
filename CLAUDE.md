@@ -114,7 +114,9 @@ interface CyclingSessionUiNavigator {
 }
 ```
 
-Bridge interface composables use `<Name>Screen` naming; feature implementations use `<Name>Route`.
+Bridge interface composables use descriptive names (`SessionScreen`, `DestinationOptions`,
+`StartFreeRoamSession`); feature implementations use `<Name>Route` (`SessionScreenRoute`,
+`DestinationOptionsRoute`, `FreeRoamSessionRoute`).
 
 ### Feature: Destinations
 
