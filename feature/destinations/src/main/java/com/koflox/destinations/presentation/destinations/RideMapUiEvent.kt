@@ -29,7 +29,8 @@ internal sealed interface RideMapUiEvent {
     }
 
     sealed interface SessionEvent : RideMapUiEvent {
-        data object StartFreeRoamClicked : SessionEvent
+        data object FreeRoamSessionStarting : SessionEvent
+        data object DestinationSessionStarting : SessionEvent
     }
 
     sealed interface CommonEvent : RideMapUiEvent {

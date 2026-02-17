@@ -13,7 +13,7 @@ internal sealed interface RideMapUiState {
     data class FreeRoamIdle(
         val userLocation: Location?,
         val cameraFocusLocation: Location?,
-        val isStartingFreeRoam: Boolean,
+        val isSessionStarting: Boolean,
         val error: String?,
     ) : RideMapUiState
 
@@ -30,6 +30,7 @@ internal sealed interface RideMapUiState {
         val isCalculatingBounds: Boolean,
         val areDistanceBoundsReady: Boolean,
         val isLoading: Boolean,
+        val isSessionStarting: Boolean,
         val showSelectedMarkerOptionsDialog: Boolean,
         val error: String?,
         val navigationAction: NavigationAction?,

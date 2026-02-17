@@ -33,6 +33,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -260,36 +261,53 @@ class RideMapViewModelTest {
     }
 
     @Test
-    fun `startFreeRoamSession success transitions to active session`() = runTest {
-        coEvery { cyclingSessionUseCase.startFreeRoamSession() } returns Result.success(Unit)
-
+    fun `startFreeRoamClicked shows session starting indicator`() = runTest {
         viewModel = createViewModel()
         advanceUntilIdle()
         sendMapLoaded()
         viewModel.onEvent(RideMapUiEvent.PermissionEvent.PermissionGranted)
         advanceUntilIdle()
 
-        viewModel.onEvent(RideMapUiEvent.SessionEvent.StartFreeRoamClicked)
-        advanceUntilIdle()
-
-        coVerify { cyclingSessionUseCase.startFreeRoamSession() }
-    }
-
-    @Test
-    fun `startFreeRoamSession failure shows error`() = runTest {
-        coEvery { cyclingSessionUseCase.startFreeRoamSession() } returns Result.failure(RuntimeException("error"))
-
-        viewModel = createViewModel()
-        advanceUntilIdle()
-        sendMapLoaded()
-        viewModel.onEvent(RideMapUiEvent.PermissionEvent.PermissionGranted)
-        advanceUntilIdle()
-
-        viewModel.onEvent(RideMapUiEvent.SessionEvent.StartFreeRoamClicked)
+        viewModel.onEvent(RideMapUiEvent.SessionEvent.FreeRoamSessionStarting)
         advanceUntilIdle()
 
         val state = viewModel.uiState.value as RideMapUiState.FreeRoamIdle
-        assertNotNull(state.error)
+        assertTrue(state.isSessionStarting)
+    }
+
+    @Test
+    fun `destinationSessionStarting shows session starting indicator`() = runTest {
+        every { distanceCalculator.calculateKm(any(), any(), any(), any()) } returns 0.0
+        ridingModeFlow.value = RidingMode.DESTINATION
+        viewModel = createViewModel()
+        advanceUntilIdle()
+        sendMapLoaded()
+        viewModel.onEvent(RideMapUiEvent.PermissionEvent.PermissionGranted)
+        advanceUntilIdle()
+
+        viewModel.onEvent(RideMapUiEvent.SessionEvent.DestinationSessionStarting)
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value as RideMapUiState.DestinationIdle
+        assertTrue(state.isSessionStarting)
+    }
+
+    @Test
+    fun `session becoming active clears session starting indicator`() = runTest {
+        viewModel = createViewModel()
+        advanceUntilIdle()
+        sendMapLoaded()
+        viewModel.onEvent(RideMapUiEvent.PermissionEvent.PermissionGranted)
+        advanceUntilIdle()
+
+        viewModel.onEvent(RideMapUiEvent.SessionEvent.FreeRoamSessionStarting)
+        advanceUntilIdle()
+        assertTrue((viewModel.uiState.value as RideMapUiState.FreeRoamIdle).isSessionStarting)
+
+        activeSessionFlow.value = true
+        advanceUntilIdle()
+
+        assertTrue(viewModel.uiState.value is RideMapUiState.ActiveSession)
     }
 
     @Test
@@ -411,7 +429,7 @@ class RideMapViewModelTest {
     }
 
     @Test
-    fun `startFreeRoamSession not starting shows no loading indicator`() = runTest {
+    fun `initial FreeRoamIdle has no session starting indicator`() = runTest {
         viewModel = createViewModel()
         advanceUntilIdle()
         sendMapLoaded()
@@ -419,7 +437,7 @@ class RideMapViewModelTest {
         advanceUntilIdle()
 
         val state = viewModel.uiState.value as RideMapUiState.FreeRoamIdle
-        assertEquals(false, state.isStartingFreeRoam)
+        assertFalse(state.isSessionStarting)
     }
 
     @Test
