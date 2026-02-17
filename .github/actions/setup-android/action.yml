@@ -1,0 +1,51 @@
+name: Setup Android Build Environment
+description: Sets up JDK, Gradle, and Android build cache
+
+inputs:
+  gradle-cache-save:
+    description: "'true' enables Gradle cache writes; 'false' restores only (read-only)"
+    default: 'false'
+  build-cache-save:
+    description: "'true' saves Android build cache; 'false' restores only"
+    default: 'false'
+
+runs:
+  using: composite
+  steps:
+    - name: Set up JDK
+      uses: actions/setup-java@v5
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v5
+      with:
+        gradle-version: "9.3.1"
+        cache-read-only: ${{ inputs.gradle-cache-save == 'false' }}
+
+    - name: Restore Android build cache
+      if: inputs.build-cache-save == 'false'
+      uses: actions/cache/restore@v5
+      with:
+        path: |
+          ~/.android/build-cache
+          **/build/intermediates
+          **/build/generated
+          **/build/tmp
+        key: android-build-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', 'gradle/libs.versions.toml') }}
+        restore-keys: |
+          android-build-${{ runner.os }}-
+
+    - name: Cache Android build outputs
+      if: inputs.build-cache-save == 'true'
+      uses: actions/cache@v5
+      with:
+        path: |
+          ~/.android/build-cache
+          **/build/intermediates
+          **/build/generated
+          **/build/tmp
+        key: android-build-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', 'gradle/libs.versions.toml') }}
+        restore-keys: |
+          android-build-${{ runner.os }}-

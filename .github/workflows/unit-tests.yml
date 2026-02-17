@@ -26,29 +26,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
 
-      - name: Set up JDK
-        uses: actions/setup-java@v5
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v5
-        with:
-          gradle-version: "9.3.1"
-          cache-read-only: true
-
-      - name: Restore Android build cache
-        uses: actions/cache/restore@v5
-        with:
-          path: |
-            ~/.android/build-cache
-            **/build/intermediates
-            **/build/generated
-            **/build/tmp
-          key: android-build-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', 'gradle/libs.versions.toml') }}
-          restore-keys: |
-            android-build-${{ runner.os }}-
+      - name: Setup Android build environment
+        uses: ./.github/actions/setup-android
 
       - name: Run detekt
         run: gradle detektRun --build-cache
