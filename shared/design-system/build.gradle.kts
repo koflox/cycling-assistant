@@ -9,6 +9,10 @@ android {
     buildFeatures {
         compose = true
     }
+
+    testFixtures {
+        enable = true
+    }
 }
 
 dependencies {
@@ -24,4 +28,8 @@ dependencies {
     implementation(libs.androidx.material.icons.extended)
 
     debugImplementation(libs.androidx.ui.tooling)
+
+    testFixturesImplementation(platform(libs.androidx.compose.bom))
+    testFixturesImplementation(libs.androidx.ui)
+    testFixturesImplementation(libs.mockk)
 }

@@ -82,6 +82,7 @@ dependencies {
     testImplementation(libs.turbine)
     testImplementation(libs.koin.test)
     testImplementation(project(":shared:testing"))
+    testImplementation(testFixtures(project(":shared:design-system")))
 
     // Test fixtures dependencies
     testFixturesImplementation(platform(libs.androidx.compose.bom))
