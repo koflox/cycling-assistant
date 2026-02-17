@@ -76,6 +76,7 @@ internal fun RouteMapView(
             routeDisplayData = routeDisplayData,
             startMarkerRotation = startMarkerRotation,
             endMarkerRotation = endMarkerRotation,
+            isSharePreview = isSharePreview,
         )
     }
 }
@@ -87,6 +88,7 @@ private fun RouteMapContent(
     routeDisplayData: RouteDisplayData,
     startMarkerRotation: Float,
     endMarkerRotation: Float,
+    isSharePreview: Boolean = false,
 ) {
     val allPoints = routeDisplayData.allPoints
     val markerSizePx = with(LocalDensity.current) { MARKER_SIZE_DP.toPx().toInt() }
@@ -102,6 +104,7 @@ private fun RouteMapContent(
             title = "Start",
             icon = startMarkerIcon,
             anchor = Offset(0.5f, 0.5f),
+            onClick = { isSharePreview },
         )
     }
     routeDisplayData.segments.forEach { segment ->
@@ -128,6 +131,7 @@ private fun RouteMapContent(
             title = "End",
             icon = endMarkerIcon,
             anchor = Offset(0.5f, 0.5f),
+            onClick = { isSharePreview },
         )
     }
 }
