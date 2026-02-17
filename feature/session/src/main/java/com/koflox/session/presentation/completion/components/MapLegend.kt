@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -29,6 +28,7 @@ import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
+import com.koflox.designsystem.component.LocalizedDropdownMenu
 import com.koflox.designsystem.theme.CornerRadius
 import com.koflox.designsystem.theme.Spacing
 import com.koflox.designsystem.theme.SurfaceAlpha
@@ -54,7 +54,7 @@ internal fun MapLegendButton(modifier: Modifier = Modifier) {
                 tint = MaterialTheme.colorScheme.onSurface,
             )
         }
-        DropdownMenu(
+        LocalizedDropdownMenu(
             expanded = isExpanded,
             onDismissRequest = { isExpanded = false },
             offset = DpOffset(x = 0.dp, y = Spacing.Small),
