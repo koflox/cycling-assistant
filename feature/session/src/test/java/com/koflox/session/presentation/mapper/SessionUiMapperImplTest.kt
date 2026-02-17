@@ -1,5 +1,6 @@
 package com.koflox.session.presentation.mapper
 
+import com.koflox.designsystem.testutil.mockLocalizedContextProvider
 import com.koflox.session.testutil.createSession
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -15,13 +16,16 @@ class SessionUiMapperImplTest {
         private const val ONE_MINUTE_MS = 60000L
         private const val ONE_SECOND_MS = 1000L
         private const val START_TIME_MS = 1700000000000L
+        private val TEST_LOCALE = Locale.US
     }
 
     private lateinit var mapper: SessionUiMapperImpl
 
     @Before
     fun setup() {
-        mapper = SessionUiMapperImpl()
+        mapper = SessionUiMapperImpl(
+            localizedContextProvider = mockLocalizedContextProvider(TEST_LOCALE),
+        )
     }
 
     @Test
@@ -82,7 +86,7 @@ class SessionUiMapperImplTest {
 
     @Test
     fun `formatStartDate formats correctly`() {
-        val expected = SimpleDateFormat("MMM dd, yyyy HH:mm", Locale.getDefault()).format(Date(START_TIME_MS))
+        val expected = SimpleDateFormat("MMM dd, yyyy HH:mm", TEST_LOCALE).format(Date(START_TIME_MS))
 
         val result = mapper.formatStartDate(START_TIME_MS)
 

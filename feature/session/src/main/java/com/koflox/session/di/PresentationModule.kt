@@ -34,7 +34,9 @@ internal val presentationModule = module {
         )
     }
     single<SessionUiMapper> {
-        SessionUiMapperImpl()
+        SessionUiMapperImpl(
+            localizedContextProvider = get(),
+        )
     }
     single<SessionTimerFactory> {
         SessionTimerFactory { scope -> SessionTimerImpl(scope) }
@@ -55,7 +57,9 @@ internal val presentationModule = module {
         )
     }
     single<SessionsListUiMapper> {
-        SessionsListUiMapperImpl()
+        SessionsListUiMapperImpl(
+            localizedContextProvider = get(),
+        )
     }
     single<SessionImageSharer> {
         SessionImageSharerImpl(

@@ -1,11 +1,14 @@
 package com.koflox.session.presentation.mapper
 
+import com.koflox.designsystem.context.LocalizedContextProvider
 import com.koflox.session.domain.model.Session
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-class SessionUiMapperImpl : SessionUiMapper {
+internal class SessionUiMapperImpl(
+    private val localizedContextProvider: LocalizedContextProvider,
+) : SessionUiMapper {
 
     companion object {
         private const val DATE_FORMAT_PATTERN = "MMM dd, yyyy HH:mm"
@@ -33,7 +36,8 @@ class SessionUiMapperImpl : SessionUiMapper {
         String.format(Locale.getDefault(), FORMAT_WHOLE_NUMBER, calories)
 
     override fun formatStartDate(startTimeMs: Long): String {
-        val dateFormat = SimpleDateFormat(DATE_FORMAT_PATTERN, Locale.getDefault())
+        val locale = localizedContextProvider.getLocalizedContext().resources.configuration.locales[0]
+        val dateFormat = SimpleDateFormat(DATE_FORMAT_PATTERN, locale)
         return dateFormat.format(Date(startTimeMs))
     }
 
