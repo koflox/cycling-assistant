@@ -111,6 +111,7 @@ graph LR
   :feature:bridge:nutrition-session:impl --> :feature:bridge:nutrition-session:api
   :feature:bridge:nutrition-session:impl --> :feature:session
   :shared:error --> :shared:concurrent
+  :shared:error --> :shared:design-system
   :feature:theme --> :shared:concurrent
   :feature:theme --> :shared:di
   :feature:locale --> :shared:concurrent
