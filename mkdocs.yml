@@ -1,7 +1,7 @@
 site_name: CyclingAssistant
 site_description: Documentation for the CyclingAssistant Android app
-repo_url: https://github.com/koflox/CyclingAssistant
-repo_name: koflox/CyclingAssistant
+repo_url: https://github.com/koflox/cycling-assistant
+repo_name: koflox/cycling-assistant
 
 theme:
   name: material
