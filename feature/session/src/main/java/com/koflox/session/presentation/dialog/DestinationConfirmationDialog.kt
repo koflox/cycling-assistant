@@ -26,46 +26,47 @@ import com.koflox.session.presentation.session.SessionViewModel
 import org.koin.androidx.compose.koinViewModel
 import java.util.Locale
 
+private enum class SessionStartStep {
+    IDLE,
+    CHECKING_LOCATION,
+    STARTING_SESSION,
+}
+
 @Composable
 fun DestinationOptionsRoute(
     destinationId: String,
     destinationName: String,
     destinationLocation: Location,
     distanceKm: Double,
+    onSessionStarting: () -> Unit,
     onNavigateClick: () -> Unit,
     onDismiss: () -> Unit,
 ) {
     val viewModel: SessionViewModel = koinViewModel()
-    var shouldCheckLocation by remember { mutableStateOf(false) }
-    var shouldRequestPermission by remember { mutableStateOf(false) }
-    if (shouldCheckLocation) {
-        LocationSettingsHandler(
+    var startStep by remember { mutableStateOf(SessionStartStep.IDLE) }
+    when (startStep) {
+        SessionStartStep.IDLE -> Unit
+        SessionStartStep.CHECKING_LOCATION -> LocationSettingsHandler(
             onLocationEnabled = {
-                shouldCheckLocation = false
                 @Suppress("AssignedValueIsNeverRead")
-                shouldRequestPermission = true
+                startStep = SessionStartStep.STARTING_SESSION
             },
             onLocationDenied = {
                 @Suppress("AssignedValueIsNeverRead")
-                shouldCheckLocation = false
+                startStep = SessionStartStep.IDLE
             },
         )
-    }
-    if (shouldRequestPermission) {
-        NotificationPermissionHandler { isGranted ->
-            if (isGranted) {
-                viewModel.startSession(
-                    CreateSessionParams.Destination(
-                        destinationId = destinationId,
-                        destinationName = destinationName,
-                        destinationLatitude = destinationLocation.latitude,
-                        destinationLongitude = destinationLocation.longitude,
-                    ),
-                )
-                onDismiss()
-            }
-            @Suppress("AssignedValueIsNeverRead")
-            shouldRequestPermission = false
+        SessionStartStep.STARTING_SESSION -> NotificationPermissionHandler { _ ->
+            onSessionStarting()
+            viewModel.startSession(
+                CreateSessionParams.Destination(
+                    destinationId = destinationId,
+                    destinationName = destinationName,
+                    destinationLatitude = destinationLocation.latitude,
+                    destinationLongitude = destinationLocation.longitude,
+                ),
+            )
+            onDismiss()
         }
     }
     DestinationConfirmationDialog(
@@ -74,7 +75,7 @@ fun DestinationOptionsRoute(
         onNavigateClick = onNavigateClick,
         onStartSessionClick = {
             @Suppress("AssignedValueIsNeverRead")
-            shouldCheckLocation = true
+            startStep = SessionStartStep.CHECKING_LOCATION
         },
         onDismiss = onDismiss,
     )

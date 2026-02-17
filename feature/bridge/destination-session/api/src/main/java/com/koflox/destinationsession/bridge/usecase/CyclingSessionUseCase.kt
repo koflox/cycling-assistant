@@ -3,7 +3,7 @@ package com.koflox.destinationsession.bridge.usecase
 import kotlinx.coroutines.flow.Flow
 
 /**
- * Domain-level interface for cycling session state.
+ * Domain-level interface for cycling session state observation.
  */
 interface CyclingSessionUseCase {
 
@@ -17,10 +17,5 @@ interface CyclingSessionUseCase {
      * Returns null when there's no active session or the session is free roam.
      */
     suspend fun getActiveSessionDestination(): ActiveSessionDestination?
-
-    /**
-     * Start a free roam session without a destination.
-     */
-    suspend fun startFreeRoamSession(): Result<Unit>
 
 }

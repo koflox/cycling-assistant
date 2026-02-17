@@ -154,6 +154,10 @@ private fun RideMapContent(
         RideMapOverlay(uiState, viewModel, sessionUiNavigator, nutritionUiNavigator, onNavigateToSessionCompletion, onRetryPermission)
     }
     when (uiState) {
+        is RideMapUiState.FreeRoamIdle -> FreeRoamSessionGate(
+            uiState = uiState,
+            sessionUiNavigator = sessionUiNavigator,
+        )
         is RideMapUiState.DestinationIdle -> DestinationOptionsDialog(
             showDialog = uiState.showSelectedMarkerOptionsDialog,
             selectedDestination = uiState.selectedDestination,
@@ -236,7 +240,7 @@ private fun BoxScope.IdleOverlay(uiState: RideMapUiState.FreeRoamIdle, viewModel
         FreeRoamControls(uiState = uiState, viewModel = viewModel)
         Spacer(modifier = Modifier.weight(1f))
     }
-    if (uiState.isStartingFreeRoam) {
+    if (uiState.isSessionStarting) {
         LoadingOverlay()
     }
 }
@@ -273,8 +277,18 @@ private fun BoxScope.IdleOverlay(uiState: RideMapUiState.DestinationIdle, viewMo
             Spacer(modifier = Modifier.weight(1f))
         }
     }
-    if (uiState.isLoading) {
+    if (uiState.isLoading || uiState.isSessionStarting) {
         LoadingOverlay()
+    }
+}
+
+@Composable
+private fun FreeRoamSessionGate(
+    uiState: RideMapUiState.FreeRoamIdle,
+    sessionUiNavigator: CyclingSessionUiNavigator,
+) {
+    if (uiState.isSessionStarting) {
+        sessionUiNavigator.StartFreeRoamSession()
     }
 }
 
@@ -291,6 +305,7 @@ private fun DestinationOptionsDialog(
             destinationName = selectedDestination.title,
             destinationLocation = selectedDestination.location,
             distanceKm = selectedDestination.distanceKm,
+            onSessionStarting = { viewModel.onEvent(RideMapUiEvent.SessionEvent.DestinationSessionStarting) },
             onNavigateClick = {
                 viewModel.onEvent(RideMapUiEvent.DestinationEvent.SelectedMarkerOptionsDialogDismissed)
                 viewModel.onEvent(RideMapUiEvent.DestinationEvent.OpenInGoogleMaps(selectedDestination))
@@ -342,7 +357,7 @@ private fun FreeRoamControls(
         LocationSettingsHandler(
             onLocationEnabled = {
                 shouldCheckLocation = false
-                viewModel.onEvent(RideMapUiEvent.SessionEvent.StartFreeRoamClicked)
+                viewModel.onEvent(RideMapUiEvent.SessionEvent.FreeRoamSessionStarting)
             },
             onLocationDenied = {
                 @Suppress("AssignedValueIsNeverRead")
@@ -352,7 +367,7 @@ private fun FreeRoamControls(
     }
     StartRideButton(
         onClick = { shouldCheckLocation = true },
-        enabled = !uiState.isStartingFreeRoam,
+        enabled = !uiState.isSessionStarting,
         modifier = modifier,
     )
 }
