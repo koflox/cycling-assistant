@@ -38,6 +38,7 @@ private val mainModule = module {
         MainViewModel(
             observeThemeUseCase = get(),
             observeLocaleUseCase = get(),
+            pendingSessionAction = get(),
         )
     }
 }

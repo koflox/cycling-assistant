@@ -114,6 +114,9 @@ internal class SessionTrackerImpl(
                 if (session != null) {
                     handleSessionUpdate(session)
                 } else {
+                    stopLocationCollection()
+                    stopLocationMonitoring()
+                    stopTimer()
                     delegate?.onStopService()
                 }
             }

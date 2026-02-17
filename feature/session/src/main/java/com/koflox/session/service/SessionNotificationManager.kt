@@ -124,8 +124,21 @@ internal class SessionNotificationManagerImpl(
         return NotificationCompat.Action.Builder(
             R.drawable.ic_notification_stop,
             localizedContext.getString(R.string.notification_action_stop),
-            createActionPendingIntent(SessionTrackingService.ACTION_STOP),
+            createStopPendingIntent(),
         ).build()
+    }
+
+    private fun createStopPendingIntent(): PendingIntent {
+        val intent = context.packageManager.getLaunchIntentForPackage(context.packageName)?.apply {
+            action = PendingSessionActionImpl.ACTION_STOP_CONFIRMATION
+            addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+        }
+        return PendingIntent.getActivity(
+            context,
+            PendingSessionActionImpl.ACTION_STOP_CONFIRMATION.hashCode(),
+            intent!!,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
     }
 
     private fun createActionPendingIntent(action: String): PendingIntent {
