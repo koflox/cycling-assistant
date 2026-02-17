@@ -47,7 +47,6 @@ class RideMapViewModelTest {
     companion object {
         private const val USER_LAT = 52.52
         private const val USER_LONG = 13.405
-        private const val ERROR_MESSAGE = "Something went wrong"
         private const val NUTRITION_SUGGESTION_MS = 3600000L
     }
 
@@ -88,8 +87,6 @@ class RideMapViewModelTest {
         every { cyclingSessionUseCase.observeHasActiveSession() } returns activeSessionFlow
         coEvery { cyclingSessionUseCase.getActiveSessionDestination() } returns null
         every { observeNutritionBreakUseCase.observeNutritionBreakEvents() } returns nutritionFlow
-        every { application.getString(any()) } returns ERROR_MESSAGE
-        every { application.getString(any(), any()) } returns ERROR_MESSAGE
         every { initializeDatabaseUseCase.init(any()) } returns flowOf(
             DestinationLoadingEvent.Loading,
             DestinationLoadingEvent.Completed,

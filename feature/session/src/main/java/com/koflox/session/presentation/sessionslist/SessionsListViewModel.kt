@@ -48,7 +48,7 @@ internal class SessionsListViewModel(
         viewModelScope.launch(dispatcherDefault) {
             when (event) {
                 is SessionsListUiEvent.ShareClicked -> showSharePreview(event.sessionId)
-                is SessionsListUiEvent.ShareConfirmed -> shareImage(event.bitmap, event.destinationName)
+                is SessionsListUiEvent.ShareConfirmed -> shareImage(event.bitmap, event.shareText, event.chooserTitle)
                 SessionsListUiEvent.ShareDialogDismissed -> dismissShareDialog()
                 SessionsListUiEvent.ShareIntentLaunched -> dismissShareDialog()
                 SessionsListUiEvent.ShareErrorDismissed -> clearShareError()
@@ -99,14 +99,14 @@ internal class SessionsListViewModel(
         updateContent { it.copy(overlay = null) }
     }
 
-    private suspend fun shareImage(bitmap: Bitmap, destinationName: String?) {
+    private suspend fun shareImage(bitmap: Bitmap, shareText: String, chooserTitle: String) {
         val previewData = when (val currentOverlay = (_uiState.value as? SessionsListUiState.Content)?.overlay) {
             is SessionsListOverlay.SharePreview -> currentOverlay.data
             is SessionsListOverlay.ShareError -> currentOverlay.data
             else -> return
         }
         updateContent { it.copy(overlay = SessionsListOverlay.Sharing(previewData)) }
-        val result = imageSharer.shareImage(bitmap, destinationName)
+        val result = imageSharer.shareImage(bitmap, shareText, chooserTitle)
         updateContent { content ->
             when (result) {
                 is ShareResult.Success -> content.copy(overlay = SessionsListOverlay.ShareReady(result.intent))

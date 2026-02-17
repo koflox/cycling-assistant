@@ -27,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import com.koflox.designsystem.text.resolve
 import com.koflox.designsystem.theme.Spacing
 import com.koflox.session.R
 import com.koflox.session.presentation.completion.components.MapHeaderOverlay
@@ -62,7 +63,7 @@ internal fun SessionCompletionRoute(
             }
 
             is Overlay.ShareError -> {
-                Toast.makeText(context, overlay.message, Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, overlay.message.resolve(context), Toast.LENGTH_SHORT).show()
                 viewModel.onEvent(SessionCompletionUiEvent.ErrorDismissed)
             }
 
@@ -94,8 +95,8 @@ internal fun SessionCompletionContent(
         SharePreviewDialog(
             data = sharePreviewData,
             isSharing = content?.overlay is Overlay.Sharing,
-            onShareClick = { bitmap, destinationName ->
-                onEvent(SessionCompletionUiEvent.ShareConfirmed(bitmap, destinationName))
+            onShareClick = { bitmap, shareText, chooserTitle ->
+                onEvent(SessionCompletionUiEvent.ShareConfirmed(bitmap, shareText, chooserTitle))
             },
             onDismiss = { onEvent(SessionCompletionUiEvent.ShareDialogDismissed) },
         )
@@ -160,7 +161,7 @@ private fun SessionCompletionBody(
 
         is SessionCompletionUiState.Error -> {
             Box(modifier = modifier) {
-                Text(text = uiState.message, modifier = Modifier.align(Alignment.Center))
+                Text(text = uiState.message.resolve(LocalContext.current), modifier = Modifier.align(Alignment.Center))
             }
         }
 

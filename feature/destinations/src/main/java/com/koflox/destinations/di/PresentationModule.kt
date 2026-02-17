@@ -32,7 +32,6 @@ internal val presentationModule = module {
         DestinationUiMapperImpl(
             dispatcherDefault = get(DispatchersQualifier.Default),
             distanceCalculator = get(),
-            context = androidApplication(),
         )
     }
 }

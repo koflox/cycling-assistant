@@ -4,6 +4,7 @@ import android.content.Intent
 import android.graphics.Bitmap
 import androidx.lifecycle.SavedStateHandle
 import app.cash.turbine.test
+import com.koflox.designsystem.text.UiText
 import com.koflox.error.mapper.ErrorMessageMapper
 import com.koflox.session.domain.model.SessionDerivedStats
 import com.koflox.session.domain.model.SessionStatus
@@ -35,8 +36,10 @@ class SessionCompletionViewModelTest {
     companion object {
         private const val SESSION_ID = "session-123"
         private const val DESTINATION_NAME = "Test Destination"
-        private const val ERROR_MESSAGE = "Something went wrong"
-        private const val SHARE_ERROR_MESSAGE = "Cannot share"
+        private const val SHARE_TEXT = "Check out my ride!"
+        private const val CHOOSER_TITLE = "Share via"
+        private val ERROR_UI_TEXT = UiText.Resource(com.koflox.error.R.string.error_not_handled)
+        private val SHARE_ERROR_UI_TEXT = UiText.Resource(com.koflox.session.R.string.share_image_processing_error)
         private const val FORMATTED_DATE = "Jan 1, 2024"
         private const val FORMATTED_TIME = "01:30:00"
         private const val FORMATTED_DISTANCE = "15.5 km"
@@ -81,7 +84,7 @@ class SessionCompletionViewModelTest {
                 caloriesBurned = 0.0,
             ),
         )
-        coEvery { errorMessageMapper.map(any()) } returns ERROR_MESSAGE
+        coEvery { errorMessageMapper.map(any()) } returns ERROR_UI_TEXT
     }
 
     private fun createViewModel(): SessionCompletionViewModel {
@@ -221,7 +224,7 @@ class SessionCompletionViewModelTest {
         viewModel.uiState.test {
             awaitItem() // Loading
             val error = awaitItem() as SessionCompletionUiState.Error
-            assertEquals(ERROR_MESSAGE, error.message)
+            assertEquals(ERROR_UI_TEXT, error.message)
         }
     }
 
@@ -315,7 +318,7 @@ class SessionCompletionViewModelTest {
         coEvery {
             getSessionByIdUseCase.getSession(SESSION_ID)
         } returns Result.success(createSession(id = SESSION_ID, destinationName = DESTINATION_NAME, status = SessionStatus.COMPLETED))
-        coEvery { imageSharer.shareImage(bitmap, DESTINATION_NAME) } returns ShareResult.Success(intent)
+        coEvery { imageSharer.shareImage(bitmap, SHARE_TEXT, CHOOSER_TITLE) } returns ShareResult.Success(intent)
 
         viewModel = createViewModel()
 
@@ -323,7 +326,7 @@ class SessionCompletionViewModelTest {
             awaitItem() // Loading
             awaitItem() // Content
 
-            viewModel.onEvent(SessionCompletionUiEvent.ShareConfirmed(bitmap, DESTINATION_NAME))
+            viewModel.onEvent(SessionCompletionUiEvent.ShareConfirmed(bitmap, SHARE_TEXT, CHOOSER_TITLE))
 
             val sharingState = awaitItem() as SessionCompletionUiState.Content
             assertTrue(sharingState.overlay is Overlay.Sharing)
@@ -338,7 +341,7 @@ class SessionCompletionViewModelTest {
         coEvery {
             getSessionByIdUseCase.getSession(SESSION_ID)
         } returns Result.success(createSession(id = SESSION_ID, destinationName = DESTINATION_NAME, status = SessionStatus.COMPLETED))
-        coEvery { imageSharer.shareImage(bitmap, DESTINATION_NAME) } returns ShareResult.Success(intent)
+        coEvery { imageSharer.shareImage(bitmap, SHARE_TEXT, CHOOSER_TITLE) } returns ShareResult.Success(intent)
 
         viewModel = createViewModel()
 
@@ -346,7 +349,7 @@ class SessionCompletionViewModelTest {
             awaitItem() // Loading
             awaitItem() // Content
 
-            viewModel.onEvent(SessionCompletionUiEvent.ShareConfirmed(bitmap, DESTINATION_NAME))
+            viewModel.onEvent(SessionCompletionUiEvent.ShareConfirmed(bitmap, SHARE_TEXT, CHOOSER_TITLE))
 
             awaitItem() // Sharing
             val readyState = awaitItem() as SessionCompletionUiState.Content
@@ -361,8 +364,8 @@ class SessionCompletionViewModelTest {
         coEvery {
             getSessionByIdUseCase.getSession(SESSION_ID)
         } returns Result.success(createSession(id = SESSION_ID, destinationName = DESTINATION_NAME, status = SessionStatus.COMPLETED))
-        coEvery { imageSharer.shareImage(bitmap, DESTINATION_NAME) } returns ShareResult.CannotProcessTheImage
-        every { shareErrorMapper.map(ShareResult.CannotProcessTheImage) } returns SHARE_ERROR_MESSAGE
+        coEvery { imageSharer.shareImage(bitmap, SHARE_TEXT, CHOOSER_TITLE) } returns ShareResult.CannotProcessTheImage
+        every { shareErrorMapper.map(ShareResult.CannotProcessTheImage) } returns SHARE_ERROR_UI_TEXT
 
         viewModel = createViewModel()
 
@@ -370,12 +373,12 @@ class SessionCompletionViewModelTest {
             awaitItem() // Loading
             awaitItem() // Content
 
-            viewModel.onEvent(SessionCompletionUiEvent.ShareConfirmed(bitmap, DESTINATION_NAME))
+            viewModel.onEvent(SessionCompletionUiEvent.ShareConfirmed(bitmap, SHARE_TEXT, CHOOSER_TITLE))
 
             awaitItem() // Sharing
             val errorState = awaitItem() as SessionCompletionUiState.Content
             assertTrue(errorState.overlay is Overlay.ShareError)
-            assertEquals(SHARE_ERROR_MESSAGE, (errorState.overlay as Overlay.ShareError).message)
+            assertEquals(SHARE_ERROR_UI_TEXT, (errorState.overlay as Overlay.ShareError).message)
         }
     }
 
@@ -385,7 +388,7 @@ class SessionCompletionViewModelTest {
         coEvery {
             getSessionByIdUseCase.getSession(SESSION_ID)
         } returns Result.success(createSession(id = SESSION_ID, destinationName = DESTINATION_NAME, status = SessionStatus.COMPLETED))
-        coEvery { imageSharer.shareImage(bitmap, DESTINATION_NAME) } returns ShareResult.NoAppAvailable
+        coEvery { imageSharer.shareImage(bitmap, SHARE_TEXT, CHOOSER_TITLE) } returns ShareResult.NoAppAvailable
         every { shareErrorMapper.map(ShareResult.NoAppAvailable) } returns null
 
         viewModel = createViewModel()
@@ -394,7 +397,7 @@ class SessionCompletionViewModelTest {
             awaitItem() // Loading
             awaitItem() // Content
 
-            viewModel.onEvent(SessionCompletionUiEvent.ShareConfirmed(bitmap, DESTINATION_NAME))
+            viewModel.onEvent(SessionCompletionUiEvent.ShareConfirmed(bitmap, SHARE_TEXT, CHOOSER_TITLE))
 
             awaitItem() // Sharing
             val state = awaitItem() as SessionCompletionUiState.Content
@@ -409,7 +412,7 @@ class SessionCompletionViewModelTest {
         coEvery {
             getSessionByIdUseCase.getSession(SESSION_ID)
         } returns Result.success(createSession(id = SESSION_ID, destinationName = DESTINATION_NAME, status = SessionStatus.COMPLETED))
-        coEvery { imageSharer.shareImage(bitmap, DESTINATION_NAME) } returns ShareResult.Success(intent)
+        coEvery { imageSharer.shareImage(bitmap, SHARE_TEXT, CHOOSER_TITLE) } returns ShareResult.Success(intent)
 
         viewModel = createViewModel()
 
@@ -417,7 +420,7 @@ class SessionCompletionViewModelTest {
             awaitItem() // Loading
             awaitItem() // Content
 
-            viewModel.onEvent(SessionCompletionUiEvent.ShareConfirmed(bitmap, DESTINATION_NAME))
+            viewModel.onEvent(SessionCompletionUiEvent.ShareConfirmed(bitmap, SHARE_TEXT, CHOOSER_TITLE))
             awaitItem() // Sharing
             awaitItem() // ShareReady
 
@@ -434,8 +437,8 @@ class SessionCompletionViewModelTest {
         coEvery {
             getSessionByIdUseCase.getSession(SESSION_ID)
         } returns Result.success(createSession(id = SESSION_ID, destinationName = DESTINATION_NAME, status = SessionStatus.COMPLETED))
-        coEvery { imageSharer.shareImage(bitmap, DESTINATION_NAME) } returns ShareResult.CannotProcessTheImage
-        every { shareErrorMapper.map(ShareResult.CannotProcessTheImage) } returns SHARE_ERROR_MESSAGE
+        coEvery { imageSharer.shareImage(bitmap, SHARE_TEXT, CHOOSER_TITLE) } returns ShareResult.CannotProcessTheImage
+        every { shareErrorMapper.map(ShareResult.CannotProcessTheImage) } returns SHARE_ERROR_UI_TEXT
 
         viewModel = createViewModel()
 
@@ -443,7 +446,7 @@ class SessionCompletionViewModelTest {
             awaitItem() // Loading
             awaitItem() // Content
 
-            viewModel.onEvent(SessionCompletionUiEvent.ShareConfirmed(bitmap, DESTINATION_NAME))
+            viewModel.onEvent(SessionCompletionUiEvent.ShareConfirmed(bitmap, SHARE_TEXT, CHOOSER_TITLE))
             awaitItem() // Sharing
             awaitItem() // ShareError
 

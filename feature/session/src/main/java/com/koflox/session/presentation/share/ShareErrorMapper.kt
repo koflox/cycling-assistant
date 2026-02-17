@@ -1,19 +1,17 @@
 package com.koflox.session.presentation.share
 
-import android.content.Context
+import com.koflox.designsystem.text.UiText
 import com.koflox.session.R
 
 interface ShareErrorMapper {
-    fun map(result: ShareResult): String?
+    fun map(result: ShareResult): UiText?
 }
 
-internal class ShareErrorMapperImpl(
-    private val context: Context,
-) : ShareErrorMapper {
+internal class ShareErrorMapperImpl : ShareErrorMapper {
 
-    override fun map(result: ShareResult): String? = when (result) {
+    override fun map(result: ShareResult): UiText? = when (result) {
         is ShareResult.Success -> null
-        ShareResult.CannotProcessTheImage -> context.getString(R.string.share_image_processing_error)
-        ShareResult.NoAppAvailable -> context.getString(R.string.share_no_app_available)
+        ShareResult.CannotProcessTheImage -> UiText.Resource(R.string.share_image_processing_error)
+        ShareResult.NoAppAvailable -> UiText.Resource(R.string.share_no_app_available)
     }
 }

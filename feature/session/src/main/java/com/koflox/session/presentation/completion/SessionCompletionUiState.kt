@@ -1,6 +1,7 @@
 package com.koflox.session.presentation.completion
 
 import android.content.Intent
+import com.koflox.designsystem.text.UiText
 import com.koflox.session.presentation.completion.components.RouteDisplayData
 import com.koflox.session.presentation.share.SharePreviewData
 
@@ -27,12 +28,12 @@ internal sealed interface SessionCompletionUiState {
         val overlay: Overlay? = null,
     ) : SessionCompletionUiState
 
-    data class Error(val message: String) : SessionCompletionUiState
+    data class Error(val message: UiText) : SessionCompletionUiState
 }
 
 internal sealed interface Overlay {
     data class ShareDialog(val sharePreviewData: SharePreviewData) : Overlay
     data class Sharing(val sharePreviewData: SharePreviewData) : Overlay
     data class ShareReady(val intent: Intent) : Overlay
-    data class ShareError(val message: String) : Overlay
+    data class ShareError(val message: UiText) : Overlay
 }

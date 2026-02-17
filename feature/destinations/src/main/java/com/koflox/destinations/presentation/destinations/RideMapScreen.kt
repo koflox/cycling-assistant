@@ -31,6 +31,8 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.koflox.designsystem.component.ActionCard
 import com.koflox.designsystem.component.StatusCard
+import com.koflox.designsystem.text.UiText
+import com.koflox.designsystem.text.resolve
 import com.koflox.designsystem.theme.Spacing
 import com.koflox.destinationnutrition.bridge.navigator.NutritionUiNavigator
 import com.koflox.destinations.R
@@ -106,10 +108,10 @@ private fun ScreenLifecycleEffects(viewModel: RideMapViewModel) {
 }
 
 @Composable
-private fun ErrorEffect(error: String?, context: Context, viewModel: RideMapViewModel) {
+private fun ErrorEffect(error: UiText?, context: Context, viewModel: RideMapViewModel) {
     LaunchedEffect(error) {
         error?.let {
-            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, it.resolve(context), Toast.LENGTH_SHORT).show()
             viewModel.onEvent(RideMapUiEvent.CommonEvent.ErrorDismissed)
         }
     }

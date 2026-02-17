@@ -1,6 +1,7 @@
 package com.koflox.session.presentation.session
 
 import app.cash.turbine.test
+import com.koflox.designsystem.text.UiText
 import com.koflox.error.mapper.ErrorMessageMapper
 import com.koflox.session.domain.model.Session
 import com.koflox.session.domain.model.SessionStatus
@@ -40,7 +41,7 @@ class SessionViewModelTest {
         private const val DESTINATION_NAME = "Test Destination"
         private const val DESTINATION_LATITUDE = 52.52
         private const val DESTINATION_LONGITUDE = 13.405
-        private const val ERROR_MESSAGE = "Something went wrong"
+        private val ERROR_UI_TEXT = UiText.Resource(com.koflox.error.R.string.error_not_handled)
         private const val FORMATTED_TIME = "01:30:00"
         private const val FORMATTED_DISTANCE = "15.5 km"
         private const val FORMATTED_AVG_SPEED = "22.0 km/h"
@@ -78,7 +79,7 @@ class SessionViewModelTest {
             topSpeedFormatted = FORMATTED_TOP_SPEED,
         )
         every { sessionUiMapper.formatElapsedTime(any()) } returns FORMATTED_TIME
-        coEvery { errorMessageMapper.map(any()) } returns ERROR_MESSAGE
+        coEvery { errorMessageMapper.map(any()) } returns ERROR_UI_TEXT
         coEvery { activeSessionUseCase.observeActiveSession() } returns activeSessionFlow
         every { sessionTimerFactory.create(any()) } returns sessionTimer
         every { checkLocationEnabledUseCase.observeLocationEnabled() } returns locationEnabledFlow
@@ -263,7 +264,7 @@ class SessionViewModelTest {
 
             val activeWithError = awaitItem() as SessionUiState.Active
             assertTrue(activeWithError.overlay is SessionOverlay.Error)
-            assertEquals(ERROR_MESSAGE, (activeWithError.overlay as SessionOverlay.Error).message)
+            assertEquals(ERROR_UI_TEXT, (activeWithError.overlay as SessionOverlay.Error).message)
         }
     }
 
@@ -410,7 +411,7 @@ class SessionViewModelTest {
 
             val activeWithError = awaitItem() as SessionUiState.Active
             assertTrue(activeWithError.overlay is SessionOverlay.Error)
-            assertEquals(ERROR_MESSAGE, (activeWithError.overlay as SessionOverlay.Error).message)
+            assertEquals(ERROR_UI_TEXT, (activeWithError.overlay as SessionOverlay.Error).message)
         }
     }
 

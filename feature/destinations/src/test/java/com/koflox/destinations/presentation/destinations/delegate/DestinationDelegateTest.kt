@@ -4,6 +4,8 @@ import android.app.Application
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.net.Uri
+import com.koflox.designsystem.text.UiText
+import com.koflox.destinations.R
 import com.koflox.destinations.domain.model.DestinationLoadingEvent
 import com.koflox.destinations.domain.model.Destinations
 import com.koflox.destinations.domain.model.DistanceBounds
@@ -56,9 +58,6 @@ class DestinationDelegateTest {
         private const val TOLERANCE_KM = 3.2
         private const val MIN_BOUNDS_KM = 2.0
         private const val MAX_BOUNDS_KM = 50.0
-        private const val ERROR_MESSAGE = "Something went wrong"
-        private const val ERROR_TOO_FAR = "Too far from supported area"
-        private const val ERROR_NO_MAPS = "Google Maps not installed"
     }
 
     @get:Rule
@@ -82,8 +81,6 @@ class DestinationDelegateTest {
     fun setup() {
         uiState = MutableStateFlow(RideMapInternalState())
         every { application.packageManager } returns packageManager
-        every { application.getString(any()) } returns ERROR_MESSAGE
-        every { application.getString(any(), any()) } returns ERROR_MESSAGE
         every { toleranceCalculator.calculateKm(any()) } returns TOLERANCE_KM
         delegate = createDelegate()
     }
@@ -247,7 +244,6 @@ class DestinationDelegateTest {
 
     @Test
     fun `findDestination handles NoSuitableDestinationException`() = runTest {
-        every { application.getString(any()) } returnsMany listOf(ERROR_TOO_FAR, ERROR_MESSAGE)
         coEvery { getUserLocationUseCase.getLocation() } returns Result.success(createUserLocation())
         coEvery { getDestinationInfoUseCase.getRandomDestinations(any(), any()) } returns
             Result.failure(NoSuitableDestinationException())
@@ -345,7 +341,7 @@ class DestinationDelegateTest {
         title = DESTINATION_TITLE,
         location = Location(DEST_LAT, DEST_LONG),
         distanceKm = ROUTE_DISTANCE_KM,
-        distanceFormatted = "10.0 km",
+        distanceFormatted = UiText.Resource(R.string.distance_to_dest_desc, listOf(ROUTE_DISTANCE_KM)),
         isMain = true,
     )
 }

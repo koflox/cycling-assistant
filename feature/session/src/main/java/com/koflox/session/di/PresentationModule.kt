@@ -29,7 +29,6 @@ internal sealed class PresentationModuleQualifier : ClassNameQualifier() {
 internal val presentationModule = module {
     single<ErrorMessageMapper>(PresentationModuleQualifier.SessionErrorMessageMapper) {
         SessionErrorMessageMapper(
-            context = androidContext(),
             dispatcherDefault = get<CoroutineDispatcher>(DispatchersQualifier.Default),
             defaultMapper = get(),
         )
@@ -63,7 +62,7 @@ internal val presentationModule = module {
         )
     }
     single<ShareErrorMapper> {
-        ShareErrorMapperImpl(context = androidContext())
+        ShareErrorMapperImpl()
     }
     viewModel {
         SessionsListViewModel(

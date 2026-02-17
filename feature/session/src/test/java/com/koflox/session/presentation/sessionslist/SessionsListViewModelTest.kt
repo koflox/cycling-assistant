@@ -3,6 +3,7 @@ package com.koflox.session.presentation.sessionslist
 import android.content.Intent
 import android.graphics.Bitmap
 import app.cash.turbine.test
+import com.koflox.designsystem.text.UiText
 import com.koflox.error.mapper.ErrorMessageMapper
 import com.koflox.session.domain.model.SessionDerivedStats
 import com.koflox.session.domain.usecase.CalculateSessionStatsUseCase
@@ -33,13 +34,15 @@ class SessionsListViewModelTest {
     companion object {
         private const val SESSION_ID = "session-123"
         private const val DESTINATION_NAME = "Test Destination"
-        private const val SHARE_ERROR_MESSAGE = "Cannot share"
+        private const val SHARE_TEXT = "Check out my ride!"
+        private const val CHOOSER_TITLE = "Share via"
+        private val SHARE_ERROR_UI_TEXT = UiText.Resource(com.koflox.session.R.string.share_image_processing_error)
+        private val LOAD_ERROR_UI_TEXT = UiText.Resource(com.koflox.error.R.string.error_not_handled)
         private const val FORMATTED_DATE = "Jan 1, 2024"
         private const val FORMATTED_TIME = "01:30:00"
         private const val FORMATTED_DISTANCE = "15.5 km"
         private const val FORMATTED_AVG_SPEED = "22.0 km/h"
         private const val FORMATTED_TOP_SPEED = "35.0 km/h"
-        private const val LOAD_ERROR_MESSAGE = "Failed to load session"
     }
 
     @get:Rule
@@ -194,7 +197,7 @@ class SessionsListViewModelTest {
         val intent = mockk<Intent>()
         coEvery { getAllSessionsUseCase.observeAllSessions() } returns flowOf(listOf(session))
         coEvery { getSessionByIdUseCase.getSession(SESSION_ID) } returns Result.success(session)
-        coEvery { imageSharer.shareImage(bitmap, DESTINATION_NAME) } returns ShareResult.Success(intent)
+        coEvery { imageSharer.shareImage(bitmap, SHARE_TEXT, CHOOSER_TITLE) } returns ShareResult.Success(intent)
 
         viewModel = createViewModel()
 
@@ -205,7 +208,7 @@ class SessionsListViewModelTest {
             viewModel.onEvent(SessionsListUiEvent.ShareClicked(SESSION_ID))
             awaitItem() // SharePreview
 
-            viewModel.onEvent(SessionsListUiEvent.ShareConfirmed(bitmap, DESTINATION_NAME))
+            viewModel.onEvent(SessionsListUiEvent.ShareConfirmed(bitmap, SHARE_TEXT, CHOOSER_TITLE))
 
             val sharingState = awaitItem() as SessionsListUiState.Content
             assertTrue(sharingState.overlay is SessionsListOverlay.Sharing)
@@ -220,7 +223,7 @@ class SessionsListViewModelTest {
         val intent = mockk<Intent>()
         coEvery { getAllSessionsUseCase.observeAllSessions() } returns flowOf(listOf(session))
         coEvery { getSessionByIdUseCase.getSession(SESSION_ID) } returns Result.success(session)
-        coEvery { imageSharer.shareImage(bitmap, DESTINATION_NAME) } returns ShareResult.Success(intent)
+        coEvery { imageSharer.shareImage(bitmap, SHARE_TEXT, CHOOSER_TITLE) } returns ShareResult.Success(intent)
 
         viewModel = createViewModel()
 
@@ -231,7 +234,7 @@ class SessionsListViewModelTest {
             viewModel.onEvent(SessionsListUiEvent.ShareClicked(SESSION_ID))
             awaitItem() // SharePreview
 
-            viewModel.onEvent(SessionsListUiEvent.ShareConfirmed(bitmap, DESTINATION_NAME))
+            viewModel.onEvent(SessionsListUiEvent.ShareConfirmed(bitmap, SHARE_TEXT, CHOOSER_TITLE))
 
             awaitItem() // Sharing
             val readyState = awaitItem() as SessionsListUiState.Content
@@ -246,8 +249,8 @@ class SessionsListViewModelTest {
         val bitmap = mockk<Bitmap>()
         coEvery { getAllSessionsUseCase.observeAllSessions() } returns flowOf(listOf(session))
         coEvery { getSessionByIdUseCase.getSession(SESSION_ID) } returns Result.success(session)
-        coEvery { imageSharer.shareImage(bitmap, DESTINATION_NAME) } returns ShareResult.CannotProcessTheImage
-        every { shareErrorMapper.map(ShareResult.CannotProcessTheImage) } returns SHARE_ERROR_MESSAGE
+        coEvery { imageSharer.shareImage(bitmap, SHARE_TEXT, CHOOSER_TITLE) } returns ShareResult.CannotProcessTheImage
+        every { shareErrorMapper.map(ShareResult.CannotProcessTheImage) } returns SHARE_ERROR_UI_TEXT
 
         viewModel = createViewModel()
 
@@ -258,12 +261,12 @@ class SessionsListViewModelTest {
             viewModel.onEvent(SessionsListUiEvent.ShareClicked(SESSION_ID))
             awaitItem() // SharePreview
 
-            viewModel.onEvent(SessionsListUiEvent.ShareConfirmed(bitmap, DESTINATION_NAME))
+            viewModel.onEvent(SessionsListUiEvent.ShareConfirmed(bitmap, SHARE_TEXT, CHOOSER_TITLE))
 
             awaitItem() // Sharing
             val errorState = awaitItem() as SessionsListUiState.Content
             assertTrue(errorState.overlay is SessionsListOverlay.ShareError)
-            assertEquals(SHARE_ERROR_MESSAGE, (errorState.overlay as SessionsListOverlay.ShareError).message)
+            assertEquals(SHARE_ERROR_UI_TEXT, (errorState.overlay as SessionsListOverlay.ShareError).message)
         }
     }
 
@@ -274,7 +277,7 @@ class SessionsListViewModelTest {
         val intent = mockk<Intent>()
         coEvery { getAllSessionsUseCase.observeAllSessions() } returns flowOf(listOf(session))
         coEvery { getSessionByIdUseCase.getSession(SESSION_ID) } returns Result.success(session)
-        coEvery { imageSharer.shareImage(bitmap, DESTINATION_NAME) } returns ShareResult.Success(intent)
+        coEvery { imageSharer.shareImage(bitmap, SHARE_TEXT, CHOOSER_TITLE) } returns ShareResult.Success(intent)
 
         viewModel = createViewModel()
 
@@ -285,7 +288,7 @@ class SessionsListViewModelTest {
             viewModel.onEvent(SessionsListUiEvent.ShareClicked(SESSION_ID))
             awaitItem() // SharePreview
 
-            viewModel.onEvent(SessionsListUiEvent.ShareConfirmed(bitmap, DESTINATION_NAME))
+            viewModel.onEvent(SessionsListUiEvent.ShareConfirmed(bitmap, SHARE_TEXT, CHOOSER_TITLE))
             awaitItem() // Sharing
             awaitItem() // ShareReady
 
@@ -302,8 +305,8 @@ class SessionsListViewModelTest {
         val bitmap = mockk<Bitmap>()
         coEvery { getAllSessionsUseCase.observeAllSessions() } returns flowOf(listOf(session))
         coEvery { getSessionByIdUseCase.getSession(SESSION_ID) } returns Result.success(session)
-        coEvery { imageSharer.shareImage(bitmap, DESTINATION_NAME) } returns ShareResult.CannotProcessTheImage
-        every { shareErrorMapper.map(ShareResult.CannotProcessTheImage) } returns SHARE_ERROR_MESSAGE
+        coEvery { imageSharer.shareImage(bitmap, SHARE_TEXT, CHOOSER_TITLE) } returns ShareResult.CannotProcessTheImage
+        every { shareErrorMapper.map(ShareResult.CannotProcessTheImage) } returns SHARE_ERROR_UI_TEXT
 
         viewModel = createViewModel()
 
@@ -314,7 +317,7 @@ class SessionsListViewModelTest {
             viewModel.onEvent(SessionsListUiEvent.ShareClicked(SESSION_ID))
             awaitItem() // SharePreview
 
-            viewModel.onEvent(SessionsListUiEvent.ShareConfirmed(bitmap, DESTINATION_NAME))
+            viewModel.onEvent(SessionsListUiEvent.ShareConfirmed(bitmap, SHARE_TEXT, CHOOSER_TITLE))
             awaitItem() // Sharing
             awaitItem() // ShareError
 
@@ -330,7 +333,7 @@ class SessionsListViewModelTest {
         val sessions = listOf(createSession(id = SESSION_ID, destinationName = DESTINATION_NAME))
         coEvery { getAllSessionsUseCase.observeAllSessions() } returns flowOf(sessions)
         coEvery { getSessionByIdUseCase.getSession(SESSION_ID) } returns Result.failure(RuntimeException())
-        coEvery { errorMessageMapper.map(any()) } returns LOAD_ERROR_MESSAGE
+        coEvery { errorMessageMapper.map(any()) } returns LOAD_ERROR_UI_TEXT
 
         viewModel = createViewModel()
 
@@ -342,7 +345,7 @@ class SessionsListViewModelTest {
 
             val updatedContent = awaitItem() as SessionsListUiState.Content
             assertTrue(updatedContent.overlay is SessionsListOverlay.LoadError)
-            assertEquals(LOAD_ERROR_MESSAGE, (updatedContent.overlay as SessionsListOverlay.LoadError).message)
+            assertEquals(LOAD_ERROR_UI_TEXT, (updatedContent.overlay as SessionsListOverlay.LoadError).message)
         }
     }
 
@@ -352,7 +355,7 @@ class SessionsListViewModelTest {
         coEvery { getAllSessionsUseCase.observeAllSessions() } returns flowOf(listOf(session))
         coEvery { getSessionByIdUseCase.getSession(SESSION_ID) } returns Result.success(session)
         coEvery { calculateSessionStatsUseCase.calculate(SESSION_ID) } returns Result.failure(RuntimeException())
-        coEvery { errorMessageMapper.map(any()) } returns LOAD_ERROR_MESSAGE
+        coEvery { errorMessageMapper.map(any()) } returns LOAD_ERROR_UI_TEXT
 
         viewModel = createViewModel()
 
@@ -364,7 +367,7 @@ class SessionsListViewModelTest {
 
             val updatedContent = awaitItem() as SessionsListUiState.Content
             assertTrue(updatedContent.overlay is SessionsListOverlay.LoadError)
-            assertEquals(LOAD_ERROR_MESSAGE, (updatedContent.overlay as SessionsListOverlay.LoadError).message)
+            assertEquals(LOAD_ERROR_UI_TEXT, (updatedContent.overlay as SessionsListOverlay.LoadError).message)
         }
     }
 
@@ -373,7 +376,7 @@ class SessionsListViewModelTest {
         val sessions = listOf(createSession(id = SESSION_ID, destinationName = DESTINATION_NAME))
         coEvery { getAllSessionsUseCase.observeAllSessions() } returns flowOf(sessions)
         coEvery { getSessionByIdUseCase.getSession(SESSION_ID) } returns Result.failure(RuntimeException())
-        coEvery { errorMessageMapper.map(any()) } returns LOAD_ERROR_MESSAGE
+        coEvery { errorMessageMapper.map(any()) } returns LOAD_ERROR_UI_TEXT
 
         viewModel = createViewModel()
 
