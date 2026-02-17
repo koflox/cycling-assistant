@@ -1,6 +1,7 @@
 package com.koflox.destinations.presentation.destinations
 
 import com.google.android.gms.maps.model.LatLng
+import com.koflox.designsystem.text.UiText
 import com.koflox.destinations.domain.model.DistanceBounds
 import com.koflox.destinations.domain.model.RidingMode
 import com.koflox.destinations.presentation.destinations.model.DestinationUiModel
@@ -21,7 +22,7 @@ internal data class RideMapInternalState(
     val toleranceKm: Double = 0.0,
     val distanceBounds: DistanceBounds? = null,
     val isCalculatingBounds: Boolean = false,
-    val error: String? = null,
+    val error: UiText? = null,
     val isPermissionGranted: Boolean = false,
     val isPermissionDenied: Boolean = false,
     val isRationaleAvailable: Boolean = false,

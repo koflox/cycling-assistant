@@ -1,5 +1,6 @@
 package com.koflox.session.presentation.session
 
+import com.koflox.designsystem.text.UiText
 import com.koflox.location.model.Location
 import com.koflox.session.domain.model.SessionStatus
 
@@ -27,5 +28,5 @@ internal sealed interface SessionUiState {
 internal sealed interface SessionOverlay {
     data object StopConfirmation : SessionOverlay
     data object LocationDisabled : SessionOverlay
-    data class Error(val message: String) : SessionOverlay
+    data class Error(val message: UiText) : SessionOverlay
 }

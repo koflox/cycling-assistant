@@ -1,6 +1,6 @@
 package com.koflox.destinations.presentation.mapper
 
-import android.content.Context
+import com.koflox.designsystem.text.UiText
 import com.koflox.destinations.R
 import com.koflox.destinations.domain.model.Destinations
 import com.koflox.destinations.testutil.createDestination
@@ -32,23 +32,19 @@ class DestinationUiMapperImplTest {
         private const val USER_LON = 10.0
         private const val MAIN_DISTANCE = 5.0
         private const val OTHER_DISTANCE = 12.0
-        private const val DISTANCE_FORMAT = "%.1f km away"
     }
 
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
     private val distanceCalculator: DistanceCalculator = mockk()
-    private val context: Context = mockk()
     private lateinit var mapper: DestinationUiMapperImpl
 
     @Before
     fun setup() {
-        every { context.getString(R.string.distance_to_dest_desc) } returns DISTANCE_FORMAT
         mapper = DestinationUiMapperImpl(
             dispatcherDefault = mainDispatcherRule.testDispatcher,
             distanceCalculator = distanceCalculator,
-            context = context,
         )
     }
 
@@ -63,7 +59,7 @@ class DestinationUiMapperImplTest {
         assertEquals(MAIN_ID, result.selected.id)
         assertEquals(MAIN_TITLE, result.selected.title)
         assertEquals(MAIN_DISTANCE, result.selected.distanceKm, 0.0)
-        assertEquals("5.0 km away", result.selected.distanceFormatted)
+        assertEquals(UiText.Resource(R.string.distance_to_dest_desc, listOf(MAIN_DISTANCE)), result.selected.distanceFormatted)
     }
 
     @Test
