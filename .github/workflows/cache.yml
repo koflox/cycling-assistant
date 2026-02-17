@@ -21,28 +21,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
 
-      - name: Set up JDK
-        uses: actions/setup-java@v5
+      - name: Setup Android build environment
+        uses: ./.github/actions/setup-android
         with:
-          java-version: '17'
-          distribution: 'temurin'
-
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v5
-        with:
-          gradle-version: "9.3.1"
-
-      - name: Cache Android build outputs
-        uses: actions/cache@v5
-        with:
-          path: |
-            ~/.android/build-cache
-            **/build/intermediates
-            **/build/generated
-            **/build/tmp
-          key: android-build-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', 'gradle/libs.versions.toml') }}
-          restore-keys: |
-            android-build-${{ runner.os }}-
+          gradle-cache-save: 'true'
+          build-cache-save: 'true'
 
       - name: Build project
         run: gradle buildDebug --build-cache -x test
@@ -58,28 +41,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
 
-      - name: Set up JDK
-        uses: actions/setup-java@v5
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v5
-        with:
-          gradle-version: "9.3.1"
-
-      - name: Restore Android build cache
-        uses: actions/cache@v5
-        with:
-          path: |
-            ~/.android/build-cache
-            **/build/intermediates
-            **/build/generated
-            **/build/tmp
-          key: android-build-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', 'gradle/libs.versions.toml') }}
-          restore-keys: |
-            android-build-${{ runner.os }}-
+      - name: Setup Android build environment
+        uses: ./.github/actions/setup-android
 
       - name: Read version
         id: version
