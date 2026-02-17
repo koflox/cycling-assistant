@@ -14,6 +14,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import com.koflox.designsystem.component.LocalizedAlertDialog
 import com.koflox.designsystem.theme.Spacing
@@ -24,7 +25,6 @@ import com.koflox.session.domain.usecase.CreateSessionParams
 import com.koflox.session.presentation.permission.NotificationPermissionHandler
 import com.koflox.session.presentation.session.SessionViewModel
 import org.koin.androidx.compose.koinViewModel
-import java.util.Locale
 
 private enum class SessionStartStep {
     IDLE,
@@ -95,9 +95,10 @@ fun DestinationConfirmationDialog(
             Text(text = destinationName)
         },
         text = {
+            val locale = LocalConfiguration.current.locales[0]
             Text(
                 text = String.format(
-                    Locale.getDefault(),
+                    locale,
                     stringResource(R.string.dialog_distance_format),
                     distanceKm,
                 ),
