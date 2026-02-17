@@ -5,6 +5,8 @@ import com.koflox.altitude.di.altitudeModule
 import com.koflox.concurrent.concurrentModule
 import com.koflox.cyclingassistant.MainViewModel
 import com.koflox.cyclingassistant.data.AppDatabase
+import com.koflox.cyclingassistant.locale.LocalizedContextProviderImpl
+import com.koflox.designsystem.context.LocalizedContextProvider
 import com.koflox.destinationnutrition.bridge.impl.di.destinationNutritionBridgeImplModule
 import com.koflox.destinations.di.destinationsModule
 import com.koflox.destinationsession.bridge.impl.di.destinationSessionBridgeImplModule
@@ -26,10 +28,17 @@ import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 
 private val mainModule = module {
+    single<LocalizedContextProvider> {
+        LocalizedContextProviderImpl(
+            applicationContext = androidContext(),
+            observeLocaleUseCase = get(),
+        )
+    }
     viewModel {
         MainViewModel(
             observeThemeUseCase = get(),
             observeLocaleUseCase = get(),
+            pendingSessionAction = get(),
         )
     }
 }

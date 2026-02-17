@@ -13,6 +13,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -52,6 +53,7 @@ internal fun RouteSlider(
             )
             Spacer(modifier = Modifier.height(Spacing.Tiny))
 
+            val locale = LocalConfiguration.current.locales[0]
             val headlineStyle = MaterialTheme.typography.headlineSmall
             val toleranceFontSize = headlineStyle.fontSize * TOLERANCE_FONT_SIZE_RATIO
             val onSurfaceColor = MaterialTheme.colorScheme.onSurface
@@ -70,7 +72,7 @@ internal fun RouteSlider(
                             baselineShift = BaselineShift((1 - TOLERANCE_FONT_SIZE_RATIO) / 2),
                         ),
                     ) {
-                        append(" (±$toleranceKm)")
+                        append(stringResource(R.string.tolerance_format, String.format(locale, "%.1f", toleranceKm)))
                     }
                 },
                 style = headlineStyle,

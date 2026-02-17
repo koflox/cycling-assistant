@@ -266,6 +266,27 @@ class SessionTrackerImplTest {
     }
 
     @Test
+    fun `session becoming null stops timer and notification updates`() = runTrackerTest {
+        val session = createTestSession(status = SessionStatus.RUNNING)
+        sessionFlow.value = session
+        tracker.startTracking(delegate)
+        advanceTimeBy(SessionTrackerImpl.TIMER_UPDATE_INTERVAL_MS + 1)
+
+        verify(atLeast = 1) { delegate.onNotificationUpdate(session, any()) }
+
+        sessionFlow.value = null
+        advanceTimeBy(1)
+
+        verify { delegate.onStopService() }
+
+        // Reset notification mock and advance time — no more updates should happen
+        io.mockk.clearMocks(delegate, answers = false, recordedCalls = true, verificationMarks = true)
+        advanceTimeBy(SessionTrackerImpl.TIMER_UPDATE_INTERVAL_MS * 3)
+
+        verify(exactly = 0) { delegate.onNotificationUpdate(any(), any()) }
+    }
+
+    @Test
     fun `nutrition reminder triggers delegate onVibrate`() = runTrackerTest {
         val session = createTestSession(status = SessionStatus.RUNNING)
         sessionFlow.value = session

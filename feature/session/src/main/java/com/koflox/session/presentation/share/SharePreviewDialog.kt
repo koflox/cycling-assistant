@@ -29,8 +29,8 @@ import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.IntSize
-import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.koflox.designsystem.component.LocalizedDialog
 import com.koflox.designsystem.theme.Spacing
 import com.koflox.session.R
 import com.koflox.session.presentation.completion.components.MapHeaderOverlay
@@ -43,15 +43,20 @@ import kotlinx.coroutines.launch
 fun SharePreviewDialog(
     data: SharePreviewData,
     isSharing: Boolean,
-    onShareClick: (bitmap: Bitmap, destinationName: String?) -> Unit,
+    onShareClick: (bitmap: Bitmap, shareText: String, chooserTitle: String) -> Unit,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val graphicsLayer = rememberGraphicsLayer()
     val scope = rememberCoroutineScope()
     var isMapLoaded by remember { mutableStateOf(false) }
-
-    Dialog(
+    val shareText = if (data.destinationName != null) {
+        stringResource(R.string.share_text, data.destinationName)
+    } else {
+        stringResource(R.string.share_text_free_roam)
+    }
+    val chooserTitle = stringResource(R.string.share_chooser_title)
+    LocalizedDialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false),
     ) {
@@ -67,7 +72,7 @@ fun SharePreviewDialog(
             onShareClick = {
                 scope.launch {
                     val bitmap = graphicsLayer.toImageBitmap().asAndroidBitmap()
-                    onShareClick(bitmap, data.destinationName)
+                    onShareClick(bitmap, shareText, chooserTitle)
                 }
             },
             modifier = modifier,

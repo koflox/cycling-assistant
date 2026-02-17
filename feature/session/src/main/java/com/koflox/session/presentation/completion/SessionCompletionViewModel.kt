@@ -58,7 +58,7 @@ internal class SessionCompletionViewModel(
         viewModelScope.launch(dispatcherDefault) {
             when (event) {
                 SessionCompletionUiEvent.ShareClicked -> showShareDialog()
-                is SessionCompletionUiEvent.ShareConfirmed -> shareImage(event.bitmap, event.destinationName)
+                is SessionCompletionUiEvent.ShareConfirmed -> shareImage(event.bitmap, event.shareText, event.chooserTitle)
                 SessionCompletionUiEvent.ShareDialogDismissed -> dismissShareDialog()
                 SessionCompletionUiEvent.ShareIntentLaunched -> clearShareIntent()
                 SessionCompletionUiEvent.ErrorDismissed -> clearOverlayError()
@@ -76,9 +76,9 @@ internal class SessionCompletionViewModel(
         updateContent { it.copy(overlay = null) }
     }
 
-    private suspend fun shareImage(bitmap: Bitmap, destinationName: String?) {
+    private suspend fun shareImage(bitmap: Bitmap, shareText: String, chooserTitle: String) {
         updateContent { it.copy(overlay = Overlay.Sharing(buildSharePreviewData(it))) }
-        val result = imageSharer.shareImage(bitmap, destinationName)
+        val result = imageSharer.shareImage(bitmap, shareText, chooserTitle)
         updateContent { content ->
             when (result) {
                 is ShareResult.Success -> content.copy(overlay = Overlay.ShareReady(result.intent))

@@ -12,6 +12,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import com.koflox.designsystem.text.resolve
 import com.koflox.location.settings.LocationSettingsHandler
 import com.koflox.session.presentation.dialog.LocationDisabledDialog
 import com.koflox.session.presentation.dialog.StopConfirmationDialog
@@ -36,7 +37,7 @@ fun SessionScreenRoute(
     LaunchedEffect(uiState) {
         val active = uiState as? SessionUiState.Active ?: return@LaunchedEffect
         if (active.overlay is SessionOverlay.Error) {
-            Toast.makeText(context, active.overlay.message, Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, active.overlay.message.resolve(context), Toast.LENGTH_SHORT).show()
             viewModel.onEvent(SessionUiEvent.SessionManagementEvent.ErrorDismissed)
         }
     }

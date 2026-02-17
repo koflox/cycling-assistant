@@ -5,6 +5,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import com.koflox.designsystem.text.UiText
 import com.koflox.session.presentation.completion.components.RouteDisplayData
 import org.junit.Rule
 import org.junit.Test
@@ -24,7 +25,8 @@ class SessionCompletionScreenTest {
         private const val ALTITUDE_GAIN = "150"
         private const val ALTITUDE_LOSS = "120"
         private const val CALORIES = "450"
-        private const val ERROR_MESSAGE = "Failed to load session"
+        private val ERROR_UI_TEXT = UiText.Resource(com.koflox.error.R.string.error_not_handled)
+        private const val ERROR_MESSAGE_RESOLVED = "Something went wrong"
     }
 
     @get:Rule
@@ -47,13 +49,13 @@ class SessionCompletionScreenTest {
     fun sessionCompletionScreen_errorState_showsErrorMessage() {
         composeTestRule.setContent {
             SessionCompletionContent(
-                uiState = SessionCompletionUiState.Error(message = ERROR_MESSAGE),
+                uiState = SessionCompletionUiState.Error(message = ERROR_UI_TEXT),
                 onBackClick = {},
                 onEvent = {},
             )
         }
 
-        composeTestRule.onNodeWithText(ERROR_MESSAGE).assertIsDisplayed()
+        composeTestRule.onNodeWithText(ERROR_MESSAGE_RESOLVED).assertIsDisplayed()
     }
 
     @Test
@@ -115,7 +117,7 @@ class SessionCompletionScreenTest {
     fun sessionCompletionScreen_errorState_doesNotShowShareIcon() {
         composeTestRule.setContent {
             SessionCompletionContent(
-                uiState = SessionCompletionUiState.Error(message = ERROR_MESSAGE),
+                uiState = SessionCompletionUiState.Error(message = ERROR_UI_TEXT),
                 onBackClick = {},
                 onEvent = {},
             )

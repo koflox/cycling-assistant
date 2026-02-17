@@ -1,39 +1,45 @@
 package com.koflox.session.presentation.mapper
 
+import com.koflox.designsystem.context.LocalizedContextProvider
 import com.koflox.session.domain.model.Session
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-class SessionUiMapperImpl : SessionUiMapper {
+internal class SessionUiMapperImpl(
+    private val localizedContextProvider: LocalizedContextProvider,
+) : SessionUiMapper {
 
     companion object {
         private const val DATE_FORMAT_PATTERN = "MMM dd, yyyy HH:mm"
         private const val FORMAT_WHOLE_NUMBER = "%.0f"
     }
 
+    private val appLocale: Locale
+        get() = localizedContextProvider.getLocalizedContext().resources.configuration.locales[0]
+
     override fun formatElapsedTime(elapsedMs: Long): String {
         val totalSeconds = elapsedMs / 1000
         val hours = totalSeconds / 3600
         val minutes = (totalSeconds % 3600) / 60
         val seconds = totalSeconds % 60
-        return String.format(Locale.getDefault(), "%02d:%02d:%02d", hours, minutes, seconds)
+        return String.format(appLocale, "%02d:%02d:%02d", hours, minutes, seconds)
     }
 
     override fun formatDistance(distanceKm: Double): String =
-        String.format(Locale.getDefault(), "%.2f", distanceKm)
+        String.format(appLocale, "%.2f", distanceKm)
 
     override fun formatSpeed(speedKmh: Double): String =
-        String.format(Locale.getDefault(), "%.1f", speedKmh)
+        String.format(appLocale, "%.1f", speedKmh)
 
     override fun formatAltitudeGain(altitudeGainMeters: Double): String =
-        String.format(Locale.getDefault(), FORMAT_WHOLE_NUMBER, altitudeGainMeters)
+        String.format(appLocale, FORMAT_WHOLE_NUMBER, altitudeGainMeters)
 
     override fun formatCalories(calories: Double): String =
-        String.format(Locale.getDefault(), FORMAT_WHOLE_NUMBER, calories)
+        String.format(appLocale, FORMAT_WHOLE_NUMBER, calories)
 
     override fun formatStartDate(startTimeMs: Long): String {
-        val dateFormat = SimpleDateFormat(DATE_FORMAT_PATTERN, Locale.getDefault())
+        val dateFormat = SimpleDateFormat(DATE_FORMAT_PATTERN, appLocale)
         return dateFormat.format(Date(startTimeMs))
     }
 

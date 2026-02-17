@@ -1,6 +1,7 @@
 package com.koflox.session.presentation.session
 
 import app.cash.turbine.test
+import com.koflox.designsystem.text.UiText
 import com.koflox.error.mapper.ErrorMessageMapper
 import com.koflox.session.domain.model.Session
 import com.koflox.session.domain.model.SessionStatus
@@ -12,6 +13,7 @@ import com.koflox.session.domain.usecase.UpdateSessionStatusUseCase
 import com.koflox.session.presentation.mapper.SessionUiMapper
 import com.koflox.session.presentation.session.timer.SessionTimer
 import com.koflox.session.presentation.session.timer.SessionTimerFactory
+import com.koflox.session.service.PendingSessionActionImpl
 import com.koflox.session.service.SessionServiceController
 import com.koflox.session.testutil.createSession
 import com.koflox.session.testutil.createSessionUiModel
@@ -40,7 +42,7 @@ class SessionViewModelTest {
         private const val DESTINATION_NAME = "Test Destination"
         private const val DESTINATION_LATITUDE = 52.52
         private const val DESTINATION_LONGITUDE = 13.405
-        private const val ERROR_MESSAGE = "Something went wrong"
+        private val ERROR_UI_TEXT = UiText.Resource(com.koflox.error.R.string.error_not_handled)
         private const val FORMATTED_TIME = "01:30:00"
         private const val FORMATTED_DISTANCE = "15.5 km"
         private const val FORMATTED_AVG_SPEED = "22.0 km/h"
@@ -60,6 +62,7 @@ class SessionViewModelTest {
     private val sessionTimer: SessionTimer = mockk(relaxed = true)
     private val sessionTimerFactory: SessionTimerFactory = mockk()
 
+    private val pendingSessionAction = PendingSessionActionImpl()
     private val activeSessionFlow = MutableStateFlow<Session?>(null)
     private val locationEnabledFlow = MutableStateFlow(true)
 
@@ -78,7 +81,7 @@ class SessionViewModelTest {
             topSpeedFormatted = FORMATTED_TOP_SPEED,
         )
         every { sessionUiMapper.formatElapsedTime(any()) } returns FORMATTED_TIME
-        coEvery { errorMessageMapper.map(any()) } returns ERROR_MESSAGE
+        coEvery { errorMessageMapper.map(any()) } returns ERROR_UI_TEXT
         coEvery { activeSessionUseCase.observeActiveSession() } returns activeSessionFlow
         every { sessionTimerFactory.create(any()) } returns sessionTimer
         every { checkLocationEnabledUseCase.observeLocationEnabled() } returns locationEnabledFlow
@@ -92,6 +95,8 @@ class SessionViewModelTest {
             activeSessionUseCase = activeSessionUseCase,
             checkLocationEnabledUseCase = checkLocationEnabledUseCase,
             sessionServiceController = sessionServiceController,
+            pendingSessionAction = pendingSessionAction,
+            pendingSessionActionConsumer = pendingSessionAction,
             sessionUiMapper = sessionUiMapper,
             errorMessageMapper = errorMessageMapper,
             sessionTimerFactory = sessionTimerFactory,
@@ -184,6 +189,122 @@ class SessionViewModelTest {
     }
 
     @Test
+    fun `notification stop request shows StopConfirmation overlay`() = runTest {
+        val session = createSession()
+        activeSessionFlow.value = session
+
+        viewModel = createViewModel()
+
+        viewModel.uiState.test {
+            awaitItem() // Idle
+            awaitItem() // Active
+
+            pendingSessionAction.handleIntentAction(PendingSessionActionImpl.ACTION_STOP_CONFIRMATION)
+
+            val activeWithOverlay = awaitItem() as SessionUiState.Active
+            assertEquals(SessionOverlay.StopConfirmation, activeWithOverlay.overlay)
+        }
+
+        assertTrue(pendingSessionAction.isStopRequested.value)
+    }
+
+    @Test
+    fun `notification stop request is consumed on dismiss`() = runTest {
+        val session = createSession()
+        activeSessionFlow.value = session
+
+        viewModel = createViewModel()
+
+        viewModel.uiState.test {
+            awaitItem() // Idle
+            awaitItem() // Active
+
+            pendingSessionAction.handleIntentAction(PendingSessionActionImpl.ACTION_STOP_CONFIRMATION)
+            awaitItem() // StopConfirmation
+
+            viewModel.onEvent(SessionUiEvent.SessionManagementEvent.StopConfirmationDismissed)
+            awaitItem() // overlay cleared
+        }
+
+        assertFalse(pendingSessionAction.isStopRequested.value)
+    }
+
+    @Test
+    fun `notification stop request is consumed on confirm`() = runTest {
+        val session = createSession(id = SESSION_ID)
+        activeSessionFlow.value = session
+        coEvery { updateSessionStatusUseCase.stop() } returns Result.success(Unit)
+
+        viewModel = createViewModel()
+
+        viewModel.uiState.test {
+            awaitItem() // Idle
+            awaitItem() // Active
+
+            pendingSessionAction.handleIntentAction(PendingSessionActionImpl.ACTION_STOP_CONFIRMATION)
+            awaitItem() // StopConfirmation
+        }
+
+        viewModel.onEvent(SessionUiEvent.SessionManagementEvent.StopConfirmed)
+        mainDispatcherRule.testDispatcher.scheduler.advanceUntilIdle()
+
+        assertFalse(pendingSessionAction.isStopRequested.value)
+    }
+
+    @Test
+    fun `notification stop request without active session is consumed immediately`() = runTest {
+        viewModel = createViewModel()
+
+        viewModel.uiState.test {
+            awaitItem() // Idle
+
+            pendingSessionAction.handleIntentAction(PendingSessionActionImpl.ACTION_STOP_CONFIRMATION)
+            mainDispatcherRule.testDispatcher.scheduler.advanceUntilIdle()
+
+            // Request stays pending (no active session to show dialog on, but not consumed yet)
+            assertTrue(pendingSessionAction.isStopRequested.value)
+        }
+    }
+
+    @Test
+    fun `notification stop request on cold start shows dialog after session loads`() = runTest {
+        pendingSessionAction.handleIntentAction(PendingSessionActionImpl.ACTION_STOP_CONFIRMATION)
+        val session = createSession()
+
+        viewModel = createViewModel()
+
+        viewModel.uiState.test {
+            awaitItem() // Idle
+
+            activeSessionFlow.value = session
+
+            val active = awaitItem() as SessionUiState.Active
+            assertEquals(SessionOverlay.StopConfirmation, active.overlay)
+        }
+    }
+
+    @Test
+    fun `pending stop request is consumed when session becomes null`() = runTest {
+        val session = createSession()
+        activeSessionFlow.value = session
+
+        viewModel = createViewModel()
+
+        viewModel.uiState.test {
+            awaitItem() // Idle
+            awaitItem() // Active
+
+            pendingSessionAction.handleIntentAction(PendingSessionActionImpl.ACTION_STOP_CONFIRMATION)
+            awaitItem() // StopConfirmation
+
+            activeSessionFlow.value = null
+            assertEquals(SessionUiState.Idle, awaitItem())
+        }
+
+        assertFalse(pendingSessionAction.isStopRequested.value)
+    }
+
+    @Test
     fun `StopConfirmed calls stop use case and navigates`() = runTest {
         val session = createSession(id = SESSION_ID)
         activeSessionFlow.value = session
@@ -263,7 +384,7 @@ class SessionViewModelTest {
 
             val activeWithError = awaitItem() as SessionUiState.Active
             assertTrue(activeWithError.overlay is SessionOverlay.Error)
-            assertEquals(ERROR_MESSAGE, (activeWithError.overlay as SessionOverlay.Error).message)
+            assertEquals(ERROR_UI_TEXT, (activeWithError.overlay as SessionOverlay.Error).message)
         }
     }
 
@@ -410,7 +531,7 @@ class SessionViewModelTest {
 
             val activeWithError = awaitItem() as SessionUiState.Active
             assertTrue(activeWithError.overlay is SessionOverlay.Error)
-            assertEquals(ERROR_MESSAGE, (activeWithError.overlay as SessionOverlay.Error).message)
+            assertEquals(ERROR_UI_TEXT, (activeWithError.overlay as SessionOverlay.Error).message)
         }
     }
 

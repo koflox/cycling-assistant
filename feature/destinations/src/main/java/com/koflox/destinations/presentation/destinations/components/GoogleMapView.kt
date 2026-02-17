@@ -33,6 +33,7 @@ import com.google.maps.android.compose.MarkerInfoWindow
 import com.google.maps.android.compose.Polyline
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberUpdatedMarkerState
+import com.koflox.designsystem.text.resolve
 import com.koflox.designsystem.theme.CornerRadius
 import com.koflox.designsystem.theme.LocalDarkTheme
 import com.koflox.designsystem.theme.Spacing
@@ -238,7 +239,7 @@ private fun SelectedDestinationInfoWindow(
             color = MaterialTheme.colorScheme.onSurface,
         )
         Text(
-            text = destination.distanceFormatted,
+            text = destination.distanceFormatted.resolve(LocalContext.current),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(top = Spacing.Tiny),
@@ -271,7 +272,7 @@ private fun OtherDestinationInfoWindow(destination: DestinationUiModel) {
             color = MaterialTheme.colorScheme.onSurface,
         )
         Text(
-            text = destination.distanceFormatted,
+            text = destination.distanceFormatted.resolve(LocalContext.current),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(top = Spacing.Tiny),

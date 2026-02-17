@@ -2,6 +2,7 @@ version: 2
 updates:
   - package-ecosystem: "gradle"
     directory: "/"
+    target-branch: "staging"
     schedule:
       interval: "weekly"
       day: "saturday"
@@ -36,6 +37,7 @@ updates:
 
   - package-ecosystem: "github-actions"
     directory: "/"
+    target-branch: "staging"
     schedule:
       interval: "weekly"
       day: "saturday"

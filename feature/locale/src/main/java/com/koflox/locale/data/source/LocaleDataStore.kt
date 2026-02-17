@@ -30,7 +30,7 @@ internal class LocaleDataStore(
         .map { prefs ->
             prefs[KEY_LANGUAGE]?.let { code ->
                 AppLanguage.entries.find { it.code == code }
-            } ?: AppLanguage.ENGLISH
+            } ?: AppLanguage.DEFAULT
         }
         .flowOn(dispatcherIo)
 

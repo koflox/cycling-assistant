@@ -5,7 +5,6 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.koflox.destinationnutrition.bridge.model.NutritionBreakEvent
 import com.koflox.destinationnutrition.bridge.usecase.ObserveNutritionBreakUseCase
-import com.koflox.destinations.R
 import com.koflox.destinations.domain.model.RidingMode
 import com.koflox.destinations.domain.usecase.CheckLocationEnabledUseCase
 import com.koflox.destinations.domain.usecase.GetDestinationInfoUseCase
@@ -145,10 +144,11 @@ internal class RideMapViewModel(
             cyclingSessionUseCase.observeHasActiveSession().collect { isActive ->
                 _internalState.update {
                     if (isActive) {
-                        it.copy(isSessionActive = true)
+                        it.copy(isSessionActive = true, isSessionStarting = false)
                     } else {
                         it.copy(
                             isSessionActive = false,
+                            isSessionStarting = false,
                             selectedDestination = null,
                             curvePoints = emptyList(),
                             showSelectedMarkerOptionsDialog = false,
@@ -204,9 +204,14 @@ internal class RideMapViewModel(
         }
     }
 
-    private suspend fun handleSessionEvent(event: RideMapUiEvent.SessionEvent) {
+    private fun handleSessionEvent(event: RideMapUiEvent.SessionEvent) {
         when (event) {
-            RideMapUiEvent.SessionEvent.StartFreeRoamClicked -> startFreeRoamSession()
+            RideMapUiEvent.SessionEvent.FreeRoamSessionStarting -> {
+                _internalState.update { it.copy(isSessionStarting = true) }
+            }
+            RideMapUiEvent.SessionEvent.DestinationSessionStarting -> {
+                _internalState.update { it.copy(isSessionStarting = true) }
+            }
         }
     }
 
@@ -279,22 +284,6 @@ internal class RideMapViewModel(
         }
     }
 
-    private suspend fun startFreeRoamSession() {
-        _internalState.update { it.copy(isStartingFreeRoam = true) }
-        cyclingSessionUseCase.startFreeRoamSession()
-            .onFailure {
-                _internalState.update {
-                    it.copy(
-                        isStartingFreeRoam = false,
-                        error = application.getString(R.string.error_not_handled),
-                    )
-                }
-            }
-            .onSuccess {
-                _internalState.update { it.copy(isStartingFreeRoam = false) }
-            }
-    }
-
     private fun observeNutritionEvents() {
         viewModelScope.launch(dispatcherDefault) {
             observeNutritionBreakUseCase.observeNutritionBreakEvents().collect { event ->
@@ -328,7 +317,7 @@ internal class RideMapViewModel(
         state.isReady && state.isMapLoaded && state.isFreeRoam -> RideMapUiState.FreeRoamIdle(
             userLocation = state.userLocation,
             cameraFocusLocation = state.cameraFocusLocation,
-            isStartingFreeRoam = state.isStartingFreeRoam,
+            isSessionStarting = state.isSessionStarting,
             error = state.error,
         )
         state.isReady && state.isMapLoaded -> RideMapUiState.DestinationIdle(
@@ -344,6 +333,7 @@ internal class RideMapViewModel(
             isCalculatingBounds = state.isCalculatingBounds,
             areDistanceBoundsReady = state.areDistanceBoundsReady,
             isLoading = state.isLoading,
+            isSessionStarting = state.isSessionStarting,
             showSelectedMarkerOptionsDialog = state.showSelectedMarkerOptionsDialog,
             error = state.error,
             navigationAction = state.navigationAction,

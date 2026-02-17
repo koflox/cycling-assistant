@@ -2,7 +2,6 @@ package com.koflox.session.presentation.permission
 
 import android.Manifest
 import android.os.Build
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -16,6 +15,7 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.accompanist.permissions.shouldShowRationale
+import com.koflox.designsystem.component.LocalizedAlertDialog
 import com.koflox.session.R
 
 @OptIn(ExperimentalPermissionsApi::class)
@@ -77,7 +77,7 @@ private fun PermissionRationaleDialog(
     onGrantClick: () -> Unit,
     onSkipClick: () -> Unit,
 ) {
-    AlertDialog(
+    LocalizedAlertDialog(
         onDismissRequest = onSkipClick,
         title = { Text(text = stringResource(R.string.permission_notification_title)) },
         text = { Text(text = stringResource(R.string.permission_notification_rationale)) },
