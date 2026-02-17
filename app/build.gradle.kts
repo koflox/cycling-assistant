@@ -138,6 +138,7 @@ dependencies {
     implementation(project(":shared:error"))
 
     // Testing
+    testImplementation(project(":shared:testing"))
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.mockk)
