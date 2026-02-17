@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -16,6 +15,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import com.koflox.designsystem.component.LocalizedAlertDialog
 import com.koflox.designsystem.theme.Spacing
 import com.koflox.location.model.Location
 import com.koflox.location.settings.LocationSettingsHandler
@@ -89,7 +89,7 @@ fun DestinationConfirmationDialog(
     onStartSessionClick: () -> Unit,
     onDismiss: () -> Unit,
 ) {
-    AlertDialog(
+    LocalizedAlertDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(text = destinationName)
