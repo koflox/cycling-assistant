@@ -90,3 +90,6 @@ lint/tmp/
 
 # keys
 api_key.properties
+
+# MkDocs build output
+site/

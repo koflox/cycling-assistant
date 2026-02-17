@@ -4,6 +4,7 @@ import android.app.Application
 import android.content.pm.PackageManager
 import androidx.core.net.toUri
 import com.google.android.gms.maps.model.LatLng
+import com.koflox.designsystem.text.UiText
 import com.koflox.destinations.R
 import com.koflox.destinations.domain.model.DestinationLoadingEvent
 import com.koflox.destinations.domain.model.Destinations
@@ -64,7 +65,7 @@ internal class DestinationDelegate(
                     }
                     is DestinationLoadingEvent.Error -> {
                         uiState.update {
-                            it.copy(isPreparingDestinations = false, error = application.getString(R.string.error_not_handled))
+                            it.copy(isPreparingDestinations = false, error = UiText.Resource(R.string.error_not_handled))
                         }
                     }
                 }
@@ -120,7 +121,8 @@ internal class DestinationDelegate(
                     it.copy(
                         isLoading = false,
                         isSessionActive = isSessionActive,
-                        error = if (isRecovery) null else application.getString(R.string.failed_to_get_location, error.message),
+                        error = if (isRecovery) null
+                        else UiText.Resource(R.string.failed_to_get_location, listOf(error.message ?: "")),
                     )
                 }
             }
@@ -183,8 +185,8 @@ internal class DestinationDelegate(
 
     private fun handleDestinationError(error: Throwable) {
         val message = when (error) {
-            is NoSuitableDestinationException -> application.getString(R.string.error_too_far_from_supported_area)
-            else -> application.getString(R.string.error_not_handled)
+            is NoSuitableDestinationException -> UiText.Resource(R.string.error_too_far_from_supported_area)
+            else -> UiText.Resource(R.string.error_not_handled)
         }
         uiState.update { it.copy(isLoading = false, error = message) }
     }
@@ -234,7 +236,7 @@ internal class DestinationDelegate(
             val uri = "google.navigation:q=${destination.location.latitude},${destination.location.longitude}&mode=b".toUri()
             uiState.update { it.copy(navigationAction = NavigationAction.OpenGoogleMaps(uri)) }
         } else {
-            uiState.update { it.copy(error = application.getString(R.string.error_google_maps_not_installed)) }
+            uiState.update { it.copy(error = UiText.Resource(R.string.error_google_maps_not_installed)) }
         }
     }
 

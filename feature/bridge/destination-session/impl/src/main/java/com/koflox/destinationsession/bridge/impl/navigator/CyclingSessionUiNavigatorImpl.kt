@@ -5,6 +5,7 @@ import androidx.compose.ui.Modifier
 import com.koflox.destinationsession.bridge.navigator.CyclingSessionUiNavigator
 import com.koflox.location.model.Location
 import com.koflox.session.presentation.dialog.DestinationOptionsRoute
+import com.koflox.session.presentation.dialog.FreeRoamSessionRoute
 import com.koflox.session.presentation.session.SessionScreenRoute
 
 internal class CyclingSessionUiNavigatorImpl : CyclingSessionUiNavigator {
@@ -22,11 +23,17 @@ internal class CyclingSessionUiNavigatorImpl : CyclingSessionUiNavigator {
     }
 
     @Composable
+    override fun StartFreeRoamSession() {
+        FreeRoamSessionRoute()
+    }
+
+    @Composable
     override fun DestinationOptions(
         destinationId: String,
         destinationName: String,
         destinationLocation: Location,
         distanceKm: Double,
+        onSessionStarting: () -> Unit,
         onNavigateClick: () -> Unit,
         onDismiss: () -> Unit,
     ) {
@@ -35,6 +42,7 @@ internal class CyclingSessionUiNavigatorImpl : CyclingSessionUiNavigator {
             destinationName = destinationName,
             destinationLocation = destinationLocation,
             distanceKm = distanceKm,
+            onSessionStarting = onSessionStarting,
             onNavigateClick = onNavigateClick,
             onDismiss = onDismiss,
         )

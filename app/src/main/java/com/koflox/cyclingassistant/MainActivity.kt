@@ -1,5 +1,6 @@
 package com.koflox.cyclingassistant
 
+import android.content.Intent
 import android.content.res.Configuration
 import android.os.Bundle
 import android.view.ContextThemeWrapper
@@ -24,15 +25,18 @@ import androidx.navigation.compose.rememberNavController
 import com.koflox.cyclingassistant.navigation.AppNavHost
 import com.koflox.cyclingassistant.ui.theme.CyclingAssistantTheme
 import com.koflox.locale.domain.model.AppLanguage
-import org.koin.androidx.compose.koinViewModel
+import org.koin.androidx.viewmodel.ext.android.viewModel
 import java.util.Locale
 
 class MainActivity : ComponentActivity() {
+
+    private val viewModel: MainViewModel by viewModel()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        handleIntent(intent)
         enableEdgeToEdge()
         setContent {
-            val viewModel: MainViewModel = koinViewModel()
             val uiState by viewModel.uiState.collectAsStateWithLifecycle()
             val navController = rememberNavController()
             when (val state = uiState) {
@@ -46,6 +50,16 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        handleIntent(intent)
+    }
+
+    private fun handleIntent(intent: Intent?) {
+        viewModel.handleIntent(intent?.action)
+        intent?.action = null
     }
 }
 

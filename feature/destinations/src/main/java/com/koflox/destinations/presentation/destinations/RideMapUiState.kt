@@ -2,6 +2,7 @@ package com.koflox.destinations.presentation.destinations
 
 import android.net.Uri
 import com.google.android.gms.maps.model.LatLng
+import com.koflox.designsystem.text.UiText
 import com.koflox.destinations.domain.model.DistanceBounds
 import com.koflox.destinations.presentation.destinations.model.DestinationUiModel
 import com.koflox.location.model.Location
@@ -13,8 +14,8 @@ internal sealed interface RideMapUiState {
     data class FreeRoamIdle(
         val userLocation: Location?,
         val cameraFocusLocation: Location?,
-        val isStartingFreeRoam: Boolean,
-        val error: String?,
+        val isSessionStarting: Boolean,
+        val error: UiText?,
     ) : RideMapUiState
 
     data class DestinationIdle(
@@ -30,8 +31,9 @@ internal sealed interface RideMapUiState {
         val isCalculatingBounds: Boolean,
         val areDistanceBoundsReady: Boolean,
         val isLoading: Boolean,
+        val isSessionStarting: Boolean,
         val showSelectedMarkerOptionsDialog: Boolean,
-        val error: String?,
+        val error: UiText?,
         val navigationAction: NavigationAction?,
     ) : RideMapUiState
 
@@ -41,7 +43,7 @@ internal sealed interface RideMapUiState {
         val selectedDestination: DestinationUiModel?,
         val curvePoints: List<LatLng>,
         val showSelectedMarkerOptionsDialog: Boolean,
-        val error: String?,
+        val error: UiText?,
         val navigationAction: NavigationAction?,
         val nutritionSuggestionTimeMs: Long?,
     ) : RideMapUiState
@@ -51,7 +53,7 @@ internal sealed interface NavigationAction {
     data class OpenGoogleMaps(val uri: Uri) : NavigationAction
 }
 
-internal val RideMapUiState.error: String?
+internal val RideMapUiState.error: UiText?
     get() = when (this) {
         is RideMapUiState.FreeRoamIdle -> error
         is RideMapUiState.DestinationIdle -> error

@@ -14,6 +14,8 @@ import com.koflox.session.domain.usecase.UpdateSessionStatusUseCase
 import com.koflox.session.presentation.mapper.SessionUiMapper
 import com.koflox.session.presentation.session.timer.SessionTimer
 import com.koflox.session.presentation.session.timer.SessionTimerFactory
+import com.koflox.session.service.PendingSessionAction
+import com.koflox.session.service.PendingSessionActionConsumer
 import com.koflox.session.service.SessionServiceController
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.channels.Channel
@@ -31,6 +33,8 @@ internal class SessionViewModel(
     private val activeSessionUseCase: ActiveSessionUseCase,
     private val checkLocationEnabledUseCase: CheckLocationEnabledUseCase,
     private val sessionServiceController: SessionServiceController,
+    private val pendingSessionAction: PendingSessionAction,
+    private val pendingSessionActionConsumer: PendingSessionActionConsumer,
     private val sessionUiMapper: SessionUiMapper,
     private val errorMessageMapper: ErrorMessageMapper,
     sessionTimerFactory: SessionTimerFactory,
@@ -55,6 +59,7 @@ internal class SessionViewModel(
         showNotificationForStartedSession()
         observeActiveSession()
         observeLocationEnabled()
+        observeStopRequest()
     }
 
     private fun observeActiveSession() {
@@ -69,6 +74,9 @@ internal class SessionViewModel(
                     }
                 } else {
                     stopTimer()
+                    if (_uiState.value is SessionUiState.Active) {
+                        pendingSessionActionConsumer.consumeStopRequest()
+                    }
                     _uiState.value = SessionUiState.Idle
                 }
             }
@@ -85,6 +93,16 @@ internal class SessionViewModel(
                 } else if (isEnabled && isPausedDueToLocation) {
                     isPausedDueToLocation = false
                     resumeSession()
+                }
+            }
+        }
+    }
+
+    private fun observeStopRequest() {
+        viewModelScope.launch(dispatcherDefault) {
+            pendingSessionAction.isStopRequested.collect { requested ->
+                if (requested && _uiState.value is SessionUiState.Active) {
+                    showStopConfirmation()
                 }
             }
         }
@@ -144,10 +162,12 @@ internal class SessionViewModel(
     }
 
     private fun dismissStopConfirmation() {
+        pendingSessionActionConsumer.consumeStopRequest()
         updateActive { it.copy(overlay = null) }
     }
 
     private suspend fun confirmStop() {
+        pendingSessionActionConsumer.consumeStopRequest()
         val sessionId = (_uiState.value as? SessionUiState.Active)?.sessionId
         updateActive { it.copy(overlay = null) }
         stopSession()
@@ -214,6 +234,7 @@ internal class SessionViewModel(
     private fun updateUiFromSession(session: Session) {
         val formattedData = sessionUiMapper.toSessionUiModel(session)
         val currentOverlay = (_uiState.value as? SessionUiState.Active)?.overlay
+            ?: if (pendingSessionAction.isStopRequested.value) SessionOverlay.StopConfirmation else null
         val destinationLocation = if (session.destinationLatitude != null && session.destinationLongitude != null) {
             Location(latitude = session.destinationLatitude, longitude = session.destinationLongitude)
         } else {

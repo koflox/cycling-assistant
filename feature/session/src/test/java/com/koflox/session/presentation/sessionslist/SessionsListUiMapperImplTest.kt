@@ -1,5 +1,6 @@
 package com.koflox.session.presentation.sessionslist
 
+import com.koflox.designsystem.testutil.mockLocalizedContextProvider
 import com.koflox.session.domain.model.SessionStatus
 import com.koflox.session.testutil.createSession
 import org.junit.Assert.assertEquals
@@ -18,13 +19,16 @@ class SessionsListUiMapperImplTest {
         private const val DESTINATION_NAME = "Test Park"
         private const val START_TIME_MS = 1700000000000L
         private const val DISTANCE_KM = 12.345
+        private val TEST_LOCALE = Locale.US
     }
 
     private lateinit var mapper: SessionsListUiMapperImpl
 
     @Before
     fun setup() {
-        mapper = SessionsListUiMapperImpl()
+        mapper = SessionsListUiMapperImpl(
+            localizedContextProvider = mockLocalizedContextProvider(TEST_LOCALE),
+        )
     }
 
     @Test
@@ -40,7 +44,7 @@ class SessionsListUiMapperImplTest {
     @Test
     fun `toUiModel formats date`() {
         val session = createSession(startTimeMs = START_TIME_MS)
-        val expectedDate = SimpleDateFormat("MMM dd, yyyy HH:mm", Locale.getDefault()).format(Date(START_TIME_MS))
+        val expectedDate = SimpleDateFormat("MMM dd, yyyy HH:mm", TEST_LOCALE).format(Date(START_TIME_MS))
 
         val result = mapper.toUiModel(session)
 
@@ -53,7 +57,7 @@ class SessionsListUiMapperImplTest {
 
         val result = mapper.toUiModel(session)
 
-        assertEquals(String.format(Locale.getDefault(), "%.2f km", DISTANCE_KM), result.distanceFormatted)
+        assertEquals(String.format(Locale.getDefault(), "%.2f", DISTANCE_KM), result.distanceFormatted)
     }
 
     @Test

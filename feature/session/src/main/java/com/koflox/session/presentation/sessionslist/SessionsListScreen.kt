@@ -35,6 +35,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import com.koflox.designsystem.text.resolve
 import com.koflox.designsystem.theme.Elevation
 import com.koflox.designsystem.theme.Spacing
 import com.koflox.session.R
@@ -59,8 +60,8 @@ internal fun SessionsListRoute(
             return@LaunchedEffect
         }
         val (message, dismissEvent) = when (overlay) {
-            is SessionsListOverlay.ShareError -> overlay.message to SessionsListUiEvent.ShareErrorDismissed
-            is SessionsListOverlay.LoadError -> overlay.message to SessionsListUiEvent.LoadErrorDismissed
+            is SessionsListOverlay.ShareError -> overlay.message.resolve(context) to SessionsListUiEvent.ShareErrorDismissed
+            is SessionsListOverlay.LoadError -> overlay.message.resolve(context) to SessionsListUiEvent.LoadErrorDismissed
             else -> return@LaunchedEffect
         }
         Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
@@ -98,8 +99,8 @@ private fun SessionsListContent(
             SharePreviewDialog(
                 data = data,
                 isSharing = overlay is SessionsListOverlay.Sharing,
-                onShareClick = { bitmap, destinationName ->
-                    onEvent(SessionsListUiEvent.ShareConfirmed(bitmap, destinationName))
+                onShareClick = { bitmap, shareText, chooserTitle ->
+                    onEvent(SessionsListUiEvent.ShareConfirmed(bitmap, shareText, chooserTitle))
                 },
                 onDismiss = { onEvent(SessionsListUiEvent.ShareDialogDismissed) },
             )
@@ -229,7 +230,7 @@ private fun SessionListItem(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Text(
-                    text = session.distanceFormatted,
+                    text = stringResource(R.string.session_stat_value_km, session.distanceFormatted),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

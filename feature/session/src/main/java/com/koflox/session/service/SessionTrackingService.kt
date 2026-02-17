@@ -45,7 +45,6 @@ class SessionTrackingService : Service(), SessionTrackingDelegate {
                 goForeground()
                 sessionTracker.startTracking(this)
             }
-            ACTION_STOP -> sessionTracker.stopSession()
             ACTION_PAUSE -> sessionTracker.pauseSession()
             ACTION_RESUME -> sessionTracker.resumeSession()
             null -> sessionTracker.handleRestart(this)

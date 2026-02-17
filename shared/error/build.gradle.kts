@@ -8,6 +8,7 @@ android {
 
 dependencies {
     implementation(project(":shared:concurrent"))
+    implementation(project(":shared:design-system"))
     implementation(libs.koin.android)
     implementation(libs.kotlinx.coroutines.core)
     testImplementation(libs.junit)

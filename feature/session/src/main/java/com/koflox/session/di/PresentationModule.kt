@@ -29,13 +29,14 @@ internal sealed class PresentationModuleQualifier : ClassNameQualifier() {
 internal val presentationModule = module {
     single<ErrorMessageMapper>(PresentationModuleQualifier.SessionErrorMessageMapper) {
         SessionErrorMessageMapper(
-            context = androidContext(),
             dispatcherDefault = get<CoroutineDispatcher>(DispatchersQualifier.Default),
             defaultMapper = get(),
         )
     }
     single<SessionUiMapper> {
-        SessionUiMapperImpl()
+        SessionUiMapperImpl(
+            localizedContextProvider = get(),
+        )
     }
     single<SessionTimerFactory> {
         SessionTimerFactory { scope -> SessionTimerImpl(scope) }
@@ -47,6 +48,8 @@ internal val presentationModule = module {
             activeSessionUseCase = get(),
             checkLocationEnabledUseCase = get(),
             sessionServiceController = get(),
+            pendingSessionAction = get(),
+            pendingSessionActionConsumer = get(),
             sessionUiMapper = get(),
             errorMessageMapper = get(PresentationModuleQualifier.SessionErrorMessageMapper),
             sessionTimerFactory = get(),
@@ -54,7 +57,9 @@ internal val presentationModule = module {
         )
     }
     single<SessionsListUiMapper> {
-        SessionsListUiMapperImpl()
+        SessionsListUiMapperImpl(
+            localizedContextProvider = get(),
+        )
     }
     single<SessionImageSharer> {
         SessionImageSharerImpl(
@@ -63,7 +68,7 @@ internal val presentationModule = module {
         )
     }
     single<ShareErrorMapper> {
-        ShareErrorMapperImpl(context = androidContext())
+        ShareErrorMapperImpl()
     }
     viewModel {
         SessionsListViewModel(

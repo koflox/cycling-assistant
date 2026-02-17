@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.koflox.locale.domain.model.AppLanguage
 import com.koflox.locale.domain.usecase.ObserveLocaleUseCase
+import com.koflox.session.service.PendingSessionAction
 import com.koflox.theme.domain.model.AppTheme
 import com.koflox.theme.domain.usecase.ObserveThemeUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,6 +16,7 @@ import kotlinx.coroutines.launch
 internal class MainViewModel(
     observeThemeUseCase: ObserveThemeUseCase,
     observeLocaleUseCase: ObserveLocaleUseCase,
+    private val pendingSessionAction: PendingSessionAction,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<MainUiState>(MainUiState.Loading)
@@ -22,6 +24,10 @@ internal class MainViewModel(
 
     init {
         initialize(observeThemeUseCase, observeLocaleUseCase)
+    }
+
+    fun handleIntent(action: String?) {
+        action?.let(pendingSessionAction::handleIntentAction)
     }
 
     private fun initialize(observeThemeUseCase: ObserveThemeUseCase, observeLocaleUseCase: ObserveLocaleUseCase) {
