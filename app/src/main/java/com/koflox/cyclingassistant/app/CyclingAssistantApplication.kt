@@ -8,7 +8,6 @@ import org.koin.core.context.startKoin
 class CyclingAssistantApplication : Application() {
     override fun onCreate() {
         super.onCreate()
-
         startKoin {
             androidLogger()
             androidContext(this@CyclingAssistantApplication)

@@ -21,6 +21,7 @@ interface UpdateSessionLocationUseCase {
 
 internal class UpdateSessionLocationUseCaseImpl(
     private val dispatcherDefault: CoroutineDispatcher,
+    private val mutex: Mutex,
     private val activeSessionUseCase: ActiveSessionUseCase,
     private val sessionRepository: SessionRepository,
     private val distanceCalculator: DistanceCalculator,
@@ -40,8 +41,6 @@ internal class UpdateSessionLocationUseCaseImpl(
         private const val SPEED_BUFFER_SIZE = 5
         private const val MAX_ACCELERATION_KMH_PER_S = 8.0
     }
-
-    private val mutex = Mutex()
     private val speedBuffer = ArrayDeque<Double>(SPEED_BUFFER_SIZE)
     private var lastAcceptedSpeedKmh = 0.0
 
@@ -164,7 +163,11 @@ internal class UpdateSessionLocationUseCaseImpl(
             lastResumedTimeMs = timestampMs,
             traveledDistanceKm = totalDistanceKm,
             averageSpeedKmh = if (elapsedTimeMs > 0) (totalDistanceKm / elapsedTimeMs) * MILLISECONDS_PER_HOUR else 0.0,
-            topSpeedKmh = maxOf(session.topSpeedKmh, speedKmh),
+            topSpeedKmh = if (speedBuffer.size >= SPEED_BUFFER_SIZE) {
+                maxOf(session.topSpeedKmh, speedKmh)
+            } else {
+                session.topSpeedKmh
+            },
             totalAltitudeGainMeters = session.totalAltitudeGainMeters + altitudeGain,
             trackPoints = session.trackPoints + newTrackPoint,
         )

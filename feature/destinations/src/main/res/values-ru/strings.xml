@@ -16,6 +16,10 @@
     <string name="destination_calculating_bounds">Поиск подходящего диапазона расстояний</string>
     <string name="destination_no_destinations_in_area">В этой области локации не найдены. Доступные локации зависят от вашего местоположения</string>
 
+    <!-- POI -->
+    <string name="session_poi_coffee_shop">Кофейни</string>
+    <string name="session_poi_toilet">Туалеты</string>
+
     <!-- Loading -->
     <string name="loading_prefix">Инициализация: %s</string>
     <string name="loading_item_map">карта</string>

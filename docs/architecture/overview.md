@@ -61,6 +61,10 @@ All dependencies are managed via [Koin](https://insert-koin.io/). Registration c
 | Repository | `single`                                                        |
 | ViewModel  | `viewModel { }`                                                 |
 
+### Feature-Local Qualifiers
+
+When a feature needs to disambiguate DI bindings internally, define a `sealed class` extending `ClassNameQualifier()` in the feature's `di/` package (e.g., `SessionQualifier.SessionMutex` for a shared `Mutex`).
+
 ### DI File Organization
 
 Each feature module organizes DI into separate files:

@@ -21,3 +21,16 @@ All layout values are defined as constants in `shared/design-system/theme/Spacin
 | `Elevation.*`    | Shadow elevation           |
 | `CornerRadius.*` | Rounded corner sizes       |
 | `SurfaceAlpha.*` | Surface transparency       |
+
+## Components
+
+The design system provides wrapper composables that should be used instead of raw Material 3 counterparts:
+
+| Design System Component       | Replaces               | Purpose                               |
+|-------------------------------|------------------------|---------------------------------------|
+| `DebouncedButton`             | `Button`               | Prevents click spamming (400ms debounce) |
+| `DebouncedOutlinedButton`     | `OutlinedButton`       | Prevents click spamming (400ms debounce) |
+| `LocalizedDialog`             | `Dialog`               | Inherits app-selected locale          |
+| `LocalizedAlertDialog`        | `AlertDialog`          | Inherits app-selected locale          |
+| `LocalizedDropdownMenu`       | `DropdownMenu`         | Inherits app-selected locale          |
+| `LocalizedExposedDropdownMenu`| `ExposedDropdownMenu`  | Inherits app-selected locale          |

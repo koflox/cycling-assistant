@@ -39,6 +39,7 @@ internal fun LocationPermissionHandler(
                 hasRequestedPermission = true
                 permissionState.launchPermissionRequest()
             }
+            else -> onPermissionDenied(permissionState.status.shouldShowRationale)
         }
     }
     LaunchedEffect(denialCount) {

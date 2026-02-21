@@ -23,7 +23,7 @@ private val dataSourceModule = module {
     single<SessionLocalDataSource> {
         SessionLocalDataSourceImpl(
             dispatcherIo = get<CoroutineDispatcher>(DispatchersQualifier.Io),
-            dao = get(),
+            daoFactory = get(SessionQualifier.DaoFactory),
         )
     }
 }
