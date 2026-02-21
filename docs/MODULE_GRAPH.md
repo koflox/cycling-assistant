@@ -123,6 +123,7 @@ graph LR
   :feature:destinations --> :feature:bridge:destination-session:api
   :feature:destinations --> :shared:concurrent
   :feature:destinations --> :shared:design-system
+  :feature:destinations --> :shared:di
   :feature:destinations --> :shared:distance
   :feature:destinations --> :shared:graphics
   :feature:destinations --> :shared:location
