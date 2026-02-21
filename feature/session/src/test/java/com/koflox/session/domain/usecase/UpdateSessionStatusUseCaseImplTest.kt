@@ -338,6 +338,142 @@ class UpdateSessionStatusUseCaseImplTest {
         coVerify(exactly = 0) { sessionRepository.saveSession(any()) }
     }
 
+    @Test
+    fun `pause recalculates average speed`() = runTest {
+        val session = createTestSession(
+            status = SessionStatus.RUNNING,
+            elapsedTimeMs = ELAPSED_TIME_MS,
+            lastResumedTimeMs = LAST_RESUMED_TIME_MS,
+            traveledDistanceKm = TRAVELED_DISTANCE_KM,
+            averageSpeedKmh = AVERAGE_SPEED_KMH,
+        )
+        val sessionSlot = slot<Session>()
+        coEvery { activeSessionUseCase.getActiveSession() } returns session
+        coEvery { sessionRepository.saveSession(capture(sessionSlot)) } returns Result.success(Unit)
+
+        useCase.pause()
+
+        assertTrue(sessionSlot.captured.averageSpeedKmh < AVERAGE_SPEED_KMH)
+    }
+
+    @Test
+    fun `stop recalculates average speed for running session`() = runTest {
+        val session = createTestSession(
+            status = SessionStatus.RUNNING,
+            elapsedTimeMs = ELAPSED_TIME_MS,
+            lastResumedTimeMs = LAST_RESUMED_TIME_MS,
+            traveledDistanceKm = TRAVELED_DISTANCE_KM,
+            averageSpeedKmh = AVERAGE_SPEED_KMH,
+        )
+        val sessionSlot = slot<Session>()
+        coEvery { activeSessionUseCase.getActiveSession() } returns session
+        coEvery { sessionRepository.saveSession(capture(sessionSlot)) } returns Result.success(Unit)
+
+        useCase.stop()
+
+        assertTrue(sessionSlot.captured.averageSpeedKmh < AVERAGE_SPEED_KMH)
+    }
+
+    @Test
+    fun `stop preserves average speed for paused session`() = runTest {
+        val consistentAvgSpeed = (TRAVELED_DISTANCE_KM / ELAPSED_TIME_MS) * MILLISECONDS_PER_HOUR
+        val session = createTestSession(
+            status = SessionStatus.PAUSED,
+            elapsedTimeMs = ELAPSED_TIME_MS,
+            traveledDistanceKm = TRAVELED_DISTANCE_KM,
+            averageSpeedKmh = consistentAvgSpeed,
+        )
+        val sessionSlot = slot<Session>()
+        coEvery { activeSessionUseCase.getActiveSession() } returns session
+        coEvery { sessionRepository.saveSession(capture(sessionSlot)) } returns Result.success(Unit)
+
+        useCase.stop()
+
+        assertEquals(consistentAvgSpeed, sessionSlot.captured.averageSpeedKmh, 0.001)
+    }
+
+    @Test
+    fun `onServiceRestart updates lastResumedTimeMs for running session`() = runTest {
+        val session = createTestSession(
+            status = SessionStatus.RUNNING,
+            lastResumedTimeMs = LAST_RESUMED_TIME_MS,
+        )
+        val sessionSlot = slot<Session>()
+        coEvery { activeSessionUseCase.getActiveSession() } returns session
+        coEvery { sessionRepository.saveSession(capture(sessionSlot)) } returns Result.success(Unit)
+
+        useCase.onServiceRestart()
+
+        assertTrue(sessionSlot.captured.lastResumedTimeMs > LAST_RESUMED_TIME_MS)
+    }
+
+    @Test
+    fun `onServiceRestart preserves elapsedTimeMs`() = runTest {
+        val session = createTestSession(
+            status = SessionStatus.RUNNING,
+            elapsedTimeMs = ELAPSED_TIME_MS,
+            lastResumedTimeMs = LAST_RESUMED_TIME_MS,
+        )
+        val sessionSlot = slot<Session>()
+        coEvery { activeSessionUseCase.getActiveSession() } returns session
+        coEvery { sessionRepository.saveSession(capture(sessionSlot)) } returns Result.success(Unit)
+
+        useCase.onServiceRestart()
+
+        assertEquals(ELAPSED_TIME_MS, sessionSlot.captured.elapsedTimeMs)
+    }
+
+    @Test
+    fun `onServiceRestart preserves running status`() = runTest {
+        val session = createTestSession(status = SessionStatus.RUNNING)
+        val sessionSlot = slot<Session>()
+        coEvery { activeSessionUseCase.getActiveSession() } returns session
+        coEvery { sessionRepository.saveSession(capture(sessionSlot)) } returns Result.success(Unit)
+
+        useCase.onServiceRestart()
+
+        assertEquals(SessionStatus.RUNNING, sessionSlot.captured.status)
+    }
+
+    @Test
+    fun `onServiceRestart does nothing when session is paused`() = runTest {
+        val session = createTestSession(status = SessionStatus.PAUSED)
+        coEvery { activeSessionUseCase.getActiveSession() } returns session
+
+        val result = useCase.onServiceRestart()
+
+        assertTrue(result.isSuccess)
+        coVerify(exactly = 0) { sessionRepository.saveSession(any()) }
+    }
+
+    @Test
+    fun `onServiceRestart returns failure when no active session`() = runTest {
+        coEvery { activeSessionUseCase.getActiveSession() } throws NoActiveSessionException()
+
+        val result = useCase.onServiceRestart()
+
+        assertTrue(result.isFailure)
+    }
+
+    @Test
+    fun `stop ensures top speed is at least average speed`() = runTest {
+        val lowTopSpeed = 5.0
+        val session = createTestSession(
+            status = SessionStatus.PAUSED,
+            elapsedTimeMs = ELAPSED_TIME_MS,
+            traveledDistanceKm = TRAVELED_DISTANCE_KM,
+            averageSpeedKmh = AVERAGE_SPEED_KMH,
+            topSpeedKmh = lowTopSpeed,
+        )
+        val sessionSlot = slot<Session>()
+        coEvery { activeSessionUseCase.getActiveSession() } returns session
+        coEvery { sessionRepository.saveSession(capture(sessionSlot)) } returns Result.success(Unit)
+
+        useCase.stop()
+
+        assertTrue(sessionSlot.captured.topSpeedKmh >= sessionSlot.captured.averageSpeedKmh)
+    }
+
     private fun createTestSession(
         id: String = SESSION_ID,
         status: SessionStatus = SessionStatus.RUNNING,
