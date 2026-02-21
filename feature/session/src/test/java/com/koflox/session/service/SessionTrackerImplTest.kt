@@ -64,6 +64,7 @@ class SessionTrackerImplTest {
         coEvery { updateSessionStatusUseCase.pause() } returns Result.success(Unit)
         coEvery { updateSessionStatusUseCase.resume() } returns Result.success(Unit)
         coEvery { updateSessionStatusUseCase.stop() } returns Result.success(Unit)
+        coEvery { updateSessionStatusUseCase.onServiceRestart() } returns Result.success(Unit)
         every { locationDataSource.observeLocationUpdates(any(), any()) } returns locationFlow
         tracker = createTracker()
     }
@@ -253,6 +254,17 @@ class SessionTrackerImplTest {
 
         verify { delegate.onStartForeground() }
         verify { activeSessionUseCase.observeActiveSession() }
+    }
+
+    @Test
+    fun `handleRestart calls onServiceRestart before observing session`() = runTrackerTest {
+        every { delegate.onStartForeground() } returns true
+        val session = createTestSession(status = SessionStatus.RUNNING)
+        sessionFlow.value = session
+        tracker.handleRestart(delegate)
+        advanceTimeBy(1)
+
+        coVerify { updateSessionStatusUseCase.onServiceRestart() }
     }
 
     @Test

@@ -6,7 +6,6 @@ import androidx.core.content.ContextCompat
 
 interface SessionServiceController {
     fun startSessionTracking()
-    fun stopSessionTracking()
 }
 
 internal class SessionServiceControllerImpl(
@@ -18,12 +17,5 @@ internal class SessionServiceControllerImpl(
             action = SessionTrackingService.ACTION_START
         }
         ContextCompat.startForegroundService(context, intent)
-    }
-
-    override fun stopSessionTracking() {
-        val intent = Intent(context, SessionTrackingService::class.java).apply {
-            action = SessionTrackingService.ACTION_STOP
-        }
-        context.startService(intent)
     }
 }

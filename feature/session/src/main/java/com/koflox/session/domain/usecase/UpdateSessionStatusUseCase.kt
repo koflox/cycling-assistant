@@ -12,6 +12,7 @@ interface UpdateSessionStatusUseCase {
     suspend fun pause(): Result<Unit>
     suspend fun resume(): Result<Unit>
     suspend fun stop(): Result<Unit>
+    suspend fun onServiceRestart(): Result<Unit>
 }
 
 internal class UpdateSessionStatusUseCaseImpl(
