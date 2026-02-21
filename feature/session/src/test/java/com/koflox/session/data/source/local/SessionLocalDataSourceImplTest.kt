@@ -1,7 +1,7 @@
-@file:Suppress("UnusedFlow")
-
 package com.koflox.session.data.source.local
 
+import app.cash.turbine.test
+import com.koflox.concurrent.ConcurrentFactory
 import com.koflox.session.data.source.local.dao.SessionDao
 import com.koflox.session.testutil.createSessionEntity
 import com.koflox.session.testutil.createSessionWithTrackPoints
@@ -31,13 +31,16 @@ class SessionLocalDataSourceImplTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     private val dao: SessionDao = mockk()
+    private val daoFactory = object : ConcurrentFactory<SessionDao>() {
+        override suspend fun create(): SessionDao = dao
+    }
     private lateinit var dataSource: SessionLocalDataSourceImpl
 
     @Before
     fun setup() {
         dataSource = SessionLocalDataSourceImpl(
             dispatcherIo = mainDispatcherRule.testDispatcher,
-            dao = dao,
+            daoFactory = daoFactory,
         )
     }
 
@@ -92,67 +95,51 @@ class SessionLocalDataSourceImplTest {
     }
 
     @Test
-    fun `observeSessionsByStatuses delegates to dao`() = runTest {
-        val statuses = listOf("RUNNING", "PAUSED")
-        every { dao.observeSessionsByStatuses(statuses) } returns flowOf(emptyList())
-
-        dataSource.observeSessionsByStatuses(statuses)
-
-        verify(exactly = 1) { dao.observeSessionsByStatuses(statuses) }
-    }
-
-    @Test
-    fun `observeSessionsByStatuses returns flow from dao`() = runTest {
-        val statuses = listOf("RUNNING")
-        val sessions = listOf(createTestSessionWithTrackPoints())
-        val flow = flowOf(sessions)
-        every { dao.observeSessionsByStatuses(statuses) } returns flow
-
-        val result = dataSource.observeSessionsByStatuses(statuses)
-
-        assertEquals(flow, result)
-    }
-
-    @Test
     fun `observeFirstSessionByStatuses delegates to dao`() = runTest {
         val statuses = listOf("RUNNING", "PAUSED")
         every { dao.observeFirstSessionByStatuses(statuses) } returns flowOf(null)
 
-        dataSource.observeFirstSessionByStatuses(statuses)
+        dataSource.observeFirstSessionByStatuses(statuses).test {
+            awaitItem()
+            cancelAndIgnoreRemainingEvents()
+        }
 
         verify(exactly = 1) { dao.observeFirstSessionByStatuses(statuses) }
     }
 
     @Test
-    fun `observeFirstSessionByStatuses returns flow from dao`() = runTest {
+    fun `observeFirstSessionByStatuses emits values from dao`() = runTest {
         val statuses = listOf("RUNNING")
         val session = createTestSessionWithTrackPoints()
-        val flow = flowOf(session)
-        every { dao.observeFirstSessionByStatuses(statuses) } returns flow
+        every { dao.observeFirstSessionByStatuses(statuses) } returns flowOf(session)
 
-        val result = dataSource.observeFirstSessionByStatuses(statuses)
-
-        assertEquals(flow, result)
+        dataSource.observeFirstSessionByStatuses(statuses).test {
+            assertEquals(session, awaitItem())
+            cancelAndIgnoreRemainingEvents()
+        }
     }
 
     @Test
     fun `observeAllSessions delegates to dao`() = runTest {
         every { dao.observeAllSessions() } returns flowOf(emptyList())
 
-        dataSource.observeAllSessions()
+        dataSource.observeAllSessions().test {
+            awaitItem()
+            cancelAndIgnoreRemainingEvents()
+        }
 
         verify(exactly = 1) { dao.observeAllSessions() }
     }
 
     @Test
-    fun `observeAllSessions returns flow from dao`() = runTest {
+    fun `observeAllSessions emits values from dao`() = runTest {
         val sessions = listOf(createTestSessionWithTrackPoints())
-        val flow = flowOf(sessions)
-        every { dao.observeAllSessions() } returns flow
+        every { dao.observeAllSessions() } returns flowOf(sessions)
 
-        val result = dataSource.observeAllSessions()
-
-        assertEquals(flow, result)
+        dataSource.observeAllSessions().test {
+            assertEquals(sessions, awaitItem())
+            cancelAndIgnoreRemainingEvents()
+        }
     }
 
     private fun createTestSessionWithTrackPoints() = createSessionWithTrackPoints(

@@ -1,5 +1,6 @@
 package com.koflox.destinations.data.source.local
 
+import com.koflox.concurrent.ConcurrentFactory
 import com.koflox.destinations.data.source.local.database.dao.DestinationDao
 import com.koflox.destinations.data.source.local.entity.DestinationLocal
 import com.koflox.destinations.testutil.createDestinationLocal
@@ -27,13 +28,16 @@ class PoiLocalDataSourceImplTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     private val dao: DestinationDao = mockk()
+    private val daoFactory = object : ConcurrentFactory<DestinationDao>() {
+        override suspend fun create(): DestinationDao = dao
+    }
     private lateinit var dataSource: PoiLocalDataSourceImpl
 
     @Before
     fun setup() {
         dataSource = PoiLocalDataSourceImpl(
             dispatcherIo = mainDispatcherRule.testDispatcher,
-            dao = dao,
+            daoFactory = daoFactory,
         )
     }
 

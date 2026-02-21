@@ -122,6 +122,9 @@ kover {
                     "*Activity\$*",
                     "*DataStore",
                     "*DataStore\$*",
+                    "*RoomDataSource",
+                    "*RoomDataSource\$*",
+                    "*DatabasePassphraseManager",
                     "*LocalizedContextProviderImpl",
                 )
                 packages(

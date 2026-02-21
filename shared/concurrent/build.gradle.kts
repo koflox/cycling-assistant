@@ -13,4 +13,5 @@ dependencies {
     implementation(project(":shared:di"))
 
     testImplementation(libs.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
 }

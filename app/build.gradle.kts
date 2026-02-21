@@ -108,6 +108,10 @@ dependencies {
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
 
+    // SQLCipher - Room database encryption
+    implementation(libs.sqlcipher.android)
+    implementation(libs.androidx.sqlite)
+
     // Feature modules
     implementation(project(":feature:bridge:destination-nutrition:api"))
     implementation(project(":feature:bridge:destination-nutrition:impl"))
