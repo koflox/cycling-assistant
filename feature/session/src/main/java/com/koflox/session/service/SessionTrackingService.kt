@@ -18,7 +18,6 @@ class SessionTrackingService : Service(), SessionTrackingDelegate {
 
     companion object {
         const val ACTION_START = "com.koflox.session.START"
-        const val ACTION_STOP = "com.koflox.session.STOP"
         const val ACTION_PAUSE = "com.koflox.session.PAUSE"
         const val ACTION_RESUME = "com.koflox.session.RESUME"
 
