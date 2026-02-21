@@ -33,6 +33,7 @@ internal sealed interface RideMapUiState {
         val isLoading: Boolean,
         val isSessionStarting: Boolean,
         val showSelectedMarkerOptionsDialog: Boolean,
+        val isNavigateVisible: Boolean,
         val error: UiText?,
         val navigationAction: NavigationAction?,
     ) : RideMapUiState
@@ -43,6 +44,7 @@ internal sealed interface RideMapUiState {
         val selectedDestination: DestinationUiModel?,
         val curvePoints: List<LatLng>,
         val showSelectedMarkerOptionsDialog: Boolean,
+        val arePoiActionsVisible: Boolean,
         val error: UiText?,
         val navigationAction: NavigationAction?,
         val nutritionSuggestionTimeMs: Long?,

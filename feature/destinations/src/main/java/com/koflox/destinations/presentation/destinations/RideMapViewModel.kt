@@ -100,6 +100,7 @@ internal class RideMapViewModel(
     private fun initializeInternal() {
         viewModelScope.launch(dispatcherDefault) {
             _internalState.update { it.copy(isInitializing = true) }
+            destinationDelegate.checkGoogleMapsAvailability()
             val location = locationDelegate.fetchInitialLocation()
             if (location != null && _internalState.value.ridingMode == RidingMode.DESTINATION) {
                 destinationDelegate.startDestinationLoading(location)
@@ -166,6 +167,7 @@ internal class RideMapViewModel(
                 is RideMapUiEvent.LifecycleEvent -> handleLifecycleEvent(event)
                 is RideMapUiEvent.PermissionEvent -> handlePermissionEvent(event)
                 is RideMapUiEvent.DestinationEvent -> handleDestinationEvent(event)
+                is RideMapUiEvent.PoiEvent -> handlePoiEvent(event)
                 is RideMapUiEvent.SessionEvent -> handleSessionEvent(event)
                 is RideMapUiEvent.CommonEvent -> handleCommonEvent(event)
                 is RideMapUiEvent.MapEvent -> handleMapEvent(event)
@@ -192,6 +194,14 @@ internal class RideMapViewModel(
             RideMapUiEvent.PermissionEvent.PermissionGranted -> onPermissionGranted()
             is RideMapUiEvent.PermissionEvent.PermissionDenied -> onPermissionDenied(event)
         }
+    }
+
+    private fun handlePoiEvent(event: RideMapUiEvent.PoiEvent) {
+        val query = when (event) {
+            is RideMapUiEvent.PoiEvent.CoffeeShopClicked -> event.query
+            is RideMapUiEvent.PoiEvent.ToiletClicked -> event.query
+        }
+        destinationDelegate.openPoiInGoogleMaps(query)
     }
 
     private suspend fun handleDestinationEvent(event: RideMapUiEvent.DestinationEvent) {
@@ -264,6 +274,7 @@ internal class RideMapViewModel(
 
     private fun onScreenResumed() {
         isScreenVisible = true
+        destinationDelegate.checkGoogleMapsAvailability()
         if (_internalState.value.isPermissionGranted) {
             locationDelegate.startLocationObservation()
         }
@@ -310,6 +321,7 @@ internal class RideMapViewModel(
             selectedDestination = if (state.isFreeRoam) null else state.selectedDestination,
             curvePoints = if (state.isFreeRoam) emptyList() else state.curvePoints,
             showSelectedMarkerOptionsDialog = if (state.isFreeRoam) false else state.showSelectedMarkerOptionsDialog,
+            arePoiActionsVisible = state.isGoogleMapsAvailable,
             error = state.error,
             navigationAction = state.navigationAction,
             nutritionSuggestionTimeMs = state.nutritionSuggestionTimeMs,
@@ -335,6 +347,7 @@ internal class RideMapViewModel(
             isLoading = state.isLoading,
             isSessionStarting = state.isSessionStarting,
             showSelectedMarkerOptionsDialog = state.showSelectedMarkerOptionsDialog,
+            isNavigateVisible = state.isGoogleMapsAvailable,
             error = state.error,
             navigationAction = state.navigationAction,
         )

@@ -2,6 +2,7 @@ package com.koflox.destinations.presentation.destinations.delegate
 
 import android.app.Application
 import android.content.pm.PackageManager
+import android.net.Uri
 import androidx.core.net.toUri
 import com.google.android.gms.maps.model.LatLng
 import com.koflox.designsystem.text.UiText
@@ -29,6 +30,7 @@ import kotlinx.coroutines.launch
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.math.roundToInt
 
+@Suppress("TooManyFunctions")
 internal class DestinationDelegate(
     private val initializeDatabaseUseCase: InitializeDatabaseUseCase,
     private val getDestinationInfoUseCase: GetDestinationInfoUseCase,
@@ -231,13 +233,36 @@ internal class DestinationDelegate(
         uiState.update { it.copy(curvePoints = updatedCurvePoints) }
     }
 
+    fun checkGoogleMapsAvailability() {
+        uiState.update { it.copy(isGoogleMapsAvailable = isGoogleMapsInstalled()) }
+    }
+
     fun openInGoogleMaps(destination: DestinationUiModel) {
         if (isGoogleMapsInstalled()) {
             val uri = "google.navigation:q=${destination.location.latitude},${destination.location.longitude}&mode=b".toUri()
             uiState.update { it.copy(navigationAction = NavigationAction.OpenGoogleMaps(uri)) }
         } else {
-            uiState.update { it.copy(error = UiText.Resource(R.string.error_google_maps_not_installed)) }
+            uiState.update {
+                it.copy(isGoogleMapsAvailable = false, error = UiText.Resource(R.string.error_google_maps_not_installed))
+            }
         }
+    }
+
+    fun openPoiInGoogleMaps(query: String) {
+        if (!isGoogleMapsInstalled()) {
+            uiState.update {
+                it.copy(isGoogleMapsAvailable = false, error = UiText.Resource(R.string.error_google_maps_not_installed))
+            }
+            return
+        }
+        val location = uiState.value.userLocation
+        if (location == null) {
+            uiState.update { it.copy(error = UiText.Resource(R.string.failed_to_get_location, listOf(""))) }
+            return
+        }
+        val encodedQuery = Uri.encode(query)
+        val uri = "geo:${location.latitude},${location.longitude}?q=$encodedQuery".toUri()
+        uiState.update { it.copy(navigationAction = NavigationAction.OpenGoogleMaps(uri)) }
     }
 
     fun showMarkerOptionsDialog() {
