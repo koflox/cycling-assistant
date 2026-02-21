@@ -144,13 +144,14 @@ Manages cycling session lifecycle with foreground service for background trackin
 
 - `SessionTrackingService` - Foreground service with `START_STICKY`
 - `SessionNotificationManager` - Notification with pause/resume/stop actions
-- `SessionServiceController` - Interface to start/stop service from ViewModel
+- `SessionTracker` - Tracking orchestrator (delegates from service)
+- `SessionServiceController` - Interface to start service from ViewModel
 
 **Use Cases:**
 
 - `ActiveSessionUseCase` - Observe/get active session
 - `CreateSessionUseCase` - Create new session
-- `UpdateSessionStatusUseCase` - Pause/resume/stop
+- `UpdateSessionStatusUseCase` - Pause/resume/stop/onServiceRestart
 - `UpdateSessionLocationUseCase` - Add track points
 
 **Service Flow:**
@@ -160,10 +161,13 @@ SessionViewModel
     │ starts service on session create
     ▼
 SessionTrackingService (foreground, type=location)
-    ├── Observes ActiveSessionUseCase
-    ├── Collects location every 3s
-    ├── Updates notification every 1s
-    └── Handles notification actions
+    └── delegates to SessionTrackerImpl
+            ├── Observes ActiveSessionUseCase
+            ├── Collects location every 3s / 5m
+            ├── Monitors location enabled state (auto-pause)
+            ├── Updates notification every 1s
+            ├── Handles notification actions (pause/resume)
+            └── Observes NutritionReminderUseCase (triggers vibration)
 ```
 
 ### Database
@@ -325,6 +329,11 @@ wrapping for flows).
 | Repository | `single`  |
 | ViewModel  | `viewModel { }` |
 
+**Feature-local qualifiers:** When a feature needs to disambiguate DI bindings internally, define a
+`sealed class` extending `ClassNameQualifier()` in the feature's `di/` package (e.g.,
+`SessionQualifier.SessionMutex` for a shared `Mutex`). Use `shared/di` `ClassNameQualifier` as
+the base.
+
 **Feature DI file organization:**
 
 - `DataModule.kt` — `private val dataModule`, `private val dataSourceModule`,
@@ -338,6 +347,10 @@ wrapping for flows).
 Use constants from `shared/design-system/theme/Spacing.kt`: `Spacing.*`, `Elevation.*`,
 `CornerRadius.*`, `SurfaceAlpha.*`. Theme state via `LocalDarkTheme.current`. Color schemes:
 `CyclingLightColorScheme` / `CyclingDarkColorScheme` (Material 3).
+
+**Click debounce rule:** Use `DebouncedButton` / `DebouncedOutlinedButton` from
+`shared/design-system/component/` instead of raw `Button` / `OutlinedButton` to prevent click
+spamming (400ms debounce interval).
 
 ### Composable Conventions
 
@@ -508,6 +521,7 @@ Supported languages: English (default), Russian (`values-ru`), Japanese (`values
 | `app/Modules.kt`                                                                | Root DI configuration     |
 | `app/data/AppDatabase.kt`                                                       | Room database             |
 | `feature/session/service/SessionTrackingService.kt`                             | Foreground service        |
+| `feature/session/service/SessionTracker.kt`                                     | Session tracking orchestrator |
 | `feature/theme/domain/usecase/ObserveThemeUseCase.kt`                           | Theme observation         |
 | `feature/bridge/destination-session/api/.../CyclingSessionUseCase.kt`           | Bridge data interface     |
 | `feature/bridge/destination-session/api/.../CyclingSessionUiNavigator.kt`       | Bridge UI interface       |
