@@ -1,5 +1,6 @@
 package com.koflox.destinations.data.source.local
 
+import com.koflox.concurrent.ConcurrentFactory
 import com.koflox.destinations.data.source.local.database.dao.DestinationDao
 import com.koflox.destinations.data.source.local.entity.DestinationLocal
 import kotlinx.coroutines.CoroutineDispatcher
@@ -7,7 +8,7 @@ import kotlinx.coroutines.withContext
 
 internal class PoiLocalDataSourceImpl(
     private val dispatcherIo: CoroutineDispatcher,
-    private val dao: DestinationDao,
+    private val daoFactory: ConcurrentFactory<DestinationDao>,
 ) : PoiLocalDataSource {
 
     override suspend fun getDestinationsInArea(
@@ -16,14 +17,14 @@ internal class PoiLocalDataSourceImpl(
         minLon: Double,
         maxLon: Double,
     ): List<DestinationLocal> = withContext(dispatcherIo) {
-        dao.getDestinationsInArea(minLat, maxLat, minLon, maxLon)
+        daoFactory.get().getDestinationsInArea(minLat, maxLat, minLon, maxLon)
     }
 
     override suspend fun getDestinationById(id: String): DestinationLocal? = withContext(dispatcherIo) {
-        dao.getDestinationById(id)
+        daoFactory.get().getDestinationById(id)
     }
 
     override suspend fun insertAll(destinations: List<DestinationLocal>) = withContext(dispatcherIo) {
-        dao.insertAll(destinations)
+        daoFactory.get().insertAll(destinations)
     }
 }

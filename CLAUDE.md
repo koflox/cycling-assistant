@@ -40,7 +40,7 @@ CyclingAssistant/
 │   ├── session/                      # Session tracking with foreground service
 │   └── settings/                     # App settings (theme, language)
 └── shared/
-    ├── concurrent/                   # Coroutine dispatchers, suspendRunCatching
+    ├── concurrent/                   # Coroutine dispatchers, suspendRunCatching, ConcurrentFactory
     ├── design-system/                # UI theme, colors, spacing, components
     ├── di/                           # Koin qualifiers
     ├── distance/                     # Distance calculator
@@ -179,6 +179,47 @@ Centralized Room database in app module (`AppDatabase`):
 
 **DAO conventions:** `@Dao` interfaces with suspend functions for one-shot operations and `Flow`
 for observable queries. Default conflict strategy: `OnConflictStrategy.REPLACE`.
+
+### Concurrency — ConcurrentFactory Pattern
+
+`ConcurrentFactory<T>` in `shared/concurrent` — generic abstract factory with suspendable `get()`
+and Mutex-based double-checked locking. First call creates and caches the instance; subsequent calls
+return cached (volatile read). If `create()` throws, instance stays null — next `get()` retries.
+
+Used by `RoomDatabaseFactory` to ensure Room DB is always initialized off the main thread.
+DataSources access DAOs via `ConcurrentFactory<*Dao>` instances. Each feature defines a
+`DaoFactory` entry in its sealed qualifier class (e.g., `LocaleQualifier.DaoFactory`) to
+disambiguate Koin registrations (generics are erased at runtime):
+
+```kotlin
+// feature/locale/di/LocaleQualifier.kt
+sealed class LocaleQualifier : ClassNameQualifier(), Qualifier {
+    data object DaoFactory : LocaleQualifier()
+}
+
+// feature/locale/data/source/LocaleRoomDataSource.kt
+internal class LocaleRoomDataSource(
+    private val daoFactory: ConcurrentFactory<LocaleDao>,
+    ...
+)
+```
+
+### Security — Database Encryption
+
+SQLCipher encrypts the Room database at rest (AES-256) in **release builds only**. Debug builds
+use plain SQLite so that App Inspector works. The `isEncryptionEnabled` flag is injected via DI
+(`!BuildConfig.DEBUG`).
+
+Passphrase: 32-byte random, generated once and encrypted with Android Keystore (AES-256-GCM).
+Encrypted passphrase + IV stored in SharedPreferences, excluded from backup.
+
+`DatabasePassphraseManager` interface + `Impl` — handles passphrase lifecycle with error recovery.
+If the Keystore key is lost (corruption, rare OS bug) or stored data is corrupted, passphrase is
+regenerated. Old DB becomes unreadable → `RoomDatabaseFactory.recoverIfCorrupted()` deletes and
+recreates the DB. Data loss is accepted over crash loop. Backup rules exclude DB files and
+passphrase prefs from cloud backup and device transfer.
+
+See [Security docs](docs/infrastructure/security.md) for full details.
 
 ### State Management (MVVM)
 
