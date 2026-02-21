@@ -9,6 +9,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.slot
+import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -24,6 +25,9 @@ class UpdateSessionStatusUseCaseImplTest {
         private const val START_TIME_MS = 1000000L
         private const val LAST_RESUMED_TIME_MS = 1500000L
         private const val ELAPSED_TIME_MS = 300000L
+        private const val MILLISECONDS_PER_HOUR = 3_600_000.0
+        private const val TRAVELED_DISTANCE_KM = 10.0
+        private const val AVERAGE_SPEED_KMH = 25.0
     }
 
     @get:Rule
@@ -35,7 +39,12 @@ class UpdateSessionStatusUseCaseImplTest {
 
     @Before
     fun setup() {
-        useCase = UpdateSessionStatusUseCaseImpl(activeSessionUseCase, sessionRepository)
+        useCase = UpdateSessionStatusUseCaseImpl(
+            dispatcherDefault = mainDispatcherRule.testDispatcher,
+            mutex = Mutex(),
+            activeSessionUseCase = activeSessionUseCase,
+            sessionRepository = sessionRepository,
+        )
     }
 
     @Test
@@ -109,6 +118,28 @@ class UpdateSessionStatusUseCaseImplTest {
     }
 
     @Test
+    fun `pause does nothing when session is paused`() = runTest {
+        val session = createTestSession(status = SessionStatus.PAUSED)
+        coEvery { activeSessionUseCase.getActiveSession() } returns session
+
+        val result = useCase.pause()
+
+        assertTrue(result.isSuccess)
+        coVerify(exactly = 0) { sessionRepository.saveSession(any()) }
+    }
+
+    @Test
+    fun `pause does nothing when session is completed`() = runTest {
+        val session = createTestSession(status = SessionStatus.COMPLETED)
+        coEvery { activeSessionUseCase.getActiveSession() } returns session
+
+        val result = useCase.pause()
+
+        assertTrue(result.isSuccess)
+        coVerify(exactly = 0) { sessionRepository.saveSession(any()) }
+    }
+
+    @Test
     fun `resume gets active session`() = runTest {
         val session = createTestSession(status = SessionStatus.PAUSED)
         coEvery { activeSessionUseCase.getActiveSession() } returns session
@@ -175,6 +206,28 @@ class UpdateSessionStatusUseCaseImplTest {
         val result = useCase.resume()
 
         assertTrue(result.isFailure)
+    }
+
+    @Test
+    fun `resume does nothing when session is running`() = runTest {
+        val session = createTestSession(status = SessionStatus.RUNNING)
+        coEvery { activeSessionUseCase.getActiveSession() } returns session
+
+        val result = useCase.resume()
+
+        assertTrue(result.isSuccess)
+        coVerify(exactly = 0) { sessionRepository.saveSession(any()) }
+    }
+
+    @Test
+    fun `resume does nothing when session is completed`() = runTest {
+        val session = createTestSession(status = SessionStatus.COMPLETED)
+        coEvery { activeSessionUseCase.getActiveSession() } returns session
+
+        val result = useCase.resume()
+
+        assertTrue(result.isSuccess)
+        coVerify(exactly = 0) { sessionRepository.saveSession(any()) }
     }
 
     @Test
@@ -274,15 +327,32 @@ class UpdateSessionStatusUseCaseImplTest {
         assertTrue(result.isFailure)
     }
 
+    @Test
+    fun `stop does nothing when session is completed`() = runTest {
+        val session = createTestSession(status = SessionStatus.COMPLETED)
+        coEvery { activeSessionUseCase.getActiveSession() } returns session
+
+        val result = useCase.stop()
+
+        assertTrue(result.isSuccess)
+        coVerify(exactly = 0) { sessionRepository.saveSession(any()) }
+    }
+
     private fun createTestSession(
         id: String = SESSION_ID,
         status: SessionStatus = SessionStatus.RUNNING,
         elapsedTimeMs: Long = 0L,
         lastResumedTimeMs: Long = START_TIME_MS,
+        traveledDistanceKm: Double = 0.0,
+        averageSpeedKmh: Double = 0.0,
+        topSpeedKmh: Double = 0.0,
     ) = createSession(
         id = id,
         lastResumedTimeMs = lastResumedTimeMs,
         elapsedTimeMs = elapsedTimeMs,
+        traveledDistanceKm = traveledDistanceKm,
+        averageSpeedKmh = averageSpeedKmh,
+        topSpeedKmh = topSpeedKmh,
         status = status,
     )
 }

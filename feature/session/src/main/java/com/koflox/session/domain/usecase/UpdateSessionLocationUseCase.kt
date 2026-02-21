@@ -164,7 +164,11 @@ internal class UpdateSessionLocationUseCaseImpl(
             lastResumedTimeMs = timestampMs,
             traveledDistanceKm = totalDistanceKm,
             averageSpeedKmh = if (elapsedTimeMs > 0) (totalDistanceKm / elapsedTimeMs) * MILLISECONDS_PER_HOUR else 0.0,
-            topSpeedKmh = maxOf(session.topSpeedKmh, speedKmh),
+            topSpeedKmh = if (speedBuffer.size >= SPEED_BUFFER_SIZE) {
+                maxOf(session.topSpeedKmh, speedKmh)
+            } else {
+                session.topSpeedKmh
+            },
             totalAltitudeGainMeters = session.totalAltitudeGainMeters + altitudeGain,
             trackPoints = session.trackPoints + newTrackPoint,
         )
