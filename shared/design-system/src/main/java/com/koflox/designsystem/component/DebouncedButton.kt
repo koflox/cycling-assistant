@@ -42,6 +42,7 @@ fun DebouncedOutlinedButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    colors: ButtonColors = ButtonDefaults.outlinedButtonColors(),
     content: @Composable () -> Unit,
 ) {
     var lastClickTimeMs by remember { mutableLongStateOf(0L) }
@@ -55,6 +56,7 @@ fun DebouncedOutlinedButton(
         },
         modifier = modifier,
         enabled = enabled,
+        colors = colors,
         content = { content() },
     )
 }

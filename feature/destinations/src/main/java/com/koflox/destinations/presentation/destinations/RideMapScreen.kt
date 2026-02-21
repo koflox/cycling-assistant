@@ -7,6 +7,7 @@ import android.provider.Settings
 import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
@@ -15,6 +16,9 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -30,6 +34,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.koflox.designsystem.component.ActionCard
+import com.koflox.designsystem.component.DebouncedOutlinedButton
 import com.koflox.designsystem.component.StatusCard
 import com.koflox.designsystem.text.UiText
 import com.koflox.designsystem.text.resolve
@@ -185,6 +190,7 @@ private fun RideMapContent(
         is RideMapUiState.DestinationIdle -> DestinationOptionsDialog(
             showDialog = uiState.showSelectedMarkerOptionsDialog,
             selectedDestination = uiState.selectedDestination,
+            isNavigateVisible = uiState.isNavigateVisible,
             onSessionStarting = { onEvent(RideMapUiEvent.SessionEvent.DestinationSessionStarting) },
             onNavigateClick = { destination ->
                 onEvent(RideMapUiEvent.DestinationEvent.SelectedMarkerOptionsDialogDismissed)
@@ -196,6 +202,7 @@ private fun RideMapContent(
         is RideMapUiState.ActiveSession -> DestinationOptionsDialog(
             showDialog = uiState.showSelectedMarkerOptionsDialog,
             selectedDestination = uiState.selectedDestination,
+            isNavigateVisible = uiState.arePoiActionsVisible,
             onSessionStarting = { onEvent(RideMapUiEvent.SessionEvent.DestinationSessionStarting) },
             onNavigateClick = { destination ->
                 onEvent(RideMapUiEvent.DestinationEvent.SelectedMarkerOptionsDialogDismissed)
@@ -249,6 +256,7 @@ private fun BoxScope.RideMapOverlay(
         is RideMapUiState.ActiveSession -> ActiveSessionControls(
             uiState = uiState,
             onNutritionPopupDismiss = { onEvent(RideMapUiEvent.CommonEvent.NutritionPopupDismissed) },
+            onPoiEvent = { onEvent(it) },
             sessionUiNavigator = sessionUiNavigator,
             nutritionUiNavigator = nutritionUiNavigator,
             onNavigateToSessionCompletion = onNavigateToSessionCompletion,
@@ -348,6 +356,7 @@ private fun FreeRoamSessionGate(
 private fun DestinationOptionsDialog(
     showDialog: Boolean,
     selectedDestination: DestinationUiModel?,
+    isNavigateVisible: Boolean,
     onSessionStarting: () -> Unit,
     onNavigateClick: (DestinationUiModel) -> Unit,
     onDialogDismiss: () -> Unit,
@@ -359,6 +368,7 @@ private fun DestinationOptionsDialog(
             destinationName = selectedDestination.title,
             destinationLocation = selectedDestination.location,
             distanceKm = selectedDestination.distanceKm,
+            isNavigateVisible = isNavigateVisible,
             onSessionStarting = onSessionStarting,
             onNavigateClick = { onNavigateClick(selectedDestination) },
             onDismiss = onDialogDismiss,
@@ -370,6 +380,7 @@ private fun DestinationOptionsDialog(
 private fun ActiveSessionControls(
     uiState: RideMapUiState.ActiveSession,
     onNutritionPopupDismiss: () -> Unit,
+    onPoiEvent: (RideMapUiEvent.PoiEvent) -> Unit,
     sessionUiNavigator: CyclingSessionUiNavigator,
     nutritionUiNavigator: NutritionUiNavigator,
     onNavigateToSessionCompletion: (sessionId: String) -> Unit,
@@ -385,6 +396,14 @@ private fun ActiveSessionControls(
                     .padding(horizontal = Spacing.Large),
             )
         }
+        if (uiState.arePoiActionsVisible) {
+            ActiveSessionPoiButtons(
+                onPoiEvent = onPoiEvent,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = Spacing.Large),
+            )
+        }
         sessionUiNavigator.SessionScreen(
             destinationLocation = uiState.selectedDestination?.location,
             modifier = Modifier
@@ -394,6 +413,37 @@ private fun ActiveSessionControls(
                 .padding(horizontal = Spacing.Large),
             onNavigateToCompletion = onNavigateToSessionCompletion,
         )
+    }
+}
+
+@Composable
+internal fun ActiveSessionPoiButtons(
+    onPoiEvent: (RideMapUiEvent.PoiEvent) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val coffeeShopLabel = stringResource(R.string.session_poi_coffee_shop)
+    val toiletLabel = stringResource(R.string.session_poi_toilet)
+    val poiButtonColors = ButtonDefaults.outlinedButtonColors(
+        containerColor = MaterialTheme.colorScheme.surface,
+    )
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(Spacing.Small),
+    ) {
+        DebouncedOutlinedButton(
+            onClick = { onPoiEvent(RideMapUiEvent.PoiEvent.CoffeeShopClicked(coffeeShopLabel)) },
+            modifier = Modifier.weight(1f),
+            colors = poiButtonColors,
+        ) {
+            Text(coffeeShopLabel)
+        }
+        DebouncedOutlinedButton(
+            onClick = { onPoiEvent(RideMapUiEvent.PoiEvent.ToiletClicked(toiletLabel)) },
+            modifier = Modifier.weight(1f),
+            colors = poiButtonColors,
+        ) {
+            Text(toiletLabel)
+        }
     }
 }
 

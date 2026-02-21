@@ -47,6 +47,7 @@ interface CyclingSessionUiNavigator {
         destinationName: String,
         destinationLocation: Location,
         distanceKm: Double,
+        isNavigateVisible: Boolean,
         onSessionStarting: () -> Unit,
         onNavigateClick: () -> Unit,
         onDismiss: () -> Unit,

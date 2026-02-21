@@ -486,6 +486,54 @@ class RideMapViewModelTest {
         assertNotNull(state.cameraFocusLocation)
     }
 
+    @Test
+    fun `ActiveSession includes arePoiActionsVisible from Google Maps availability`() = runTest {
+        every { application.packageManager.getPackageInfo("com.google.android.apps.maps", 0) } returns
+            android.content.pm.PackageInfo()
+        activeSessionFlow.value = true
+
+        viewModel = createViewModel()
+        advanceUntilIdle()
+        viewModel.onEvent(RideMapUiEvent.PermissionEvent.PermissionGranted)
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value as RideMapUiState.ActiveSession
+        assertTrue(state.arePoiActionsVisible)
+    }
+
+    @Test
+    fun `ActiveSession arePoiActionsVisible is false when Google Maps not installed`() = runTest {
+        every {
+            application.packageManager.getPackageInfo("com.google.android.apps.maps", 0)
+        } throws android.content.pm.PackageManager.NameNotFoundException()
+        activeSessionFlow.value = true
+
+        viewModel = createViewModel()
+        advanceUntilIdle()
+        viewModel.onEvent(RideMapUiEvent.PermissionEvent.PermissionGranted)
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value as RideMapUiState.ActiveSession
+        assertFalse(state.arePoiActionsVisible)
+    }
+
+    @Test
+    fun `DestinationIdle includes isNavigateVisible from Google Maps availability`() = runTest {
+        every { distanceCalculator.calculateKm(any(), any(), any(), any()) } returns 0.0
+        every { application.packageManager.getPackageInfo("com.google.android.apps.maps", 0) } returns
+            android.content.pm.PackageInfo()
+        ridingModeFlow.value = RidingMode.DESTINATION
+
+        viewModel = createViewModel()
+        advanceUntilIdle()
+        sendMapLoaded()
+        viewModel.onEvent(RideMapUiEvent.PermissionEvent.PermissionGranted)
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value as RideMapUiState.DestinationIdle
+        assertTrue(state.isNavigateVisible)
+    }
+
     private fun sendMapLoaded() {
         viewModel.onEvent(RideMapUiEvent.MapEvent.MapLoaded)
     }

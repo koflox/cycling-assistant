@@ -34,6 +34,7 @@ internal data class RideMapInternalState(
     val isLocationDisabled: Boolean = false,
     val isSessionStarting: Boolean = false,
     val isMapLoaded: Boolean = false,
+    val isGoogleMapsAvailable: Boolean = false,
 ) {
     val isFreeRoam: Boolean
         get() = ridingMode == RidingMode.FREE_ROAM
