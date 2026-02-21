@@ -62,6 +62,8 @@ nav:
       - Other Features: features/other-features.md
   - Infrastructure:
       - CI/CD: infrastructure/ci-cd.md
+      - Concurrency: infrastructure/concurrency.md
+      - Security: infrastructure/security.md
       - Testing: infrastructure/testing.md
       - Code Quality: infrastructure/code-quality.md
       - Design System: infrastructure/design-system.md

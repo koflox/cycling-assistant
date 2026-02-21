@@ -34,11 +34,10 @@ private val dataModule = module {
 }
 
 private val dataSourceModule = module {
-    // DestinationDao is provided by :feature:database module
     single<PoiLocalDataSource> {
         PoiLocalDataSourceImpl(
             dispatcherIo = get<CoroutineDispatcher>(DispatchersQualifier.Io),
-            dao = get(),
+            daoFactory = get(DestinationsQualifier.DaoFactory),
         )
     }
     single<PoiAssetDataSource> {

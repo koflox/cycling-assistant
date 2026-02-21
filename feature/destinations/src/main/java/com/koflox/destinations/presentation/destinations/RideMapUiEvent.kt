@@ -28,6 +28,11 @@ internal sealed interface RideMapUiEvent {
         data object SelectedMarkerOptionsDialogDismissed : DestinationEvent
     }
 
+    sealed interface PoiEvent : RideMapUiEvent {
+        data class CoffeeShopClicked(val query: String) : PoiEvent
+        data class ToiletClicked(val query: String) : PoiEvent
+    }
+
     sealed interface SessionEvent : RideMapUiEvent {
         data object FreeRoamSessionStarting : SessionEvent
         data object DestinationSessionStarting : SessionEvent

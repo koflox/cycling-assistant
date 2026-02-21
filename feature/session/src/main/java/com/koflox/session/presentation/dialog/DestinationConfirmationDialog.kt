@@ -38,6 +38,7 @@ fun DestinationOptionsRoute(
     destinationName: String,
     destinationLocation: Location,
     distanceKm: Double,
+    isNavigateVisible: Boolean,
     onSessionStarting: () -> Unit,
     onNavigateClick: () -> Unit,
     onDismiss: () -> Unit,
@@ -72,6 +73,7 @@ fun DestinationOptionsRoute(
     DestinationConfirmationDialog(
         destinationName = destinationName,
         distanceKm = distanceKm,
+        isNavigateVisible = isNavigateVisible,
         onNavigateClick = onNavigateClick,
         onStartSessionClick = {
             @Suppress("AssignedValueIsNeverRead")
@@ -85,6 +87,7 @@ fun DestinationOptionsRoute(
 fun DestinationConfirmationDialog(
     destinationName: String,
     distanceKm: Double,
+    isNavigateVisible: Boolean,
     onNavigateClick: () -> Unit,
     onStartSessionClick: () -> Unit,
     onDismiss: () -> Unit,
@@ -106,13 +109,15 @@ fun DestinationConfirmationDialog(
         },
         confirmButton = {
             Column {
-                Button(
-                    onClick = onNavigateClick,
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Text(stringResource(R.string.dialog_button_navigate))
+                if (isNavigateVisible) {
+                    Button(
+                        onClick = onNavigateClick,
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text(stringResource(R.string.dialog_button_navigate))
+                    }
+                    Spacer(modifier = Modifier.height(Spacing.Small))
                 }
-                Spacer(modifier = Modifier.height(Spacing.Small))
                 OutlinedButton(
                     onClick = onStartSessionClick,
                     modifier = Modifier.fillMaxWidth(),

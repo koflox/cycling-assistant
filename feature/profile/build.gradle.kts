@@ -1,9 +1,15 @@
 plugins {
     alias(libs.plugins.android.library)
+    alias(libs.plugins.ksp)
 }
 
 android {
     namespace = "com.koflox.profile"
+    defaultConfig {
+        ksp {
+            arg("room.schemaLocation", "${rootProject.projectDir}/schemas/profile")
+        }
+    }
 }
 
 dependencies {
@@ -15,8 +21,10 @@ dependencies {
     implementation(libs.koin.android)
     implementation(libs.koin.core)
 
-    // DataStore
-    implementation(libs.androidx.datastore.preferences)
+    // Room
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    ksp(libs.androidx.room.compiler)
 
     // Shared modules
     implementation(project(":shared:concurrent"))

@@ -290,22 +290,6 @@ class DestinationDelegateTest {
     }
 
     @Test
-    fun `showMarkerOptionsDialog sets flag to true`() = runTest {
-        delegate.showMarkerOptionsDialog()
-
-        assertTrue(uiState.value.showSelectedMarkerOptionsDialog)
-    }
-
-    @Test
-    fun `dismissSelectedMarkerOptionsDialog sets flag to false`() = runTest {
-        uiState.value = uiState.value.copy(showSelectedMarkerOptionsDialog = true)
-
-        delegate.dismissSelectedMarkerOptionsDialog()
-
-        assertFalse(uiState.value.showSelectedMarkerOptionsDialog)
-    }
-
-    @Test
     fun `openInGoogleMaps sets navigation action when maps installed`() = runTest {
         mockkStatic(Uri::class)
         try {
@@ -329,6 +313,94 @@ class DestinationDelegateTest {
             PackageManager.NameNotFoundException()
 
         delegate.openInGoogleMaps(createDestinationUiModel())
+
+        assertNotNull(uiState.value.error)
+        assertNull(uiState.value.navigationAction)
+    }
+
+    @Test
+    fun `showMarkerOptionsDialog sets flag to true`() = runTest {
+        delegate.showMarkerOptionsDialog()
+
+        assertTrue(uiState.value.showSelectedMarkerOptionsDialog)
+    }
+
+    @Test
+    fun `dismissSelectedMarkerOptionsDialog sets flag to false`() = runTest {
+        uiState.value = uiState.value.copy(showSelectedMarkerOptionsDialog = true)
+
+        delegate.dismissSelectedMarkerOptionsDialog()
+
+        assertFalse(uiState.value.showSelectedMarkerOptionsDialog)
+    }
+
+    @Test
+    fun `openInGoogleMaps clears availability on failure`() = runTest {
+        uiState.value = uiState.value.copy(isGoogleMapsAvailable = true)
+        every { packageManager.getPackageInfo("com.google.android.apps.maps", 0) } throws
+            PackageManager.NameNotFoundException()
+
+        delegate.openInGoogleMaps(createDestinationUiModel())
+
+        assertFalse(uiState.value.isGoogleMapsAvailable)
+    }
+
+    @Test
+    fun `checkGoogleMapsAvailability sets true when installed`() = runTest {
+        every { packageManager.getPackageInfo("com.google.android.apps.maps", 0) } returns PackageInfo()
+
+        delegate.checkGoogleMapsAvailability()
+
+        assertTrue(uiState.value.isGoogleMapsAvailable)
+    }
+
+    @Test
+    fun `checkGoogleMapsAvailability sets false when not installed`() = runTest {
+        every { packageManager.getPackageInfo("com.google.android.apps.maps", 0) } throws
+            PackageManager.NameNotFoundException()
+
+        delegate.checkGoogleMapsAvailability()
+
+        assertFalse(uiState.value.isGoogleMapsAvailable)
+    }
+
+    @Test
+    fun `openPoiInGoogleMaps sets navigation action when maps installed and location available`() = runTest {
+        mockkStatic(Uri::class)
+        try {
+            val mockUri: Uri = mockk()
+            every { Uri.parse(any()) } returns mockUri
+            every { Uri.encode(any()) } returns "coffee+shop"
+            every { packageManager.getPackageInfo("com.google.android.apps.maps", 0) } returns PackageInfo()
+            uiState.value = uiState.value.copy(userLocation = createUserLocation())
+
+            delegate.openPoiInGoogleMaps("coffee shop")
+
+            val action = uiState.value.navigationAction
+            assertTrue(action is NavigationAction.OpenGoogleMaps)
+        } finally {
+            unmockkStatic(Uri::class)
+        }
+    }
+
+    @Test
+    fun `openPoiInGoogleMaps sets error when maps not installed`() = runTest {
+        every { packageManager.getPackageInfo("com.google.android.apps.maps", 0) } throws
+            PackageManager.NameNotFoundException()
+        uiState.value = uiState.value.copy(isGoogleMapsAvailable = true)
+
+        delegate.openPoiInGoogleMaps("coffee shop")
+
+        assertNotNull(uiState.value.error)
+        assertFalse(uiState.value.isGoogleMapsAvailable)
+        assertNull(uiState.value.navigationAction)
+    }
+
+    @Test
+    fun `openPoiInGoogleMaps sets error when no user location`() = runTest {
+        every { packageManager.getPackageInfo("com.google.android.apps.maps", 0) } returns PackageInfo()
+
+        delegate.openPoiInGoogleMaps("toilet")
 
         assertNotNull(uiState.value.error)
         assertNull(uiState.value.navigationAction)

@@ -18,7 +18,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 interface SessionTrackingDelegate {
-    fun onStartForeground()
+    fun onStartForeground(): Boolean
     fun onNotificationUpdate(session: Session, elapsedMs: Long)
     fun onStopService()
     fun onVibrate()
@@ -70,8 +70,8 @@ internal class SessionTrackerImpl(
         scope = CoroutineScope(SupervisorJob() + dispatcherIo).also {
             it.launch {
                 val activeSession = activeSessionUseCase.observeActiveSession().first()
-                if (activeSession != null) {
-                    delegate.onStartForeground()
+                if (activeSession != null && delegate.onStartForeground()) {
+                    updateSessionStatusUseCase.onServiceRestart()
                     observeSession()
                     observeNutritionReminders()
                 } else {

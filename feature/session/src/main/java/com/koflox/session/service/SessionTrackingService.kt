@@ -18,7 +18,6 @@ class SessionTrackingService : Service(), SessionTrackingDelegate {
 
     companion object {
         const val ACTION_START = "com.koflox.session.START"
-        const val ACTION_STOP = "com.koflox.session.STOP"
         const val ACTION_PAUSE = "com.koflox.session.PAUSE"
         const val ACTION_RESUME = "com.koflox.session.RESUME"
 
@@ -42,8 +41,9 @@ class SessionTrackingService : Service(), SessionTrackingDelegate {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
             ACTION_START -> {
-                goForeground()
-                sessionTracker.startTracking(this)
+                if (goForeground()) {
+                    sessionTracker.startTracking(this)
+                }
             }
             ACTION_PAUSE -> sessionTracker.pauseSession()
             ACTION_RESUME -> sessionTracker.resumeSession()
@@ -52,9 +52,7 @@ class SessionTrackingService : Service(), SessionTrackingDelegate {
         return START_STICKY
     }
 
-    override fun onStartForeground() {
-        goForeground()
-    }
+    override fun onStartForeground(): Boolean = goForeground()
 
     override fun onNotificationUpdate(session: Session, elapsedMs: Long) {
         val notification = notificationManager.buildNotification(session, elapsedMs)
@@ -75,17 +73,23 @@ class SessionTrackingService : Service(), SessionTrackingDelegate {
         sessionTracker.stopTracking()
     }
 
-    private fun goForeground() {
+    private fun goForeground(): Boolean {
         val notification = notificationManager.createInitialNotification()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            ServiceCompat.startForeground(
-                this,
-                SessionNotificationManagerImpl.NOTIFICATION_ID,
-                notification,
-                ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION,
-            )
-        } else {
-            startForeground(SessionNotificationManagerImpl.NOTIFICATION_ID, notification)
+        return try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                ServiceCompat.startForeground(
+                    this,
+                    SessionNotificationManagerImpl.NOTIFICATION_ID,
+                    notification,
+                    ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION,
+                )
+            } else {
+                startForeground(SessionNotificationManagerImpl.NOTIFICATION_ID, notification)
+            }
+            true
+        } catch (_: SecurityException) {
+            stopSelf()
+            false
         }
     }
 
