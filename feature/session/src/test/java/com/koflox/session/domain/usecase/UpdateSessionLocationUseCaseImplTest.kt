@@ -19,6 +19,7 @@ import io.mockk.justRun
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
+import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -69,6 +70,7 @@ class UpdateSessionLocationUseCaseImplTest {
         every { idGenerator.generate() } returns TRACK_POINT_ID
         useCase = UpdateSessionLocationUseCaseImpl(
             dispatcherDefault = mainDispatcherRule.testDispatcher,
+            mutex = Mutex(),
             activeSessionUseCase = activeSessionUseCase,
             sessionRepository = sessionRepository,
             distanceCalculator = distanceCalculator,

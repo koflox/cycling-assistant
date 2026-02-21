@@ -17,9 +17,11 @@ import com.koflox.session.domain.usecase.UpdateSessionLocationUseCase
 import com.koflox.session.domain.usecase.UpdateSessionLocationUseCaseImpl
 import com.koflox.session.domain.usecase.UpdateSessionStatusUseCase
 import com.koflox.session.domain.usecase.UpdateSessionStatusUseCaseImpl
+import kotlinx.coroutines.sync.Mutex
 import org.koin.dsl.module
 
 internal val domainModule = module {
+    single<Mutex>(SessionQualifier.SessionMutex) { Mutex() }
     single<ActiveSessionUseCase> {
         ActiveSessionUseCaseImpl(
             sessionRepository = get(),
@@ -33,8 +35,10 @@ internal val domainModule = module {
             locationValidator = get(),
         )
     }
-    factory<UpdateSessionStatusUseCase> {
+    single<UpdateSessionStatusUseCase> {
         UpdateSessionStatusUseCaseImpl(
+            dispatcherDefault = get(DispatchersQualifier.Default),
+            mutex = get(SessionQualifier.SessionMutex),
             activeSessionUseCase = get(),
             sessionRepository = get(),
         )
@@ -44,6 +48,7 @@ internal val domainModule = module {
     single<UpdateSessionLocationUseCase> {
         UpdateSessionLocationUseCaseImpl(
             dispatcherDefault = get(DispatchersQualifier.Default),
+            mutex = get(SessionQualifier.SessionMutex),
             activeSessionUseCase = get(),
             sessionRepository = get(),
             distanceCalculator = get(),
