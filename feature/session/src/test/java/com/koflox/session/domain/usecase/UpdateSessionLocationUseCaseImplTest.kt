@@ -179,15 +179,43 @@ class UpdateSessionLocationUseCaseImplTest {
     }
 
     @Test
-    fun `update updates top speed when current speed is higher`() = runTest {
-        val initialTopSpeed = 10.0
-        val session = createTestSession(topSpeedKmh = initialTopSpeed)
-        val sessionSlot = slot<Session>()
+    fun `update does not update top speed during warmup`() = runTest {
+        val session = createTestSession(topSpeedKmh = 0.0)
         coEvery { activeSessionUseCase.getActiveSession() } returns session
         every { distanceCalculator.calculateKm(any(), any(), any(), any()) } returns DISTANCE_KM
+        val sessionSlot = slot<Session>()
         coEvery { sessionRepository.saveSession(capture(sessionSlot)) } returns Result.success(Unit)
 
         useCase.update(createNewLocation(), NEW_TIMESTAMP_MS)
+
+        assertEquals(0.0, sessionSlot.captured.topSpeedKmh, 0.0)
+    }
+
+    @Test
+    fun `update updates top speed when current speed is higher`() = runTest {
+        val initialTopSpeed = 10.0
+        every { distanceCalculator.calculateKm(any(), any(), any(), any()) } returns DISTANCE_KM
+        coEvery { sessionRepository.saveSession(any()) } returns Result.success(Unit)
+        val sessions = (0..4).map { i ->
+            val trackPointTimestamp = START_TIME_MS + i * TIME_DIFF_MS
+            createSession(
+                id = SESSION_ID,
+                lastResumedTimeMs = trackPointTimestamp,
+                topSpeedKmh = initialTopSpeed,
+                status = SessionStatus.RUNNING,
+                trackPoints = listOf(
+                    createTrackPoint(latitude = START_LAT, longitude = START_LONG, timestampMs = trackPointTimestamp),
+                ),
+            )
+        }
+        coEvery { activeSessionUseCase.getActiveSession() } returnsMany sessions
+        repeat(4) { i ->
+            useCase.update(createNewLocation(), START_TIME_MS + (i + 1) * TIME_DIFF_MS)
+        }
+        val sessionSlot = slot<Session>()
+        coEvery { sessionRepository.saveSession(capture(sessionSlot)) } returns Result.success(Unit)
+
+        useCase.update(createNewLocation(), START_TIME_MS + 5 * TIME_DIFF_MS)
 
         assertEquals(EXPECTED_SPEED_KMH, sessionSlot.captured.topSpeedKmh, 0.0)
     }
@@ -448,13 +476,27 @@ class UpdateSessionLocationUseCaseImplTest {
 
     @Test
     fun `update uses smoothed speed for top speed`() = runTest {
-        val session = createTestSession()
-        val sessionSlot = slot<Session>()
-        coEvery { activeSessionUseCase.getActiveSession() } returns session
         every { distanceCalculator.calculateKm(any(), any(), any(), any()) } returns DISTANCE_KM
+        coEvery { sessionRepository.saveSession(any()) } returns Result.success(Unit)
+        val sessions = (0..4).map { i ->
+            val trackPointTimestamp = START_TIME_MS + i * TIME_DIFF_MS
+            createSession(
+                id = SESSION_ID,
+                lastResumedTimeMs = trackPointTimestamp,
+                status = SessionStatus.RUNNING,
+                trackPoints = listOf(
+                    createTrackPoint(latitude = START_LAT, longitude = START_LONG, timestampMs = trackPointTimestamp),
+                ),
+            )
+        }
+        coEvery { activeSessionUseCase.getActiveSession() } returnsMany sessions
+        repeat(4) { i ->
+            useCase.update(createNewLocation(), START_TIME_MS + (i + 1) * TIME_DIFF_MS)
+        }
+        val sessionSlot = slot<Session>()
         coEvery { sessionRepository.saveSession(capture(sessionSlot)) } returns Result.success(Unit)
 
-        useCase.update(createNewLocation(), NEW_TIMESTAMP_MS)
+        useCase.update(createNewLocation(), START_TIME_MS + 5 * TIME_DIFF_MS)
 
         assertEquals(EXPECTED_SPEED_KMH, sessionSlot.captured.topSpeedKmh, 0.0)
         assertEquals(EXPECTED_SPEED_KMH, sessionSlot.captured.trackPoints[1].speedKmh, 0.0)
