@@ -135,6 +135,25 @@ transfer:
 </data-extraction-rules>
 ```
 
+## APK Size Impact
+
+SQLCipher bundles native `.so` libraries (compiled OpenSSL + SQLCipher C code) for each supported
+ABI architecture. This adds approximately **22 MB** to the universal APK:
+
+| ABI | Approx. Size |
+|-----|-------------|
+| arm64-v8a | ~5.5 MB |
+| armeabi-v7a | ~4.5 MB |
+| x86_64 | ~6 MB |
+| x86 | ~6 MB |
+
+When distributing via **Android App Bundle (AAB)** on Google Play, each user only downloads the
+native library matching their device architecture. The actual download size increase per user is
+**~5-6 MB** (typically arm64-v8a on modern devices).
+
+No ABI filtering is applied in the build configuration — all four architectures are included to
+maintain emulator support in release builds and full device compatibility.
+
 ## Summary
 
 | Technique | Threat | Protection |
