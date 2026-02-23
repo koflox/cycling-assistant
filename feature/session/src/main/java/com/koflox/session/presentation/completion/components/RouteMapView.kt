@@ -2,23 +2,15 @@
 
 package com.koflox.session.presentation.completion.components
 
-import android.graphics.Canvas
-import android.graphics.Paint
-import android.graphics.Path
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.unit.dp
-import androidx.core.graphics.createBitmap
-import androidx.core.graphics.withRotation
 import com.google.android.gms.maps.CameraUpdateFactory
-import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.Dash
 import com.google.android.gms.maps.model.Gap
@@ -36,18 +28,21 @@ import com.google.maps.android.compose.Polyline
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberUpdatedMarkerState
 import com.koflox.designsystem.theme.LocalDarkTheme
+import com.koflox.graphics.figures.createArrowBitmap
+import com.koflox.graphics.figures.createCircleBitmap
 import com.koflox.designsystem.R as DesignSystemR
 
 private const val MAP_PADDING = 100
 private const val DASH_LENGTH = 20f
 private const val GAP_LENGTH = 15f
-private val MARKER_SIZE_DP = 24.dp
+private const val START_MARKER_SIZE_DP = 14
+private const val END_MARKER_SIZE_DP = 20
+private const val MARKER_STROKE_WIDTH_DP = 2
 private val GAP_PATTERN = listOf(Dash(DASH_LENGTH), Gap(GAP_LENGTH))
 
 @Composable
 internal fun RouteMapView(
     routeDisplayData: RouteDisplayData,
-    startMarkerRotation: Float,
     endMarkerRotation: Float,
     modifier: Modifier = Modifier,
     isSharePreview: Boolean = false,
@@ -74,7 +69,6 @@ internal fun RouteMapView(
     ) {
         RouteMapContent(
             routeDisplayData = routeDisplayData,
-            startMarkerRotation = startMarkerRotation,
             endMarkerRotation = endMarkerRotation,
             isSharePreview = isSharePreview,
         )
@@ -86,17 +80,16 @@ internal fun RouteMapView(
 @GoogleMapComposable
 private fun RouteMapContent(
     routeDisplayData: RouteDisplayData,
-    startMarkerRotation: Float,
     endMarkerRotation: Float,
     isSharePreview: Boolean = false,
 ) {
     val allPoints = routeDisplayData.allPoints
-    val markerSizePx = with(LocalDensity.current) { MARKER_SIZE_DP.toPx().toInt() }
-    val startMarkerIcon = remember(startMarkerRotation, markerSizePx) {
-        if (allPoints.isNotEmpty()) createArrowBitmap(markerSizePx, RouteColors.StartMarker, startMarkerRotation) else null
+    val density = LocalDensity.current.density
+    val startMarkerIcon = remember(density) {
+        if (allPoints.isNotEmpty()) createStartMarkerIcon(density) else null
     }
-    val endMarkerIcon = remember(endMarkerRotation, markerSizePx) {
-        if (allPoints.size >= 2) createArrowBitmap(markerSizePx, RouteColors.EndMarker, endMarkerRotation) else null
+    val endMarkerIcon = remember(endMarkerRotation, density) {
+        if (allPoints.size >= 2) createEndMarkerIcon(density, endMarkerRotation) else null
     }
     if (allPoints.isNotEmpty() && startMarkerIcon != null) {
         Marker(
@@ -136,6 +129,27 @@ private fun RouteMapContent(
     }
 }
 
+private fun createStartMarkerIcon(density: Float) = BitmapDescriptorFactory.fromBitmap(
+    createCircleBitmap(
+        sizeDp = START_MARKER_SIZE_DP,
+        strokeWidthDp = MARKER_STROKE_WIDTH_DP,
+        fillColor = android.graphics.Color.WHITE,
+        strokeColor = RouteColors.StartMarker.toArgb(),
+        density = density,
+    ),
+)
+
+private fun createEndMarkerIcon(density: Float, rotationDegrees: Float) = BitmapDescriptorFactory.fromBitmap(
+    createArrowBitmap(
+        sizeDp = END_MARKER_SIZE_DP,
+        strokeWidthDp = MARKER_STROKE_WIDTH_DP,
+        fillColor = android.graphics.Color.WHITE,
+        strokeColor = RouteColors.EndMarker.toArgb(),
+        density = density,
+        rotationDegrees = rotationDegrees,
+    ),
+)
+
 private fun buildMapUiSettings(isSharePreview: Boolean) = MapUiSettings(
     zoomControlsEnabled = false,
     mapToolbarEnabled = false,
@@ -160,29 +174,4 @@ private fun animateCameraToRoute(
             cameraPositionState.move(CameraUpdateFactory.newLatLngZoom(routePoints.first(), 15f))
         }
     }
-}
-
-private fun createArrowBitmap(
-    sizePx: Int,
-    color: Color,
-    rotationDegrees: Float,
-): BitmapDescriptor {
-    val bitmap = createBitmap(sizePx, sizePx)
-    val canvas = Canvas(bitmap)
-    val paint = Paint().apply {
-        this.color = color.toArgb()
-        style = Paint.Style.FILL
-        isAntiAlias = true
-    }
-    val vertices = computeArrowVertices(sizePx.toFloat())
-    canvas.withRotation(rotationDegrees, sizePx / 2f, sizePx / 2f) {
-        val path = Path().apply {
-            moveTo(vertices.tipX, vertices.tipY)
-            lineTo(vertices.baseUpperX, vertices.baseUpperY)
-            lineTo(vertices.baseLowerX, vertices.baseLowerY)
-            close()
-        }
-        drawPath(path, paint)
-    }
-    return BitmapDescriptorFactory.fromBitmap(bitmap)
 }

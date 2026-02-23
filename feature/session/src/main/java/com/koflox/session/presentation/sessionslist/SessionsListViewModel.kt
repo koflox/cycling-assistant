@@ -4,6 +4,8 @@ import android.graphics.Bitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.koflox.error.mapper.ErrorMessageMapper
+import com.koflox.location.bearing.calculateBearingDegrees
+import com.koflox.location.model.Location
 import com.koflox.session.domain.usecase.CalculateSessionStatsUseCase
 import com.koflox.session.domain.usecase.GetAllSessionsUseCase
 import com.koflox.session.domain.usecase.GetSessionByIdUseCase
@@ -68,6 +70,15 @@ internal class SessionsListViewModel(
                 val derivedStats = statsResult.getOrThrow()
                 val formattedData = sessionUiMapper.toSessionUiModel(session)
                 val routeDisplayData = buildRouteDisplayData(session.trackPoints)
+                val allPoints = routeDisplayData.allPoints
+                val endRotation = if (allPoints.size >= 2) {
+                    calculateBearingDegrees(
+                        from = Location(allPoints[allPoints.lastIndex - 1].latitude, allPoints[allPoints.lastIndex - 1].longitude),
+                        to = Location(allPoints.last().latitude, allPoints.last().longitude),
+                    )
+                } else {
+                    0f
+                }
                 val previewData = SharePreviewData(
                     sessionId = session.id,
                     destinationName = session.destinationName,
@@ -82,6 +93,7 @@ internal class SessionsListViewModel(
                     altitudeLossFormatted = sessionUiMapper.formatAltitudeGain(derivedStats.altitudeLossMeters),
                     caloriesFormatted = derivedStats.caloriesBurned?.let { sessionUiMapper.formatCalories(it) },
                     routeDisplayData = routeDisplayData,
+                    endMarkerRotation = endRotation,
                 )
                 updateContent { it.copy(overlay = SessionsListOverlay.SharePreview(previewData)) }
             }
