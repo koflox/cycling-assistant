@@ -68,6 +68,7 @@ dependencies {
     implementation(project(":shared:di"))
     implementation(project(":shared:distance"))
     implementation(project(":shared:error"))
+    implementation(project(":shared:graphics"))
     implementation(project(":shared:id"))
     implementation(project(":shared:location"))
 

@@ -182,7 +182,6 @@ private fun SharePreviewContent(
             ) {
                 RouteMapView(
                     routeDisplayData = data.routeDisplayData,
-                    startMarkerRotation = data.startMarkerRotation,
                     endMarkerRotation = data.endMarkerRotation,
                     isSharePreview = true,
                     onMapLoaded = onMapLoaded,

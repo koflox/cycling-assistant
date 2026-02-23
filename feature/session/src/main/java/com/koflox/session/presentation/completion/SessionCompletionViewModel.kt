@@ -122,14 +122,6 @@ internal class SessionCompletionViewModel(
                 val derivedStats = calculateSessionStatsUseCase.calculate(sessionId).getOrNull() ?: return@onSuccess
                 val routeDisplayData = buildRouteDisplayData(session.trackPoints)
                 val allPoints = routeDisplayData.allPoints
-                val startRotation = if (allPoints.size >= 2) {
-                    calculateBearingDegrees(
-                        from = Location(allPoints[0].latitude, allPoints[0].longitude),
-                        to = Location(allPoints[1].latitude, allPoints[1].longitude),
-                    )
-                } else {
-                    0f
-                }
                 val endRotation = if (allPoints.size >= 2) {
                     calculateBearingDegrees(
                         from = Location(allPoints[allPoints.lastIndex - 1].latitude, allPoints[allPoints.lastIndex - 1].longitude),
@@ -152,7 +144,6 @@ internal class SessionCompletionViewModel(
                     altitudeLossFormatted = sessionUiMapper.formatAltitudeGain(derivedStats.altitudeLossMeters),
                     caloriesFormatted = derivedStats.caloriesBurned?.let { sessionUiMapper.formatCalories(it) },
                     routeDisplayData = routeDisplayData,
-                    startMarkerRotation = startRotation,
                     endMarkerRotation = endRotation,
                 )
             }
@@ -183,7 +174,6 @@ internal class SessionCompletionViewModel(
         altitudeLossFormatted = content.altitudeLossFormatted,
         caloriesFormatted = content.caloriesFormatted,
         routeDisplayData = content.routeDisplayData,
-        startMarkerRotation = content.startMarkerRotation,
         endMarkerRotation = content.endMarkerRotation,
     )
 }
