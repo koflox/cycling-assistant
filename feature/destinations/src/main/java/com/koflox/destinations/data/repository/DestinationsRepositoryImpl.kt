@@ -33,7 +33,11 @@ internal class DestinationsRepositoryImpl(
             mutex.withLock {
                 emit(DestinationLoadingEvent.Loading)
                 try {
-                    val loadedFiles = destinationFilesLocalDataSource.getLoadedFiles()
+                    var loadedFiles = destinationFilesLocalDataSource.getLoadedFiles()
+                    if (loadedFiles.isNotEmpty() && poiLocalDataSource.hasDestinations().not()) {
+                        destinationFilesLocalDataSource.clearLoadedFiles()
+                        loadedFiles = emptySet()
+                    }
                     val files = destinationFileResolver.getFilesWithinRadius(location)
                     val filesToLoad = files.filter { it.fileName !in loadedFiles }
                     for (file in filesToLoad) {
@@ -55,16 +59,20 @@ internal class DestinationsRepositoryImpl(
         minLon: Double,
         maxLon: Double,
     ): Result<List<Destination>> = withContext(dispatcherDefault) {
-        suspendRunCatching {
-            poiLocalDataSource.getDestinationsInArea(minLat, maxLat, minLon, maxLon).map {
-                mapper.toDomain(it)
+        mutex.withLock {
+            suspendRunCatching {
+                poiLocalDataSource.getDestinationsInArea(minLat, maxLat, minLon, maxLon).map {
+                    mapper.toDomain(it)
+                }
             }
         }
     }
 
     override suspend fun getDestinationById(id: String): Result<Destination?> = withContext(dispatcherDefault) {
-        suspendRunCatching {
-            poiLocalDataSource.getDestinationById(id)?.let { mapper.toDomain(it) }
+        mutex.withLock {
+            suspendRunCatching {
+                poiLocalDataSource.getDestinationById(id)?.let { mapper.toDomain(it) }
+            }
         }
     }
 }

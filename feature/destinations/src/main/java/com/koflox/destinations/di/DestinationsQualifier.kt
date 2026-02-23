@@ -6,3 +6,7 @@ import org.koin.core.qualifier.Qualifier
 sealed class DestinationsQualifier : ClassNameQualifier(), Qualifier {
     data object DaoFactory : DestinationsQualifier()
 }
+
+internal sealed class DestinationsDataQualifierInternal : ClassNameQualifier(), Qualifier {
+    data object DestinationFilesMutex : DestinationsDataQualifierInternal()
+}
