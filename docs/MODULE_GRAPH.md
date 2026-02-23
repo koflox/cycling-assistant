@@ -92,6 +92,7 @@ graph LR
   :feature:session --> :shared:di
   :feature:session --> :shared:distance
   :feature:session --> :shared:error
+  :feature:session --> :shared:graphics
   :feature:session --> :shared:id
   :feature:session --> :shared:location
   :feature:session --> :feature:bridge:nutrition-session:api
