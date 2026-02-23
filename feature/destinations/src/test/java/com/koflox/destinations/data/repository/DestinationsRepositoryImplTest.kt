@@ -106,6 +106,7 @@ class DestinationsRepositoryImplTest {
         val location = Location(TEST_LAT, TEST_LONG)
         val fileMetadata = createFileMetadata()
         coEvery { destinationFilesLocalDataSource.getLoadedFiles() } returns setOf(TEST_FILE_NAME)
+        coEvery { poiLocalDataSource.hasDestinations() } returns true
         coEvery { destinationFileResolver.getFilesWithinRadius(location) } returns listOf(fileMetadata)
 
         repository.loadDestinationsForLocation(location).test {
@@ -163,6 +164,66 @@ class DestinationsRepositoryImplTest {
             poiAssetDataSource.readDestinationsJson("tier1.json")
             poiAssetDataSource.readDestinationsJson("tier2.json")
         }
+    }
+
+    @Test
+    fun `loadDestinationsForLocation clears stale loaded files when DB is empty`() = runTest {
+        val location = Location(TEST_LAT, TEST_LONG)
+        val fileMetadata = createFileMetadata()
+        val assets = listOf(createDestinationAsset(id = TEST_ID, title = TEST_TITLE, latitude = TEST_LAT, longitude = TEST_LONG))
+        val entities = listOf(createDestinationLocal(id = TEST_ID, title = TEST_TITLE, latitude = TEST_LAT, longitude = TEST_LONG))
+        coEvery { destinationFilesLocalDataSource.getLoadedFiles() } returns setOf(TEST_FILE_NAME)
+        coEvery { poiLocalDataSource.hasDestinations() } returns false
+        coJustRun { destinationFilesLocalDataSource.clearLoadedFiles() }
+        coEvery { destinationFileResolver.getFilesWithinRadius(location) } returns listOf(fileMetadata)
+        coEvery { poiAssetDataSource.readDestinationsJson(TEST_FILE_NAME) } returns assets
+        coEvery { mapper.toLocalList(assets) } returns entities
+        coJustRun { poiLocalDataSource.insertAll(entities) }
+        coJustRun { destinationFilesLocalDataSource.addLoadedFile(TEST_FILE_NAME) }
+
+        repository.loadDestinationsForLocation(location).test {
+            assertEquals(DestinationLoadingEvent.Loading, awaitItem())
+            assertEquals(DestinationLoadingEvent.Completed, awaitItem())
+            awaitComplete()
+        }
+
+        coVerify { destinationFilesLocalDataSource.clearLoadedFiles() }
+        coVerify { poiAssetDataSource.readDestinationsJson(TEST_FILE_NAME) }
+        coVerify { poiLocalDataSource.insertAll(entities) }
+    }
+
+    @Test
+    fun `loadDestinationsForLocation skips consistency check when DB has destinations`() = runTest {
+        val location = Location(TEST_LAT, TEST_LONG)
+        val fileMetadata = createFileMetadata()
+        coEvery { destinationFilesLocalDataSource.getLoadedFiles() } returns setOf(TEST_FILE_NAME)
+        coEvery { poiLocalDataSource.hasDestinations() } returns true
+        coEvery { destinationFileResolver.getFilesWithinRadius(location) } returns listOf(fileMetadata)
+
+        repository.loadDestinationsForLocation(location).test {
+            assertEquals(DestinationLoadingEvent.Loading, awaitItem())
+            assertEquals(DestinationLoadingEvent.Completed, awaitItem())
+            awaitComplete()
+        }
+
+        coVerify(exactly = 0) { destinationFilesLocalDataSource.clearLoadedFiles() }
+        coVerify(exactly = 0) { poiAssetDataSource.readDestinationsJson(any()) }
+    }
+
+    @Test
+    fun `loadDestinationsForLocation skips consistency check when no loaded files`() = runTest {
+        val location = Location(TEST_LAT, TEST_LONG)
+        coEvery { destinationFilesLocalDataSource.getLoadedFiles() } returns emptySet()
+        coEvery { destinationFileResolver.getFilesWithinRadius(location) } returns emptyList()
+
+        repository.loadDestinationsForLocation(location).test {
+            assertEquals(DestinationLoadingEvent.Loading, awaitItem())
+            assertEquals(DestinationLoadingEvent.Completed, awaitItem())
+            awaitComplete()
+        }
+
+        coVerify(exactly = 0) { poiLocalDataSource.hasDestinations() }
+        coVerify(exactly = 0) { destinationFilesLocalDataSource.clearLoadedFiles() }
     }
 
     @Test

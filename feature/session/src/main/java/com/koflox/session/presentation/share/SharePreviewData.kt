@@ -16,6 +16,5 @@ data class SharePreviewData(
     val altitudeLossFormatted: String,
     val caloriesFormatted: String?,
     val routeDisplayData: RouteDisplayData,
-    val startMarkerRotation: Float = 0f,
     val endMarkerRotation: Float = 0f,
 )

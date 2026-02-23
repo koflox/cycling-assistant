@@ -185,7 +185,6 @@ private fun SessionCompletionLayout(
             if (uiState.routeDisplayData.allPoints.isNotEmpty()) {
                 RouteMapView(
                     routeDisplayData = uiState.routeDisplayData,
-                    startMarkerRotation = uiState.startMarkerRotation,
                     endMarkerRotation = uiState.endMarkerRotation,
                     modifier = Modifier.matchParentSize(),
                 )

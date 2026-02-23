@@ -24,7 +24,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Fill
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
@@ -32,6 +33,7 @@ import com.koflox.designsystem.component.LocalizedDropdownMenu
 import com.koflox.designsystem.theme.CornerRadius
 import com.koflox.designsystem.theme.Spacing
 import com.koflox.designsystem.theme.SurfaceAlpha
+import com.koflox.graphics.figures.computeArrowVertices
 import com.koflox.session.R
 
 private val LEGEND_INDICATOR_SIZE = 20.dp
@@ -76,7 +78,7 @@ internal fun MapLegendButton(modifier: Modifier = Modifier) {
                     DashedLineIndicator(color = RouteColors.Gap)
                 }, label = stringResource(R.string.map_legend_gap))
                 LegendRow(indicator = {
-                    ArrowIndicator(color = RouteColors.StartMarker)
+                    CircleIndicator(color = RouteColors.StartMarker)
                 }, label = stringResource(R.string.map_legend_start))
                 LegendRow(indicator = {
                     ArrowIndicator(color = RouteColors.EndMarker)
@@ -133,8 +135,20 @@ private fun DashedLineIndicator(color: Color) {
 }
 
 @Composable
+private fun CircleIndicator(color: Color) {
+    Canvas(modifier = Modifier.size(LEGEND_INDICATOR_SIZE)) {
+        val strokeWidth = size.minDimension * 0.15f
+        val center = Offset(size.width / 2f, size.height / 2f)
+        val radius = (size.minDimension - strokeWidth) / 2f
+        drawCircle(color = Color.White, radius = radius, center = center)
+        drawCircle(color = color, radius = radius, center = center, style = Stroke(width = strokeWidth))
+    }
+}
+
+@Composable
 private fun ArrowIndicator(color: Color) {
     Canvas(modifier = Modifier.size(LEGEND_INDICATOR_SIZE)) {
+        val strokeWidth = size.minDimension * 0.15f
         val vertices = computeArrowVertices(size.width)
         val path = Path().apply {
             moveTo(vertices.tipX, vertices.tipY)
@@ -142,6 +156,7 @@ private fun ArrowIndicator(color: Color) {
             lineTo(vertices.baseLowerX, vertices.baseLowerY)
             close()
         }
-        drawPath(path = path, color = color, style = Fill)
+        drawPath(path = path, color = Color.White)
+        drawPath(path = path, color = color, style = Stroke(width = strokeWidth, join = StrokeJoin.Round))
     }
 }

@@ -5,4 +5,5 @@
     <exclude domain="database" path="cycling_assistant_db-wal" />
     <exclude domain="database" path="cycling_assistant_db-journal" />
     <exclude domain="sharedpref" path="db_passphrase_prefs.xml" />
+    <exclude domain="file" path="datastore/destination_files.preferences_pb" />
 </full-backup-content>
