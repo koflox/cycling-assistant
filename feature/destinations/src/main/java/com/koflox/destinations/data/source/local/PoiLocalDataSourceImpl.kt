@@ -24,6 +24,10 @@ internal class PoiLocalDataSourceImpl(
         daoFactory.get().getDestinationById(id)
     }
 
+    override suspend fun hasDestinations(): Boolean = withContext(dispatcherIo) {
+        daoFactory.get().hasDestinations()
+    }
+
     override suspend fun insertAll(destinations: List<DestinationLocal>) = withContext(dispatcherIo) {
         daoFactory.get().insertAll(destinations)
     }

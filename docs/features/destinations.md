@@ -17,6 +17,18 @@ The destinations feature handles discovery and selection of cycling points of in
 | `GetUserLocationUseCase`     | Get current user location            |
 | `InitializeDatabaseUseCase`  | Seed database on first launch        |
 
+## Database Consistency Check
+
+The `destination_files` DataStore tracks which JSON asset files have been loaded into the Room
+database. If the database is deleted and recreated (e.g., SQLCipher encryption recovery after
+switching from debug to release build), the DataStore may still report files as "loaded" while
+the database is actually empty.
+
+`DestinationsRepositoryImpl.loadDestinationsForLocation()` detects this desync: if loaded files
+are non-empty but the database has no destinations, it clears the DataStore and reloads from
+scratch. The `destination_files` DataStore is also excluded from Android backup rules to prevent
+the same issue on backup restore.
+
 ## App Recovery Flow
 
 When the app restarts with an active session, `DestinationsViewModel`:

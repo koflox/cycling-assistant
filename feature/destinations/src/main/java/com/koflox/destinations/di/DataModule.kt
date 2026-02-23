@@ -34,6 +34,9 @@ private val dataModule = module {
 }
 
 private val dataSourceModule = module {
+    single(DestinationsDataQualifierInternal.DestinationFilesMutex) {
+        Mutex()
+    }
     single<PoiLocalDataSource> {
         PoiLocalDataSourceImpl(
             dispatcherIo = get<CoroutineDispatcher>(DispatchersQualifier.Io),
@@ -50,6 +53,7 @@ private val dataSourceModule = module {
         DestinationFilesLocalDataSourceImpl(
             dispatcherIo = get(DispatchersQualifier.Io),
             context = androidContext(),
+            mutex = get(DestinationsDataQualifierInternal.DestinationFilesMutex),
         )
     }
     single<DestinationFileResolver> {

@@ -92,7 +92,9 @@ and if SQLCipher fails (passphrase mismatch), deletes the database file and rebu
 before Room checks the schema version.
 
 Data loss (sessions, profile, locale settings) is unavoidable but accepted over a crash loop.
-Destination data is re-seeded on empty database by `InitializeDatabaseUseCase`.
+Destination data is reloaded automatically — `DestinationsRepositoryImpl` detects the empty
+database (via `hasDestinations()`) and clears the stale `destination_files` DataStore so that
+asset files are loaded again. See [Destinations — Database Consistency Check](../features/destinations.md#database-consistency-check).
 
 ## Backup Exclusions
 
@@ -117,6 +119,7 @@ transfer:
     <exclude domain="database" path="cycling_assistant_db-wal" />
     <exclude domain="database" path="cycling_assistant_db-journal" />
     <exclude domain="sharedpref" path="db_passphrase_prefs.xml" />
+    <exclude domain="file" path="datastore/destination_files.preferences_pb" />
 </full-backup-content>
 ```
 
@@ -128,12 +131,18 @@ transfer:
         <exclude domain="database" path="cycling_assistant_db" />
         <!-- shm, wal, journal also excluded -->
         <exclude domain="sharedpref" path="db_passphrase_prefs.xml" />
+        <exclude domain="file" path="datastore/destination_files.preferences_pb" />
     </cloud-backup>
     <device-transfer>
         <!-- same exclusions -->
     </device-transfer>
 </data-extraction-rules>
 ```
+
+The `destination_files` DataStore is a cache of which asset files have been loaded into the
+database. If restored without the database, it would prevent re-loading. The runtime consistency
+check in `DestinationsRepositoryImpl` also handles this case, but excluding from backup avoids
+the unnecessary recovery path.
 
 ## APK Size Impact
 
@@ -161,7 +170,7 @@ maintain emulator support in release builds and full device compatibility.
 | SQLCipher (AES-256) | Physical device access, ADB extraction | Database file unreadable without passphrase |
 | Android Keystore (AES-256-GCM) | App data extraction | Passphrase encrypted at rest, key in hardware-backed store |
 | Keystore recovery | Key loss (OS bug, factory reset) | Regenerate passphrase, delete and rebuild DB |
-| Backup exclusions | Cross-device restore, cloud leak | DB files and passphrase prefs excluded from backup |
+| Backup exclusions | Cross-device restore, cloud leak | DB files, passphrase prefs, and destination_files DataStore excluded from backup |
 | Debug bypass | Developer tooling (App Inspector) | Encryption disabled in debug builds only |
 | R8 keep rules | Obfuscation breaking SQLCipher | Native classes preserved from minification |
 
