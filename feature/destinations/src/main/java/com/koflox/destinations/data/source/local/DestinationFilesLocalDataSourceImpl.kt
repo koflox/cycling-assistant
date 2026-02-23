@@ -8,6 +8,8 @@ import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
 private val Context.destinationFilesDataStore: DataStore<Preferences> by preferencesDataStore(
@@ -17,6 +19,7 @@ private val Context.destinationFilesDataStore: DataStore<Preferences> by prefere
 internal class DestinationFilesLocalDataSourceImpl(
     private val dispatcherIo: CoroutineDispatcher,
     private val context: Context,
+    private val mutex: Mutex,
 ) : DestinationFilesLocalDataSource {
 
     companion object {
@@ -24,13 +27,24 @@ internal class DestinationFilesLocalDataSourceImpl(
     }
 
     override suspend fun getLoadedFiles(): Set<String> = withContext(dispatcherIo) {
-        context.destinationFilesDataStore.data.first()[KEY_LOADED_FILES] ?: emptySet()
+        mutex.withLock {
+            context.destinationFilesDataStore.data.first()[KEY_LOADED_FILES] ?: emptySet()
+        }
     }
 
     override suspend fun addLoadedFile(fileName: String) = withContext(dispatcherIo) {
-        context.destinationFilesDataStore.edit { prefs ->
-            val currentFiles = prefs[KEY_LOADED_FILES] ?: emptySet()
-            prefs[KEY_LOADED_FILES] = currentFiles + fileName
+        mutex.withLock {
+            context.destinationFilesDataStore.edit { prefs ->
+                val currentFiles = prefs[KEY_LOADED_FILES] ?: emptySet()
+                prefs[KEY_LOADED_FILES] = currentFiles + fileName
+            }
+        }
+        Unit
+    }
+
+    override suspend fun clearLoadedFiles() = withContext(dispatcherIo) {
+        mutex.withLock {
+            context.destinationFilesDataStore.edit { prefs -> prefs.remove(KEY_LOADED_FILES) }
         }
         Unit
     }
