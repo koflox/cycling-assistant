@@ -25,6 +25,9 @@ dependencies {
     implementation(libs.koin.androidx.compose)
     implementation(libs.koin.core)
 
+    // Google Maps (for LatLng access in route mapping)
+    implementation(libs.play.services.maps)
+
     // Bridge API
     implementation(project(":feature:bridge:destination-session:api"))
     implementation(project(":feature:session"))

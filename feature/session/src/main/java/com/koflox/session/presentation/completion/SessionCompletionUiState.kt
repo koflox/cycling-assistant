@@ -2,7 +2,7 @@ package com.koflox.session.presentation.completion
 
 import android.content.Intent
 import com.koflox.designsystem.text.UiText
-import com.koflox.session.presentation.completion.components.RouteDisplayData
+import com.koflox.session.presentation.route.RouteDisplayData
 import com.koflox.session.presentation.share.SharePreviewData
 
 internal sealed interface SessionCompletionUiState {

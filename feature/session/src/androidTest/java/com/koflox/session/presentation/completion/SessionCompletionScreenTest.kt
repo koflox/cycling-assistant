@@ -6,7 +6,7 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.koflox.designsystem.text.UiText
-import com.koflox.session.presentation.completion.components.RouteDisplayData
+import com.koflox.session.presentation.route.RouteDisplayData
 import org.junit.Rule
 import org.junit.Test
 

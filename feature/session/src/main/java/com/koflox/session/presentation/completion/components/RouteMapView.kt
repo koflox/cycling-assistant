@@ -12,8 +12,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
-import com.google.android.gms.maps.model.Dash
-import com.google.android.gms.maps.model.Gap
 import com.google.android.gms.maps.model.JointType
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
@@ -29,16 +27,16 @@ import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberUpdatedMarkerState
 import com.koflox.designsystem.theme.LocalDarkTheme
 import com.koflox.graphics.figures.createArrowBitmap
-import com.koflox.graphics.figures.createCircleBitmap
+import com.koflox.session.presentation.route.GAP_PATTERN
+import com.koflox.session.presentation.route.ROUTE_WIDTH
+import com.koflox.session.presentation.route.RouteColors
+import com.koflox.session.presentation.route.RouteDisplayData
+import com.koflox.session.presentation.route.createStartMarkerIcon
 import com.koflox.designsystem.R as DesignSystemR
 
 private const val MAP_PADDING = 100
-private const val DASH_LENGTH = 20f
-private const val GAP_LENGTH = 15f
-private const val START_MARKER_SIZE_DP = 14
 private const val END_MARKER_SIZE_DP = 20
 private const val MARKER_STROKE_WIDTH_DP = 2
-private val GAP_PATTERN = listOf(Dash(DASH_LENGTH), Gap(GAP_LENGTH))
 
 @Composable
 internal fun RouteMapView(
@@ -128,16 +126,6 @@ private fun RouteMapContent(
         )
     }
 }
-
-private fun createStartMarkerIcon(density: Float) = BitmapDescriptorFactory.fromBitmap(
-    createCircleBitmap(
-        sizeDp = START_MARKER_SIZE_DP,
-        strokeWidthDp = MARKER_STROKE_WIDTH_DP,
-        fillColor = android.graphics.Color.WHITE,
-        strokeColor = RouteColors.StartMarker.toArgb(),
-        density = density,
-    ),
-)
 
 private fun createEndMarkerIcon(density: Float, rotationDegrees: Float) = BitmapDescriptorFactory.fromBitmap(
     createArrowBitmap(
