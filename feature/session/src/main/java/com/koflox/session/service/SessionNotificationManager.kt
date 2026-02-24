@@ -122,11 +122,13 @@ internal class SessionNotificationManagerImpl(
             .build()
     }
 
-    private fun resolveNotificationColor(): Int = (when (currentTheme) {
-        AppTheme.LIGHT -> CyclingGreen
-        AppTheme.DARK -> CyclingGreenDark
-        AppTheme.SYSTEM -> if (isNightMode(context)) CyclingGreenDark else CyclingGreen
-    }).toArgb()
+    private fun resolveNotificationColor(): Int = (
+        when (currentTheme) {
+            AppTheme.LIGHT -> CyclingGreen
+            AppTheme.DARK -> CyclingGreenDark
+            AppTheme.SYSTEM -> if (isNightMode(context)) CyclingGreenDark else CyclingGreen
+        }
+        ).toArgb()
 
     private fun createContentPendingIntent(): PendingIntent {
         val intent = context.packageManager.getLaunchIntentForPackage(context.packageName)

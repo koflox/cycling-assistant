@@ -1,5 +1,8 @@
 package com.koflox.settings.presentation
 
+import android.app.Application
+import android.content.pm.ApplicationInfo
+import android.os.Build
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.koflox.locale.domain.model.AppLanguage
@@ -22,6 +25,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 internal class SettingsViewModel(
+    private val application: Application,
     private val observeThemeUseCase: ObserveThemeUseCase,
     private val updateThemeUseCase: UpdateThemeUseCase,
     private val observeLocaleUseCase: ObserveLocaleUseCase,
@@ -33,6 +37,9 @@ internal class SettingsViewModel(
 
     companion object {
         private const val WEIGHT_INPUT_DEBOUNCE_MS = 300L
+        private const val BUILD_INFO_SEPARATOR = "\u2022"
+        private const val BUILD_TYPE_DEBUG = "debug"
+        private const val BUILD_TYPE_RELEASE = "release"
     }
 
     private val _uiState = MutableStateFlow(SettingsUiState())
@@ -46,7 +53,7 @@ internal class SettingsViewModel(
 
     private fun initialize() {
         observeSettings()
-        loadRiderWeight()
+        loadInitialData()
     }
 
     fun onEvent(event: SettingsUiEvent) {
@@ -83,13 +90,26 @@ internal class SettingsViewModel(
         }
     }
 
-    private fun loadRiderWeight() {
+    private fun loadInitialData() {
         viewModelScope.launch(dispatcherDefault) {
             val weightKg = getRiderWeightUseCase.getRiderWeightKg()
+            val buildInfo = resolveBuildInfo()
             _uiState.update {
-                it.copy(riderWeightKg = formatWeight(weightKg))
+                it.copy(
+                    riderWeightKg = formatWeight(weightKg),
+                    buildInfoText = buildInfo,
+                )
             }
         }
+    }
+
+    private fun resolveBuildInfo(): String {
+        val packageInfo = application.packageManager.getPackageInfo(application.packageName, 0)
+        val versionName = packageInfo.versionName.orEmpty()
+        val isDebuggable = application.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0
+        val buildType = if (isDebuggable) BUILD_TYPE_DEBUG else BUILD_TYPE_RELEASE
+        val arch = Build.SUPPORTED_ABIS?.firstOrNull().orEmpty()
+        return "$versionName $BUILD_INFO_SEPARATOR $buildType $BUILD_INFO_SEPARATOR $arch"
     }
 
     private fun formatWeight(weightKg: Float?): String {

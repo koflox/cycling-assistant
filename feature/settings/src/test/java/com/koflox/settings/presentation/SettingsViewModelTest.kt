@@ -1,5 +1,9 @@
 package com.koflox.settings.presentation
 
+import android.app.Application
+import android.content.pm.ApplicationInfo
+import android.content.pm.PackageInfo
+import android.content.pm.PackageManager
 import app.cash.turbine.test
 import com.koflox.locale.domain.model.AppLanguage
 import com.koflox.locale.domain.usecase.ObserveLocaleUseCase
@@ -33,11 +37,15 @@ class SettingsViewModelTest {
     companion object {
         private const val MIN_WEIGHT_KG = 1
         private const val MAX_WEIGHT_KG = 300
+        private const val TEST_PACKAGE_NAME = "com.koflox.test"
+        private const val TEST_VERSION_NAME = "1.5.1"
     }
 
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
+    private val application: Application = mockk()
+    private val packageManager: PackageManager = mockk()
     private val observeThemeUseCase: ObserveThemeUseCase = mockk()
     private val updateThemeUseCase: UpdateThemeUseCase = mockk(relaxed = true)
     private val observeLocaleUseCase: ObserveLocaleUseCase = mockk()
@@ -59,10 +67,17 @@ class SettingsViewModelTest {
         every { observeThemeUseCase.observeTheme() } returns themeFlow
         every { observeLocaleUseCase.observeLanguage() } returns languageFlow
         coEvery { getRiderWeightUseCase.getRiderWeightKg() } returns null
+        every { application.packageManager } returns packageManager
+        every { application.packageName } returns TEST_PACKAGE_NAME
+        every { application.applicationInfo } returns ApplicationInfo().apply { flags = ApplicationInfo.FLAG_DEBUGGABLE }
+        every { packageManager.getPackageInfo(TEST_PACKAGE_NAME, 0) } returns PackageInfo().apply {
+            versionName = TEST_VERSION_NAME
+        }
     }
 
     private fun createViewModel(): SettingsViewModel {
         return SettingsViewModel(
+            application = application,
             observeThemeUseCase = observeThemeUseCase,
             updateThemeUseCase = updateThemeUseCase,
             observeLocaleUseCase = observeLocaleUseCase,
@@ -89,9 +104,10 @@ class SettingsViewModelTest {
     @Test
     fun `observeSettings updates theme from flow`() = runTest {
         viewModel = createViewModel()
+        advanceUntilIdle()
 
         viewModel.uiState.test {
-            awaitItem() // Initial state
+            awaitItem() // Settled state
 
             themeFlow.value = AppTheme.DARK
 
@@ -103,9 +119,10 @@ class SettingsViewModelTest {
     @Test
     fun `observeSettings updates language from flow`() = runTest {
         viewModel = createViewModel()
+        advanceUntilIdle()
 
         viewModel.uiState.test {
-            awaitItem() // Initial state
+            awaitItem() // Settled state
 
             languageFlow.value = AppLanguage.RUSSIAN
 
@@ -117,9 +134,10 @@ class SettingsViewModelTest {
     @Test
     fun `ThemeSelected updates theme and closes dropdown`() = runTest {
         viewModel = createViewModel()
+        advanceUntilIdle()
 
         viewModel.uiState.test {
-            awaitItem() // Initial state
+            awaitItem() // Settled state
 
             viewModel.onEvent(SettingsUiEvent.ThemeDropdownToggled)
             val expandedState = awaitItem()
@@ -137,9 +155,10 @@ class SettingsViewModelTest {
     @Test
     fun `LanguageSelected updates language and closes dropdown`() = runTest {
         viewModel = createViewModel()
+        advanceUntilIdle()
 
         viewModel.uiState.test {
-            awaitItem() // Initial state
+            awaitItem() // Settled state
 
             viewModel.onEvent(SettingsUiEvent.LanguageDropdownToggled)
             awaitItem() // Expanded
@@ -156,9 +175,10 @@ class SettingsViewModelTest {
     @Test
     fun `ThemeDropdownToggled opens dropdown`() = runTest {
         viewModel = createViewModel()
+        advanceUntilIdle()
 
         viewModel.uiState.test {
-            awaitItem() // Initial state
+            awaitItem() // Settled state
 
             viewModel.onEvent(SettingsUiEvent.ThemeDropdownToggled)
 
@@ -171,9 +191,10 @@ class SettingsViewModelTest {
     @Test
     fun `ThemeDropdownToggled closes dropdown when already open`() = runTest {
         viewModel = createViewModel()
+        advanceUntilIdle()
 
         viewModel.uiState.test {
-            awaitItem() // Initial state
+            awaitItem() // Settled state
 
             viewModel.onEvent(SettingsUiEvent.ThemeDropdownToggled)
             awaitItem() // Expanded
@@ -188,9 +209,10 @@ class SettingsViewModelTest {
     @Test
     fun `ThemeDropdownToggled closes language dropdown when opening theme`() = runTest {
         viewModel = createViewModel()
+        advanceUntilIdle()
 
         viewModel.uiState.test {
-            awaitItem() // Initial state
+            awaitItem() // Settled state
 
             viewModel.onEvent(SettingsUiEvent.LanguageDropdownToggled)
             awaitItem() // Language expanded
@@ -206,9 +228,10 @@ class SettingsViewModelTest {
     @Test
     fun `LanguageDropdownToggled opens dropdown`() = runTest {
         viewModel = createViewModel()
+        advanceUntilIdle()
 
         viewModel.uiState.test {
-            awaitItem() // Initial state
+            awaitItem() // Settled state
 
             viewModel.onEvent(SettingsUiEvent.LanguageDropdownToggled)
 
@@ -221,9 +244,10 @@ class SettingsViewModelTest {
     @Test
     fun `LanguageDropdownToggled closes dropdown when already open`() = runTest {
         viewModel = createViewModel()
+        advanceUntilIdle()
 
         viewModel.uiState.test {
-            awaitItem() // Initial state
+            awaitItem() // Settled state
 
             viewModel.onEvent(SettingsUiEvent.LanguageDropdownToggled)
             awaitItem() // Expanded
@@ -238,9 +262,10 @@ class SettingsViewModelTest {
     @Test
     fun `LanguageDropdownToggled closes theme dropdown when opening language`() = runTest {
         viewModel = createViewModel()
+        advanceUntilIdle()
 
         viewModel.uiState.test {
-            awaitItem() // Initial state
+            awaitItem() // Settled state
 
             viewModel.onEvent(SettingsUiEvent.ThemeDropdownToggled)
             awaitItem() // Theme expanded
@@ -256,9 +281,10 @@ class SettingsViewModelTest {
     @Test
     fun `DropdownsDismissed closes all dropdowns`() = runTest {
         viewModel = createViewModel()
+        advanceUntilIdle()
 
         viewModel.uiState.test {
-            awaitItem() // Initial state
+            awaitItem() // Settled state
 
             viewModel.onEvent(SettingsUiEvent.ThemeDropdownToggled)
             awaitItem() // Theme expanded
@@ -286,13 +312,10 @@ class SettingsViewModelTest {
         coEvery { getRiderWeightUseCase.getRiderWeightKg() } returns 80f
 
         viewModel = createViewModel()
+        advanceUntilIdle()
 
-        viewModel.uiState.test {
-            awaitItem() // Initial state with default weight
-
-            val state = awaitItem()
-            assertEquals("80", state.riderWeightKg)
-        }
+        val state = viewModel.uiState.value
+        assertEquals("80", state.riderWeightKg)
     }
 
     @Test
@@ -417,5 +440,15 @@ class SettingsViewModelTest {
             val state = awaitItem()
             assertEquals(AppLanguage.entries, state.availableLanguages)
         }
+    }
+
+    @Test
+    fun `initial state loads build info`() = runTest {
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertTrue(state.buildInfoText.contains(TEST_VERSION_NAME))
+        assertTrue(state.buildInfoText.contains("debug"))
     }
 }
