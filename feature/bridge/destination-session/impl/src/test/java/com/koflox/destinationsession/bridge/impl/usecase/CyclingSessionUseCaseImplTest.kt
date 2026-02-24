@@ -3,6 +3,7 @@ package com.koflox.destinationsession.bridge.impl.usecase
 import app.cash.turbine.test
 import com.koflox.session.domain.usecase.ActiveSessionUseCase
 import com.koflox.session.domain.usecase.NoActiveSessionException
+import com.koflox.session.domain.usecase.ObserveActiveSessionRouteUseCase
 import com.koflox.session.testutil.createSession
 import com.koflox.testing.coroutine.MainDispatcherRule
 import io.mockk.coEvery
@@ -30,12 +31,14 @@ class CyclingSessionUseCaseImplTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     private val activeSessionUseCase: ActiveSessionUseCase = mockk()
+    private val observeActiveSessionRouteUseCase: ObserveActiveSessionRouteUseCase = mockk()
     private lateinit var useCase: CyclingSessionUseCaseImpl
 
     @Before
     fun setup() {
         useCase = CyclingSessionUseCaseImpl(
             activeSessionUseCase = activeSessionUseCase,
+            observeActiveSessionRouteUseCase = observeActiveSessionRouteUseCase,
         )
     }
 

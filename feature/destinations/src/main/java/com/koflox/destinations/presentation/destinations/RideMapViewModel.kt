@@ -108,6 +108,7 @@ internal class RideMapViewModel(
             checkActiveSession()
             _internalState.update { it.copy(isInitializing = false) }
             listenToActiveSession()
+            observeActiveSessionRoute()
             observeNutritionEvents()
         }
     }
@@ -153,9 +154,18 @@ internal class RideMapViewModel(
                             selectedDestination = null,
                             curvePoints = emptyList(),
                             showSelectedMarkerOptionsDialog = false,
+                            activeSessionRouteData = null,
                         )
                     }
                 }
+            }
+        }
+    }
+
+    private fun observeActiveSessionRoute() {
+        viewModelScope.launch(dispatcherDefault) {
+            cyclingSessionUseCase.observeActiveSessionRoute().collect { routeData ->
+                _internalState.update { it.copy(activeSessionRouteData = routeData) }
             }
         }
     }
@@ -325,6 +335,7 @@ internal class RideMapViewModel(
             error = state.error,
             navigationAction = state.navigationAction,
             nutritionSuggestionTimeMs = state.nutritionSuggestionTimeMs,
+            routeData = state.activeSessionRouteData,
         )
         state.isReady && state.isMapLoaded && state.isFreeRoam -> RideMapUiState.FreeRoamIdle(
             userLocation = state.userLocation,

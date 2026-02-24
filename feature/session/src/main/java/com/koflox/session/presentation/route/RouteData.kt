@@ -1,4 +1,4 @@
-package com.koflox.session.presentation.completion.components
+package com.koflox.session.presentation.route
 
 import androidx.compose.ui.graphics.toArgb
 import com.google.android.gms.maps.model.LatLng
@@ -15,9 +15,30 @@ internal data class RouteSegment(
     val points: List<RoutePoint>,
 )
 
+sealed interface ColorSpanData {
+    val length: Double
+    val endColorArgb: Int
+
+    data class Solid(
+        val colorArgb: Int,
+        override val length: Double,
+    ) : ColorSpanData {
+        override val endColorArgb: Int get() = colorArgb
+    }
+
+    data class Gradient(
+        val fromColorArgb: Int,
+        val toColorArgb: Int,
+        override val length: Double,
+    ) : ColorSpanData {
+        override val endColorArgb: Int get() = toColorArgb
+    }
+}
+
 data class SegmentDisplayData(
     val points: List<LatLng>,
     val spans: List<StyleSpan>,
+    val colorSpans: List<ColorSpanData> = emptyList(),
 )
 
 private const val SPEED_THRESHOLD_FAST = 30.0
@@ -42,9 +63,11 @@ internal fun buildRouteDisplayData(trackPoints: List<TrackPoint>): RouteDisplayD
     val routeSegments = buildRouteSegments(trackPoints)
     val segments = routeSegments.map { segment ->
         val pointColors = smoothSpeedColors(segment.points)
+        val (spans, colorSpans) = buildSpans(pointColors)
         SegmentDisplayData(
             points = segment.points.map { it.latLng },
-            spans = buildSpans(pointColors),
+            spans = spans,
+            colorSpans = colorSpans,
         )
     }
     val gapPolylines = (0 until routeSegments.size - 1).map { i ->
@@ -80,11 +103,12 @@ private fun smoothSpeedColors(points: List<RoutePoint>): List<Int> {
 
 private fun speedToColor(speedKmh: Double): Int = if (speedKmh < SPEED_THRESHOLD_FAST) SPEED_COLOR_NORMAL_ARGB else SPEED_COLOR_FAST_ARGB
 
-private fun buildSpans(pointColors: List<Int>): List<StyleSpan> {
+private fun buildSpans(pointColors: List<Int>): Pair<List<StyleSpan>, List<ColorSpanData>> {
     val edgeCount = pointColors.size - 1
-    if (edgeCount < 1) return emptyList()
+    if (edgeCount < 1) return emptyList<StyleSpan>() to emptyList()
     val transitions = (0 until edgeCount).filter { pointColors[it] != pointColors[it + 1] }
     val spans = mutableListOf<StyleSpan>()
+    val colorSpans = mutableListOf<ColorSpanData>()
     var pos = 0
     for (t in transitions) {
         val gradStart = maxOf(pos, t - GRADIENT_HALF_WIDTH)
@@ -92,17 +116,21 @@ private fun buildSpans(pointColors: List<Int>): List<StyleSpan> {
         val solidBefore = gradStart - pos
         if (solidBefore > 0) {
             spans.add(StyleSpan(StrokeStyle.colorBuilder(pointColors[pos]).build(), solidBefore.toDouble()))
+            colorSpans.add(ColorSpanData.Solid(pointColors[pos], solidBefore.toDouble()))
         }
         val gradWidth = gradEnd - gradStart + 1
         spans.add(StyleSpan(StrokeStyle.gradientBuilder(pointColors[t], pointColors[t + 1]).build(), gradWidth.toDouble()))
+        colorSpans.add(ColorSpanData.Gradient(pointColors[t], pointColors[t + 1], gradWidth.toDouble()))
         pos = gradEnd + 1
     }
     val remaining = edgeCount - pos
     if (remaining > 0) {
         spans.add(StyleSpan(StrokeStyle.colorBuilder(pointColors[pos]).build(), remaining.toDouble()))
+        colorSpans.add(ColorSpanData.Solid(pointColors[pos], remaining.toDouble()))
     }
     if (spans.isEmpty()) {
         spans.add(StyleSpan(StrokeStyle.colorBuilder(pointColors[0]).build(), edgeCount.toDouble()))
+        colorSpans.add(ColorSpanData.Solid(pointColors[0], edgeCount.toDouble()))
     }
-    return spans
+    return spans to colorSpans
 }

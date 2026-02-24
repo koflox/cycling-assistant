@@ -177,6 +177,7 @@ private fun RideMapContent(
             cameraFocusLocation = uiState.cameraFocusLocation,
             curvePoints = uiState.curvePoints,
             isSessionActive = uiState is RideMapUiState.ActiveSession,
+            routeData = uiState.routeData,
             onSelectedMarkerInfoClick = { onEvent(RideMapUiEvent.DestinationEvent.SelectedMarkerInfoClicked) },
             onMapLoaded = { onEvent(RideMapUiEvent.MapEvent.MapLoaded) },
         )

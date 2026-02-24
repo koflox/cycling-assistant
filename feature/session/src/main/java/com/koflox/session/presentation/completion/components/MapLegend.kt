@@ -35,6 +35,8 @@ import com.koflox.designsystem.theme.Spacing
 import com.koflox.designsystem.theme.SurfaceAlpha
 import com.koflox.graphics.figures.computeArrowVertices
 import com.koflox.session.R
+import com.koflox.session.presentation.route.ROUTE_WIDTH
+import com.koflox.session.presentation.route.RouteColors
 
 private val LEGEND_INDICATOR_SIZE = 20.dp
 private const val LEGEND_DASH_LENGTH = 6f

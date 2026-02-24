@@ -85,6 +85,7 @@ class RideMapViewModelTest {
         every { observeRidingModeUseCase.observe() } returns ridingModeFlow
         coEvery { getUserLocationUseCase.getLocation() } returns Result.success(createUserLocation())
         every { cyclingSessionUseCase.observeHasActiveSession() } returns activeSessionFlow
+        every { cyclingSessionUseCase.observeActiveSessionRoute() } returns emptyFlow()
         coEvery { cyclingSessionUseCase.getActiveSessionDestination() } returns null
         every { observeNutritionBreakUseCase.observeNutritionBreakEvents() } returns nutritionFlow
         every { initializeDatabaseUseCase.init(any()) } returns flowOf(

@@ -22,10 +22,17 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
+import com.google.android.gms.maps.model.Dash
+import com.google.android.gms.maps.model.Gap
+import com.google.android.gms.maps.model.JointType
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MapStyleOptions
+import com.google.android.gms.maps.model.RoundCap
+import com.google.android.gms.maps.model.StrokeStyle
+import com.google.android.gms.maps.model.StyleSpan
 import com.google.maps.android.compose.CameraPositionState
 import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.GoogleMapComposable
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
@@ -39,6 +46,8 @@ import com.koflox.designsystem.theme.LocalDarkTheme
 import com.koflox.designsystem.theme.Spacing
 import com.koflox.destinations.R
 import com.koflox.destinations.presentation.destinations.model.DestinationUiModel
+import com.koflox.destinationsession.bridge.usecase.ActiveSessionRouteData
+import com.koflox.destinationsession.bridge.usecase.RouteSpan
 import com.koflox.graphics.figures.createCircleBitmap
 import com.koflox.location.model.Location
 import android.graphics.Color as AndroidColor
@@ -50,6 +59,16 @@ private const val USER_LOCATION_DOT_SIZE_DP = 24
 private const val USER_LOCATION_STROKE_WIDTH_DP = 3
 private val UserLocationBlue = Color(0xFF4285F4)
 
+private const val ACTIVE_ROUTE_WIDTH = 10f
+private const val ACTIVE_ROUTE_DASH_LENGTH = 20f
+private const val ACTIVE_ROUTE_GAP_LENGTH = 15f
+private const val ACTIVE_START_MARKER_SIZE_DP = 14
+private const val ACTIVE_MARKER_STROKE_WIDTH_DP = 2
+private val ActiveRouteGapColor = Color(0xFFBDBDBD)
+private val ActiveRouteDefaultColor = Color(0xFF42A5F5)
+private val ActiveRouteStartMarkerStrokeColor = Color(0xFF5A6BD5)
+private val ACTIVE_GAP_PATTERN = listOf(Dash(ACTIVE_ROUTE_DASH_LENGTH), Gap(ACTIVE_ROUTE_GAP_LENGTH))
+
 @Composable
 internal fun GoogleMapView(
     modifier: Modifier = Modifier,
@@ -59,6 +78,7 @@ internal fun GoogleMapView(
     cameraFocusLocation: Location?,
     curvePoints: List<LatLng>,
     isSessionActive: Boolean,
+    routeData: ActiveSessionRouteData? = null,
     onSelectedMarkerInfoClick: () -> Unit,
     onMapLoaded: (() -> Unit)? = null,
 ) {
@@ -90,6 +110,7 @@ internal fun GoogleMapView(
         otherDestinations = otherDestinations,
         curvePoints = curvePoints,
         isSessionActive = isSessionActive,
+        routeData = routeData,
         onSelectedMarkerInfoClick = onSelectedMarkerInfoClick,
         isDarkTheme = isDarkTheme,
         onMapLoaded = {
@@ -109,6 +130,7 @@ private fun Map(
     otherDestinations: List<DestinationUiModel>,
     curvePoints: List<LatLng>,
     isSessionActive: Boolean,
+    routeData: ActiveSessionRouteData?,
     onSelectedMarkerInfoClick: () -> Unit,
     isDarkTheme: Boolean,
     onMapLoaded: () -> Unit,
@@ -142,32 +164,128 @@ private fun Map(
         properties = mapProperties,
         onMapLoaded = onMapLoaded,
     ) {
-        userLocation?.let {
-            val userLocationIcon = remember(userLocationBitmap) {
-                BitmapDescriptorFactory.fromBitmap(userLocationBitmap)
-            }
-            val userLocationMarkerState = rememberUpdatedMarkerState(
-                position = LatLng(it.latitude, it.longitude),
-            )
-            Marker(
-                state = userLocationMarkerState,
-                icon = userLocationIcon,
-                anchor = Offset(0.5f, 0.5f),
-            )
-        }
+        UserLocationMarker(userLocation, userLocationBitmap)
         selectedDestination?.let { destination ->
             Destinations(destination, otherDestinations, isSessionActive, onSelectedMarkerInfoClick)
         }
         if (curvePoints.isNotEmpty()) {
             @Suppress("COMPOSE_APPLIER_CALL_MISMATCH")
+            Polyline(points = curvePoints, color = UserLocationBlue, width = DEFAULT_ROUTE_LINE_WIDTH)
+        }
+        routeData?.let { data ->
+            @Suppress("COMPOSE_APPLIER_CALL_MISMATCH")
+            ActiveSessionRouteOverlay(routeData = data, userLocation = userLocation, density = density)
+        }
+    }
+}
+
+@Suppress("COMPOSE_APPLIER_CALL_MISMATCH")
+@Composable
+@GoogleMapComposable
+private fun UserLocationMarker(userLocation: Location?, userLocationBitmap: android.graphics.Bitmap) {
+    userLocation?.let {
+        val userLocationIcon = remember(userLocationBitmap) {
+            BitmapDescriptorFactory.fromBitmap(userLocationBitmap)
+        }
+        Marker(
+            state = rememberUpdatedMarkerState(position = LatLng(it.latitude, it.longitude)),
+            icon = userLocationIcon,
+            anchor = Offset(0.5f, 0.5f),
+        )
+    }
+}
+
+@Suppress("COMPOSE_APPLIER_CALL_MISMATCH")
+@Composable
+@GoogleMapComposable
+private fun ActiveSessionRouteOverlay(
+    routeData: ActiveSessionRouteData,
+    userLocation: Location?,
+    density: Float,
+) {
+    val startMarkerIcon = remember(density) {
+        if (routeData.startPosition != null) createActiveStartMarkerIcon(density) else null
+    }
+    RouteSegmentPolylines(routeData)
+    routeData.gapPolylines.forEach { (first, second) ->
+        Polyline(
+            points = listOf(LatLng(first.latitude, first.longitude), LatLng(second.latitude, second.longitude)),
+            color = ActiveRouteGapColor,
+            width = ACTIVE_ROUTE_WIDTH,
+            pattern = ACTIVE_GAP_PATTERN,
+        )
+    }
+    routeData.startPosition?.let { start ->
+        if (startMarkerIcon != null) {
+            Marker(
+                state = rememberUpdatedMarkerState(position = LatLng(start.latitude, start.longitude)),
+                icon = startMarkerIcon,
+                anchor = Offset(0.5f, 0.5f),
+            )
+        }
+    }
+    val lastPos = routeData.lastPosition
+    if (lastPos != null && userLocation != null) {
+        if (routeData.isPaused) {
             Polyline(
-                points = curvePoints,
-                color = UserLocationBlue,
-                width = DEFAULT_ROUTE_LINE_WIDTH,
+                points = listOf(
+                    LatLng(lastPos.latitude, lastPos.longitude),
+                    LatLng(userLocation.latitude, userLocation.longitude),
+                ),
+                color = ActiveRouteGapColor,
+                width = ACTIVE_ROUTE_WIDTH,
+                pattern = ACTIVE_GAP_PATTERN,
+            )
+        } else {
+            Polyline(
+                points = listOf(
+                    LatLng(lastPos.latitude, lastPos.longitude),
+                    LatLng(userLocation.latitude, userLocation.longitude),
+                ),
+                color = routeData.lastSpanColorArgb?.let(::Color) ?: ActiveRouteDefaultColor,
+                width = ACTIVE_ROUTE_WIDTH,
+                startCap = RoundCap(),
+                endCap = RoundCap(),
             )
         }
     }
 }
+
+@Suppress("COMPOSE_APPLIER_CALL_MISMATCH")
+@Composable
+@GoogleMapComposable
+private fun RouteSegmentPolylines(routeData: ActiveSessionRouteData) {
+    routeData.segments.forEach { segment ->
+        val points = segment.points.map { LatLng(it.latitude, it.longitude) }
+        val spans = segment.spans.map { span ->
+            when (span) {
+                is RouteSpan.Solid -> StyleSpan(StrokeStyle.colorBuilder(span.colorArgb).build(), span.length)
+                is RouteSpan.Gradient -> StyleSpan(
+                    StrokeStyle.gradientBuilder(span.fromColorArgb, span.toColorArgb).build(),
+                    span.length,
+                )
+            }
+        }
+        Polyline(
+            points = points,
+            spans = spans,
+            width = ACTIVE_ROUTE_WIDTH,
+            startCap = RoundCap(),
+            endCap = RoundCap(),
+            jointType = JointType.ROUND,
+        )
+    }
+}
+
+private fun createActiveStartMarkerIcon(density: Float) = BitmapDescriptorFactory.fromBitmap(
+    createCircleBitmap(
+        sizeDp = ACTIVE_START_MARKER_SIZE_DP,
+        strokeWidthDp = ACTIVE_MARKER_STROKE_WIDTH_DP,
+        fillColor = AndroidColor.WHITE,
+        strokeColor = ActiveRouteStartMarkerStrokeColor.toArgb(),
+        density = density,
+    ),
+)
 
 @Composable
 private fun Destinations(

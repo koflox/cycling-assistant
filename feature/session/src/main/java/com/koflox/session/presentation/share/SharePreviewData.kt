@@ -1,6 +1,6 @@
 package com.koflox.session.presentation.share
 
-import com.koflox.session.presentation.completion.components.RouteDisplayData
+import com.koflox.session.presentation.route.RouteDisplayData
 
 data class SharePreviewData(
     val sessionId: String,
