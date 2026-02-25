@@ -36,11 +36,14 @@ CyclingAssistant/
 │   │       └── impl/                 # Implementations wiring to provider internals
 │   ├── dashboard/                    # Main dashboard with expandable menu
 │   ├── destinations/                 # Destination selection feature
+│   ├── locale/                       # App language persistence and observation
 │   ├── nutrition/                    # Nutrition tracking and reminders
 │   ├── profile/                      # Rider profile management
 │   ├── session/                      # Session tracking with foreground service
-│   └── settings/                     # App settings (theme, language)
+│   ├── settings/                     # App settings (theme, language)
+│   └── theme/                        # App theme persistence and observation
 └── shared/
+    ├── altitude/                     # Altitude gain calculator
     ├── concurrent/                   # Coroutine dispatchers, suspendRunCatching, ConcurrentFactory
     ├── design-system/                # UI theme, colors, spacing, components
     ├── di/                           # Koin qualifiers
@@ -177,6 +180,8 @@ SessionTrackingService (foreground, type=location)
 Centralized Room database in app module (`AppDatabase`):
 
 - `DestinationDao` - Cycling POI data
+- `LocaleDao` - Language/locale settings
+- `ProfileDao` - Rider profile data
 - `SessionDao` - Session and track points
 
 **DAO conventions:** `@Dao` interfaces with suspend functions for one-shot operations and `Flow`
@@ -555,6 +560,26 @@ Supported languages: English (default), Russian (`values-ru`), Japanese (`values
    `impl/` submodules
 2. Consumer depends on API, impl depends on provider
 3. DI module name follows `<aB>BridgeImplModule` pattern (e.g., `destinationSessionBridgeImplModule`)
+
+## Contribution
+
+### Commit Messages
+
+Format: `<prefix>: <description>`
+
+| Prefix        | Usage                                      |
+|---------------|--------------------------------------------|
+| `feature`     | New functionality                          |
+| `fix`         | Bug fix                                    |
+| `ui`          | Visual/UI changes                          |
+| `refactoring` | Code restructuring without behavior change |
+| `security`    | Security improvements                      |
+| `docs`        | Documentation changes                      |
+| `cicd`        | CI/CD pipeline changes                     |
+| `config`      | Configuration, build, or dependency changes |
+| `release`     | Version bump and release prep              |
+
+Examples: `feature: active POI for sessions`, `fix: prevent app crash on location disabling`
 
 ## Key Files
 
