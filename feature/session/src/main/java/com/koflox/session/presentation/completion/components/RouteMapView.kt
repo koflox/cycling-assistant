@@ -27,16 +27,16 @@ import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberUpdatedMarkerState
 import com.koflox.designsystem.theme.LocalDarkTheme
 import com.koflox.graphics.figures.createArrowBitmap
-import com.koflox.session.presentation.route.GAP_PATTERN
-import com.koflox.session.presentation.route.ROUTE_WIDTH
-import com.koflox.session.presentation.route.RouteColors
+import com.koflox.map.ROUTE_GAP_PATTERN
+import com.koflox.map.ROUTE_MARKER_STROKE_WIDTH_DP
+import com.koflox.map.ROUTE_WIDTH
+import com.koflox.map.RouteColors
+import com.koflox.map.createStartMarkerIcon
 import com.koflox.session.presentation.route.RouteDisplayData
-import com.koflox.session.presentation.route.createStartMarkerIcon
 import com.koflox.designsystem.R as DesignSystemR
 
 private const val MAP_PADDING = 100
 private const val END_MARKER_SIZE_DP = 20
-private const val MARKER_STROKE_WIDTH_DP = 2
 
 @Composable
 internal fun RouteMapView(
@@ -113,7 +113,7 @@ private fun RouteMapContent(
             points = points,
             color = RouteColors.Gap,
             width = ROUTE_WIDTH,
-            pattern = GAP_PATTERN,
+            pattern = ROUTE_GAP_PATTERN,
         )
     }
     if (allPoints.size >= 2 && endMarkerIcon != null) {
@@ -130,7 +130,7 @@ private fun RouteMapContent(
 private fun createEndMarkerIcon(density: Float, rotationDegrees: Float) = BitmapDescriptorFactory.fromBitmap(
     createArrowBitmap(
         sizeDp = END_MARKER_SIZE_DP,
-        strokeWidthDp = MARKER_STROKE_WIDTH_DP,
+        strokeWidthDp = ROUTE_MARKER_STROKE_WIDTH_DP,
         fillColor = android.graphics.Color.WHITE,
         strokeColor = RouteColors.EndMarker.toArgb(),
         density = density,

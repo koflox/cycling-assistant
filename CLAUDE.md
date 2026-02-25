@@ -11,10 +11,11 @@ real-time location updates.
 ## Build Commands
 
 ```bash
-./gradlew detektRun    # Lint & auto-format (run max 2 times)
-./gradlew build        # Build
-./gradlew test         # Unit tests
-./gradlew installDebug # Install on device
+./gradlew detektRun                  # Lint & auto-format (run max 2 times)
+./gradlew build                      # Build
+./gradlew test                       # Unit tests
+./gradlew connectedDebugAndroidTest  # UI tests (requires device/emulator)
+./gradlew installDebug               # Install on device
 ```
 
 ## Architecture
@@ -48,6 +49,7 @@ CyclingAssistant/
     ├── graphics/                     # Bitmap utilities
     ├── id/                           # ID generator
     ├── location/                     # Location services
+    ├── map/                          # Google Maps route rendering constants & utilities
     └── testing/                      # Test utilities
 ```
 

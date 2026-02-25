@@ -4,6 +4,7 @@ import androidx.compose.ui.graphics.toArgb
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.StrokeStyle
 import com.google.android.gms.maps.model.StyleSpan
+import com.koflox.map.RouteColors
 import com.koflox.session.domain.model.TrackPoint
 
 internal data class RoutePoint(
