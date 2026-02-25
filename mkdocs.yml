@@ -72,5 +72,6 @@ nav:
       - Setup: product/setup.md
       - Known Issues: product/known-issues.md
   - Contributing:
+      - Commit Messages: contributing/commit-messages.md
       - Documentation: contributing/documentation.md
   - Module Graph: MODULE_GRAPH.md
