@@ -22,8 +22,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
-import com.google.android.gms.maps.model.Dash
-import com.google.android.gms.maps.model.Gap
 import com.google.android.gms.maps.model.JointType
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MapStyleOptions
@@ -50,6 +48,10 @@ import com.koflox.destinationsession.bridge.usecase.ActiveSessionRouteData
 import com.koflox.destinationsession.bridge.usecase.RouteSpan
 import com.koflox.graphics.figures.createCircleBitmap
 import com.koflox.location.model.Location
+import com.koflox.map.ROUTE_GAP_PATTERN
+import com.koflox.map.ROUTE_WIDTH
+import com.koflox.map.RouteColors
+import com.koflox.map.createStartMarkerIcon
 import android.graphics.Color as AndroidColor
 import com.koflox.designsystem.R as DesignSystemR
 
@@ -58,16 +60,6 @@ private const val DEFAULT_ROUTE_LINE_WIDTH = 8f
 private const val USER_LOCATION_DOT_SIZE_DP = 24
 private const val USER_LOCATION_STROKE_WIDTH_DP = 3
 private val UserLocationBlue = Color(0xFF4285F4)
-
-private const val ACTIVE_ROUTE_WIDTH = 10f
-private const val ACTIVE_ROUTE_DASH_LENGTH = 20f
-private const val ACTIVE_ROUTE_GAP_LENGTH = 15f
-private const val ACTIVE_START_MARKER_SIZE_DP = 14
-private const val ACTIVE_MARKER_STROKE_WIDTH_DP = 2
-private val ActiveRouteGapColor = Color(0xFFBDBDBD)
-private val ActiveRouteDefaultColor = Color(0xFF42A5F5)
-private val ActiveRouteStartMarkerStrokeColor = Color(0xFF5A6BD5)
-private val ACTIVE_GAP_PATTERN = listOf(Dash(ACTIVE_ROUTE_DASH_LENGTH), Gap(ACTIVE_ROUTE_GAP_LENGTH))
 
 @Composable
 internal fun GoogleMapView(
@@ -204,15 +196,15 @@ private fun ActiveSessionRouteOverlay(
     density: Float,
 ) {
     val startMarkerIcon = remember(density) {
-        if (routeData.startPosition != null) createActiveStartMarkerIcon(density) else null
+        if (routeData.startPosition != null) createStartMarkerIcon(density) else null
     }
     RouteSegmentPolylines(routeData)
     routeData.gapPolylines.forEach { (first, second) ->
         Polyline(
             points = listOf(LatLng(first.latitude, first.longitude), LatLng(second.latitude, second.longitude)),
-            color = ActiveRouteGapColor,
-            width = ACTIVE_ROUTE_WIDTH,
-            pattern = ACTIVE_GAP_PATTERN,
+            color = RouteColors.Gap,
+            width = ROUTE_WIDTH,
+            pattern = ROUTE_GAP_PATTERN,
         )
     }
     routeData.startPosition?.let { start ->
@@ -232,9 +224,9 @@ private fun ActiveSessionRouteOverlay(
                     LatLng(lastPos.latitude, lastPos.longitude),
                     LatLng(userLocation.latitude, userLocation.longitude),
                 ),
-                color = ActiveRouteGapColor,
-                width = ACTIVE_ROUTE_WIDTH,
-                pattern = ACTIVE_GAP_PATTERN,
+                color = RouteColors.Gap,
+                width = ROUTE_WIDTH,
+                pattern = ROUTE_GAP_PATTERN,
             )
         } else {
             Polyline(
@@ -242,8 +234,8 @@ private fun ActiveSessionRouteOverlay(
                     LatLng(lastPos.latitude, lastPos.longitude),
                     LatLng(userLocation.latitude, userLocation.longitude),
                 ),
-                color = routeData.lastSpanColorArgb?.let(::Color) ?: ActiveRouteDefaultColor,
-                width = ACTIVE_ROUTE_WIDTH,
+                color = routeData.lastSpanColorArgb?.let(::Color) ?: RouteColors.NormalSpeed,
+                width = ROUTE_WIDTH,
                 startCap = RoundCap(),
                 endCap = RoundCap(),
             )
@@ -269,23 +261,13 @@ private fun RouteSegmentPolylines(routeData: ActiveSessionRouteData) {
         Polyline(
             points = points,
             spans = spans,
-            width = ACTIVE_ROUTE_WIDTH,
+            width = ROUTE_WIDTH,
             startCap = RoundCap(),
             endCap = RoundCap(),
             jointType = JointType.ROUND,
         )
     }
 }
-
-private fun createActiveStartMarkerIcon(density: Float) = BitmapDescriptorFactory.fromBitmap(
-    createCircleBitmap(
-        sizeDp = ACTIVE_START_MARKER_SIZE_DP,
-        strokeWidthDp = ACTIVE_MARKER_STROKE_WIDTH_DP,
-        fillColor = AndroidColor.WHITE,
-        strokeColor = ActiveRouteStartMarkerStrokeColor.toArgb(),
-        density = density,
-    ),
-)
 
 @Composable
 private fun Destinations(

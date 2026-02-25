@@ -75,6 +75,7 @@ dependencies {
     implementation(project(":shared:distance"))
     implementation(project(":shared:graphics"))
     implementation(project(":shared:location"))
+    implementation(project(":shared:map"))
 
     // Testing
     testImplementation(libs.junit)

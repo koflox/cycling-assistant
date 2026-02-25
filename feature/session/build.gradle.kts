@@ -70,6 +70,7 @@ dependencies {
     implementation(project(":shared:error"))
     implementation(project(":shared:graphics"))
     implementation(project(":shared:id"))
+    implementation(project(":shared:map"))
     implementation(project(":shared:location"))
 
     // Feature modules
