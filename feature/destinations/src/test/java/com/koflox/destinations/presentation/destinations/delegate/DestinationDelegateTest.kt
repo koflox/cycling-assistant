@@ -11,7 +11,6 @@ import com.koflox.destinations.domain.model.Destinations
 import com.koflox.destinations.domain.model.DistanceBounds
 import com.koflox.destinations.domain.usecase.GetDestinationInfoUseCase
 import com.koflox.destinations.domain.usecase.GetDistanceBoundsUseCase
-import com.koflox.destinations.domain.usecase.GetUserLocationUseCase
 import com.koflox.destinations.domain.usecase.InitializeDatabaseUseCase
 import com.koflox.destinations.domain.usecase.NoSuitableDestinationException
 import com.koflox.destinations.domain.usecase.ToleranceCalculator
@@ -23,6 +22,7 @@ import com.koflox.destinations.presentation.mapper.DestinationUiMapper
 import com.koflox.destinations.testutil.createDestination
 import com.koflox.distance.DistanceCalculator
 import com.koflox.location.model.Location
+import com.koflox.location.usecase.GetUserLocationUseCase
 import com.koflox.testing.coroutine.MainDispatcherRule
 import io.mockk.coEvery
 import io.mockk.every

@@ -1,4 +1,4 @@
-package com.koflox.destinations.domain.repository
+package com.koflox.location.repository
 
 import com.koflox.location.model.Location
 import kotlinx.coroutines.flow.Flow

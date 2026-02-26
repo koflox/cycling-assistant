@@ -9,14 +9,10 @@ import com.koflox.destinations.domain.usecase.GetDistanceBoundsUseCase
 import com.koflox.destinations.domain.usecase.GetDistanceBoundsUseCaseImpl
 import com.koflox.destinations.domain.usecase.GetNearbyDestinationsUseCase
 import com.koflox.destinations.domain.usecase.GetNearbyDestinationsUseCaseImpl
-import com.koflox.destinations.domain.usecase.GetUserLocationUseCase
-import com.koflox.destinations.domain.usecase.GetUserLocationUseCaseImpl
 import com.koflox.destinations.domain.usecase.InitializeDatabaseUseCase
 import com.koflox.destinations.domain.usecase.InitializeDatabaseUseCaseImpl
 import com.koflox.destinations.domain.usecase.ObserveRidingModeUseCase
 import com.koflox.destinations.domain.usecase.ObserveRidingModeUseCaseImpl
-import com.koflox.destinations.domain.usecase.ObserveUserLocationUseCase
-import com.koflox.destinations.domain.usecase.ObserveUserLocationUseCaseImpl
 import com.koflox.destinations.domain.usecase.ToleranceCalculator
 import com.koflox.destinations.domain.usecase.ToleranceCalculatorImpl
 import com.koflox.destinations.domain.usecase.UpdateRidingModeUseCase
@@ -45,18 +41,8 @@ internal val domainModule = module {
             toleranceCalculator = get(),
         )
     }
-    factory<GetUserLocationUseCase> {
-        GetUserLocationUseCaseImpl(
-            repository = get(),
-        )
-    }
     factory<InitializeDatabaseUseCase> {
         InitializeDatabaseUseCaseImpl(
-            repository = get(),
-        )
-    }
-    factory<ObserveUserLocationUseCase> {
-        ObserveUserLocationUseCaseImpl(
             repository = get(),
         )
     }

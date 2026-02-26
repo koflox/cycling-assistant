@@ -11,7 +11,6 @@ import com.koflox.destinations.domain.model.DestinationLoadingEvent
 import com.koflox.destinations.domain.model.Destinations
 import com.koflox.destinations.domain.usecase.GetDestinationInfoUseCase
 import com.koflox.destinations.domain.usecase.GetDistanceBoundsUseCase
-import com.koflox.destinations.domain.usecase.GetUserLocationUseCase
 import com.koflox.destinations.domain.usecase.InitializeDatabaseUseCase
 import com.koflox.destinations.domain.usecase.NoSuitableDestinationException
 import com.koflox.destinations.domain.usecase.ToleranceCalculator
@@ -23,6 +22,7 @@ import com.koflox.distance.DistanceCalculator
 import com.koflox.graphics.curves.createCurvePoints
 import com.koflox.graphics.primitives.Point
 import com.koflox.location.model.Location
+import com.koflox.location.usecase.GetUserLocationUseCase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update

@@ -1,8 +1,8 @@
-package com.koflox.destinations.domain.usecase
+package com.koflox.location.usecase
 
 import app.cash.turbine.test
-import com.koflox.destinations.domain.repository.UserLocationRepository
 import com.koflox.location.model.Location
+import com.koflox.location.repository.UserLocationRepository
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
