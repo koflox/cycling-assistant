@@ -5,7 +5,6 @@ import com.koflox.destinations.data.mapper.DestinationMapper
 import com.koflox.destinations.data.mapper.DestinationMapperImpl
 import com.koflox.destinations.data.repository.DestinationsRepositoryImpl
 import com.koflox.destinations.data.repository.RidePreferencesRepositoryImpl
-import com.koflox.destinations.data.repository.UserLocationRepositoryImpl
 import com.koflox.destinations.data.source.asset.DestinationFileResolver
 import com.koflox.destinations.data.source.asset.DestinationFileResolverImpl
 import com.koflox.destinations.data.source.asset.PoiAssetDataSource
@@ -18,7 +17,6 @@ import com.koflox.destinations.data.source.local.RidingModeLocalDataSource
 import com.koflox.destinations.data.source.local.RidingModeLocalDataSourceImpl
 import com.koflox.destinations.domain.repository.DestinationsRepository
 import com.koflox.destinations.domain.repository.RidePreferencesRepository
-import com.koflox.destinations.domain.repository.UserLocationRepository
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.sync.Mutex
 import org.koin.android.ext.koin.androidContext
@@ -81,12 +79,6 @@ private val repoModule = module {
             destinationFileResolver = get(),
             mapper = get(),
             mutex = Mutex(),
-        )
-    }
-    single<UserLocationRepository> {
-        UserLocationRepositoryImpl(
-            dispatcherDefault = get<CoroutineDispatcher>(DispatchersQualifier.Default),
-            locationDataSource = get(),
         )
     }
     single<RidePreferencesRepository> {

@@ -1,6 +1,5 @@
-package com.koflox.destinations.data.repository
+package com.koflox.location.repository
 
-import com.koflox.destinations.domain.repository.UserLocationRepository
 import com.koflox.location.geolocation.LocationDataSource
 import com.koflox.location.model.Location
 import kotlinx.coroutines.CoroutineDispatcher

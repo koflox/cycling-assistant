@@ -1,7 +1,7 @@
-package com.koflox.destinations.domain.usecase
+package com.koflox.location.usecase
 
-import com.koflox.destinations.domain.repository.UserLocationRepository
 import com.koflox.location.model.Location
+import com.koflox.location.repository.UserLocationRepository
 
 interface GetUserLocationUseCase {
     suspend fun getLocation(): Result<Location>

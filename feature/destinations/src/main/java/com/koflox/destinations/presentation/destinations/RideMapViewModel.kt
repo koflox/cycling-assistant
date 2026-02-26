@@ -9,10 +9,8 @@ import com.koflox.destinations.domain.model.RidingMode
 import com.koflox.destinations.domain.usecase.CheckLocationEnabledUseCase
 import com.koflox.destinations.domain.usecase.GetDestinationInfoUseCase
 import com.koflox.destinations.domain.usecase.GetDistanceBoundsUseCase
-import com.koflox.destinations.domain.usecase.GetUserLocationUseCase
 import com.koflox.destinations.domain.usecase.InitializeDatabaseUseCase
 import com.koflox.destinations.domain.usecase.ObserveRidingModeUseCase
-import com.koflox.destinations.domain.usecase.ObserveUserLocationUseCase
 import com.koflox.destinations.domain.usecase.ToleranceCalculator
 import com.koflox.destinations.domain.usecase.UpdateRidingModeUseCase
 import com.koflox.destinations.presentation.destinations.delegate.DestinationDelegate
@@ -21,6 +19,8 @@ import com.koflox.destinations.presentation.mapper.DestinationUiMapper
 import com.koflox.destinationsession.bridge.usecase.CyclingSessionUseCase
 import com.koflox.distance.DistanceCalculator
 import com.koflox.location.model.Location
+import com.koflox.location.usecase.GetUserLocationUseCase
+import com.koflox.location.usecase.ObserveUserLocationUseCase
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted

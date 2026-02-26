@@ -1,10 +1,10 @@
 package com.koflox.destinations.presentation.destinations.delegate
 
-import com.koflox.destinations.domain.usecase.GetUserLocationUseCase
-import com.koflox.destinations.domain.usecase.ObserveUserLocationUseCase
 import com.koflox.destinations.presentation.destinations.RideMapInternalState
 import com.koflox.distance.DistanceCalculator
 import com.koflox.location.model.Location
+import com.koflox.location.usecase.GetUserLocationUseCase
+import com.koflox.location.usecase.ObserveUserLocationUseCase
 import com.koflox.testing.coroutine.MainDispatcherRule
 import io.mockk.coEvery
 import io.mockk.every
