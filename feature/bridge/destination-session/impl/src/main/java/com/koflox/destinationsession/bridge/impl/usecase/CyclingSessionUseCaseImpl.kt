@@ -42,14 +42,14 @@ internal class CyclingSessionUseCaseImpl(
             val last = points.last()
             Location(first.latitude, first.longitude) to Location(last.latitude, last.longitude)
         }
-        val allPoints = routeData.allPoints
         val lastSpanColor = routeData.segments.lastOrNull()?.colorSpans?.lastOrNull()?.endColorArgb
         return ActiveSessionRouteData(
             segments = segments,
             gapPolylines = gapPolylines,
-            startPosition = allPoints.firstOrNull()?.let { Location(it.latitude, it.longitude) },
-            lastPosition = allPoints.lastOrNull()?.let { Location(it.latitude, it.longitude) },
+            startPosition = snapshot.firstTrackPointPosition,
+            lastPosition = snapshot.lastTrackPointPosition,
             lastSpanColorArgb = lastSpanColor,
+            lastBearingDegrees = snapshot.lastBearingDegrees,
             isPaused = snapshot.isPaused,
         )
     }

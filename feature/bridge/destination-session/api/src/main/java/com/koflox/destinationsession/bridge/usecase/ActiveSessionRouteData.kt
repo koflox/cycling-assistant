@@ -8,6 +8,7 @@ data class ActiveSessionRouteData(
     val startPosition: Location?,
     val lastPosition: Location?,
     val lastSpanColorArgb: Int?,
+    val lastBearingDegrees: Float?,
     val isPaused: Boolean,
 )
 
