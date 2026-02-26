@@ -68,7 +68,7 @@ internal class RideMapViewModel(
             distanceCalculator = distanceCalculator,
             uiState = _internalState,
             scope = viewModelScope,
-            onLocationUpdated = ::onLocationUpdated,
+            onLocationObserved = ::onLocationObserved,
         )
     }
 
@@ -158,6 +158,11 @@ internal class RideMapViewModel(
                         )
                     }
                 }
+                if (isActive) {
+                    locationDelegate.stopLocationObservation()
+                } else if (_internalState.value.isPermissionGranted && isScreenVisible) {
+                    locationDelegate.startLocationObservation()
+                }
             }
         }
     }
@@ -166,6 +171,7 @@ internal class RideMapViewModel(
         viewModelScope.launch(dispatcherDefault) {
             cyclingSessionUseCase.observeActiveSessionRoute().collect { routeData ->
                 _internalState.update { it.copy(activeSessionRouteData = routeData) }
+                routeData?.lastPosition?.let(locationDelegate::updateUserLocation)
             }
         }
     }
@@ -262,7 +268,7 @@ internal class RideMapViewModel(
     private fun onPermissionGranted() {
         _internalState.update { it.copy(isPermissionGranted = true, isPermissionDenied = false) }
         fetchInitialLocationAndStartLoading()
-        if (isScreenVisible) {
+        if (isScreenVisible && !_internalState.value.isSessionActive) {
             locationDelegate.startLocationObservation()
         }
     }
@@ -285,7 +291,7 @@ internal class RideMapViewModel(
     private fun onScreenResumed() {
         isScreenVisible = true
         destinationDelegate.checkGoogleMapsAvailability()
-        if (_internalState.value.isPermissionGranted) {
+        if (_internalState.value.isPermissionGranted && !_internalState.value.isSessionActive) {
             locationDelegate.startLocationObservation()
         }
     }
@@ -295,7 +301,7 @@ internal class RideMapViewModel(
         locationDelegate.stopLocationObservation()
     }
 
-    private fun onLocationUpdated(newLocation: Location) {
+    private fun onLocationObserved(newLocation: Location) {
         if (_internalState.value.ridingMode == RidingMode.DESTINATION) {
             destinationDelegate.updateCurvePointsForLocation(newLocation)
             destinationDelegate.checkAndReloadDestinationsIfNeeded(newLocation)

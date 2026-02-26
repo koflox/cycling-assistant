@@ -25,6 +25,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -374,8 +375,8 @@ class RideMapViewModelTest {
     }
 
     @Test
-    fun `ScreenResumed with permission starts location observation`() = runTest {
-        every { observeUserLocationUseCase.observe() } returns emptyFlow()
+    fun `ScreenResumed with permission starts location observation when idle`() = runTest {
+        every { observeUserLocationUseCase.observe(any(), any()) } returns emptyFlow()
 
         viewModel = createViewModel()
         advanceUntilIdle()
@@ -384,11 +385,28 @@ class RideMapViewModelTest {
         advanceUntilIdle()
         viewModel.onEvent(RideMapUiEvent.LifecycleEvent.ScreenResumed)
         advanceUntilIdle()
+
+        verify { observeUserLocationUseCase.observe(any(), any()) }
+    }
+
+    @Test
+    fun `ScreenResumed with active session does not start location observation`() = runTest {
+        activeSessionFlow.value = true
+
+        viewModel = createViewModel()
+        advanceUntilIdle()
+        sendMapLoaded()
+        viewModel.onEvent(RideMapUiEvent.PermissionEvent.PermissionGranted)
+        advanceUntilIdle()
+        viewModel.onEvent(RideMapUiEvent.LifecycleEvent.ScreenResumed)
+        advanceUntilIdle()
+
+        verify(exactly = 0) { observeUserLocationUseCase.observe(any(), any()) }
     }
 
     @Test
     fun `ScreenPaused stops location observation`() = runTest {
-        every { observeUserLocationUseCase.observe() } returns emptyFlow()
+        every { observeUserLocationUseCase.observe(any(), any()) } returns emptyFlow()
 
         viewModel = createViewModel()
         advanceUntilIdle()
@@ -399,6 +417,45 @@ class RideMapViewModelTest {
         advanceUntilIdle()
         viewModel.onEvent(RideMapUiEvent.LifecycleEvent.ScreenPaused)
         advanceUntilIdle()
+    }
+
+    @Test
+    fun `session becoming active stops location observation`() = runTest {
+        every { observeUserLocationUseCase.observe(any(), any()) } returns emptyFlow()
+
+        viewModel = createViewModel()
+        advanceUntilIdle()
+        sendMapLoaded()
+        viewModel.onEvent(RideMapUiEvent.PermissionEvent.PermissionGranted)
+        viewModel.onEvent(RideMapUiEvent.LifecycleEvent.ScreenResumed)
+        advanceUntilIdle()
+
+        verify(exactly = 1) { observeUserLocationUseCase.observe(any(), any()) }
+
+        activeSessionFlow.value = true
+        advanceUntilIdle()
+
+        verify(exactly = 1) { observeUserLocationUseCase.observe(any(), any()) }
+    }
+
+    @Test
+    fun `session ending restarts location observation`() = runTest {
+        every { observeUserLocationUseCase.observe(any(), any()) } returns emptyFlow()
+        activeSessionFlow.value = true
+
+        viewModel = createViewModel()
+        advanceUntilIdle()
+        sendMapLoaded()
+        viewModel.onEvent(RideMapUiEvent.PermissionEvent.PermissionGranted)
+        viewModel.onEvent(RideMapUiEvent.LifecycleEvent.ScreenResumed)
+        advanceUntilIdle()
+
+        verify(exactly = 0) { observeUserLocationUseCase.observe(any(), any()) }
+
+        activeSessionFlow.value = false
+        advanceUntilIdle()
+
+        verify(exactly = 1) { observeUserLocationUseCase.observe(any(), any()) }
     }
 
     @Test
@@ -456,7 +513,7 @@ class RideMapViewModelTest {
     fun `initial location fetch failure transitions after observation delivers location`() = runTest {
         coEvery { getUserLocationUseCase.getLocation() } returns Result.failure(RuntimeException("No GPS"))
         val locationFlow = MutableSharedFlow<Location>()
-        every { observeUserLocationUseCase.observe() } returns locationFlow
+        every { observeUserLocationUseCase.observe(any(), any()) } returns locationFlow
 
         viewModel = createViewModel()
         advanceUntilIdle()
