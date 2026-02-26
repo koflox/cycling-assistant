@@ -35,6 +35,7 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.koflox.designsystem.component.ActionCard
 import com.koflox.designsystem.component.DebouncedOutlinedButton
+import com.koflox.designsystem.component.HintCard
 import com.koflox.designsystem.component.StatusCard
 import com.koflox.designsystem.text.UiText
 import com.koflox.designsystem.text.resolve
@@ -387,6 +388,7 @@ private fun ActiveSessionControls(
     onNavigateToSessionCompletion: (sessionId: String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val isWaitingForRoute = uiState.routeData == null || uiState.routeData.segments.isEmpty()
     Column(modifier = modifier) {
         uiState.nutritionSuggestionTimeMs?.let { suggestionTimeMs ->
             nutritionUiNavigator.NutritionBreakPopup(
@@ -395,6 +397,14 @@ private fun ActiveSessionControls(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = Spacing.Large),
+            )
+        }
+        if (isWaitingForRoute) {
+            HintCard(
+                message = stringResource(R.string.session_hint_keep_moving),
+                modifier = Modifier
+                    .padding(horizontal = Spacing.Large)
+                    .align(Alignment.CenterHorizontally),
             )
         }
         if (uiState.arePoiActionsVisible) {

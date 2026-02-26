@@ -16,6 +16,9 @@
     <string name="destination_calculating_bounds">適切な距離範囲を検索中</string>
     <string name="destination_no_destinations_in_area">このエリアには目的地が見つかりません。利用可能な目的地は現在地に依存します</string>
 
+    <!-- Session Hint -->
+    <string name="session_hint_keep_moving">移動を続けてください…</string>
+
     <!-- POI -->
     <string name="session_poi_coffee_shop">カフェ</string>
     <string name="session_poi_toilet">トイレ</string>

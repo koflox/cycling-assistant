@@ -16,6 +16,9 @@
     <string name="destination_calculating_bounds">Searching for suitable distance range</string>
     <string name="destination_no_destinations_in_area">No destinations found in this area. Available destinations depend on your location</string>
 
+    <!-- Session Hint -->
+    <string name="session_hint_keep_moving">Keep moving…</string>
+
     <!-- POI -->
     <string name="session_poi_coffee_shop">Coffee shops</string>
     <string name="session_poi_toilet">Toilets</string>

@@ -7,11 +7,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import com.google.android.gms.maps.CameraUpdateFactory
-import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.JointType
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
@@ -26,17 +24,15 @@ import com.google.maps.android.compose.Polyline
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberUpdatedMarkerState
 import com.koflox.designsystem.theme.LocalDarkTheme
-import com.koflox.graphics.figures.createArrowBitmap
 import com.koflox.map.ROUTE_GAP_PATTERN
-import com.koflox.map.ROUTE_MARKER_STROKE_WIDTH_DP
 import com.koflox.map.ROUTE_WIDTH
 import com.koflox.map.RouteColors
+import com.koflox.map.createEndMarkerIcon
 import com.koflox.map.createStartMarkerIcon
 import com.koflox.session.presentation.route.RouteDisplayData
 import com.koflox.designsystem.R as DesignSystemR
 
 private const val MAP_PADDING = 100
-private const val END_MARKER_SIZE_DP = 20
 
 @Composable
 internal fun RouteMapView(
@@ -126,17 +122,6 @@ private fun RouteMapContent(
         )
     }
 }
-
-private fun createEndMarkerIcon(density: Float, rotationDegrees: Float) = BitmapDescriptorFactory.fromBitmap(
-    createArrowBitmap(
-        sizeDp = END_MARKER_SIZE_DP,
-        strokeWidthDp = ROUTE_MARKER_STROKE_WIDTH_DP,
-        fillColor = android.graphics.Color.WHITE,
-        strokeColor = RouteColors.EndMarker.toArgb(),
-        density = density,
-        rotationDegrees = rotationDegrees,
-    ),
-)
 
 private fun buildMapUiSettings(isSharePreview: Boolean) = MapUiSettings(
     zoomControlsEnabled = false,

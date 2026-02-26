@@ -1,6 +1,12 @@
 package com.koflox.destinations.presentation.destinations.components
 
 import android.content.Context
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
@@ -29,6 +35,7 @@ import com.google.android.gms.maps.model.RoundCap
 import com.google.android.gms.maps.model.StrokeStyle
 import com.google.android.gms.maps.model.StyleSpan
 import com.google.maps.android.compose.CameraPositionState
+import com.google.maps.android.compose.Circle
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.GoogleMapComposable
 import com.google.maps.android.compose.MapProperties
@@ -51,7 +58,9 @@ import com.koflox.location.model.Location
 import com.koflox.map.ROUTE_GAP_PATTERN
 import com.koflox.map.ROUTE_WIDTH
 import com.koflox.map.RouteColors
+import com.koflox.map.createEndMarkerIcon
 import com.koflox.map.createStartMarkerIcon
+import kotlin.math.pow
 import android.graphics.Color as AndroidColor
 import com.koflox.designsystem.R as DesignSystemR
 
@@ -60,6 +69,10 @@ private const val DEFAULT_ROUTE_LINE_WIDTH = 8f
 private const val USER_LOCATION_DOT_SIZE_DP = 24
 private const val USER_LOCATION_STROKE_WIDTH_DP = 3
 private val UserLocationBlue = Color(0xFF4285F4)
+private const val RIPPLE_BASE_RADIUS_METERS = 200.0
+private const val RIPPLE_REFERENCE_ZOOM = 15f
+private const val RIPPLE_DURATION_MS = 1500
+private const val RIPPLE_START_ALPHA = 0.4f
 
 @Composable
 internal fun GoogleMapView(
@@ -156,7 +169,10 @@ private fun Map(
         properties = mapProperties,
         onMapLoaded = onMapLoaded,
     ) {
-        UserLocationMarker(userLocation, userLocationBitmap)
+        val isRouteMarkerVisible = routeData?.startPosition != null
+        if (!isRouteMarkerVisible) {
+            UserLocationMarker(userLocation, userLocationBitmap)
+        }
         selectedDestination?.let { destination ->
             Destinations(destination, otherDestinations, isSessionActive, onSelectedMarkerInfoClick)
         }
@@ -166,7 +182,12 @@ private fun Map(
         }
         routeData?.let { data ->
             @Suppress("COMPOSE_APPLIER_CALL_MISMATCH")
-            ActiveSessionRouteOverlay(routeData = data, userLocation = userLocation, density = density)
+            ActiveSessionRouteOverlay(
+                routeData = data,
+                userLocation = userLocation,
+                density = density,
+                cameraZoom = cameraPositionState.position.zoom,
+            )
         }
     }
 }
@@ -194,9 +215,13 @@ private fun ActiveSessionRouteOverlay(
     routeData: ActiveSessionRouteData,
     userLocation: Location?,
     density: Float,
+    cameraZoom: Float,
 ) {
-    val startMarkerIcon = remember(density) {
+    val startMarkerIcon = remember(density, routeData.startPosition) {
         if (routeData.startPosition != null) createStartMarkerIcon(density) else null
+    }
+    val endMarkerIcon = remember(density, routeData.lastBearingDegrees) {
+        if (routeData.segments.isNotEmpty()) createEndMarkerIcon(density, routeData.lastBearingDegrees ?: 0f) else null
     }
     RouteSegmentPolylines(routeData)
     routeData.gapPolylines.forEach { (first, second) ->
@@ -208,10 +233,25 @@ private fun ActiveSessionRouteOverlay(
         )
     }
     routeData.startPosition?.let { start ->
+        val startLatLng = LatLng(start.latitude, start.longitude)
+        if (routeData.segments.isEmpty()) {
+            MarkerRipple(center = startLatLng, color = RouteColors.StartMarker, cameraZoom = cameraZoom)
+        }
         if (startMarkerIcon != null) {
             Marker(
-                state = rememberUpdatedMarkerState(position = LatLng(start.latitude, start.longitude)),
+                state = rememberUpdatedMarkerState(position = startLatLng),
                 icon = startMarkerIcon,
+                anchor = Offset(0.5f, 0.5f),
+            )
+        }
+    }
+    routeData.lastPosition?.let { lastPos ->
+        if (routeData.segments.isNotEmpty() && endMarkerIcon != null) {
+            val endLatLng = LatLng(lastPos.latitude, lastPos.longitude)
+            MarkerRipple(center = endLatLng, color = RouteColors.EndMarker, cameraZoom = cameraZoom)
+            Marker(
+                state = rememberUpdatedMarkerState(position = endLatLng),
+                icon = endMarkerIcon,
                 anchor = Offset(0.5f, 0.5f),
             )
         }
@@ -228,6 +268,29 @@ private fun ActiveSessionRouteOverlay(
             pattern = ROUTE_GAP_PATTERN,
         )
     }
+}
+
+@Suppress("COMPOSE_APPLIER_CALL_MISMATCH")
+@Composable
+@GoogleMapComposable
+private fun MarkerRipple(center: LatLng, color: Color, cameraZoom: Float) {
+    val transition = rememberInfiniteTransition(label = "ripple")
+    val progress by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = RIPPLE_DURATION_MS, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart,
+        ),
+        label = "rippleProgress",
+    )
+    val zoomScale = 2.0.pow((RIPPLE_REFERENCE_ZOOM - cameraZoom).toDouble())
+    Circle(
+        center = center,
+        radius = RIPPLE_BASE_RADIUS_METERS * zoomScale * progress,
+        fillColor = color.copy(alpha = RIPPLE_START_ALPHA * (1f - progress)),
+        strokeWidth = 0f,
+    )
 }
 
 @Suppress("COMPOSE_APPLIER_CALL_MISMATCH")
