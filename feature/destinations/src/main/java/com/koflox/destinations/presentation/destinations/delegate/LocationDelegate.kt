@@ -17,10 +17,12 @@ internal class LocationDelegate(
     private val distanceCalculator: DistanceCalculator,
     private val uiState: MutableStateFlow<RideMapInternalState>,
     private val scope: CoroutineScope,
-    private val onLocationUpdated: (Location) -> Unit,
+    private val onLocationObserved: (Location) -> Unit,
 ) {
 
     companion object {
+        private const val IDLE_LOCATION_INTERVAL_MS = 15_000L
+        private const val IDLE_MIN_UPDATE_DISTANCE_METERS = 50F
         private const val CAMERA_MOVEMENT_THRESHOLD_METERS = 50.0
         private const val METERS_IN_KILOMETER = 1000.0
     }
@@ -42,23 +44,24 @@ internal class LocationDelegate(
         return result
     }
 
+    fun updateUserLocation(newLocation: Location) {
+        val shouldMoveCamera = shouldUpdateCameraFocus(uiState.value.cameraFocusLocation, newLocation)
+        uiState.update {
+            it.copy(
+                userLocation = newLocation,
+                cameraFocusLocation = if (shouldMoveCamera) newLocation else it.cameraFocusLocation,
+            )
+        }
+    }
+
     fun startLocationObservation() {
         locationObservationJob?.cancel()
         locationObservationJob = scope.launch {
-            observeUserLocationUseCase.observe().collect { newLocation ->
-                val currentState = uiState.value
-                val shouldMoveCamera = shouldUpdateCameraFocus(
-                    currentFocus = currentState.cameraFocusLocation,
-                    newLocation = newLocation,
-                )
-                uiState.update {
-                    it.copy(
-                        userLocation = newLocation,
-                        cameraFocusLocation = if (shouldMoveCamera) newLocation else it.cameraFocusLocation,
-                    )
+            observeUserLocationUseCase.observe(IDLE_LOCATION_INTERVAL_MS, IDLE_MIN_UPDATE_DISTANCE_METERS)
+                .collect { newLocation ->
+                    updateUserLocation(newLocation)
+                    onLocationObserved(newLocation)
                 }
-                onLocationUpdated(newLocation)
-            }
         }
     }
 

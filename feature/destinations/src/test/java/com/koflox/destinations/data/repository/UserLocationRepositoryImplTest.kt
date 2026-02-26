@@ -21,6 +21,8 @@ class UserLocationRepositoryImplTest {
     companion object {
         private const val TEST_LAT = 52.52
         private const val TEST_LONG = 13.405
+        private const val TEST_INTERVAL_MS = 3000L
+        private const val TEST_MIN_DISTANCE = 5F
     }
 
     @get:Rule
@@ -71,13 +73,13 @@ class UserLocationRepositoryImplTest {
 
     @Suppress("UnusedFlow")
     @Test
-    fun `observeUserLocation delegates to locationDataSource`() = runTest {
+    fun `observeUserLocation delegates to locationDataSource with params`() = runTest {
         val location = Location(TEST_LAT, TEST_LONG)
         every { locationDataSource.observeLocationUpdates(any(), any()) } returns flowOf(location)
 
-        repository.observeUserLocation()
+        repository.observeUserLocation(TEST_INTERVAL_MS, TEST_MIN_DISTANCE)
 
-        verify { locationDataSource.observeLocationUpdates() }
+        verify { locationDataSource.observeLocationUpdates(TEST_INTERVAL_MS, TEST_MIN_DISTANCE) }
     }
 
     @Test
@@ -86,7 +88,7 @@ class UserLocationRepositoryImplTest {
         val flow = flowOf(location)
         every { locationDataSource.observeLocationUpdates(any(), any()) } returns flow
 
-        val result = repository.observeUserLocation()
+        val result = repository.observeUserLocation(TEST_INTERVAL_MS, TEST_MIN_DISTANCE)
 
         assertEquals(flow, result)
     }

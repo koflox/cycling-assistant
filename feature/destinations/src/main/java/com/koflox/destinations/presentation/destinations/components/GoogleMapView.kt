@@ -217,29 +217,16 @@ private fun ActiveSessionRouteOverlay(
         }
     }
     val lastPos = routeData.lastPosition
-    if (lastPos != null && userLocation != null) {
-        if (routeData.isPaused) {
-            Polyline(
-                points = listOf(
-                    LatLng(lastPos.latitude, lastPos.longitude),
-                    LatLng(userLocation.latitude, userLocation.longitude),
-                ),
-                color = RouteColors.Gap,
-                width = ROUTE_WIDTH,
-                pattern = ROUTE_GAP_PATTERN,
-            )
-        } else {
-            Polyline(
-                points = listOf(
-                    LatLng(lastPos.latitude, lastPos.longitude),
-                    LatLng(userLocation.latitude, userLocation.longitude),
-                ),
-                color = routeData.lastSpanColorArgb?.let(::Color) ?: RouteColors.NormalSpeed,
-                width = ROUTE_WIDTH,
-                startCap = RoundCap(),
-                endCap = RoundCap(),
-            )
-        }
+    if (lastPos != null && userLocation != null && routeData.isPaused) {
+        Polyline(
+            points = listOf(
+                LatLng(lastPos.latitude, lastPos.longitude),
+                LatLng(userLocation.latitude, userLocation.longitude),
+            ),
+            color = RouteColors.Gap,
+            width = ROUTE_WIDTH,
+            pattern = ROUTE_GAP_PATTERN,
+        )
     }
 }
 
