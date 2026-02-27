@@ -20,6 +20,7 @@ import com.koflox.destinationsession.bridge.usecase.CyclingSessionUseCase
 import com.koflox.distance.DistanceCalculator
 import com.koflox.location.usecase.GetUserLocationUseCase
 import com.koflox.location.usecase.ObserveUserLocationUseCase
+import com.koflox.map.intent.GoogleMapsIntentHelper
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -42,6 +43,7 @@ internal class RideMapViewModel(
     private val toleranceCalculator: ToleranceCalculator,
     private val application: Application,
     private val cyclingSessionUseCase: CyclingSessionUseCase,
+    private val googleMapsIntentHelper: GoogleMapsIntentHelper,
     private val observeNutritionBreakUseCase: ObserveNutritionBreakUseCase,
     private val observeRidingModeUseCase: ObserveRidingModeUseCase,
     private val updateRidingModeUseCase: UpdateRidingModeUseCase,
@@ -79,7 +81,7 @@ internal class RideMapViewModel(
             distanceCalculator = distanceCalculator,
             uiMapper = uiMapper,
             toleranceCalculator = toleranceCalculator,
-            application = application,
+            googleMapsIntentHelper = googleMapsIntentHelper,
             uiState = _internalState,
             scope = viewModelScope,
         )
