@@ -36,11 +36,11 @@ import com.koflox.poi.presentation.mapper.label
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
-internal fun PoiSelectionRoute(
+fun PoiSelectionRoute(
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: PoiSelectionViewModel = koinViewModel(),
 ) {
+    val viewModel: PoiSelectionViewModel = koinViewModel()
     val uiState by viewModel.uiState.collectAsState()
     LaunchedEffect(Unit) {
         viewModel.navigation.collect { event ->
