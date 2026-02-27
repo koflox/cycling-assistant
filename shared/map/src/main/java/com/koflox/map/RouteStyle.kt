@@ -15,6 +15,8 @@ object RouteColors {
     val Gap = Color(0xFFBDBDBD)
     val StartMarker = Color(0xFF5A6BD5)
     val EndMarker = Color(0xFFE84940)
+    val ActiveEndMarker = Color(0xFF26A69A)
+    val PauseMarker = Color(0xFF9E9E9E)
 }
 
 const val ROUTE_WIDTH = 10f
@@ -43,5 +45,26 @@ fun createEndMarkerIcon(density: Float, rotationDegrees: Float): BitmapDescripto
         strokeColor = RouteColors.EndMarker.toArgb(),
         density = density,
         rotationDegrees = rotationDegrees,
+    ),
+)
+
+fun createActiveEndMarkerIcon(density: Float, rotationDegrees: Float): BitmapDescriptor = BitmapDescriptorFactory.fromBitmap(
+    createArrowBitmap(
+        sizeDp = ROUTE_END_MARKER_SIZE_DP,
+        strokeWidthDp = ROUTE_MARKER_STROKE_WIDTH_DP,
+        fillColor = android.graphics.Color.WHITE,
+        strokeColor = RouteColors.ActiveEndMarker.toArgb(),
+        density = density,
+        rotationDegrees = rotationDegrees,
+    ),
+)
+
+fun createPauseMarkerIcon(density: Float): BitmapDescriptor = BitmapDescriptorFactory.fromBitmap(
+    createCircleBitmap(
+        sizeDp = ROUTE_START_MARKER_SIZE_DP,
+        strokeWidthDp = ROUTE_MARKER_STROKE_WIDTH_DP,
+        fillColor = android.graphics.Color.WHITE,
+        strokeColor = RouteColors.PauseMarker.toArgb(),
+        density = density,
     ),
 )

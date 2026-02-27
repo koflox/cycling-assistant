@@ -10,6 +10,7 @@ data class ActiveSessionRouteData(
     val lastSpanColorArgb: Int?,
     val lastBearingDegrees: Float?,
     val isPaused: Boolean,
+    val showGapToUserLocation: Boolean,
 )
 
 data class ActiveRouteSegment(

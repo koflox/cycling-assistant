@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.map
 data class SessionRouteSnapshot(
     val routeDisplayData: RouteDisplayData,
     val isPaused: Boolean,
+    val showGapToUserLocation: Boolean,
     val firstTrackPointPosition: Location?,
     val lastTrackPointPosition: Location?,
     val lastBearingDegrees: Float?,
@@ -30,9 +31,13 @@ internal class ObserveActiveSessionRouteUseCaseImpl(
             session?.let {
                 val trackPoints = it.trackPoints
                 val lastTwo = trackPoints.takeLast(2)
+                val isPaused = it.status == SessionStatus.PAUSED
+                val isAwaitingResumePoint = it.status == SessionStatus.RUNNING &&
+                    trackPoints.lastOrNull()?.let { tp -> tp.timestampMs < it.lastResumedTimeMs } == true
                 SessionRouteSnapshot(
                     routeDisplayData = buildRouteDisplayData(trackPoints),
-                    isPaused = it.status == SessionStatus.PAUSED,
+                    isPaused = isPaused,
+                    showGapToUserLocation = isPaused || isAwaitingResumePoint,
                     firstTrackPointPosition = trackPoints.firstOrNull()?.toLocation(),
                     lastTrackPointPosition = trackPoints.lastOrNull()?.toLocation(),
                     lastBearingDegrees = if (lastTwo.size == 2) {

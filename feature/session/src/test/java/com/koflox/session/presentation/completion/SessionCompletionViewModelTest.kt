@@ -191,7 +191,7 @@ class SessionCompletionViewModelTest {
     }
 
     @Test
-    fun `loadSession filters out segments with fewer than two points`() = runTest {
+    fun `loadSession filters out segments with fewer than two points but keeps gaps`() = runTest {
         val session = createSession(
             id = SESSION_ID,
             status = SessionStatus.COMPLETED,
@@ -209,8 +209,11 @@ class SessionCompletionViewModelTest {
             awaitItem() // Loading
             val content = awaitItem() as SessionCompletionUiState.Content
             val displayData = content.routeDisplayData
-            assertEquals(2, displayData.allPoints.size)
-            assertTrue(displayData.gapPolylines.isEmpty())
+            assertEquals(1, displayData.segments.size)
+            assertEquals(3, displayData.allPoints.size)
+            assertEquals(1, displayData.gapPolylines.size)
+            assertEquals(52.52, displayData.gapPolylines[0][0].latitude, 0.0)
+            assertEquals(52.53, displayData.gapPolylines[0][1].latitude, 0.0)
         }
     }
 
