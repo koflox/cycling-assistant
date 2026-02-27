@@ -29,6 +29,7 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.JointType
 import com.google.android.gms.maps.model.LatLng
@@ -62,7 +63,8 @@ import com.koflox.location.model.Location
 import com.koflox.map.ROUTE_GAP_PATTERN
 import com.koflox.map.ROUTE_WIDTH
 import com.koflox.map.RouteColors
-import com.koflox.map.createEndMarkerIcon
+import com.koflox.map.createActiveEndMarkerIcon
+import com.koflox.map.createPauseMarkerIcon
 import com.koflox.map.createStartMarkerIcon
 import kotlin.math.pow
 import android.graphics.Color as AndroidColor
@@ -134,6 +136,7 @@ internal fun GoogleMapView(
     )
 }
 
+@Suppress("COMPOSE_APPLIER_CALL_MISMATCH")
 @Composable
 private fun Map(
     modifier: Modifier,
@@ -186,22 +189,20 @@ private fun Map(
             Destinations(destination, otherDestinations, isSessionActive, onSelectedMarkerInfoClick)
         }
         if (curvePoints.isNotEmpty()) {
-            @Suppress("COMPOSE_APPLIER_CALL_MISMATCH")
             Polyline(points = curvePoints, color = UserLocationBlue, width = DEFAULT_ROUTE_LINE_WIDTH)
         }
         routeData?.let { data ->
-            @Suppress("COMPOSE_APPLIER_CALL_MISMATCH")
             ActiveSessionRouteOverlay(
                 routeData = data,
                 userLocation = userLocation,
                 density = density,
                 cameraZoom = cameraPositionState.position.zoom,
+                isDarkTheme = isDarkTheme,
             )
         }
     }
 }
 
-@Suppress("COMPOSE_APPLIER_CALL_MISMATCH")
 @Composable
 @GoogleMapComposable
 private fun UserLocationMarker(userLocation: Location?, userLocationBitmap: android.graphics.Bitmap) {
@@ -217,7 +218,6 @@ private fun UserLocationMarker(userLocation: Location?, userLocationBitmap: andr
     }
 }
 
-@Suppress("COMPOSE_APPLIER_CALL_MISMATCH")
 @Composable
 @GoogleMapComposable
 private fun ActiveSessionRouteOverlay(
@@ -225,26 +225,28 @@ private fun ActiveSessionRouteOverlay(
     userLocation: Location?,
     density: Float,
     cameraZoom: Float,
+    isDarkTheme: Boolean,
 ) {
     val startMarkerIcon = remember(density, routeData.startPosition) {
         if (routeData.startPosition != null) createStartMarkerIcon(density) else null
     }
-    val endMarkerIcon = remember(density, routeData.lastBearingDegrees) {
-        if (routeData.segments.isNotEmpty()) createEndMarkerIcon(density, routeData.lastBearingDegrees ?: 0f) else null
-    }
+    FirstLocationMarker(routeData, cameraZoom, isDarkTheme, startMarkerIcon)
     RouteSegmentPolylines(routeData)
-    routeData.gapPolylines.forEach { (first, second) ->
-        Polyline(
-            points = listOf(LatLng(first.latitude, first.longitude), LatLng(second.latitude, second.longitude)),
-            color = RouteColors.Gap,
-            width = ROUTE_WIDTH,
-            pattern = ROUTE_GAP_PATTERN,
-        )
-    }
+    GapPolylines(routeData, userLocation)
+    LastPositionMarker(routeData = routeData, density = density, cameraZoom = cameraZoom, isDarkTheme = isDarkTheme)
+}
+
+@Composable
+private fun FirstLocationMarker(
+    routeData: ActiveSessionRouteData,
+    cameraZoom: Float,
+    isDarkTheme: Boolean,
+    startMarkerIcon: BitmapDescriptor?
+) {
     routeData.startPosition?.let { start ->
         val startLatLng = LatLng(start.latitude, start.longitude)
         if (routeData.segments.isEmpty()) {
-            MarkerRipple(center = startLatLng, color = RouteColors.StartMarker, cameraZoom = cameraZoom)
+            MarkerRipple(center = startLatLng, color = RouteColors.StartMarker, cameraZoom = cameraZoom, isDarkTheme = isDarkTheme)
         }
         if (startMarkerIcon != null) {
             Marker(
@@ -254,24 +256,55 @@ private fun ActiveSessionRouteOverlay(
             )
         }
     }
+}
+
+@Composable
+@GoogleMapComposable
+private fun LastPositionMarker(
+    routeData: ActiveSessionRouteData,
+    density: Float,
+    cameraZoom: Float,
+    isDarkTheme: Boolean,
+) {
     routeData.lastPosition?.let { lastPos ->
-        if (routeData.segments.isNotEmpty() && endMarkerIcon != null) {
-            val endLatLng = LatLng(lastPos.latitude, lastPos.longitude)
-            MarkerRipple(center = endLatLng, color = RouteColors.EndMarker, cameraZoom = cameraZoom)
+        val endLatLng = LatLng(lastPos.latitude, lastPos.longitude)
+        if (routeData.isPaused) {
+            val pauseMarkerIcon = remember(density) { createPauseMarkerIcon(density) }
+            MarkerRipple(center = endLatLng, color = RouteColors.PauseMarker, cameraZoom = cameraZoom, isDarkTheme = isDarkTheme)
             Marker(
                 state = rememberUpdatedMarkerState(position = endLatLng),
-                icon = endMarkerIcon,
+                icon = pauseMarkerIcon,
+                anchor = Offset(0.5f, 0.5f),
+            )
+        } else if (routeData.segments.isNotEmpty()) {
+            val activeEndMarkerIcon = remember(density, routeData.lastBearingDegrees) {
+                createActiveEndMarkerIcon(density, routeData.lastBearingDegrees ?: 0f)
+            }
+            MarkerRipple(center = endLatLng, color = RouteColors.ActiveEndMarker, cameraZoom = cameraZoom, isDarkTheme = isDarkTheme)
+            Marker(
+                state = rememberUpdatedMarkerState(position = endLatLng),
+                icon = activeEndMarkerIcon,
                 anchor = Offset(0.5f, 0.5f),
             )
         }
     }
-    val lastPos = routeData.lastPosition
-    if (lastPos != null && userLocation != null && routeData.isPaused) {
+}
+
+@Composable
+@GoogleMapComposable
+private fun GapPolylines(routeData: ActiveSessionRouteData, userLocation: Location?) {
+    routeData.gapPolylines.forEach { (first, second) ->
         Polyline(
-            points = listOf(
-                LatLng(lastPos.latitude, lastPos.longitude),
-                LatLng(userLocation.latitude, userLocation.longitude),
-            ),
+            points = listOf(LatLng(first.latitude, first.longitude), LatLng(second.latitude, second.longitude)),
+            color = RouteColors.Gap,
+            width = ROUTE_WIDTH,
+            pattern = ROUTE_GAP_PATTERN,
+        )
+    }
+    val lastPos = routeData.lastPosition
+    if (lastPos != null && userLocation != null && routeData.showGapToUserLocation) {
+        Polyline(
+            points = listOf(LatLng(lastPos.latitude, lastPos.longitude), LatLng(userLocation.latitude, userLocation.longitude)),
             color = RouteColors.Gap,
             width = ROUTE_WIDTH,
             pattern = ROUTE_GAP_PATTERN,
@@ -279,10 +312,10 @@ private fun ActiveSessionRouteOverlay(
     }
 }
 
-@Suppress("COMPOSE_APPLIER_CALL_MISMATCH")
 @Composable
 @GoogleMapComposable
-private fun MarkerRipple(center: LatLng, color: Color, cameraZoom: Float) {
+private fun MarkerRipple(center: LatLng, color: Color, cameraZoom: Float, isDarkTheme: Boolean) {
+    val rippleColor = if (isDarkTheme) Color.White else color
     val transition = rememberInfiniteTransition(label = "ripple")
     val progress by transition.animateFloat(
         initialValue = 0f,
@@ -297,12 +330,11 @@ private fun MarkerRipple(center: LatLng, color: Color, cameraZoom: Float) {
     Circle(
         center = center,
         radius = RIPPLE_BASE_RADIUS_METERS * zoomScale * progress,
-        fillColor = color.copy(alpha = RIPPLE_START_ALPHA * (1f - progress)),
+        fillColor = rippleColor.copy(alpha = RIPPLE_START_ALPHA * (1f - progress)),
         strokeWidth = 0f,
     )
 }
 
-@Suppress("COMPOSE_APPLIER_CALL_MISMATCH")
 @Composable
 @GoogleMapComposable
 private fun RouteSegmentPolylines(routeData: ActiveSessionRouteData) {

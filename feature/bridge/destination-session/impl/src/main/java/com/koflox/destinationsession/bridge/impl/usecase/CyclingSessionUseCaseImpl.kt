@@ -51,6 +51,7 @@ internal class CyclingSessionUseCaseImpl(
             lastSpanColorArgb = lastSpanColor,
             lastBearingDegrees = snapshot.lastBearingDegrees,
             isPaused = snapshot.isPaused,
+            showGapToUserLocation = snapshot.showGapToUserLocation,
         )
     }
 

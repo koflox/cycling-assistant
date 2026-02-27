@@ -61,7 +61,11 @@ data class RouteDisplayData(
 
 internal fun buildRouteDisplayData(trackPoints: List<TrackPoint>): RouteDisplayData {
     if (trackPoints.isEmpty()) return RouteDisplayData.EMPTY
-    val routeSegments = buildRouteSegments(trackPoints)
+    val rawSegments = buildRawSegments(trackPoints)
+    val gapPolylines = (0 until rawSegments.size - 1).map { i ->
+        listOf(rawSegments[i].last().latLng, rawSegments[i + 1].first().latLng)
+    }
+    val routeSegments = rawSegments.filter { it.size >= 2 }.map(::RouteSegment)
     val segments = routeSegments.map { segment ->
         val pointColors = smoothSpeedColors(segment.points)
         val (spans, colorSpans) = buildSpans(pointColors)
@@ -71,14 +75,11 @@ internal fun buildRouteDisplayData(trackPoints: List<TrackPoint>): RouteDisplayD
             colorSpans = colorSpans,
         )
     }
-    val gapPolylines = (0 until routeSegments.size - 1).map { i ->
-        listOf(routeSegments[i].points.last().latLng, routeSegments[i + 1].points.first().latLng)
-    }
-    val allPoints = routeSegments.flatMap { s -> s.points.map(RoutePoint::latLng) }
+    val allPoints = rawSegments.flatMap { s -> s.map(RoutePoint::latLng) }
     return RouteDisplayData(segments, gapPolylines, allPoints)
 }
 
-private fun buildRouteSegments(trackPoints: List<TrackPoint>): List<RouteSegment> {
+private fun buildRawSegments(trackPoints: List<TrackPoint>): List<List<RoutePoint>> {
     val segments = mutableListOf<MutableList<RoutePoint>>()
     trackPoints.forEach { tp ->
         if (tp.isSegmentStart || segments.isEmpty()) {
@@ -86,7 +87,7 @@ private fun buildRouteSegments(trackPoints: List<TrackPoint>): List<RouteSegment
         }
         segments.last().add(RoutePoint(LatLng(tp.latitude, tp.longitude), tp.speedKmh))
     }
-    return segments.filter { it.size >= 2 }.map(::RouteSegment)
+    return segments
 }
 
 private fun smoothSpeedColors(points: List<RoutePoint>): List<Int> {

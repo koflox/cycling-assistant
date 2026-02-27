@@ -159,6 +159,7 @@ class CyclingSessionUseCaseImplTest {
         val snapshot = SessionRouteSnapshot(
             routeDisplayData = RouteDisplayData.EMPTY,
             isPaused = false,
+            showGapToUserLocation = false,
             firstTrackPointPosition = startPosition,
             lastTrackPointPosition = lastPosition,
             lastBearingDegrees = BEARING_DEGREES,
@@ -179,6 +180,7 @@ class CyclingSessionUseCaseImplTest {
         val snapshot = SessionRouteSnapshot(
             routeDisplayData = RouteDisplayData.EMPTY,
             isPaused = false,
+            showGapToUserLocation = false,
             firstTrackPointPosition = Location(latitude = START_LAT, longitude = START_LNG),
             lastTrackPointPosition = Location(latitude = END_LAT, longitude = END_LNG),
             lastBearingDegrees = BEARING_DEGREES,
@@ -198,6 +200,7 @@ class CyclingSessionUseCaseImplTest {
         val snapshot = SessionRouteSnapshot(
             routeDisplayData = RouteDisplayData.EMPTY,
             isPaused = false,
+            showGapToUserLocation = false,
             firstTrackPointPosition = null,
             lastTrackPointPosition = null,
             lastBearingDegrees = null,
@@ -219,6 +222,7 @@ class CyclingSessionUseCaseImplTest {
         val snapshot = SessionRouteSnapshot(
             routeDisplayData = RouteDisplayData.EMPTY,
             isPaused = true,
+            showGapToUserLocation = true,
             firstTrackPointPosition = null,
             lastTrackPointPosition = null,
             lastBearingDegrees = null,
@@ -229,6 +233,26 @@ class CyclingSessionUseCaseImplTest {
             val result = awaitItem()
             assertNotNull(result)
             assertTrue(result!!.isPaused)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `observeActiveSessionRoute maps showGapToUserLocation from snapshot`() = runTest {
+        val snapshot = SessionRouteSnapshot(
+            routeDisplayData = RouteDisplayData.EMPTY,
+            isPaused = false,
+            showGapToUserLocation = true,
+            firstTrackPointPosition = null,
+            lastTrackPointPosition = null,
+            lastBearingDegrees = null,
+        )
+        every { observeActiveSessionRouteUseCase.observe() } returns flowOf(snapshot)
+
+        useCase.observeActiveSessionRoute().test {
+            val result = awaitItem()
+            assertNotNull(result)
+            assertTrue(result!!.showGapToUserLocation)
             cancelAndIgnoreRemainingEvents()
         }
     }
