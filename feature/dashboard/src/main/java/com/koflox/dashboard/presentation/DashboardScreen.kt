@@ -24,12 +24,14 @@ internal fun DashboardScreen(
     onNavigateToSessionsList: () -> Unit,
     onNavigateToSettings: () -> Unit,
     onNavigateToSessionCompletion: (sessionId: String) -> Unit,
+    onNavigateToPoiSelection: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var isMenuExpanded by remember { mutableStateOf(false) }
     Box(modifier = modifier.fillMaxSize()) {
         RideMapScreen(
             onNavigateToSessionCompletion = onNavigateToSessionCompletion,
+            onNavigateToPoiSelection = onNavigateToPoiSelection,
             modifier = Modifier.fillMaxSize(),
         )
         if (isMenuExpanded) {

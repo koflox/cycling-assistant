@@ -12,6 +12,7 @@ internal data class SettingsUiState(
     val availableLanguages: List<AppLanguage> = AppLanguage.entries,
     val isThemeDropdownExpanded: Boolean = false,
     val isLanguageDropdownExpanded: Boolean = false,
+    val buildInfoText: String = "",
 ) {
     val isRiderWeightError: Boolean get() = riderWeightError != null
 }

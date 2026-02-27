@@ -10,12 +10,14 @@ fun NavGraphBuilder.dashboardScreen(
     onNavigateToSessionsList: () -> Unit,
     onNavigateToSettings: () -> Unit,
     onNavigateToSessionCompletion: (sessionId: String) -> Unit,
+    onNavigateToPoiSelection: () -> Unit,
 ) {
     composable(route = DASHBOARD_ROUTE) {
         DashboardScreen(
             onNavigateToSessionsList = onNavigateToSessionsList,
             onNavigateToSettings = onNavigateToSettings,
             onNavigateToSessionCompletion = onNavigateToSessionCompletion,
+            onNavigateToPoiSelection = onNavigateToPoiSelection,
         )
     }
 }

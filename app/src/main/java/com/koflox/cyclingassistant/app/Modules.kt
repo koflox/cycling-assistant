@@ -13,6 +13,7 @@ import com.koflox.cyclingassistant.data.RoomDatabaseFactory
 import com.koflox.cyclingassistant.locale.LocalizedContextProviderImpl
 import com.koflox.designsystem.context.LocalizedContextProvider
 import com.koflox.destinationnutrition.bridge.impl.di.destinationNutritionBridgeImplModule
+import com.koflox.destinationpoi.bridge.impl.di.destinationPoiBridgeImplModule
 import com.koflox.destinations.di.DestinationsQualifier
 import com.koflox.destinations.di.destinationsModule
 import com.koflox.destinationsession.bridge.impl.di.destinationSessionBridgeImplModule
@@ -22,9 +23,12 @@ import com.koflox.id.di.idModule
 import com.koflox.locale.di.LocaleQualifier
 import com.koflox.locale.di.localeModule
 import com.koflox.location.locationModule
+import com.koflox.map.di.mapModule
 import com.koflox.nutrition.di.nutritionModule
 import com.koflox.nutritionsession.bridge.impl.di.nutritionSessionBridgeImplModule
 import com.koflox.nutritionsettings.bridge.impl.di.nutritionSettingsBridgeImplModule
+import com.koflox.poi.di.poiModule
+import com.koflox.poisettings.bridge.impl.di.poiSettingsBridgeImplModule
 import com.koflox.profile.di.ProfileQualifier
 import com.koflox.profile.di.profileModule
 import com.koflox.profilesession.bridge.impl.di.profileSessionBridgeImplModule
@@ -81,6 +85,7 @@ internal val appModule = module {
         concurrentModule,
         databaseModule,
         destinationNutritionBridgeImplModule,
+        destinationPoiBridgeImplModule,
         destinationSessionBridgeImplModule,
         destinationsModule,
         distanceModule,
@@ -89,9 +94,12 @@ internal val appModule = module {
         localeModule,
         locationModule,
         mainModule,
+        mapModule,
         nutritionModule,
         nutritionSessionBridgeImplModule,
         nutritionSettingsBridgeImplModule,
+        poiModule,
+        poiSettingsBridgeImplModule,
         profileModule,
         profileSessionBridgeImplModule,
         sessionModule,

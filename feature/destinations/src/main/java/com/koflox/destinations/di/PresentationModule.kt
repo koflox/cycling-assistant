@@ -22,6 +22,7 @@ internal val presentationModule = module {
             toleranceCalculator = get(),
             application = androidApplication(),
             cyclingSessionUseCase = get(),
+            googleMapsIntentHelper = get(),
             observeNutritionBreakUseCase = get(),
             observeRidingModeUseCase = get(),
             updateRidingModeUseCase = get(),

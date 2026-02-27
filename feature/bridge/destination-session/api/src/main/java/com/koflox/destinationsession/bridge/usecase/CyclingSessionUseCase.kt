@@ -18,4 +18,9 @@ interface CyclingSessionUseCase {
      */
     suspend fun getActiveSessionDestination(): ActiveSessionDestination?
 
+    /**
+     * Observe the active session's route data for live rendering.
+     * Returns null when there's no active session.
+     */
+    fun observeActiveSessionRoute(): Flow<ActiveSessionRouteData?>
 }

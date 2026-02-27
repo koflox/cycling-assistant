@@ -1,9 +1,5 @@
 package com.koflox.destinations.presentation.destinations.delegate
 
-import android.app.Application
-import android.content.pm.PackageManager
-import android.net.Uri
-import androidx.core.net.toUri
 import com.google.android.gms.maps.model.LatLng
 import com.koflox.designsystem.text.UiText
 import com.koflox.destinations.R
@@ -11,7 +7,6 @@ import com.koflox.destinations.domain.model.DestinationLoadingEvent
 import com.koflox.destinations.domain.model.Destinations
 import com.koflox.destinations.domain.usecase.GetDestinationInfoUseCase
 import com.koflox.destinations.domain.usecase.GetDistanceBoundsUseCase
-import com.koflox.destinations.domain.usecase.GetUserLocationUseCase
 import com.koflox.destinations.domain.usecase.InitializeDatabaseUseCase
 import com.koflox.destinations.domain.usecase.NoSuitableDestinationException
 import com.koflox.destinations.domain.usecase.ToleranceCalculator
@@ -23,6 +18,8 @@ import com.koflox.distance.DistanceCalculator
 import com.koflox.graphics.curves.createCurvePoints
 import com.koflox.graphics.primitives.Point
 import com.koflox.location.model.Location
+import com.koflox.location.usecase.GetUserLocationUseCase
+import com.koflox.map.intent.GoogleMapsIntentHelper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
@@ -39,7 +36,7 @@ internal class DestinationDelegate(
     private val distanceCalculator: DistanceCalculator,
     private val uiMapper: DestinationUiMapper,
     private val toleranceCalculator: ToleranceCalculator,
-    private val application: Application,
+    private val googleMapsIntentHelper: GoogleMapsIntentHelper,
     private val uiState: MutableStateFlow<RideMapInternalState>,
     private val scope: CoroutineScope,
 ) {
@@ -47,7 +44,6 @@ internal class DestinationDelegate(
     companion object {
         private const val DESTINATION_RELOAD_THRESHOLD_KM = 50.0
         private const val BOUNDS_RECALCULATION_THRESHOLD_KM = 1.0
-        private const val GOOGLE_MAPS_PACKAGE = "com.google.android.apps.maps"
     }
 
     private val lastDestinationLoadLocation = AtomicReference<Location?>(null)
@@ -234,12 +230,12 @@ internal class DestinationDelegate(
     }
 
     fun checkGoogleMapsAvailability() {
-        uiState.update { it.copy(isGoogleMapsAvailable = isGoogleMapsInstalled()) }
+        uiState.update { it.copy(isGoogleMapsAvailable = googleMapsIntentHelper.isInstalled()) }
     }
 
     fun openInGoogleMaps(destination: DestinationUiModel) {
-        if (isGoogleMapsInstalled()) {
-            val uri = "google.navigation:q=${destination.location.latitude},${destination.location.longitude}&mode=b".toUri()
+        if (googleMapsIntentHelper.isInstalled()) {
+            val uri = googleMapsIntentHelper.buildNavigationUri(destination.location.latitude, destination.location.longitude)
             uiState.update { it.copy(navigationAction = NavigationAction.OpenGoogleMaps(uri)) }
         } else {
             uiState.update {
@@ -249,7 +245,7 @@ internal class DestinationDelegate(
     }
 
     fun openPoiInGoogleMaps(query: String) {
-        if (!isGoogleMapsInstalled()) {
+        if (!googleMapsIntentHelper.isInstalled()) {
             uiState.update {
                 it.copy(isGoogleMapsAvailable = false, error = UiText.Resource(R.string.error_google_maps_not_installed))
             }
@@ -260,8 +256,7 @@ internal class DestinationDelegate(
             uiState.update { it.copy(error = UiText.Resource(R.string.failed_to_get_location, listOf(""))) }
             return
         }
-        val encodedQuery = Uri.encode(query)
-        val uri = "geo:${location.latitude},${location.longitude}?q=$encodedQuery".toUri()
+        val uri = googleMapsIntentHelper.buildSearchUri(location.latitude, location.longitude, query)
         uiState.update { it.copy(navigationAction = NavigationAction.OpenGoogleMaps(uri)) }
     }
 
@@ -271,13 +266,6 @@ internal class DestinationDelegate(
 
     fun dismissSelectedMarkerOptionsDialog() {
         uiState.update { it.copy(showSelectedMarkerOptionsDialog = false) }
-    }
-
-    private fun isGoogleMapsInstalled(): Boolean = try {
-        application.packageManager.getPackageInfo(GOOGLE_MAPS_PACKAGE, 0)
-        true
-    } catch (_: PackageManager.NameNotFoundException) {
-        false
     }
 
     private fun computeCurvePoints(userLocation: Location, destination: DestinationUiModel): List<LatLng> =

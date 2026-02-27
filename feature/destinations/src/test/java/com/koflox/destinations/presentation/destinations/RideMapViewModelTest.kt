@@ -10,21 +10,23 @@ import com.koflox.destinations.domain.model.RidingMode
 import com.koflox.destinations.domain.usecase.CheckLocationEnabledUseCase
 import com.koflox.destinations.domain.usecase.GetDestinationInfoUseCase
 import com.koflox.destinations.domain.usecase.GetDistanceBoundsUseCase
-import com.koflox.destinations.domain.usecase.GetUserLocationUseCase
 import com.koflox.destinations.domain.usecase.InitializeDatabaseUseCase
 import com.koflox.destinations.domain.usecase.ObserveRidingModeUseCase
-import com.koflox.destinations.domain.usecase.ObserveUserLocationUseCase
 import com.koflox.destinations.domain.usecase.ToleranceCalculator
 import com.koflox.destinations.domain.usecase.UpdateRidingModeUseCase
 import com.koflox.destinations.presentation.mapper.DestinationUiMapper
 import com.koflox.destinationsession.bridge.usecase.CyclingSessionUseCase
 import com.koflox.distance.DistanceCalculator
 import com.koflox.location.model.Location
+import com.koflox.location.usecase.GetUserLocationUseCase
+import com.koflox.location.usecase.ObserveUserLocationUseCase
+import com.koflox.map.intent.GoogleMapsIntentHelper
 import com.koflox.testing.coroutine.MainDispatcherRule
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -64,6 +66,7 @@ class RideMapViewModelTest {
     private val toleranceCalculator: ToleranceCalculator = mockk()
     private val application: Application = mockk(relaxed = true)
     private val cyclingSessionUseCase: CyclingSessionUseCase = mockk()
+    private val googleMapsIntentHelper: GoogleMapsIntentHelper = mockk()
     private val observeNutritionBreakUseCase: ObserveNutritionBreakUseCase = mockk()
     private val observeRidingModeUseCase: ObserveRidingModeUseCase = mockk()
     private val updateRidingModeUseCase: UpdateRidingModeUseCase = mockk()
@@ -85,6 +88,7 @@ class RideMapViewModelTest {
         every { observeRidingModeUseCase.observe() } returns ridingModeFlow
         coEvery { getUserLocationUseCase.getLocation() } returns Result.success(createUserLocation())
         every { cyclingSessionUseCase.observeHasActiveSession() } returns activeSessionFlow
+        every { cyclingSessionUseCase.observeActiveSessionRoute() } returns emptyFlow()
         coEvery { cyclingSessionUseCase.getActiveSessionDestination() } returns null
         every { observeNutritionBreakUseCase.observeNutritionBreakEvents() } returns nutritionFlow
         every { initializeDatabaseUseCase.init(any()) } returns flowOf(
@@ -95,6 +99,7 @@ class RideMapViewModelTest {
             DistanceBounds(minKm = 2.0, maxKm = 50.0),
         )
         every { toleranceCalculator.calculateKm(any()) } returns 3.0
+        every { googleMapsIntentHelper.isInstalled() } returns false
     }
 
     private fun createViewModel(): RideMapViewModel = RideMapViewModel(
@@ -109,6 +114,7 @@ class RideMapViewModelTest {
         toleranceCalculator = toleranceCalculator,
         application = application,
         cyclingSessionUseCase = cyclingSessionUseCase,
+        googleMapsIntentHelper = googleMapsIntentHelper,
         observeNutritionBreakUseCase = observeNutritionBreakUseCase,
         observeRidingModeUseCase = observeRidingModeUseCase,
         updateRidingModeUseCase = updateRidingModeUseCase,
@@ -373,8 +379,8 @@ class RideMapViewModelTest {
     }
 
     @Test
-    fun `ScreenResumed with permission starts location observation`() = runTest {
-        every { observeUserLocationUseCase.observe() } returns emptyFlow()
+    fun `ScreenResumed with permission starts location observation when idle`() = runTest {
+        every { observeUserLocationUseCase.observe(any(), any()) } returns emptyFlow()
 
         viewModel = createViewModel()
         advanceUntilIdle()
@@ -383,11 +389,28 @@ class RideMapViewModelTest {
         advanceUntilIdle()
         viewModel.onEvent(RideMapUiEvent.LifecycleEvent.ScreenResumed)
         advanceUntilIdle()
+
+        verify { observeUserLocationUseCase.observe(any(), any()) }
+    }
+
+    @Test
+    fun `ScreenResumed with active session does not start location observation`() = runTest {
+        activeSessionFlow.value = true
+
+        viewModel = createViewModel()
+        advanceUntilIdle()
+        sendMapLoaded()
+        viewModel.onEvent(RideMapUiEvent.PermissionEvent.PermissionGranted)
+        advanceUntilIdle()
+        viewModel.onEvent(RideMapUiEvent.LifecycleEvent.ScreenResumed)
+        advanceUntilIdle()
+
+        verify(exactly = 0) { observeUserLocationUseCase.observe(any(), any()) }
     }
 
     @Test
     fun `ScreenPaused stops location observation`() = runTest {
-        every { observeUserLocationUseCase.observe() } returns emptyFlow()
+        every { observeUserLocationUseCase.observe(any(), any()) } returns emptyFlow()
 
         viewModel = createViewModel()
         advanceUntilIdle()
@@ -398,6 +421,45 @@ class RideMapViewModelTest {
         advanceUntilIdle()
         viewModel.onEvent(RideMapUiEvent.LifecycleEvent.ScreenPaused)
         advanceUntilIdle()
+    }
+
+    @Test
+    fun `session becoming active stops location observation`() = runTest {
+        every { observeUserLocationUseCase.observe(any(), any()) } returns emptyFlow()
+
+        viewModel = createViewModel()
+        advanceUntilIdle()
+        sendMapLoaded()
+        viewModel.onEvent(RideMapUiEvent.PermissionEvent.PermissionGranted)
+        viewModel.onEvent(RideMapUiEvent.LifecycleEvent.ScreenResumed)
+        advanceUntilIdle()
+
+        verify(exactly = 1) { observeUserLocationUseCase.observe(any(), any()) }
+
+        activeSessionFlow.value = true
+        advanceUntilIdle()
+
+        verify(exactly = 1) { observeUserLocationUseCase.observe(any(), any()) }
+    }
+
+    @Test
+    fun `session ending restarts location observation`() = runTest {
+        every { observeUserLocationUseCase.observe(any(), any()) } returns emptyFlow()
+        activeSessionFlow.value = true
+
+        viewModel = createViewModel()
+        advanceUntilIdle()
+        sendMapLoaded()
+        viewModel.onEvent(RideMapUiEvent.PermissionEvent.PermissionGranted)
+        viewModel.onEvent(RideMapUiEvent.LifecycleEvent.ScreenResumed)
+        advanceUntilIdle()
+
+        verify(exactly = 0) { observeUserLocationUseCase.observe(any(), any()) }
+
+        activeSessionFlow.value = false
+        advanceUntilIdle()
+
+        verify(exactly = 1) { observeUserLocationUseCase.observe(any(), any()) }
     }
 
     @Test
@@ -455,7 +517,7 @@ class RideMapViewModelTest {
     fun `initial location fetch failure transitions after observation delivers location`() = runTest {
         coEvery { getUserLocationUseCase.getLocation() } returns Result.failure(RuntimeException("No GPS"))
         val locationFlow = MutableSharedFlow<Location>()
-        every { observeUserLocationUseCase.observe() } returns locationFlow
+        every { observeUserLocationUseCase.observe(any(), any()) } returns locationFlow
 
         viewModel = createViewModel()
         advanceUntilIdle()
@@ -488,8 +550,7 @@ class RideMapViewModelTest {
 
     @Test
     fun `ActiveSession includes arePoiActionsVisible from Google Maps availability`() = runTest {
-        every { application.packageManager.getPackageInfo("com.google.android.apps.maps", 0) } returns
-            android.content.pm.PackageInfo()
+        every { googleMapsIntentHelper.isInstalled() } returns true
         activeSessionFlow.value = true
 
         viewModel = createViewModel()
@@ -503,9 +564,7 @@ class RideMapViewModelTest {
 
     @Test
     fun `ActiveSession arePoiActionsVisible is false when Google Maps not installed`() = runTest {
-        every {
-            application.packageManager.getPackageInfo("com.google.android.apps.maps", 0)
-        } throws android.content.pm.PackageManager.NameNotFoundException()
+        every { googleMapsIntentHelper.isInstalled() } returns false
         activeSessionFlow.value = true
 
         viewModel = createViewModel()
@@ -520,8 +579,7 @@ class RideMapViewModelTest {
     @Test
     fun `DestinationIdle includes isNavigateVisible from Google Maps availability`() = runTest {
         every { distanceCalculator.calculateKm(any(), any(), any(), any()) } returns 0.0
-        every { application.packageManager.getPackageInfo("com.google.android.apps.maps", 0) } returns
-            android.content.pm.PackageInfo()
+        every { googleMapsIntentHelper.isInstalled() } returns true
         ridingModeFlow.value = RidingMode.DESTINATION
 
         viewModel = createViewModel()

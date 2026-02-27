@@ -10,13 +10,15 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import com.koflox.dashboard.navigation.DASHBOARD_ROUTE
 import com.koflox.dashboard.navigation.dashboardScreen
+import com.koflox.poi.navigation.POI_SELECTION_ROUTE
+import com.koflox.poi.navigation.poiSelectionScreen
 import com.koflox.session.navigation.SESSIONS_LIST_ROUTE
 import com.koflox.session.navigation.sessionCompletionRoute
 import com.koflox.session.navigation.sessionCompletionScreen
 import com.koflox.session.navigation.sessionsListScreen
 import com.koflox.session.service.PendingSessionAction
-import com.koflox.settings.navigation.SETTINGS_ROUTE
-import com.koflox.settings.navigation.settingsScreen
+import com.koflox.settings.navigation.SETTINGS_GRAPH_ROUTE
+import com.koflox.settings.navigation.settingsGraph
 import org.koin.compose.koinInject
 
 @Composable
@@ -39,10 +41,11 @@ fun AppNavHost(
     ) {
         dashboardScreen(
             onNavigateToSessionsList = { navController.navigate(SESSIONS_LIST_ROUTE) },
-            onNavigateToSettings = { navController.navigate(SETTINGS_ROUTE) },
+            onNavigateToSettings = { navController.navigate(SETTINGS_GRAPH_ROUTE) },
             onNavigateToSessionCompletion = { sessionId ->
                 navController.navigate(sessionCompletionRoute(sessionId))
             },
+            onNavigateToPoiSelection = { navController.navigate(POI_SELECTION_ROUTE) },
         )
         sessionsListScreen(
             onBackClick = { navController.popBackStack() },
@@ -56,7 +59,11 @@ fun AppNavHost(
                 navController.popBackStack(DASHBOARD_ROUTE, inclusive = false)
             },
         )
-        settingsScreen(
+        poiSelectionScreen(
+            onBackClick = { navController.popBackStack() },
+        )
+        settingsGraph(
+            navController = navController,
             onBackClick = { navController.popBackStack() },
         )
     }

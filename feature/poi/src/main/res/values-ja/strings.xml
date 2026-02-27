@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- POI Labels -->
+    <string name="poi_label_coffee_shop">カフェ</string>
+    <string name="poi_label_toilet">トイレ</string>
+    <string name="poi_label_konbini">コンビニ</string>
+    <string name="poi_label_vending_machine">自動販売機</string>
+    <string name="poi_label_water_fountain">水飲み場</string>
+    <string name="poi_label_bicycle_shop">自転車店</string>
+    <string name="poi_label_park">公園</string>
+    <string name="poi_label_pharmacy">薬局</string>
+    <string name="poi_label_restaurant">レストラン</string>
+    <string name="poi_label_gas_station">ガソリンスタンド</string>
+
+    <!-- Selection Screen -->
+    <string name="poi_selection_title">クイックアクセスPOI</string>
+    <string name="poi_selection_back">戻る</string>
+    <string name="poi_selection_hint">ライド中に表示するPOIタイプを2つ選択してください</string>
+    <string name="poi_selection_save">保存</string>
+
+    <!-- More POIs Dialog -->
+    <string name="poi_more_button_description">その他のPOI</string>
+    <string name="poi_more_dialog_title">その他のPOI</string>
+    <string name="poi_more_dialog_reselect_prefix">アクティブPOIを</string>
+    <string name="poi_more_dialog_reselect_action">再選択</string>
+    <string name="poi_more_dialog_reselect_suffix">できます</string>
+
+    <!-- Settings Section -->
+    <string name="poi_settings_label">クイックアクセスPOI</string>
+
+</resources>

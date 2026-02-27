@@ -7,7 +7,6 @@ import android.provider.Settings
 import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
@@ -16,9 +15,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -34,12 +30,13 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.koflox.designsystem.component.ActionCard
-import com.koflox.designsystem.component.DebouncedOutlinedButton
+import com.koflox.designsystem.component.HintCard
 import com.koflox.designsystem.component.StatusCard
 import com.koflox.designsystem.text.UiText
 import com.koflox.designsystem.text.resolve
 import com.koflox.designsystem.theme.Spacing
 import com.koflox.destinationnutrition.bridge.navigator.NutritionUiNavigator
+import com.koflox.destinationpoi.bridge.navigator.PoiUiNavigator
 import com.koflox.destinations.R
 import com.koflox.destinations.domain.model.RidingMode
 import com.koflox.destinations.presentation.destinations.components.GoogleMapView
@@ -53,18 +50,19 @@ import com.koflox.destinations.presentation.destinations.model.DestinationUiMode
 import com.koflox.destinations.presentation.permission.LocationPermissionHandler
 import com.koflox.destinationsession.bridge.navigator.CyclingSessionUiNavigator
 import com.koflox.location.settings.LocationSettingsHandler
+import com.koflox.map.intent.GoogleMapsIntentHelper
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
-
-private const val GOOGLE_MAPS_PACKAGE = "com.google.android.apps.maps"
 
 @Composable
 fun RideMapScreen(
     onNavigateToSessionCompletion: (sessionId: String) -> Unit,
+    onNavigateToPoiSelection: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     RideMapRoute(
         onNavigateToSessionCompletion = onNavigateToSessionCompletion,
+        onNavigateToPoiSelection = onNavigateToPoiSelection,
         modifier = modifier,
     )
 }
@@ -72,10 +70,12 @@ fun RideMapScreen(
 @Composable
 internal fun RideMapRoute(
     onNavigateToSessionCompletion: (sessionId: String) -> Unit,
+    onNavigateToPoiSelection: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: RideMapViewModel = koinViewModel(),
     sessionUiNavigator: CyclingSessionUiNavigator = koinInject(),
     nutritionUiNavigator: NutritionUiNavigator = koinInject(),
+    poiUiNavigator: PoiUiNavigator = koinInject(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
@@ -106,8 +106,10 @@ internal fun RideMapRoute(
             onEvent = viewModel::onEvent,
             sessionUiNavigator = sessionUiNavigator,
             nutritionUiNavigator = nutritionUiNavigator,
+            poiUiNavigator = poiUiNavigator,
             modifier = modifier,
             onNavigateToSessionCompletion = onNavigateToSessionCompletion,
+            onNavigateToPoiSelection = onNavigateToPoiSelection,
             onRetryPermission = { retryTrigger++ },
         )
     }
@@ -145,11 +147,12 @@ private fun NavigationEffect(
     action: NavigationAction?,
     context: Context,
     onNavigationActionHandled: () -> Unit,
+    googleMapsIntentHelper: GoogleMapsIntentHelper = koinInject(),
 ) {
     LaunchedEffect(action) {
         when (action) {
             is NavigationAction.OpenGoogleMaps -> {
-                val intent = Intent(Intent.ACTION_VIEW, action.uri).apply { setPackage(GOOGLE_MAPS_PACKAGE) }
+                val intent = googleMapsIntentHelper.createViewIntent(action.uri)
                 context.startActivity(intent)
                 onNavigationActionHandled()
             }
@@ -164,7 +167,9 @@ private fun RideMapContent(
     onEvent: (RideMapUiEvent) -> Unit,
     sessionUiNavigator: CyclingSessionUiNavigator,
     nutritionUiNavigator: NutritionUiNavigator,
+    poiUiNavigator: PoiUiNavigator,
     onNavigateToSessionCompletion: (sessionId: String) -> Unit,
+    onNavigateToPoiSelection: () -> Unit,
     onRetryPermission: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -177,10 +182,20 @@ private fun RideMapContent(
             cameraFocusLocation = uiState.cameraFocusLocation,
             curvePoints = uiState.curvePoints,
             isSessionActive = uiState is RideMapUiState.ActiveSession,
+            routeData = uiState.routeData,
             onSelectedMarkerInfoClick = { onEvent(RideMapUiEvent.DestinationEvent.SelectedMarkerInfoClicked) },
             onMapLoaded = { onEvent(RideMapUiEvent.MapEvent.MapLoaded) },
         )
-        RideMapOverlay(uiState, onEvent, sessionUiNavigator, nutritionUiNavigator, onNavigateToSessionCompletion, onRetryPermission)
+        RideMapOverlay(
+            uiState = uiState,
+            onEvent = onEvent,
+            sessionUiNavigator = sessionUiNavigator,
+            nutritionUiNavigator = nutritionUiNavigator,
+            poiUiNavigator = poiUiNavigator,
+            onNavigateToSessionCompletion = onNavigateToSessionCompletion,
+            onNavigateToPoiSelection = onNavigateToPoiSelection,
+            onRetryPermission = onRetryPermission,
+        )
     }
     when (uiState) {
         is RideMapUiState.FreeRoamIdle -> FreeRoamSessionGate(
@@ -221,7 +236,9 @@ private fun BoxScope.RideMapOverlay(
     onEvent: (RideMapUiEvent) -> Unit,
     sessionUiNavigator: CyclingSessionUiNavigator,
     nutritionUiNavigator: NutritionUiNavigator,
+    poiUiNavigator: PoiUiNavigator,
     onNavigateToSessionCompletion: (sessionId: String) -> Unit,
+    onNavigateToPoiSelection: () -> Unit,
     onRetryPermission: () -> Unit,
 ) {
     when (uiState) {
@@ -256,7 +273,9 @@ private fun BoxScope.RideMapOverlay(
         is RideMapUiState.ActiveSession -> ActiveSessionControls(
             uiState = uiState,
             onNutritionPopupDismiss = { onEvent(RideMapUiEvent.CommonEvent.NutritionPopupDismissed) },
-            onPoiEvent = { onEvent(it) },
+            onPoiClicked = { query -> onEvent(RideMapUiEvent.PoiEvent.PoiClicked(query)) },
+            onNavigateToPoiSelection = onNavigateToPoiSelection,
+            poiUiNavigator = poiUiNavigator,
             sessionUiNavigator = sessionUiNavigator,
             nutritionUiNavigator = nutritionUiNavigator,
             onNavigateToSessionCompletion = onNavigateToSessionCompletion,
@@ -380,12 +399,15 @@ private fun DestinationOptionsDialog(
 private fun ActiveSessionControls(
     uiState: RideMapUiState.ActiveSession,
     onNutritionPopupDismiss: () -> Unit,
-    onPoiEvent: (RideMapUiEvent.PoiEvent) -> Unit,
+    onPoiClicked: (String) -> Unit,
+    onNavigateToPoiSelection: () -> Unit,
+    poiUiNavigator: PoiUiNavigator,
     sessionUiNavigator: CyclingSessionUiNavigator,
     nutritionUiNavigator: NutritionUiNavigator,
     onNavigateToSessionCompletion: (sessionId: String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val isWaitingForRoute = uiState.routeData == null || uiState.routeData.segments.isEmpty()
     Column(modifier = modifier) {
         uiState.nutritionSuggestionTimeMs?.let { suggestionTimeMs ->
             nutritionUiNavigator.NutritionBreakPopup(
@@ -396,11 +418,21 @@ private fun ActiveSessionControls(
                     .padding(horizontal = Spacing.Large),
             )
         }
+        if (isWaitingForRoute) {
+            HintCard(
+                message = stringResource(R.string.session_hint_keep_moving),
+                modifier = Modifier
+                    .padding(horizontal = Spacing.Large)
+                    .align(Alignment.CenterHorizontally),
+            )
+        }
         if (uiState.arePoiActionsVisible) {
-            ActiveSessionPoiButtons(
-                onPoiEvent = onPoiEvent,
+            poiUiNavigator.ActivePoiButtons(
+                onPoiClicked = onPoiClicked,
+                onNavigateToPoiSelection = onNavigateToPoiSelection,
                 modifier = Modifier
                     .fillMaxWidth()
+                    .padding(top = Spacing.Tiny)
                     .padding(horizontal = Spacing.Large),
             )
         }
@@ -413,37 +445,6 @@ private fun ActiveSessionControls(
                 .padding(horizontal = Spacing.Large),
             onNavigateToCompletion = onNavigateToSessionCompletion,
         )
-    }
-}
-
-@Composable
-internal fun ActiveSessionPoiButtons(
-    onPoiEvent: (RideMapUiEvent.PoiEvent) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val coffeeShopLabel = stringResource(R.string.session_poi_coffee_shop)
-    val toiletLabel = stringResource(R.string.session_poi_toilet)
-    val poiButtonColors = ButtonDefaults.outlinedButtonColors(
-        containerColor = MaterialTheme.colorScheme.surface,
-    )
-    Row(
-        modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(Spacing.Small),
-    ) {
-        DebouncedOutlinedButton(
-            onClick = { onPoiEvent(RideMapUiEvent.PoiEvent.CoffeeShopClicked(coffeeShopLabel)) },
-            modifier = Modifier.weight(1f),
-            colors = poiButtonColors,
-        ) {
-            Text(coffeeShopLabel)
-        }
-        DebouncedOutlinedButton(
-            onClick = { onPoiEvent(RideMapUiEvent.PoiEvent.ToiletClicked(toiletLabel)) },
-            modifier = Modifier.weight(1f),
-            colors = poiButtonColors,
-        ) {
-            Text(toiletLabel)
-        }
     }
 }
 

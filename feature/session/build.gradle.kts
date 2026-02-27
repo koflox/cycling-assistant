@@ -70,11 +70,13 @@ dependencies {
     implementation(project(":shared:error"))
     implementation(project(":shared:graphics"))
     implementation(project(":shared:id"))
+    implementation(project(":shared:map"))
     implementation(project(":shared:location"))
 
     // Feature modules
     implementation(project(":feature:bridge:nutrition-session:api"))
     implementation(project(":feature:bridge:profile-session:api"))
+    implementation(project(":feature:theme"))
 
     // Testing
     testImplementation(libs.junit)

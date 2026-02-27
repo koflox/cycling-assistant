@@ -5,6 +5,7 @@ import com.koflox.designsystem.text.UiText
 import com.koflox.destinations.domain.model.DistanceBounds
 import com.koflox.destinations.domain.model.RidingMode
 import com.koflox.destinations.presentation.destinations.model.DestinationUiModel
+import com.koflox.destinationsession.bridge.usecase.ActiveSessionRouteData
 import com.koflox.location.model.Location
 
 internal data class RideMapInternalState(
@@ -35,6 +36,7 @@ internal data class RideMapInternalState(
     val isSessionStarting: Boolean = false,
     val isMapLoaded: Boolean = false,
     val isGoogleMapsAvailable: Boolean = false,
+    val activeSessionRouteData: ActiveSessionRouteData? = null,
 ) {
     val isFreeRoam: Boolean
         get() = ridingMode == RidingMode.FREE_ROAM

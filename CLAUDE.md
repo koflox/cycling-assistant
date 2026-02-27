@@ -11,15 +11,18 @@ real-time location updates.
 ## Build Commands
 
 ```bash
-./gradlew detektRun    # Lint & auto-format (run max 2 times)
-./gradlew build        # Build
-./gradlew test         # Unit tests
-./gradlew installDebug # Install on device
+./gradlew detektRun                  # Lint & auto-format (run max 2 times)
+./gradlew build                      # Build
+./gradlew test                       # Unit tests
+./gradlew connectedDebugAndroidTest  # UI tests (requires device/emulator)
+./gradlew installDebug               # Install on device
 ```
 
 ## Architecture
 
 ### Module Structure
+
+See also: [Module Dependency Graph](docs/MODULE_GRAPH.md) for inter-module dependencies.
 
 ```
 CyclingAssistant/
@@ -27,19 +30,25 @@ CyclingAssistant/
 ├── feature/
 │   ├── bridge/                       # Cross-feature communication (alphabetical pair names)
 │   │   ├── destination-nutrition/    # destinations ↔ nutrition
+│   │   ├── destination-poi/          # destinations ↔ poi
 │   │   ├── destination-session/      # destinations ↔ session
 │   │   ├── nutrition-session/        # nutrition ↔ session
 │   │   ├── nutrition-settings/       # nutrition ↔ settings
+│   │   ├── poi-settings/             # poi ↔ settings
 │   │   └── profile-session/          # profile ↔ session
 │   │       ├── api/                  # Interfaces exposed to consumers
 │   │       └── impl/                 # Implementations wiring to provider internals
 │   ├── dashboard/                    # Main dashboard with expandable menu
 │   ├── destinations/                 # Destination selection feature
+│   ├── locale/                       # App language persistence and observation
 │   ├── nutrition/                    # Nutrition tracking and reminders
+│   ├── poi/                          # POI type selection and active session POI actions
 │   ├── profile/                      # Rider profile management
 │   ├── session/                      # Session tracking with foreground service
-│   └── settings/                     # App settings (theme, language)
+│   ├── settings/                     # App settings (theme, language)
+│   └── theme/                        # App theme persistence and observation
 └── shared/
+    ├── altitude/                     # Altitude gain calculator
     ├── concurrent/                   # Coroutine dispatchers, suspendRunCatching, ConcurrentFactory
     ├── design-system/                # UI theme, colors, spacing, components
     ├── di/                           # Koin qualifiers
@@ -48,6 +57,7 @@ CyclingAssistant/
     ├── graphics/                     # Bitmap utilities
     ├── id/                           # ID generator
     ├── location/                     # Location services
+    ├── map/                          # Google Maps route rendering constants & utilities
     └── testing/                      # Test utilities
 ```
 
@@ -175,6 +185,8 @@ SessionTrackingService (foreground, type=location)
 Centralized Room database in app module (`AppDatabase`):
 
 - `DestinationDao` - Cycling POI data
+- `LocaleDao` - Language/locale settings
+- `ProfileDao` - Rider profile data
 - `SessionDao` - Session and track points
 
 **DAO conventions:** `@Dao` interfaces with suspend functions for one-shot operations and `Flow`
@@ -412,7 +424,8 @@ Callback-based pattern — composables are navigation-agnostic. Only `AppNavHost
 `NavController`. Never pass `NavController` to composables.
 
 Feature modules expose `NavGraphBuilder` extension functions with callback parameters. Route
-constants are defined in feature navigation files.
+constants are defined in feature navigation files. Features with multiple screens use nested
+navigation graphs (e.g., `settingsGraph` wraps settings + POI selection sub-screens).
 
 ```kotlin
 const val SESSIONS_LIST_ROUTE = "sessions_list"
@@ -553,6 +566,26 @@ Supported languages: English (default), Russian (`values-ru`), Japanese (`values
    `impl/` submodules
 2. Consumer depends on API, impl depends on provider
 3. DI module name follows `<aB>BridgeImplModule` pattern (e.g., `destinationSessionBridgeImplModule`)
+
+## Contribution
+
+### Commit Messages
+
+Format: `<prefix>: <description>`
+
+| Prefix        | Usage                                      |
+|---------------|--------------------------------------------|
+| `feature`     | New functionality                          |
+| `fix`         | Bug fix                                    |
+| `ui`          | Visual/UI changes                          |
+| `refactoring` | Code restructuring without behavior change |
+| `security`    | Security improvements                      |
+| `docs`        | Documentation changes                      |
+| `cicd`        | CI/CD pipeline changes                     |
+| `config`      | Configuration, build, or dependency changes |
+| `release`     | Version bump and release prep              |
+
+Examples: `feature: active POI for sessions`, `fix: prevent app crash on location disabling`
 
 ## Key Files
 

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- POI Labels -->
+    <string name="poi_label_coffee_shop">Кофейни</string>
+    <string name="poi_label_toilet">Туалеты</string>
+    <string name="poi_label_konbini">Комбини</string>
+    <string name="poi_label_vending_machine">Автоматы</string>
+    <string name="poi_label_water_fountain">Питьевые фонтаны</string>
+    <string name="poi_label_bicycle_shop">Веломагазины</string>
+    <string name="poi_label_park">Парки</string>
+    <string name="poi_label_pharmacy">Аптеки</string>
+    <string name="poi_label_restaurant">Рестораны</string>
+    <string name="poi_label_gas_station">АЗС</string>
+
+    <!-- Selection Screen -->
+    <string name="poi_selection_title">Быстрый доступ к POI</string>
+    <string name="poi_selection_back">Назад</string>
+    <string name="poi_selection_hint">Выберите 2 типа POI для отображения во время поездки</string>
+    <string name="poi_selection_save">Сохранить</string>
+
+    <!-- More POIs Dialog -->
+    <string name="poi_more_button_description">Больше точек интереса</string>
+    <string name="poi_more_dialog_title">Другие точки интереса</string>
+    <string name="poi_more_dialog_reselect_prefix">"Вы можете "</string>
+    <string name="poi_more_dialog_reselect_action">изменить</string>
+    <string name="poi_more_dialog_reselect_suffix">" активные POI"</string>
+
+    <!-- Settings Section -->
+    <string name="poi_settings_label">Быстрый доступ к POI</string>
+
+</resources>
