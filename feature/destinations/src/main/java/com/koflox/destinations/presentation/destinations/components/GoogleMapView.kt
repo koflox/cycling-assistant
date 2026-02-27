@@ -16,9 +16,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -30,10 +32,12 @@ import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.JointType
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.LatLngBounds
 import com.google.android.gms.maps.model.MapStyleOptions
 import com.google.android.gms.maps.model.RoundCap
 import com.google.android.gms.maps.model.StrokeStyle
 import com.google.android.gms.maps.model.StyleSpan
+import com.google.maps.android.compose.CameraMoveStartedReason
 import com.google.maps.android.compose.CameraPositionState
 import com.google.maps.android.compose.Circle
 import com.google.maps.android.compose.GoogleMap
@@ -73,6 +77,11 @@ private const val RIPPLE_BASE_RADIUS_METERS = 200.0
 private const val RIPPLE_REFERENCE_ZOOM = 15f
 private const val RIPPLE_DURATION_MS = 1500
 private const val RIPPLE_START_ALPHA = 0.4f
+private const val ROUTE_BOUNDS_PADDING_FRACTION = 0.25f
+private const val DESTINATION_BOUNDS_PADDING_FRACTION = 0.05f
+private const val USER_INTERACTION_COOLDOWN_MS = 10_000L
+private const val SESSION_BOUNDS_PADDING_PX = 50
+private const val MIN_BOUNDS_SPAN_DEGREES = 0.003
 
 @Composable
 internal fun GoogleMapView(
@@ -91,20 +100,21 @@ internal fun GoogleMapView(
     val cameraPositionState = rememberCameraPositionState()
     val context = LocalContext.current
     var isMapLoaded by remember { mutableStateOf(false) }
-    LaunchedEffect(selectedDestination, isMapLoaded) {
-        if (isMapLoaded) {
-            selectedDestination?.let { destination ->
-                moveCameraToLocation(
-                    cameraPositionState = cameraPositionState,
-                    location = destination.location,
-                )
-            }
-        }
-    }
-    LaunchedEffect(cameraFocusLocation, isMapLoaded) {
-        if (isMapLoaded && cameraFocusLocation != null && selectedDestination == null) {
+    SelectedDestinationCameraEffect(selectedDestination, isMapLoaded, isSessionActive, cameraPositionState)
+    LaunchedEffect(cameraFocusLocation, isMapLoaded, isSessionActive) { // user location camera effect
+        val isIdleWithFocusLocation = isMapLoaded && !isSessionActive && cameraFocusLocation != null
+        if (isIdleWithFocusLocation && selectedDestination == null) {
             moveCameraToLocation(cameraPositionState, cameraFocusLocation)
         }
+    }
+    if (isSessionActive) {
+        ActiveSessionCameraEffect(
+            cameraPositionState = cameraPositionState,
+            routeData = routeData,
+            selectedDestination = selectedDestination,
+            userLocation = userLocation,
+            isMapLoaded = isMapLoaded,
+        )
     }
     Map(
         modifier = modifier,
@@ -428,6 +438,81 @@ private fun OtherDestinationInfoWindow(destination: DestinationUiModel) {
             modifier = Modifier.padding(top = Spacing.Tiny),
         )
     }
+}
+
+@Composable
+private fun SelectedDestinationCameraEffect(
+    selectedDestination: DestinationUiModel?,
+    isMapLoaded: Boolean,
+    isSessionActive: Boolean,
+    cameraPositionState: CameraPositionState
+) {
+    LaunchedEffect(selectedDestination, isMapLoaded, isSessionActive) {
+        if (isMapLoaded && !isSessionActive && selectedDestination != null) {
+            moveCameraToLocation(
+                cameraPositionState = cameraPositionState,
+                location = selectedDestination.location,
+            )
+        }
+    }
+}
+
+@Composable
+private fun ActiveSessionCameraEffect(
+    cameraPositionState: CameraPositionState,
+    routeData: ActiveSessionRouteData?,
+    selectedDestination: DestinationUiModel?,
+    userLocation: Location?,
+    isMapLoaded: Boolean,
+) {
+    var lastGestureTimeMs by remember { mutableLongStateOf(0L) }
+    LaunchedEffect(Unit) {
+        snapshotFlow { cameraPositionState.isMoving to cameraPositionState.cameraMoveStartedReason }
+            .collect { (isMoving, reason) ->
+                if (isMoving && reason == CameraMoveStartedReason.GESTURE) {
+                    lastGestureTimeMs = System.currentTimeMillis()
+                }
+            }
+    }
+    LaunchedEffect(routeData, userLocation, isMapLoaded) {
+        if (System.currentTimeMillis() - lastGestureTimeMs < USER_INTERACTION_COOLDOWN_MS) return@LaunchedEffect
+        val bounds = computeSessionBounds(routeData, selectedDestination, userLocation) ?: return@LaunchedEffect
+        cameraPositionState.animate(CameraUpdateFactory.newLatLngBounds(bounds, SESSION_BOUNDS_PADDING_PX))
+    }
+}
+
+private fun computeSessionBounds(
+    routeData: ActiveSessionRouteData?,
+    selectedDestination: DestinationUiModel?,
+    userLocation: Location?,
+): LatLngBounds? {
+    val points = mutableListOf<LatLng>()
+    userLocation?.let { points.add(LatLng(it.latitude, it.longitude)) }
+    if (selectedDestination != null) {
+        points.add(LatLng(selectedDestination.location.latitude, selectedDestination.location.longitude))
+    } else {
+        routeData?.startPosition?.let { points.add(LatLng(it.latitude, it.longitude)) }
+        routeData?.lastPosition?.let { points.add(LatLng(it.latitude, it.longitude)) }
+        routeData?.segments?.forEach { segment ->
+            segment.points.forEach { points.add(LatLng(it.latitude, it.longitude)) }
+        }
+    }
+    if (points.size < 2) return null
+    val builder = LatLngBounds.Builder()
+    points.forEach { builder.include(it) }
+    val fraction = if (selectedDestination != null) DESTINATION_BOUNDS_PADDING_FRACTION else ROUTE_BOUNDS_PADDING_FRACTION
+    return builder.build().expand(fraction)
+}
+
+private fun LatLngBounds.expand(fraction: Float): LatLngBounds {
+    val latSpan = maxOf(northeast.latitude - southwest.latitude, MIN_BOUNDS_SPAN_DEGREES)
+    val lngSpan = maxOf(northeast.longitude - southwest.longitude, MIN_BOUNDS_SPAN_DEGREES)
+    val latPad = latSpan * fraction
+    val lngPad = lngSpan * fraction
+    return LatLngBounds(
+        LatLng(southwest.latitude - latPad, southwest.longitude - lngPad),
+        LatLng(northeast.latitude + latPad, northeast.longitude + lngPad),
+    )
 }
 
 private suspend fun moveCameraToLocation(
