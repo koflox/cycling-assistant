@@ -11,6 +11,7 @@ graph LR
   subgraph :feature
     :feature:nutrition["nutrition"]
     :feature:profile["profile"]
+    :feature:poi["poi"]
     :feature:settings["settings"]
     :feature:theme["theme"]
     :feature:locale["locale"]
@@ -21,6 +22,10 @@ graph LR
   subgraph :feature:bridge:destination-nutrition
     :feature:bridge:destination-nutrition:impl["impl"]
     :feature:bridge:destination-nutrition:api["api"]
+  end
+  subgraph :feature:bridge:destination-poi
+    :feature:bridge:destination-poi:impl["impl"]
+    :feature:bridge:destination-poi:api["api"]
   end
   subgraph :feature:bridge:destination-session
     :feature:bridge:destination-session:api["api"]
@@ -33,6 +38,10 @@ graph LR
   subgraph :feature:bridge:nutrition-settings
     :feature:bridge:nutrition-settings:api["api"]
     :feature:bridge:nutrition-settings:impl["impl"]
+  end
+  subgraph :feature:bridge:poi-settings
+    :feature:bridge:poi-settings:api["api"]
+    :feature:bridge:poi-settings:impl["impl"]
   end
   subgraph :feature:bridge:profile-session
     :feature:bridge:profile-session:impl["impl"]
@@ -47,33 +56,42 @@ graph LR
     :shared:id["id"]
     :shared:location["location"]
     :shared:error["error"]
+    :shared:map["map"]
     :shared:graphics["graphics"]
   end
   :feature:bridge:destination-nutrition:impl --> :feature:bridge:destination-nutrition:api
   :feature:bridge:destination-nutrition:impl --> :feature:nutrition
   :feature:bridge:profile-session:impl --> :feature:bridge:profile-session:api
   :feature:bridge:profile-session:impl --> :feature:profile
+  :feature:bridge:destination-poi:impl --> :feature:bridge:destination-poi:api
+  :feature:bridge:destination-poi:impl --> :feature:poi
   :feature:settings --> :feature:theme
   :feature:settings --> :feature:locale
   :feature:settings --> :feature:profile
   :feature:settings --> :feature:bridge:nutrition-settings:api
+  :feature:settings --> :feature:bridge:poi-settings:api
   :feature:settings --> :shared:concurrent
   :feature:settings --> :shared:design-system
   :feature:settings --> :shared:di
   :app --> :feature:bridge:destination-nutrition:api
   :app --> :feature:bridge:destination-nutrition:impl
+  :app --> :feature:bridge:destination-poi:api
+  :app --> :feature:bridge:destination-poi:impl
   :app --> :feature:bridge:destination-session:api
   :app --> :feature:bridge:destination-session:impl
   :app --> :feature:bridge:nutrition-session:api
   :app --> :feature:bridge:nutrition-session:impl
   :app --> :feature:bridge:nutrition-settings:api
   :app --> :feature:bridge:nutrition-settings:impl
+  :app --> :feature:bridge:poi-settings:api
+  :app --> :feature:bridge:poi-settings:impl
   :app --> :feature:bridge:profile-session:api
   :app --> :feature:bridge:profile-session:impl
   :app --> :feature:dashboard
   :app --> :feature:destinations
   :app --> :feature:locale
   :app --> :feature:nutrition
+  :app --> :feature:poi
   :app --> :feature:profile
   :app --> :feature:session
   :app --> :feature:settings
@@ -85,6 +103,7 @@ graph LR
   :app --> :shared:id
   :app --> :shared:location
   :app --> :shared:error
+  :app --> :shared:map
   :feature:bridge:destination-session:api --> :shared:location
   :feature:session --> :shared:altitude
   :feature:session --> :shared:concurrent
@@ -94,15 +113,18 @@ graph LR
   :feature:session --> :shared:error
   :feature:session --> :shared:graphics
   :feature:session --> :shared:id
+  :feature:session --> :shared:map
   :feature:session --> :shared:location
   :feature:session --> :feature:bridge:nutrition-session:api
   :feature:session --> :feature:bridge:profile-session:api
+  :feature:session --> :feature:theme
   :feature:dashboard --> :feature:destinations
   :feature:dashboard --> :feature:bridge:destination-session:api
   :feature:dashboard --> :shared:design-system
   :feature:nutrition --> :feature:bridge:nutrition-session:api
   :feature:nutrition --> :shared:concurrent
   :feature:nutrition --> :shared:design-system
+  :shared:map --> :shared:graphics
   :feature:bridge:destination-session:impl --> :feature:bridge:destination-session:api
   :feature:bridge:destination-session:impl --> :feature:session
   :feature:bridge:destination-session:impl --> :shared:concurrent
@@ -119,8 +141,11 @@ graph LR
   :feature:locale --> :shared:di
   :feature:bridge:nutrition-settings:impl --> :feature:bridge:nutrition-settings:api
   :feature:bridge:nutrition-settings:impl --> :feature:nutrition
+  :feature:bridge:poi-settings:impl --> :feature:bridge:poi-settings:api
+  :feature:bridge:poi-settings:impl --> :feature:poi
   :shared:location --> :shared:concurrent
   :feature:destinations --> :feature:bridge:destination-nutrition:api
+  :feature:destinations --> :feature:bridge:destination-poi:api
   :feature:destinations --> :feature:bridge:destination-session:api
   :feature:destinations --> :shared:concurrent
   :feature:destinations --> :shared:design-system
@@ -128,6 +153,9 @@ graph LR
   :feature:destinations --> :shared:distance
   :feature:destinations --> :shared:graphics
   :feature:destinations --> :shared:location
+  :feature:destinations --> :shared:map
   :feature:profile --> :shared:concurrent
   :feature:profile --> :shared:di
+  :feature:poi --> :shared:concurrent
+  :feature:poi --> :shared:design-system
 ```
