@@ -25,6 +25,8 @@ internal class LocationDelegate(
     companion object {
         private const val IDLE_LOCATION_INTERVAL_MS = 15_000L
         private const val IDLE_MIN_UPDATE_DISTANCE_METERS = 50F
+        private const val PAUSE_LOCATION_INTERVAL_MS = 5_000L
+        private const val PAUSE_MIN_UPDATE_DISTANCE_METERS = 10F
         private const val CAMERA_MOVEMENT_THRESHOLD_METERS = 50.0
         private const val METERS_IN_KILOMETER = 1000.0
     }
@@ -63,6 +65,17 @@ internal class LocationDelegate(
         locationObservationJob?.cancel()
         locationObservationJob = scope.launch {
             observeUserLocationUseCase.observe(IDLE_LOCATION_INTERVAL_MS, IDLE_MIN_UPDATE_DISTANCE_METERS)
+                .collect { newLocation ->
+                    updateUserLocation(newLocation)
+                    _observedLocations.emit(newLocation)
+                }
+        }
+    }
+
+    fun startPauseLocationObservation() {
+        locationObservationJob?.cancel()
+        locationObservationJob = scope.launch {
+            observeUserLocationUseCase.observe(PAUSE_LOCATION_INTERVAL_MS, PAUSE_MIN_UPDATE_DISTANCE_METERS)
                 .collect { newLocation ->
                     updateUserLocation(newLocation)
                     _observedLocations.emit(newLocation)
