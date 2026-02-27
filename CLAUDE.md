@@ -22,15 +22,19 @@ real-time location updates.
 
 ### Module Structure
 
+See also: [Module Dependency Graph](docs/MODULE_GRAPH.md) for inter-module dependencies.
+
 ```
 CyclingAssistant/
 ├── app/                              # Shell - navigation, theme, Koin bootstrap, Room DB
 ├── feature/
 │   ├── bridge/                       # Cross-feature communication (alphabetical pair names)
 │   │   ├── destination-nutrition/    # destinations ↔ nutrition
+│   │   ├── destination-poi/          # destinations ↔ poi
 │   │   ├── destination-session/      # destinations ↔ session
 │   │   ├── nutrition-session/        # nutrition ↔ session
 │   │   ├── nutrition-settings/       # nutrition ↔ settings
+│   │   ├── poi-settings/             # poi ↔ settings
 │   │   └── profile-session/          # profile ↔ session
 │   │       ├── api/                  # Interfaces exposed to consumers
 │   │       └── impl/                 # Implementations wiring to provider internals
@@ -38,6 +42,7 @@ CyclingAssistant/
 │   ├── destinations/                 # Destination selection feature
 │   ├── locale/                       # App language persistence and observation
 │   ├── nutrition/                    # Nutrition tracking and reminders
+│   ├── poi/                          # POI type selection and active session POI actions
 │   ├── profile/                      # Rider profile management
 │   ├── session/                      # Session tracking with foreground service
 │   ├── settings/                     # App settings (theme, language)
@@ -419,7 +424,8 @@ Callback-based pattern — composables are navigation-agnostic. Only `AppNavHost
 `NavController`. Never pass `NavController` to composables.
 
 Feature modules expose `NavGraphBuilder` extension functions with callback parameters. Route
-constants are defined in feature navigation files.
+constants are defined in feature navigation files. Features with multiple screens use nested
+navigation graphs (e.g., `settingsGraph` wraps settings + POI selection sub-screens).
 
 ```kotlin
 const val SESSIONS_LIST_ROUTE = "sessions_list"
