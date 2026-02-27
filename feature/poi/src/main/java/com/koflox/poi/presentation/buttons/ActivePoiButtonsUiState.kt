@@ -4,5 +4,9 @@ import com.koflox.poi.domain.model.PoiType
 
 internal sealed interface ActivePoiButtonsUiState {
     data object Loading : ActivePoiButtonsUiState
-    data class Content(val selectedPois: List<PoiType>) : ActivePoiButtonsUiState
+    data class Content(
+        val selectedPois: List<PoiType>,
+        val unselectedPois: List<PoiType>,
+        val isMoreDialogVisible: Boolean = false,
+    ) : ActivePoiButtonsUiState
 }

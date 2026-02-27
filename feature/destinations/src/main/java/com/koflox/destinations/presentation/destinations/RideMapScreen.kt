@@ -57,10 +57,12 @@ import org.koin.compose.koinInject
 @Composable
 fun RideMapScreen(
     onNavigateToSessionCompletion: (sessionId: String) -> Unit,
+    onNavigateToPoiSelection: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     RideMapRoute(
         onNavigateToSessionCompletion = onNavigateToSessionCompletion,
+        onNavigateToPoiSelection = onNavigateToPoiSelection,
         modifier = modifier,
     )
 }
@@ -68,6 +70,7 @@ fun RideMapScreen(
 @Composable
 internal fun RideMapRoute(
     onNavigateToSessionCompletion: (sessionId: String) -> Unit,
+    onNavigateToPoiSelection: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: RideMapViewModel = koinViewModel(),
     sessionUiNavigator: CyclingSessionUiNavigator = koinInject(),
@@ -106,6 +109,7 @@ internal fun RideMapRoute(
             poiUiNavigator = poiUiNavigator,
             modifier = modifier,
             onNavigateToSessionCompletion = onNavigateToSessionCompletion,
+            onNavigateToPoiSelection = onNavigateToPoiSelection,
             onRetryPermission = { retryTrigger++ },
         )
     }
@@ -165,6 +169,7 @@ private fun RideMapContent(
     nutritionUiNavigator: NutritionUiNavigator,
     poiUiNavigator: PoiUiNavigator,
     onNavigateToSessionCompletion: (sessionId: String) -> Unit,
+    onNavigateToPoiSelection: () -> Unit,
     onRetryPermission: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -181,7 +186,16 @@ private fun RideMapContent(
             onSelectedMarkerInfoClick = { onEvent(RideMapUiEvent.DestinationEvent.SelectedMarkerInfoClicked) },
             onMapLoaded = { onEvent(RideMapUiEvent.MapEvent.MapLoaded) },
         )
-        RideMapOverlay(uiState, onEvent, sessionUiNavigator, nutritionUiNavigator, poiUiNavigator, onNavigateToSessionCompletion, onRetryPermission)
+        RideMapOverlay(
+            uiState = uiState,
+            onEvent = onEvent,
+            sessionUiNavigator = sessionUiNavigator,
+            nutritionUiNavigator = nutritionUiNavigator,
+            poiUiNavigator = poiUiNavigator,
+            onNavigateToSessionCompletion = onNavigateToSessionCompletion,
+            onNavigateToPoiSelection = onNavigateToPoiSelection,
+            onRetryPermission = onRetryPermission,
+        )
     }
     when (uiState) {
         is RideMapUiState.FreeRoamIdle -> FreeRoamSessionGate(
@@ -224,6 +238,7 @@ private fun BoxScope.RideMapOverlay(
     nutritionUiNavigator: NutritionUiNavigator,
     poiUiNavigator: PoiUiNavigator,
     onNavigateToSessionCompletion: (sessionId: String) -> Unit,
+    onNavigateToPoiSelection: () -> Unit,
     onRetryPermission: () -> Unit,
 ) {
     when (uiState) {
@@ -259,6 +274,7 @@ private fun BoxScope.RideMapOverlay(
             uiState = uiState,
             onNutritionPopupDismiss = { onEvent(RideMapUiEvent.CommonEvent.NutritionPopupDismissed) },
             onPoiClicked = { query -> onEvent(RideMapUiEvent.PoiEvent.PoiClicked(query)) },
+            onNavigateToPoiSelection = onNavigateToPoiSelection,
             poiUiNavigator = poiUiNavigator,
             sessionUiNavigator = sessionUiNavigator,
             nutritionUiNavigator = nutritionUiNavigator,
@@ -384,6 +400,7 @@ private fun ActiveSessionControls(
     uiState: RideMapUiState.ActiveSession,
     onNutritionPopupDismiss: () -> Unit,
     onPoiClicked: (String) -> Unit,
+    onNavigateToPoiSelection: () -> Unit,
     poiUiNavigator: PoiUiNavigator,
     sessionUiNavigator: CyclingSessionUiNavigator,
     nutritionUiNavigator: NutritionUiNavigator,
@@ -412,6 +429,7 @@ private fun ActiveSessionControls(
         if (uiState.arePoiActionsVisible) {
             poiUiNavigator.ActivePoiButtons(
                 onPoiClicked = onPoiClicked,
+                onNavigateToPoiSelection = onNavigateToPoiSelection,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = Spacing.Tiny)

@@ -2,6 +2,7 @@ package com.koflox.poi.presentation.buttons
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.koflox.poi.domain.model.PoiType
 import com.koflox.poi.domain.usecase.ObserveSelectedPoisUseCase
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,11 +22,31 @@ internal class ActivePoiButtonsViewModel(
         initialize()
     }
 
+    fun onEvent(event: ActivePoiButtonsUiEvent) {
+        viewModelScope.launch(dispatcherDefault) {
+            when (event) {
+                ActivePoiButtonsUiEvent.MoreClicked -> updateContent { it.copy(isMoreDialogVisible = true) }
+                ActivePoiButtonsUiEvent.MoreDialogDismissed -> updateContent { it.copy(isMoreDialogVisible = false) }
+            }
+        }
+    }
+
     private fun initialize() {
         viewModelScope.launch(dispatcherDefault) {
             observeSelectedPoisUseCase.observeSelectedPois().collect { pois ->
-                _uiState.value = ActivePoiButtonsUiState.Content(selectedPois = pois)
+                val unselected = PoiType.entries - pois.toSet()
+                _uiState.value = ActivePoiButtonsUiState.Content(
+                    selectedPois = pois,
+                    unselectedPois = unselected,
+                )
             }
+        }
+    }
+
+    private inline fun updateContent(transform: (ActivePoiButtonsUiState.Content) -> ActivePoiButtonsUiState.Content) {
+        val current = _uiState.value
+        if (current is ActivePoiButtonsUiState.Content) {
+            _uiState.value = transform(current)
         }
     }
 }
