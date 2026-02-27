@@ -49,6 +49,14 @@ object CornerRadius {
 }
 
 /**
+ * Standardized component size values.
+ */
+object ComponentSize {
+    /** 20.dp - Small badge for numbered indicators */
+    val Badge = 20.dp
+}
+
+/**
  * Common alpha values for surface overlays.
  */
 object SurfaceAlpha {

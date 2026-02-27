@@ -27,8 +27,8 @@ internal class PoiSelectionViewModel(
     private val _navigation = Channel<PoiSelectionNavigation>()
     val navigation = _navigation.receiveAsFlow()
 
-    private val pendingSelection = mutableSetOf<PoiType>()
-    private var savedSelection = emptySet<PoiType>()
+    private val pendingSelection = mutableListOf<PoiType>()
+    private var savedSelection = emptyList<PoiType>()
 
     init {
         initialize()
@@ -38,7 +38,7 @@ internal class PoiSelectionViewModel(
         viewModelScope.launch(dispatcherDefault) {
             val currentSelection = observeSelectedPoisUseCase.observeSelectedPois().first()
             pendingSelection.addAll(currentSelection)
-            savedSelection = currentSelection.toSet()
+            savedSelection = currentSelection
             emitContentState()
         }
     }
@@ -69,7 +69,12 @@ internal class PoiSelectionViewModel(
     private fun emitContentState() {
         _uiState.value = PoiSelectionUiState.Content(
             pois = PoiType.entries.map { type ->
-                PoiItemUiModel(type = type, isSelected = type in pendingSelection)
+                val index = pendingSelection.indexOf(type)
+                PoiItemUiModel(
+                    type = type,
+                    isSelected = index >= 0,
+                    selectionIndex = if (index >= 0) index + 1 else null,
+                )
             },
             isSaveEnabled = pendingSelection.size == MAX_SELECTED_POIS && pendingSelection != savedSelection,
         )
