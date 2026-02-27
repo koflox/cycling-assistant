@@ -80,7 +80,7 @@ private const val RIPPLE_REFERENCE_ZOOM = 15f
 private const val RIPPLE_DURATION_MS = 1500
 private const val RIPPLE_START_ALPHA = 0.4f
 private const val ROUTE_BOUNDS_PADDING_FRACTION = 0.25f
-private const val DESTINATION_BOUNDS_PADDING_FRACTION = 0.05f
+private const val DESTINATION_BOUNDS_PADDING_FRACTION = 0.15f
 private const val USER_INTERACTION_COOLDOWN_MS = 10_000L
 private const val SESSION_BOUNDS_PADDING_PX = 50
 private const val MIN_BOUNDS_SPAN_DEGREES = 0.003
@@ -188,9 +188,7 @@ private fun Map(
         selectedDestination?.let { destination ->
             Destinations(destination, otherDestinations, isSessionActive, onSelectedMarkerInfoClick)
         }
-        if (curvePoints.isNotEmpty()) {
-            Polyline(points = curvePoints, color = UserLocationBlue, width = DEFAULT_ROUTE_LINE_WIDTH)
-        }
+        DestinationGuideLine(isSessionActive, userLocation, selectedDestination, curvePoints)
         routeData?.let { data ->
             ActiveSessionRouteOverlay(
                 routeData = data,
@@ -220,6 +218,31 @@ private fun UserLocationMarker(userLocation: Location?, userLocationBitmap: andr
 
 @Composable
 @GoogleMapComposable
+private fun DestinationGuideLine(
+    isSessionActive: Boolean,
+    userLocation: Location?,
+    selectedDestination: DestinationUiModel?,
+    curvePoints: List<LatLng>,
+) {
+    when {
+        isSessionActive && userLocation != null && selectedDestination != null -> {
+            Polyline(
+                points = listOf(
+                    LatLng(userLocation.latitude, userLocation.longitude),
+                    LatLng(selectedDestination.location.latitude, selectedDestination.location.longitude),
+                ),
+                color = RouteColors.DestinationGuide,
+                width = DEFAULT_ROUTE_LINE_WIDTH,
+            )
+        }
+        curvePoints.isNotEmpty() -> {
+            Polyline(points = curvePoints, color = UserLocationBlue, width = DEFAULT_ROUTE_LINE_WIDTH)
+        }
+    }
+}
+
+@Composable
+@GoogleMapComposable
 private fun ActiveSessionRouteOverlay(
     routeData: ActiveSessionRouteData,
     userLocation: Location?,
@@ -233,7 +256,7 @@ private fun ActiveSessionRouteOverlay(
     FirstLocationMarker(routeData, cameraZoom, isDarkTheme, startMarkerIcon)
     RouteSegmentPolylines(routeData)
     GapPolylines(routeData, userLocation)
-    LastPositionMarker(routeData = routeData, density = density, cameraZoom = cameraZoom, isDarkTheme = isDarkTheme)
+    LastPositionMarker(routeData = routeData, userLocation = userLocation, density = density, cameraZoom = cameraZoom, isDarkTheme = isDarkTheme)
 }
 
 @Composable
@@ -241,7 +264,7 @@ private fun FirstLocationMarker(
     routeData: ActiveSessionRouteData,
     cameraZoom: Float,
     isDarkTheme: Boolean,
-    startMarkerIcon: BitmapDescriptor?
+    startMarkerIcon: BitmapDescriptor?,
 ) {
     routeData.startPosition?.let { start ->
         val startLatLng = LatLng(start.latitude, start.longitude)
@@ -262,6 +285,7 @@ private fun FirstLocationMarker(
 @GoogleMapComposable
 private fun LastPositionMarker(
     routeData: ActiveSessionRouteData,
+    userLocation: Location?,
     density: Float,
     cameraZoom: Float,
     isDarkTheme: Boolean,
@@ -269,10 +293,11 @@ private fun LastPositionMarker(
     routeData.lastPosition?.let { lastPos ->
         val endLatLng = LatLng(lastPos.latitude, lastPos.longitude)
         if (routeData.isPaused) {
+            val pauseRippleCenter = userLocation?.let { LatLng(it.latitude, it.longitude) } ?: endLatLng
             val pauseMarkerIcon = remember(density) { createPauseMarkerIcon(density) }
-            MarkerRipple(center = endLatLng, color = RouteColors.PauseMarker, cameraZoom = cameraZoom, isDarkTheme = isDarkTheme)
+            MarkerRipple(center = pauseRippleCenter, color = RouteColors.PauseMarker, cameraZoom = cameraZoom, isDarkTheme = isDarkTheme)
             Marker(
-                state = rememberUpdatedMarkerState(position = endLatLng),
+                state = rememberUpdatedMarkerState(position = pauseRippleCenter),
                 icon = pauseMarkerIcon,
                 anchor = Offset(0.5f, 0.5f),
             )

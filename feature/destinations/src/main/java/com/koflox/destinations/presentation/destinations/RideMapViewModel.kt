@@ -170,9 +170,22 @@ internal class RideMapViewModel(
 
     private fun observeActiveSessionRoute() {
         viewModelScope.launch(dispatcherDefault) {
+            var wasPaused = false
             cyclingSessionUseCase.observeActiveSessionRoute().collect { routeData ->
                 _internalState.update { it.copy(activeSessionRouteData = routeData) }
-                routeData?.lastPosition?.let(locationDelegate::updateUserLocation)
+                val isPaused = routeData?.isPaused == true
+                if (isPaused.not()) {
+                    routeData?.lastPosition?.let(locationDelegate::updateUserLocation)
+                }
+                if (isPaused != wasPaused) {
+                    if (isPaused) {
+                        locationDelegate.startPauseLocationObservation()
+                    } else {
+                        locationDelegate.stopLocationObservation()
+                    }
+                    @Suppress("AssignedValueIsNeverRead")
+                    wasPaused = isPaused
+                }
             }
         }
     }

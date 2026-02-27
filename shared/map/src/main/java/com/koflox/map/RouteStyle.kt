@@ -17,6 +17,7 @@ object RouteColors {
     val EndMarker = Color(0xFFE84940)
     val ActiveEndMarker = Color(0xFF26A69A)
     val PauseMarker = Color(0xFF9E9E9E)
+    val DestinationGuide = Color(0x809E9E9E)
 }
 
 const val ROUTE_WIDTH = 10f
