@@ -7,9 +7,11 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.CircularProgressIndicator
@@ -29,7 +31,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import com.koflox.designsystem.component.DebouncedButton
+import com.koflox.designsystem.theme.ComponentSize
 import com.koflox.designsystem.theme.Spacing
 import com.koflox.poi.R
 import com.koflox.poi.presentation.mapper.label
@@ -139,6 +143,7 @@ private fun PoiSelectionGrid(
                 PoiFilterChip(
                     label = poi.type.label(),
                     isSelected = poi.isSelected,
+                    selectionIndex = poi.selectionIndex,
                     onClick = { onPoiToggled(poi.type) },
                 )
             }
@@ -150,6 +155,7 @@ private fun PoiSelectionGrid(
 private fun PoiFilterChip(
     label: String,
     isSelected: Boolean,
+    selectionIndex: Int?,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -161,6 +167,26 @@ private fun PoiFilterChip(
                 text = label,
                 modifier = Modifier.padding(vertical = Spacing.Small),
             )
+        },
+        trailingIcon = if (selectionIndex != null) {
+            {
+                Surface(
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(ComponentSize.Badge),
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Text(
+                            text = selectionIndex.toString(),
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                        )
+                    }
+                }
+            }
+        } else {
+            null
         },
         modifier = modifier.fillMaxWidth(),
     )

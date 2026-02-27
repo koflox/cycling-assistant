@@ -13,4 +13,5 @@ internal sealed interface PoiSelectionUiState {
 internal data class PoiItemUiModel(
     val type: PoiType,
     val isSelected: Boolean,
+    val selectionIndex: Int? = null,
 )

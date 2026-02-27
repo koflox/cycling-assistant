@@ -4,7 +4,7 @@ import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.stringSetPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.koflox.poi.domain.model.PoiType
 import kotlinx.coroutines.CoroutineDispatcher
@@ -23,18 +23,19 @@ internal class PoiPreferencesDataStore(
 ) : PoiLocalDataSource {
 
     companion object {
-        private val KEY_SELECTED_POIS = stringSetPreferencesKey("selected_pois")
+        private const val DELIMITER = ","
+        private val KEY_SELECTED_POIS_ORDERED = stringPreferencesKey("selected_pois_ordered")
         private val DEFAULT_POIS = listOf(PoiType.COFFEE_SHOP, PoiType.TOILET)
     }
 
     override fun observeSelectedPois(): Flow<List<PoiType>> = context.poiDataStore.data
         .map { prefs ->
-            val names = prefs[KEY_SELECTED_POIS]
-            if (names.isNullOrEmpty()) {
+            val csv = prefs[KEY_SELECTED_POIS_ORDERED] // comma separated values
+            if (csv.isNullOrEmpty()) {
                 DEFAULT_POIS
             } else {
                 val validNames = PoiType.entries.associateBy { it.name }
-                names.mapNotNull { name -> validNames[name] }
+                csv.split(DELIMITER).mapNotNull { name -> validNames[name] }
             }
         }
         .flowOn(dispatcherIo)
@@ -42,7 +43,7 @@ internal class PoiPreferencesDataStore(
     override suspend fun updateSelectedPois(pois: List<PoiType>) {
         withContext(dispatcherIo) {
             context.poiDataStore.edit { prefs ->
-                prefs[KEY_SELECTED_POIS] = pois.map { it.name }.toSet()
+                prefs[KEY_SELECTED_POIS_ORDERED] = pois.joinToString(DELIMITER) { it.name }
             }
         }
     }

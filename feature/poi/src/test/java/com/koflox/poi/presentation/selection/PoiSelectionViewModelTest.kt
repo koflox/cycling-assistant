@@ -10,10 +10,12 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -65,7 +67,7 @@ class PoiSelectionViewModelTest {
             val content = awaitItem() as PoiSelectionUiState.Content
             assertEquals(PoiType.entries.size, content.pois.size)
             val selectedTypes = content.pois.filter { it.isSelected }.map { it.type }
-            assertEquals(DEFAULT_SELECTION.toSet(), selectedTypes.toSet())
+            assertEquals(DEFAULT_SELECTION, selectedTypes)
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -163,5 +165,57 @@ class PoiSelectionViewModelTest {
             cancelAndIgnoreRemainingEvents()
         }
         coVerify { updateSelectedPoisUseCase.updateSelectedPois(any()) }
+    }
+
+    @Test
+    fun `selected pois have correct selection indices`() = runTest {
+        viewModel = createViewModel()
+        viewModel.uiState.test {
+            awaitItem() // Loading
+            val content = awaitItem() as PoiSelectionUiState.Content
+            val coffeeShop = content.pois.first { it.type == PoiType.COFFEE_SHOP }
+            val toilet = content.pois.first { it.type == PoiType.TOILET }
+            val park = content.pois.first { it.type == PoiType.PARK }
+            assertEquals(1, coffeeShop.selectionIndex)
+            assertEquals(2, toilet.selectionIndex)
+            assertNull(park.selectionIndex)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `deselecting first poi shifts second index`() = runTest {
+        viewModel = createViewModel()
+        viewModel.uiState.test {
+            awaitItem() // Loading
+            awaitItem() // Initial Content
+            viewModel.onEvent(PoiSelectionUiEvent.PoiToggled(PoiType.COFFEE_SHOP))
+            val content = awaitItem() as PoiSelectionUiState.Content
+            val toilet = content.pois.first { it.type == PoiType.TOILET }
+            assertEquals(1, toilet.selectionIndex)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `save preserves selection order`() = runTest {
+        viewModel = createViewModel()
+        viewModel.uiState.test {
+            awaitItem() // Loading
+            awaitItem() // Initial Content
+            viewModel.onEvent(PoiSelectionUiEvent.PoiToggled(PoiType.COFFEE_SHOP))
+            awaitItem() // Deselected COFFEE_SHOP
+            viewModel.onEvent(PoiSelectionUiEvent.PoiToggled(PoiType.PARK))
+            awaitItem() // Selected PARK
+            cancelAndIgnoreRemainingEvents()
+        }
+        val savedPois = slot<List<PoiType>>()
+        coEvery { updateSelectedPoisUseCase.updateSelectedPois(capture(savedPois)) } returns Unit
+        viewModel.navigation.test {
+            viewModel.onEvent(PoiSelectionUiEvent.SaveClicked)
+            awaitItem()
+            cancelAndIgnoreRemainingEvents()
+        }
+        assertEquals(listOf(PoiType.TOILET, PoiType.PARK), savedPois.captured)
     }
 }
