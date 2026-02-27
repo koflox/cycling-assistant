@@ -212,11 +212,9 @@ internal class RideMapViewModel(
     }
 
     private fun handlePoiEvent(event: RideMapUiEvent.PoiEvent) {
-        val query = when (event) {
-            is RideMapUiEvent.PoiEvent.CoffeeShopClicked -> event.query
-            is RideMapUiEvent.PoiEvent.ToiletClicked -> event.query
+        when (event) {
+            is RideMapUiEvent.PoiEvent.PoiClicked -> destinationDelegate.openPoiInGoogleMaps(event.query)
         }
-        destinationDelegate.openPoiInGoogleMaps(query)
     }
 
     private suspend fun handleDestinationEvent(event: RideMapUiEvent.DestinationEvent) {

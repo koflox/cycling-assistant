@@ -10,6 +10,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import com.koflox.dashboard.navigation.DASHBOARD_ROUTE
 import com.koflox.dashboard.navigation.dashboardScreen
+import com.koflox.poi.navigation.POI_SELECTION_ROUTE
+import com.koflox.poi.navigation.poiSelectionScreen
 import com.koflox.session.navigation.SESSIONS_LIST_ROUTE
 import com.koflox.session.navigation.sessionCompletionRoute
 import com.koflox.session.navigation.sessionCompletionScreen
@@ -57,6 +59,10 @@ fun AppNavHost(
             },
         )
         settingsScreen(
+            onBackClick = { navController.popBackStack() },
+            onNavigateToPoiSelection = { navController.navigate(POI_SELECTION_ROUTE) },
+        )
+        poiSelectionScreen(
             onBackClick = { navController.popBackStack() },
         )
     }

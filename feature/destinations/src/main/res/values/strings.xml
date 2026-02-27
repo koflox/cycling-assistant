@@ -19,10 +19,6 @@
     <!-- Session Hint -->
     <string name="session_hint_keep_moving">Keep moving…</string>
 
-    <!-- POI -->
-    <string name="session_poi_coffee_shop">Coffee shops</string>
-    <string name="session_poi_toilet">Toilets</string>
-
     <!-- Loading -->
     <string name="loading_prefix">Initializing: %s</string>
     <string name="loading_item_map">map</string>

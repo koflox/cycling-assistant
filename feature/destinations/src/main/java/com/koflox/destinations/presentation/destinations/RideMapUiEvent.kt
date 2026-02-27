@@ -29,8 +29,7 @@ internal sealed interface RideMapUiEvent {
     }
 
     sealed interface PoiEvent : RideMapUiEvent {
-        data class CoffeeShopClicked(val query: String) : PoiEvent
-        data class ToiletClicked(val query: String) : PoiEvent
+        data class PoiClicked(val query: String) : PoiEvent
     }
 
     sealed interface SessionEvent : RideMapUiEvent {

@@ -35,6 +35,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import com.koflox.designsystem.component.LocalizedExposedDropdownMenu
 import com.koflox.designsystem.theme.Spacing
 import com.koflox.nutritionsettings.bridge.navigator.NutritionSettingsUiNavigator
+import com.koflox.poisettings.bridge.navigator.PoiSettingsUiNavigator
 import com.koflox.settings.R
 import com.koflox.theme.domain.model.AppTheme
 import org.koin.androidx.compose.koinViewModel
@@ -43,16 +44,20 @@ import org.koin.compose.koinInject
 @Composable
 internal fun SettingsRoute(
     onBackClick: () -> Unit,
+    onNavigateToPoiSelection: () -> Unit,
     modifier: Modifier = Modifier,
     nutritionSettingsUiNavigator: NutritionSettingsUiNavigator = koinInject(),
+    poiSettingsUiNavigator: PoiSettingsUiNavigator = koinInject(),
 ) {
     val viewModel: SettingsViewModel = koinViewModel()
     val uiState by viewModel.uiState.collectAsState()
     SettingsContent(
         uiState = uiState,
         onBackClick = onBackClick,
+        onNavigateToPoiSelection = onNavigateToPoiSelection,
         onEvent = viewModel::onEvent,
         nutritionSettingsUiNavigator = nutritionSettingsUiNavigator,
+        poiSettingsUiNavigator = poiSettingsUiNavigator,
         modifier = modifier,
     )
 }
@@ -62,8 +67,10 @@ internal fun SettingsRoute(
 internal fun SettingsContent(
     uiState: SettingsUiState,
     onBackClick: () -> Unit,
+    onNavigateToPoiSelection: () -> Unit,
     onEvent: (SettingsUiEvent) -> Unit,
     nutritionSettingsUiNavigator: NutritionSettingsUiNavigator,
+    poiSettingsUiNavigator: PoiSettingsUiNavigator,
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
@@ -85,7 +92,9 @@ internal fun SettingsContent(
         SettingsBody(
             uiState = uiState,
             onEvent = onEvent,
+            onNavigateToPoiSelection = onNavigateToPoiSelection,
             nutritionSettingsUiNavigator = nutritionSettingsUiNavigator,
+            poiSettingsUiNavigator = poiSettingsUiNavigator,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
@@ -98,7 +107,9 @@ internal fun SettingsContent(
 private fun SettingsBody(
     uiState: SettingsUiState,
     onEvent: (SettingsUiEvent) -> Unit,
+    onNavigateToPoiSelection: () -> Unit,
     nutritionSettingsUiNavigator: NutritionSettingsUiNavigator,
+    poiSettingsUiNavigator: PoiSettingsUiNavigator,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -141,7 +152,11 @@ private fun SettingsBody(
                 },
             )
         }
-        SettingsSection(title = stringResource(R.string.settings_section_nutrition)) {
+        SettingsSection(title = stringResource(R.string.settings_section_session)) {
+            poiSettingsUiNavigator.PoiSettingsSection(
+                onNavigateToPoiSelection = onNavigateToPoiSelection,
+                modifier = Modifier,
+            )
             nutritionSettingsUiNavigator.NutritionSettingsSection(modifier = Modifier)
         }
         BuildInfoText(text = uiState.buildInfoText)

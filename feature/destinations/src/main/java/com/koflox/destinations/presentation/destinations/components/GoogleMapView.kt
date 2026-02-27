@@ -113,7 +113,6 @@ internal fun GoogleMapView(
             routeData = routeData,
             selectedDestination = selectedDestination,
             userLocation = userLocation,
-            isMapLoaded = isMapLoaded,
         )
     }
     Map(
@@ -445,7 +444,7 @@ private fun SelectedDestinationCameraEffect(
     selectedDestination: DestinationUiModel?,
     isMapLoaded: Boolean,
     isSessionActive: Boolean,
-    cameraPositionState: CameraPositionState
+    cameraPositionState: CameraPositionState,
 ) {
     LaunchedEffect(selectedDestination, isMapLoaded, isSessionActive) {
         if (isMapLoaded && !isSessionActive && selectedDestination != null) {
@@ -463,7 +462,6 @@ private fun ActiveSessionCameraEffect(
     routeData: ActiveSessionRouteData?,
     selectedDestination: DestinationUiModel?,
     userLocation: Location?,
-    isMapLoaded: Boolean,
 ) {
     var lastGestureTimeMs by remember { mutableLongStateOf(0L) }
     LaunchedEffect(Unit) {
@@ -474,7 +472,7 @@ private fun ActiveSessionCameraEffect(
                 }
             }
     }
-    LaunchedEffect(routeData, userLocation, isMapLoaded) {
+    LaunchedEffect(routeData, userLocation) {
         if (System.currentTimeMillis() - lastGestureTimeMs < USER_INTERACTION_COOLDOWN_MS) return@LaunchedEffect
         val bounds = computeSessionBounds(routeData, selectedDestination, userLocation) ?: return@LaunchedEffect
         cameraPositionState.animate(CameraUpdateFactory.newLatLngBounds(bounds, SESSION_BOUNDS_PADDING_PX))
