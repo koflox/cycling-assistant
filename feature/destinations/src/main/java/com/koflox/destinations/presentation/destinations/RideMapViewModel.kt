@@ -18,7 +18,6 @@ import com.koflox.destinations.presentation.destinations.delegate.LocationDelega
 import com.koflox.destinations.presentation.mapper.DestinationUiMapper
 import com.koflox.destinationsession.bridge.usecase.CyclingSessionUseCase
 import com.koflox.distance.DistanceCalculator
-import com.koflox.location.model.Location
 import com.koflox.location.usecase.GetUserLocationUseCase
 import com.koflox.location.usecase.ObserveUserLocationUseCase
 import kotlinx.coroutines.CoroutineDispatcher
@@ -68,7 +67,6 @@ internal class RideMapViewModel(
             distanceCalculator = distanceCalculator,
             uiState = _internalState,
             scope = viewModelScope,
-            onLocationObserved = ::onLocationObserved,
         )
     }
 
@@ -94,6 +92,7 @@ internal class RideMapViewModel(
     private fun initialize() {
         observeLocationEnabled()
         observeRidingMode()
+        observeIdleLocationUpdates()
         initializeInternal()
     }
 
@@ -301,12 +300,14 @@ internal class RideMapViewModel(
         locationDelegate.stopLocationObservation()
     }
 
-    private fun onLocationObserved(newLocation: Location) {
-        if (_internalState.value.ridingMode == RidingMode.DESTINATION) {
-            destinationDelegate.updateCurvePointsForLocation(newLocation)
-            destinationDelegate.checkAndReloadDestinationsIfNeeded(newLocation)
-            viewModelScope.launch(dispatcherDefault) {
-                destinationDelegate.checkAndRecalculateBoundsIfNeeded(newLocation)
+    private fun observeIdleLocationUpdates() {
+        viewModelScope.launch(dispatcherDefault) {
+            locationDelegate.observedLocations.collect { newLocation ->
+                if (_internalState.value.ridingMode == RidingMode.DESTINATION) {
+                    destinationDelegate.updateCurvePointsForLocation(newLocation)
+                    destinationDelegate.checkAndReloadDestinationsIfNeeded(newLocation)
+                    destinationDelegate.checkAndRecalculateBoundsIfNeeded(newLocation)
+                }
             }
         }
     }

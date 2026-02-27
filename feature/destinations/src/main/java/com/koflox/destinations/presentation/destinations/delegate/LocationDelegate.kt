@@ -7,7 +7,10 @@ import com.koflox.location.usecase.GetUserLocationUseCase
 import com.koflox.location.usecase.ObserveUserLocationUseCase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -17,7 +20,6 @@ internal class LocationDelegate(
     private val distanceCalculator: DistanceCalculator,
     private val uiState: MutableStateFlow<RideMapInternalState>,
     private val scope: CoroutineScope,
-    private val onLocationObserved: (Location) -> Unit,
 ) {
 
     companion object {
@@ -26,6 +28,9 @@ internal class LocationDelegate(
         private const val CAMERA_MOVEMENT_THRESHOLD_METERS = 50.0
         private const val METERS_IN_KILOMETER = 1000.0
     }
+
+    private val _observedLocations = MutableSharedFlow<Location>()
+    val observedLocations: SharedFlow<Location> = _observedLocations.asSharedFlow()
 
     private var locationObservationJob: Job? = null
 
@@ -60,7 +65,7 @@ internal class LocationDelegate(
             observeUserLocationUseCase.observe(IDLE_LOCATION_INTERVAL_MS, IDLE_MIN_UPDATE_DISTANCE_METERS)
                 .collect { newLocation ->
                     updateUserLocation(newLocation)
-                    onLocationObserved(newLocation)
+                    _observedLocations.emit(newLocation)
                 }
         }
     }

@@ -12,6 +12,7 @@ import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -43,20 +44,17 @@ class LocationDelegateTest {
     private val distanceCalculator: DistanceCalculator = mockk()
 
     private lateinit var uiState: MutableStateFlow<RideMapInternalState>
-    private var lastLocationObserved: Location? = null
     private lateinit var delegate: LocationDelegate
 
     @Before
     fun setup() {
         uiState = MutableStateFlow(RideMapInternalState())
-        lastLocationObserved = null
         delegate = LocationDelegate(
             getUserLocationUseCase = getUserLocationUseCase,
             observeUserLocationUseCase = observeUserLocationUseCase,
             distanceCalculator = distanceCalculator,
             uiState = uiState,
             scope = testScope,
-            onLocationObserved = { lastLocationObserved = it },
         )
     }
 
@@ -133,15 +131,19 @@ class LocationDelegateTest {
     }
 
     @Test
-    fun `startLocationObservation calls onLocationObserved callback`() = runTest {
+    fun `startLocationObservation emits to observedLocations`() = runTest {
         val location = Location(UPDATED_LAT, UPDATED_LONG)
         every { observeUserLocationUseCase.observe(any(), any()) } returns flowOf(location)
         every { distanceCalculator.calculateKm(any(), any(), any(), any()) } returns 0.1
 
+        val observed = mutableListOf<Location>()
+        val collectJob = launch { delegate.observedLocations.collect { observed.add(it) } }
+
         delegate.startLocationObservation()
         advanceUntilIdle()
 
-        assertEquals(location, lastLocationObserved)
+        assertEquals(listOf(location), observed)
+        collectJob.cancel()
     }
 
     @Test
@@ -191,14 +193,14 @@ class LocationDelegateTest {
 
         delegate.startLocationObservation()
         advanceUntilIdle()
-        assertNotNull(uiState.value.userLocation)
+        val locationBeforeStop = uiState.value.userLocation
+        assertNotNull(locationBeforeStop)
 
         delegate.stopLocationObservation()
-        lastLocationObserved = null
         locationFlow.value = Location(FAR_LAT, FAR_LONG)
         advanceUntilIdle()
 
-        assertNull(lastLocationObserved)
+        assertEquals(locationBeforeStop, uiState.value.userLocation)
     }
 
     @Test
