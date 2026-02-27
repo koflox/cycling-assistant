@@ -10,10 +10,12 @@ const val SETTINGS_ROUTE = "settings"
 
 fun NavGraphBuilder.settingsScreen(
     onBackClick: () -> Unit,
+    onNavigateToPoiSelection: () -> Unit,
 ) {
     composable(route = SETTINGS_ROUTE) {
         SettingsRoute(
             onBackClick = onBackClick,
+            onNavigateToPoiSelection = onNavigateToPoiSelection,
             modifier = Modifier.fillMaxSize(),
         )
     }

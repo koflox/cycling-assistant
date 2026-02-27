@@ -19,10 +19,6 @@
     <!-- Session Hint -->
     <string name="session_hint_keep_moving">移動を続けてください…</string>
 
-    <!-- POI -->
-    <string name="session_poi_coffee_shop">カフェ</string>
-    <string name="session_poi_toilet">トイレ</string>
-
     <!-- Loading -->
     <string name="loading_prefix">初期化中: %s</string>
     <string name="loading_item_map">マップ</string>

@@ -19,10 +19,6 @@
     <!-- Session Hint -->
     <string name="session_hint_keep_moving">Продолжайте движение…</string>
 
-    <!-- POI -->
-    <string name="session_poi_coffee_shop">Кофейни</string>
-    <string name="session_poi_toilet">Туалеты</string>
-
     <!-- Loading -->
     <string name="loading_prefix">Инициализация: %s</string>
     <string name="loading_item_map">карта</string>

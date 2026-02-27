@@ -68,6 +68,7 @@ dependencies {
 
     // Project modules
     implementation(project(":feature:bridge:destination-nutrition:api"))
+    implementation(project(":feature:bridge:destination-poi:api"))
     implementation(project(":feature:bridge:destination-session:api"))
     implementation(project(":shared:concurrent"))
     implementation(project(":shared:design-system"))
