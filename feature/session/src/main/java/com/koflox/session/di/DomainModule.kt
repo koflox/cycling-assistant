@@ -13,6 +13,8 @@ import com.koflox.session.domain.usecase.GetAllSessionsUseCase
 import com.koflox.session.domain.usecase.GetAllSessionsUseCaseImpl
 import com.koflox.session.domain.usecase.GetSessionByIdUseCase
 import com.koflox.session.domain.usecase.GetSessionByIdUseCaseImpl
+import com.koflox.session.domain.usecase.ObserveActiveSessionRouteUseCase
+import com.koflox.session.domain.usecase.ObserveActiveSessionRouteUseCaseImpl
 import com.koflox.session.domain.usecase.UpdateSessionLocationUseCase
 import com.koflox.session.domain.usecase.UpdateSessionLocationUseCaseImpl
 import com.koflox.session.domain.usecase.UpdateSessionStatusUseCase
@@ -77,6 +79,11 @@ internal val domainModule = module {
     factory<CheckLocationEnabledUseCase> {
         CheckLocationEnabledUseCaseImpl(
             locationSettingsDataSource = get(),
+        )
+    }
+    factory<ObserveActiveSessionRouteUseCase> {
+        ObserveActiveSessionRouteUseCaseImpl(
+            activeSessionUseCase = get(),
         )
     }
 }

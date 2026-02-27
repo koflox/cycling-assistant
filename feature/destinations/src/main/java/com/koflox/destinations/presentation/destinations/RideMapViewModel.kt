@@ -9,10 +9,8 @@ import com.koflox.destinations.domain.model.RidingMode
 import com.koflox.destinations.domain.usecase.CheckLocationEnabledUseCase
 import com.koflox.destinations.domain.usecase.GetDestinationInfoUseCase
 import com.koflox.destinations.domain.usecase.GetDistanceBoundsUseCase
-import com.koflox.destinations.domain.usecase.GetUserLocationUseCase
 import com.koflox.destinations.domain.usecase.InitializeDatabaseUseCase
 import com.koflox.destinations.domain.usecase.ObserveRidingModeUseCase
-import com.koflox.destinations.domain.usecase.ObserveUserLocationUseCase
 import com.koflox.destinations.domain.usecase.ToleranceCalculator
 import com.koflox.destinations.domain.usecase.UpdateRidingModeUseCase
 import com.koflox.destinations.presentation.destinations.delegate.DestinationDelegate
@@ -20,7 +18,9 @@ import com.koflox.destinations.presentation.destinations.delegate.LocationDelega
 import com.koflox.destinations.presentation.mapper.DestinationUiMapper
 import com.koflox.destinationsession.bridge.usecase.CyclingSessionUseCase
 import com.koflox.distance.DistanceCalculator
-import com.koflox.location.model.Location
+import com.koflox.location.usecase.GetUserLocationUseCase
+import com.koflox.location.usecase.ObserveUserLocationUseCase
+import com.koflox.map.intent.GoogleMapsIntentHelper
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -43,6 +43,7 @@ internal class RideMapViewModel(
     private val toleranceCalculator: ToleranceCalculator,
     private val application: Application,
     private val cyclingSessionUseCase: CyclingSessionUseCase,
+    private val googleMapsIntentHelper: GoogleMapsIntentHelper,
     private val observeNutritionBreakUseCase: ObserveNutritionBreakUseCase,
     private val observeRidingModeUseCase: ObserveRidingModeUseCase,
     private val updateRidingModeUseCase: UpdateRidingModeUseCase,
@@ -68,7 +69,6 @@ internal class RideMapViewModel(
             distanceCalculator = distanceCalculator,
             uiState = _internalState,
             scope = viewModelScope,
-            onLocationUpdated = ::onLocationUpdated,
         )
     }
 
@@ -81,7 +81,7 @@ internal class RideMapViewModel(
             distanceCalculator = distanceCalculator,
             uiMapper = uiMapper,
             toleranceCalculator = toleranceCalculator,
-            application = application,
+            googleMapsIntentHelper = googleMapsIntentHelper,
             uiState = _internalState,
             scope = viewModelScope,
         )
@@ -94,6 +94,7 @@ internal class RideMapViewModel(
     private fun initialize() {
         observeLocationEnabled()
         observeRidingMode()
+        observeIdleLocationUpdates()
         initializeInternal()
     }
 
@@ -108,6 +109,7 @@ internal class RideMapViewModel(
             checkActiveSession()
             _internalState.update { it.copy(isInitializing = false) }
             listenToActiveSession()
+            observeActiveSessionRoute()
             observeNutritionEvents()
         }
     }
@@ -153,8 +155,36 @@ internal class RideMapViewModel(
                             selectedDestination = null,
                             curvePoints = emptyList(),
                             showSelectedMarkerOptionsDialog = false,
+                            activeSessionRouteData = null,
                         )
                     }
+                }
+                if (isActive) {
+                    locationDelegate.stopLocationObservation()
+                } else if (_internalState.value.isPermissionGranted && isScreenVisible) {
+                    locationDelegate.startLocationObservation()
+                }
+            }
+        }
+    }
+
+    private fun observeActiveSessionRoute() {
+        viewModelScope.launch(dispatcherDefault) {
+            var wasPaused = false
+            cyclingSessionUseCase.observeActiveSessionRoute().collect { routeData ->
+                _internalState.update { it.copy(activeSessionRouteData = routeData) }
+                val isPaused = routeData?.isPaused == true
+                if (isPaused.not()) {
+                    routeData?.lastPosition?.let(locationDelegate::updateUserLocation)
+                }
+                if (isPaused != wasPaused) {
+                    if (isPaused) {
+                        locationDelegate.startPauseLocationObservation()
+                    } else {
+                        locationDelegate.stopLocationObservation()
+                    }
+                    @Suppress("AssignedValueIsNeverRead")
+                    wasPaused = isPaused
                 }
             }
         }
@@ -197,11 +227,9 @@ internal class RideMapViewModel(
     }
 
     private fun handlePoiEvent(event: RideMapUiEvent.PoiEvent) {
-        val query = when (event) {
-            is RideMapUiEvent.PoiEvent.CoffeeShopClicked -> event.query
-            is RideMapUiEvent.PoiEvent.ToiletClicked -> event.query
+        when (event) {
+            is RideMapUiEvent.PoiEvent.PoiClicked -> destinationDelegate.openPoiInGoogleMaps(event.query)
         }
-        destinationDelegate.openPoiInGoogleMaps(query)
     }
 
     private suspend fun handleDestinationEvent(event: RideMapUiEvent.DestinationEvent) {
@@ -252,7 +280,7 @@ internal class RideMapViewModel(
     private fun onPermissionGranted() {
         _internalState.update { it.copy(isPermissionGranted = true, isPermissionDenied = false) }
         fetchInitialLocationAndStartLoading()
-        if (isScreenVisible) {
+        if (isScreenVisible && !_internalState.value.isSessionActive) {
             locationDelegate.startLocationObservation()
         }
     }
@@ -275,7 +303,7 @@ internal class RideMapViewModel(
     private fun onScreenResumed() {
         isScreenVisible = true
         destinationDelegate.checkGoogleMapsAvailability()
-        if (_internalState.value.isPermissionGranted) {
+        if (_internalState.value.isPermissionGranted && !_internalState.value.isSessionActive) {
             locationDelegate.startLocationObservation()
         }
     }
@@ -285,12 +313,14 @@ internal class RideMapViewModel(
         locationDelegate.stopLocationObservation()
     }
 
-    private fun onLocationUpdated(newLocation: Location) {
-        if (_internalState.value.ridingMode == RidingMode.DESTINATION) {
-            destinationDelegate.updateCurvePointsForLocation(newLocation)
-            destinationDelegate.checkAndReloadDestinationsIfNeeded(newLocation)
-            viewModelScope.launch(dispatcherDefault) {
-                destinationDelegate.checkAndRecalculateBoundsIfNeeded(newLocation)
+    private fun observeIdleLocationUpdates() {
+        viewModelScope.launch(dispatcherDefault) {
+            locationDelegate.observedLocations.collect { newLocation ->
+                if (_internalState.value.ridingMode == RidingMode.DESTINATION) {
+                    destinationDelegate.updateCurvePointsForLocation(newLocation)
+                    destinationDelegate.checkAndReloadDestinationsIfNeeded(newLocation)
+                    destinationDelegate.checkAndRecalculateBoundsIfNeeded(newLocation)
+                }
             }
         }
     }
@@ -325,6 +355,7 @@ internal class RideMapViewModel(
             error = state.error,
             navigationAction = state.navigationAction,
             nutritionSuggestionTimeMs = state.nutritionSuggestionTimeMs,
+            routeData = state.activeSessionRouteData,
         )
         state.isReady && state.isMapLoaded && state.isFreeRoam -> RideMapUiState.FreeRoamIdle(
             userLocation = state.userLocation,

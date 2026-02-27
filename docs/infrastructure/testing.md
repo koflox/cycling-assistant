@@ -87,3 +87,18 @@ android {
     }
 }
 ```
+
+## UI Tests
+
+**Framework:** Jetpack Compose UI Testing (`androidx.compose.ui.test`)
+
+**Location:** `src/androidTest/java/` within each module.
+
+**Run commands:**
+
+```bash
+./gradlew connectedDebugAndroidTest                          # All modules
+./gradlew :feature:session:connectedDebugAndroidTest         # Per-module
+```
+
+**Modules with UI tests:** `feature/session`, `feature/destinations`, `feature/settings`

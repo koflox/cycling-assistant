@@ -1,10 +1,10 @@
 package com.koflox.destinations.presentation.destinations.delegate
 
-import com.koflox.destinations.domain.usecase.GetUserLocationUseCase
-import com.koflox.destinations.domain.usecase.ObserveUserLocationUseCase
 import com.koflox.destinations.presentation.destinations.RideMapInternalState
 import com.koflox.distance.DistanceCalculator
 import com.koflox.location.model.Location
+import com.koflox.location.usecase.GetUserLocationUseCase
+import com.koflox.location.usecase.ObserveUserLocationUseCase
 import com.koflox.testing.coroutine.MainDispatcherRule
 import io.mockk.coEvery
 import io.mockk.every
@@ -12,6 +12,7 @@ import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -43,20 +44,17 @@ class LocationDelegateTest {
     private val distanceCalculator: DistanceCalculator = mockk()
 
     private lateinit var uiState: MutableStateFlow<RideMapInternalState>
-    private var lastLocationUpdate: Location? = null
     private lateinit var delegate: LocationDelegate
 
     @Before
     fun setup() {
         uiState = MutableStateFlow(RideMapInternalState())
-        lastLocationUpdate = null
         delegate = LocationDelegate(
             getUserLocationUseCase = getUserLocationUseCase,
             observeUserLocationUseCase = observeUserLocationUseCase,
             distanceCalculator = distanceCalculator,
             uiState = uiState,
             scope = testScope,
-            onLocationUpdated = { lastLocationUpdate = it },
         )
     }
 
@@ -123,7 +121,7 @@ class LocationDelegateTest {
     @Test
     fun `startLocationObservation updates userLocation from flow`() = runTest {
         val location = Location(UPDATED_LAT, UPDATED_LONG)
-        every { observeUserLocationUseCase.observe() } returns flowOf(location)
+        every { observeUserLocationUseCase.observe(any(), any()) } returns flowOf(location)
         every { distanceCalculator.calculateKm(any(), any(), any(), any()) } returns 0.1
 
         delegate.startLocationObservation()
@@ -133,15 +131,19 @@ class LocationDelegateTest {
     }
 
     @Test
-    fun `startLocationObservation calls onLocationUpdated callback`() = runTest {
+    fun `startLocationObservation emits to observedLocations`() = runTest {
         val location = Location(UPDATED_LAT, UPDATED_LONG)
-        every { observeUserLocationUseCase.observe() } returns flowOf(location)
+        every { observeUserLocationUseCase.observe(any(), any()) } returns flowOf(location)
         every { distanceCalculator.calculateKm(any(), any(), any(), any()) } returns 0.1
+
+        val observed = mutableListOf<Location>()
+        val collectJob = launch { delegate.observedLocations.collect { observed.add(it) } }
 
         delegate.startLocationObservation()
         advanceUntilIdle()
 
-        assertEquals(location, lastLocationUpdate)
+        assertEquals(listOf(location), observed)
+        collectJob.cancel()
     }
 
     @Test
@@ -149,7 +151,7 @@ class LocationDelegateTest {
         val initialFocus = Location(INITIAL_LAT, INITIAL_LONG)
         uiState.value = uiState.value.copy(cameraFocusLocation = initialFocus)
         val farLocation = Location(FAR_LAT, FAR_LONG)
-        every { observeUserLocationUseCase.observe() } returns flowOf(farLocation)
+        every { observeUserLocationUseCase.observe(any(), any()) } returns flowOf(farLocation)
         every { distanceCalculator.calculateKm(any(), any(), any(), any()) } returns 0.060
 
         delegate.startLocationObservation()
@@ -163,7 +165,7 @@ class LocationDelegateTest {
         val initialFocus = Location(INITIAL_LAT, INITIAL_LONG)
         uiState.value = uiState.value.copy(cameraFocusLocation = initialFocus)
         val nearLocation = Location(UPDATED_LAT, UPDATED_LONG)
-        every { observeUserLocationUseCase.observe() } returns flowOf(nearLocation)
+        every { observeUserLocationUseCase.observe(any(), any()) } returns flowOf(nearLocation)
         every { distanceCalculator.calculateKm(any(), any(), any(), any()) } returns 0.010
 
         delegate.startLocationObservation()
@@ -175,7 +177,7 @@ class LocationDelegateTest {
     @Test
     fun `startLocationObservation moves camera when cameraFocusLocation is null`() = runTest {
         val location = Location(UPDATED_LAT, UPDATED_LONG)
-        every { observeUserLocationUseCase.observe() } returns flowOf(location)
+        every { observeUserLocationUseCase.observe(any(), any()) } returns flowOf(location)
 
         delegate.startLocationObservation()
         advanceUntilIdle()
@@ -186,26 +188,69 @@ class LocationDelegateTest {
     @Test
     fun `stopLocationObservation cancels observation`() = runTest {
         val locationFlow = MutableStateFlow(Location(INITIAL_LAT, INITIAL_LONG))
-        every { observeUserLocationUseCase.observe() } returns locationFlow
+        every { observeUserLocationUseCase.observe(any(), any()) } returns locationFlow
         every { distanceCalculator.calculateKm(any(), any(), any(), any()) } returns 0.001
 
         delegate.startLocationObservation()
         advanceUntilIdle()
-        assertNotNull(uiState.value.userLocation)
+        val locationBeforeStop = uiState.value.userLocation
+        assertNotNull(locationBeforeStop)
 
         delegate.stopLocationObservation()
-        lastLocationUpdate = null
         locationFlow.value = Location(FAR_LAT, FAR_LONG)
         advanceUntilIdle()
 
-        assertNull(lastLocationUpdate)
+        assertEquals(locationBeforeStop, uiState.value.userLocation)
+    }
+
+    @Test
+    fun `updateUserLocation updates userLocation in state`() = runTest {
+        val location = Location(UPDATED_LAT, UPDATED_LONG)
+        every { distanceCalculator.calculateKm(any(), any(), any(), any()) } returns 0.1
+
+        delegate.updateUserLocation(location)
+
+        assertEquals(location, uiState.value.userLocation)
+    }
+
+    @Test
+    fun `updateUserLocation moves camera when distance exceeds threshold`() = runTest {
+        val initialFocus = Location(INITIAL_LAT, INITIAL_LONG)
+        uiState.value = uiState.value.copy(cameraFocusLocation = initialFocus)
+        val farLocation = Location(FAR_LAT, FAR_LONG)
+        every { distanceCalculator.calculateKm(any(), any(), any(), any()) } returns 0.060
+
+        delegate.updateUserLocation(farLocation)
+
+        assertEquals(farLocation, uiState.value.cameraFocusLocation)
+    }
+
+    @Test
+    fun `updateUserLocation does not move camera when distance below threshold`() = runTest {
+        val initialFocus = Location(INITIAL_LAT, INITIAL_LONG)
+        uiState.value = uiState.value.copy(cameraFocusLocation = initialFocus)
+        val nearLocation = Location(UPDATED_LAT, UPDATED_LONG)
+        every { distanceCalculator.calculateKm(any(), any(), any(), any()) } returns 0.010
+
+        delegate.updateUserLocation(nearLocation)
+
+        assertEquals(initialFocus, uiState.value.cameraFocusLocation)
+    }
+
+    @Test
+    fun `updateUserLocation moves camera when cameraFocusLocation is null`() = runTest {
+        val location = Location(UPDATED_LAT, UPDATED_LONG)
+
+        delegate.updateUserLocation(location)
+
+        assertEquals(location, uiState.value.cameraFocusLocation)
     }
 
     @Test
     fun `startLocationObservation cancels previous observation`() = runTest {
         val flow1 = MutableStateFlow(Location(INITIAL_LAT, INITIAL_LONG))
         val flow2 = flowOf(Location(UPDATED_LAT, UPDATED_LONG))
-        every { observeUserLocationUseCase.observe() } returnsMany listOf(flow1, flow2)
+        every { observeUserLocationUseCase.observe(any(), any()) } returnsMany listOf(flow1, flow2)
         every { distanceCalculator.calculateKm(any(), any(), any(), any()) } returns 0.001
 
         delegate.startLocationObservation()

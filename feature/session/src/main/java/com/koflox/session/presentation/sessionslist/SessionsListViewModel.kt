@@ -9,8 +9,8 @@ import com.koflox.location.model.Location
 import com.koflox.session.domain.usecase.CalculateSessionStatsUseCase
 import com.koflox.session.domain.usecase.GetAllSessionsUseCase
 import com.koflox.session.domain.usecase.GetSessionByIdUseCase
-import com.koflox.session.presentation.completion.components.buildRouteDisplayData
 import com.koflox.session.presentation.mapper.SessionUiMapper
+import com.koflox.session.presentation.route.buildRouteDisplayData
 import com.koflox.session.presentation.share.SessionImageSharer
 import com.koflox.session.presentation.share.ShareErrorMapper
 import com.koflox.session.presentation.share.SharePreviewData

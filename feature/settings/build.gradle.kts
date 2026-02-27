@@ -48,6 +48,7 @@ dependencies {
 
     // Bridge modules
     implementation(project(":feature:bridge:nutrition-settings:api"))
+    implementation(project(":feature:bridge:poi-settings:api"))
 
     // Shared modules
     implementation(project(":shared:concurrent"))

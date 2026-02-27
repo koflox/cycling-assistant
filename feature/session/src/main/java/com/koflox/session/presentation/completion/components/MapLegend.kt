@@ -34,6 +34,8 @@ import com.koflox.designsystem.theme.CornerRadius
 import com.koflox.designsystem.theme.Spacing
 import com.koflox.designsystem.theme.SurfaceAlpha
 import com.koflox.graphics.figures.computeArrowVertices
+import com.koflox.map.ROUTE_WIDTH
+import com.koflox.map.RouteColors
 import com.koflox.session.R
 
 private val LEGEND_INDICATOR_SIZE = 20.dp

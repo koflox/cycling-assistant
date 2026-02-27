@@ -7,12 +7,22 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import androidx.compose.ui.graphics.toArgb
 import androidx.core.app.NotificationCompat
 import com.koflox.designsystem.context.LocalizedContextProvider
+import com.koflox.designsystem.theme.CyclingGreen
+import com.koflox.designsystem.theme.CyclingGreenDark
 import com.koflox.session.R
 import com.koflox.session.domain.model.Session
 import com.koflox.session.domain.model.SessionStatus
 import com.koflox.session.presentation.mapper.SessionUiMapper
+import com.koflox.theme.domain.model.AppTheme
+import com.koflox.theme.domain.usecase.ObserveThemeUseCase
+import com.koflox.theme.util.isNightMode
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 
 internal interface SessionNotificationManager {
     fun createNotificationChannel()
@@ -24,6 +34,8 @@ internal class SessionNotificationManagerImpl(
     private val context: Context,
     private val localizedContextProvider: LocalizedContextProvider,
     private val sessionUiMapper: SessionUiMapper,
+    observeThemeUseCase: ObserveThemeUseCase,
+    dispatcherIo: CoroutineDispatcher,
 ) : SessionNotificationManager {
 
     companion object {
@@ -31,6 +43,19 @@ internal class SessionNotificationManagerImpl(
         const val NOTIFICATION_ID = 1001
         private const val REQUEST_CODE_CONTENT = 100
         private const val DEFAULT_NOTIFICATION_PRIORITY = NotificationCompat.PRIORITY_DEFAULT
+    }
+
+    @Volatile
+    private var currentTheme: AppTheme = AppTheme.SYSTEM
+
+    private val scope = CoroutineScope(SupervisorJob() + dispatcherIo)
+
+    init {
+        scope.launch {
+            observeThemeUseCase.observeTheme().collect { theme ->
+                currentTheme = theme
+            }
+        }
     }
 
     private val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -55,6 +80,7 @@ internal class SessionNotificationManagerImpl(
             .setSmallIcon(R.drawable.ic_notification_cycling)
             .setContentTitle(localizedContext.getString(R.string.notification_title_session_active))
             .setContentText(localizedContext.getString(R.string.notification_text_starting))
+            .setColor(resolveNotificationColor())
             .setOngoing(true)
             .setCategory(NotificationCompat.CATEGORY_NAVIGATION)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
@@ -84,6 +110,7 @@ internal class SessionNotificationManagerImpl(
             .setContentTitle(session.destinationName ?: localizedContext.getString(R.string.session_free_roam_title))
             .setContentText(contentText)
             .setStyle(NotificationCompat.BigTextStyle().bigText(expandedText))
+            .setColor(resolveNotificationColor())
             .setOngoing(true)
             .setOnlyAlertOnce(true)
             .setCategory(NotificationCompat.CATEGORY_NAVIGATION)
@@ -94,6 +121,14 @@ internal class SessionNotificationManagerImpl(
             .addAction(createStopAction())
             .build()
     }
+
+    private fun resolveNotificationColor(): Int = (
+        when (currentTheme) {
+            AppTheme.LIGHT -> CyclingGreen
+            AppTheme.DARK -> CyclingGreenDark
+            AppTheme.SYSTEM -> if (isNightMode(context)) CyclingGreenDark else CyclingGreen
+        }
+        ).toArgb()
 
     private fun createContentPendingIntent(): PendingIntent {
         val intent = context.packageManager.getLaunchIntentForPackage(context.packageName)

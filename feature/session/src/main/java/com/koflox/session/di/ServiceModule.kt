@@ -27,6 +27,8 @@ internal val serviceModule = module {
             context = androidContext(),
             localizedContextProvider = get(),
             sessionUiMapper = get(),
+            observeThemeUseCase = get(),
+            dispatcherIo = get<CoroutineDispatcher>(DispatchersQualifier.Io),
         )
     }
     single<SessionServiceController> {

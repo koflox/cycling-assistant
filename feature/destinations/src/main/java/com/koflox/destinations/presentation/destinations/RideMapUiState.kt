@@ -5,6 +5,7 @@ import com.google.android.gms.maps.model.LatLng
 import com.koflox.designsystem.text.UiText
 import com.koflox.destinations.domain.model.DistanceBounds
 import com.koflox.destinations.presentation.destinations.model.DestinationUiModel
+import com.koflox.destinationsession.bridge.usecase.ActiveSessionRouteData
 import com.koflox.location.model.Location
 
 internal sealed interface RideMapUiState {
@@ -48,6 +49,7 @@ internal sealed interface RideMapUiState {
         val error: UiText?,
         val navigationAction: NavigationAction?,
         val nutritionSuggestionTimeMs: Long?,
+        val routeData: ActiveSessionRouteData?,
     ) : RideMapUiState
 }
 
@@ -98,4 +100,10 @@ internal val RideMapUiState.curvePoints: List<LatLng>
         is RideMapUiState.DestinationIdle -> curvePoints
         is RideMapUiState.ActiveSession -> curvePoints
         else -> emptyList()
+    }
+
+internal val RideMapUiState.routeData: ActiveSessionRouteData?
+    get() = when (this) {
+        is RideMapUiState.ActiveSession -> routeData
+        else -> null
     }

@@ -5,8 +5,6 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.koflox.designsystem.component.StatusCard
-import com.koflox.destinations.presentation.destinations.ActiveSessionPoiButtons
-import com.koflox.destinations.presentation.destinations.RideMapUiEvent
 import org.junit.Rule
 import org.junit.Test
 
@@ -103,37 +101,4 @@ class DestinationComponentsTest {
         assert(!clicked) { "onClick should not be triggered when button is disabled" }
     }
 
-    @Test
-    fun activeSessionPoiButtons_displaysButtons() {
-        composeTestRule.setContent {
-            ActiveSessionPoiButtons(onPoiEvent = {})
-        }
-
-        composeTestRule.onNodeWithText("Coffee shops").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Toilets").assertIsDisplayed()
-    }
-
-    @Test
-    fun activeSessionPoiButtons_coffeeShopClick_triggersCallback() {
-        var event: RideMapUiEvent.PoiEvent? = null
-        composeTestRule.setContent {
-            ActiveSessionPoiButtons(onPoiEvent = { event = it })
-        }
-
-        composeTestRule.onNodeWithText("Coffee shops").performClick()
-
-        assert(event is RideMapUiEvent.PoiEvent.CoffeeShopClicked) { "CoffeeShopClicked event should be emitted" }
-    }
-
-    @Test
-    fun activeSessionPoiButtons_toiletClick_triggersCallback() {
-        var event: RideMapUiEvent.PoiEvent? = null
-        composeTestRule.setContent {
-            ActiveSessionPoiButtons(onPoiEvent = { event = it })
-        }
-
-        composeTestRule.onNodeWithText("Toilets").performClick()
-
-        assert(event is RideMapUiEvent.PoiEvent.ToiletClicked) { "ToiletClicked event should be emitted" }
-    }
 }

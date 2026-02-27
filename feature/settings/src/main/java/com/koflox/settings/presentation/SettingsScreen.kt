@@ -8,7 +8,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.DropdownMenuItem
@@ -26,12 +28,14 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import com.koflox.designsystem.component.LocalizedExposedDropdownMenu
 import com.koflox.designsystem.theme.Spacing
 import com.koflox.nutritionsettings.bridge.navigator.NutritionSettingsUiNavigator
+import com.koflox.poisettings.bridge.navigator.PoiSettingsUiNavigator
 import com.koflox.settings.R
 import com.koflox.theme.domain.model.AppTheme
 import org.koin.androidx.compose.koinViewModel
@@ -40,16 +44,20 @@ import org.koin.compose.koinInject
 @Composable
 internal fun SettingsRoute(
     onBackClick: () -> Unit,
+    onNavigateToPoiSelection: () -> Unit,
     modifier: Modifier = Modifier,
     nutritionSettingsUiNavigator: NutritionSettingsUiNavigator = koinInject(),
+    poiSettingsUiNavigator: PoiSettingsUiNavigator = koinInject(),
 ) {
     val viewModel: SettingsViewModel = koinViewModel()
     val uiState by viewModel.uiState.collectAsState()
     SettingsContent(
         uiState = uiState,
         onBackClick = onBackClick,
+        onNavigateToPoiSelection = onNavigateToPoiSelection,
         onEvent = viewModel::onEvent,
         nutritionSettingsUiNavigator = nutritionSettingsUiNavigator,
+        poiSettingsUiNavigator = poiSettingsUiNavigator,
         modifier = modifier,
     )
 }
@@ -59,8 +67,10 @@ internal fun SettingsRoute(
 internal fun SettingsContent(
     uiState: SettingsUiState,
     onBackClick: () -> Unit,
+    onNavigateToPoiSelection: () -> Unit,
     onEvent: (SettingsUiEvent) -> Unit,
     nutritionSettingsUiNavigator: NutritionSettingsUiNavigator,
+    poiSettingsUiNavigator: PoiSettingsUiNavigator,
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
@@ -82,7 +92,9 @@ internal fun SettingsContent(
         SettingsBody(
             uiState = uiState,
             onEvent = onEvent,
+            onNavigateToPoiSelection = onNavigateToPoiSelection,
             nutritionSettingsUiNavigator = nutritionSettingsUiNavigator,
+            poiSettingsUiNavigator = poiSettingsUiNavigator,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
@@ -95,12 +107,15 @@ internal fun SettingsContent(
 private fun SettingsBody(
     uiState: SettingsUiState,
     onEvent: (SettingsUiEvent) -> Unit,
+    onNavigateToPoiSelection: () -> Unit,
     nutritionSettingsUiNavigator: NutritionSettingsUiNavigator,
+    poiSettingsUiNavigator: PoiSettingsUiNavigator,
     modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier = modifier,
+        modifier = modifier.verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(Spacing.ExtraLarge),
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         SettingsSection(title = stringResource(R.string.settings_section_app)) {
             SettingDropdown(
@@ -137,9 +152,29 @@ private fun SettingsBody(
                 },
             )
         }
-        SettingsSection(title = stringResource(R.string.settings_section_nutrition)) {
+        SettingsSection(title = stringResource(R.string.settings_section_session)) {
+            poiSettingsUiNavigator.PoiSettingsSection(
+                onNavigateToPoiSelection = onNavigateToPoiSelection,
+                modifier = Modifier,
+            )
             nutritionSettingsUiNavigator.NutritionSettingsSection(modifier = Modifier)
         }
+        BuildInfoText(text = uiState.buildInfoText)
+    }
+}
+
+@Composable
+private fun BuildInfoText(
+    text: String,
+    modifier: Modifier = Modifier,
+) {
+    if (text.isNotEmpty()) {
+        Text(
+            text = text,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = modifier,
+        )
     }
 }
 

@@ -1,5 +1,6 @@
 package com.koflox.designsystem.component
 
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
@@ -43,6 +44,7 @@ fun DebouncedOutlinedButton(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     colors: ButtonColors = ButtonDefaults.outlinedButtonColors(),
+    contentPadding: PaddingValues = ButtonDefaults.ContentPadding,
     content: @Composable () -> Unit,
 ) {
     var lastClickTimeMs by remember { mutableLongStateOf(0L) }
@@ -57,6 +59,7 @@ fun DebouncedOutlinedButton(
         modifier = modifier,
         enabled = enabled,
         colors = colors,
+        contentPadding = contentPadding,
         content = { content() },
     )
 }

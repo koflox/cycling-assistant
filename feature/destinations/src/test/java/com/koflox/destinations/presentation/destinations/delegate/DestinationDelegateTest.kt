@@ -1,8 +1,5 @@
 package com.koflox.destinations.presentation.destinations.delegate
 
-import android.app.Application
-import android.content.pm.PackageInfo
-import android.content.pm.PackageManager
 import android.net.Uri
 import com.koflox.designsystem.text.UiText
 import com.koflox.destinations.R
@@ -11,7 +8,6 @@ import com.koflox.destinations.domain.model.Destinations
 import com.koflox.destinations.domain.model.DistanceBounds
 import com.koflox.destinations.domain.usecase.GetDestinationInfoUseCase
 import com.koflox.destinations.domain.usecase.GetDistanceBoundsUseCase
-import com.koflox.destinations.domain.usecase.GetUserLocationUseCase
 import com.koflox.destinations.domain.usecase.InitializeDatabaseUseCase
 import com.koflox.destinations.domain.usecase.NoSuitableDestinationException
 import com.koflox.destinations.domain.usecase.ToleranceCalculator
@@ -23,12 +19,12 @@ import com.koflox.destinations.presentation.mapper.DestinationUiMapper
 import com.koflox.destinations.testutil.createDestination
 import com.koflox.distance.DistanceCalculator
 import com.koflox.location.model.Location
+import com.koflox.location.usecase.GetUserLocationUseCase
+import com.koflox.map.intent.GoogleMapsIntentHelper
 import com.koflox.testing.coroutine.MainDispatcherRule
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkStatic
-import io.mockk.unmockkStatic
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
@@ -71,8 +67,7 @@ class DestinationDelegateTest {
     private val distanceCalculator: DistanceCalculator = mockk()
     private val uiMapper: DestinationUiMapper = mockk()
     private val toleranceCalculator: ToleranceCalculator = mockk()
-    private val application: Application = mockk()
-    private val packageManager: PackageManager = mockk()
+    private val googleMapsIntentHelper: GoogleMapsIntentHelper = mockk()
 
     private lateinit var uiState: MutableStateFlow<RideMapInternalState>
     private lateinit var delegate: DestinationDelegate
@@ -80,7 +75,6 @@ class DestinationDelegateTest {
     @Before
     fun setup() {
         uiState = MutableStateFlow(RideMapInternalState())
-        every { application.packageManager } returns packageManager
         every { toleranceCalculator.calculateKm(any()) } returns TOLERANCE_KM
         delegate = createDelegate()
     }
@@ -93,7 +87,7 @@ class DestinationDelegateTest {
         distanceCalculator = distanceCalculator,
         uiMapper = uiMapper,
         toleranceCalculator = toleranceCalculator,
-        application = application,
+        googleMapsIntentHelper = googleMapsIntentHelper,
         uiState = uiState,
         scope = testScope,
     )
@@ -291,26 +285,20 @@ class DestinationDelegateTest {
 
     @Test
     fun `openInGoogleMaps sets navigation action when maps installed`() = runTest {
-        mockkStatic(Uri::class)
-        try {
-            val mockUri: Uri = mockk()
-            every { Uri.parse(any()) } returns mockUri
-            every { packageManager.getPackageInfo("com.google.android.apps.maps", 0) } returns PackageInfo()
+        val mockUri: Uri = mockk()
+        every { googleMapsIntentHelper.isInstalled() } returns true
+        every { googleMapsIntentHelper.buildNavigationUri(DEST_LAT, DEST_LONG) } returns mockUri
 
-            delegate.openInGoogleMaps(createDestinationUiModel())
+        delegate.openInGoogleMaps(createDestinationUiModel())
 
-            val action = uiState.value.navigationAction
-            assertTrue(action is NavigationAction.OpenGoogleMaps)
-            assertEquals(mockUri, (action as NavigationAction.OpenGoogleMaps).uri)
-        } finally {
-            unmockkStatic(Uri::class)
-        }
+        val action = uiState.value.navigationAction
+        assertTrue(action is NavigationAction.OpenGoogleMaps)
+        assertEquals(mockUri, (action as NavigationAction.OpenGoogleMaps).uri)
     }
 
     @Test
     fun `openInGoogleMaps sets error when maps not installed`() = runTest {
-        every { packageManager.getPackageInfo("com.google.android.apps.maps", 0) } throws
-            PackageManager.NameNotFoundException()
+        every { googleMapsIntentHelper.isInstalled() } returns false
 
         delegate.openInGoogleMaps(createDestinationUiModel())
 
@@ -337,8 +325,7 @@ class DestinationDelegateTest {
     @Test
     fun `openInGoogleMaps clears availability on failure`() = runTest {
         uiState.value = uiState.value.copy(isGoogleMapsAvailable = true)
-        every { packageManager.getPackageInfo("com.google.android.apps.maps", 0) } throws
-            PackageManager.NameNotFoundException()
+        every { googleMapsIntentHelper.isInstalled() } returns false
 
         delegate.openInGoogleMaps(createDestinationUiModel())
 
@@ -347,7 +334,7 @@ class DestinationDelegateTest {
 
     @Test
     fun `checkGoogleMapsAvailability sets true when installed`() = runTest {
-        every { packageManager.getPackageInfo("com.google.android.apps.maps", 0) } returns PackageInfo()
+        every { googleMapsIntentHelper.isInstalled() } returns true
 
         delegate.checkGoogleMapsAvailability()
 
@@ -356,8 +343,7 @@ class DestinationDelegateTest {
 
     @Test
     fun `checkGoogleMapsAvailability sets false when not installed`() = runTest {
-        every { packageManager.getPackageInfo("com.google.android.apps.maps", 0) } throws
-            PackageManager.NameNotFoundException()
+        every { googleMapsIntentHelper.isInstalled() } returns false
 
         delegate.checkGoogleMapsAvailability()
 
@@ -366,27 +352,21 @@ class DestinationDelegateTest {
 
     @Test
     fun `openPoiInGoogleMaps sets navigation action when maps installed and location available`() = runTest {
-        mockkStatic(Uri::class)
-        try {
-            val mockUri: Uri = mockk()
-            every { Uri.parse(any()) } returns mockUri
-            every { Uri.encode(any()) } returns "coffee+shop"
-            every { packageManager.getPackageInfo("com.google.android.apps.maps", 0) } returns PackageInfo()
-            uiState.value = uiState.value.copy(userLocation = createUserLocation())
+        val mockUri: Uri = mockk()
+        every { googleMapsIntentHelper.isInstalled() } returns true
+        every { googleMapsIntentHelper.buildSearchUri(USER_LAT, USER_LONG, "coffee shop") } returns mockUri
+        uiState.value = uiState.value.copy(userLocation = createUserLocation())
 
-            delegate.openPoiInGoogleMaps("coffee shop")
+        delegate.openPoiInGoogleMaps("coffee shop")
 
-            val action = uiState.value.navigationAction
-            assertTrue(action is NavigationAction.OpenGoogleMaps)
-        } finally {
-            unmockkStatic(Uri::class)
-        }
+        val action = uiState.value.navigationAction
+        assertTrue(action is NavigationAction.OpenGoogleMaps)
+        assertEquals(mockUri, (action as NavigationAction.OpenGoogleMaps).uri)
     }
 
     @Test
     fun `openPoiInGoogleMaps sets error when maps not installed`() = runTest {
-        every { packageManager.getPackageInfo("com.google.android.apps.maps", 0) } throws
-            PackageManager.NameNotFoundException()
+        every { googleMapsIntentHelper.isInstalled() } returns false
         uiState.value = uiState.value.copy(isGoogleMapsAvailable = true)
 
         delegate.openPoiInGoogleMaps("coffee shop")
@@ -398,7 +378,7 @@ class DestinationDelegateTest {
 
     @Test
     fun `openPoiInGoogleMaps sets error when no user location`() = runTest {
-        every { packageManager.getPackageInfo("com.google.android.apps.maps", 0) } returns PackageInfo()
+        every { googleMapsIntentHelper.isInstalled() } returns true
 
         delegate.openPoiInGoogleMaps("toilet")
 

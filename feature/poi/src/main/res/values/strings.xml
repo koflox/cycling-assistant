@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- POI Labels -->
+    <string name="poi_label_coffee_shop">Coffee shops</string>
+    <string name="poi_label_toilet">Toilets</string>
+    <string name="poi_label_konbini">Konbini</string>
+    <string name="poi_label_vending_machine">Vending machines</string>
+    <string name="poi_label_water_fountain">Water fountains</string>
+    <string name="poi_label_bicycle_shop">Bike shops</string>
+    <string name="poi_label_park">Parks</string>
+    <string name="poi_label_pharmacy">Pharmacies</string>
+    <string name="poi_label_restaurant">Restaurants</string>
+    <string name="poi_label_gas_station">Gas stations</string>
+
+    <!-- Selection Screen -->
+    <string name="poi_selection_title">Quick-access POI</string>
+    <string name="poi_selection_back">Back</string>
+    <string name="poi_selection_hint">Select exactly 2 POI types to show during your ride</string>
+    <string name="poi_selection_save">Save</string>
+
+    <!-- More POIs Dialog -->
+    <string name="poi_more_button_description">More points of interest</string>
+    <string name="poi_more_dialog_title">More Points of Interest</string>
+    <string name="poi_more_dialog_reselect_prefix">"You can "</string>
+    <string name="poi_more_dialog_reselect_action">reselect</string>
+    <string name="poi_more_dialog_reselect_suffix">" active POIs"</string>
+
+    <!-- Settings Section -->
+    <string name="poi_settings_label">Quick-access POI</string>
+
+</resources>
