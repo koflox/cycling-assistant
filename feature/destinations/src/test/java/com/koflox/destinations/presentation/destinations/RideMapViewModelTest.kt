@@ -20,6 +20,7 @@ import com.koflox.distance.DistanceCalculator
 import com.koflox.location.model.Location
 import com.koflox.location.usecase.GetUserLocationUseCase
 import com.koflox.location.usecase.ObserveUserLocationUseCase
+import com.koflox.map.intent.GoogleMapsIntentHelper
 import com.koflox.testing.coroutine.MainDispatcherRule
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -65,6 +66,7 @@ class RideMapViewModelTest {
     private val toleranceCalculator: ToleranceCalculator = mockk()
     private val application: Application = mockk(relaxed = true)
     private val cyclingSessionUseCase: CyclingSessionUseCase = mockk()
+    private val googleMapsIntentHelper: GoogleMapsIntentHelper = mockk()
     private val observeNutritionBreakUseCase: ObserveNutritionBreakUseCase = mockk()
     private val observeRidingModeUseCase: ObserveRidingModeUseCase = mockk()
     private val updateRidingModeUseCase: UpdateRidingModeUseCase = mockk()
@@ -97,6 +99,7 @@ class RideMapViewModelTest {
             DistanceBounds(minKm = 2.0, maxKm = 50.0),
         )
         every { toleranceCalculator.calculateKm(any()) } returns 3.0
+        every { googleMapsIntentHelper.isInstalled() } returns false
     }
 
     private fun createViewModel(): RideMapViewModel = RideMapViewModel(
@@ -111,6 +114,7 @@ class RideMapViewModelTest {
         toleranceCalculator = toleranceCalculator,
         application = application,
         cyclingSessionUseCase = cyclingSessionUseCase,
+        googleMapsIntentHelper = googleMapsIntentHelper,
         observeNutritionBreakUseCase = observeNutritionBreakUseCase,
         observeRidingModeUseCase = observeRidingModeUseCase,
         updateRidingModeUseCase = updateRidingModeUseCase,
@@ -546,8 +550,7 @@ class RideMapViewModelTest {
 
     @Test
     fun `ActiveSession includes arePoiActionsVisible from Google Maps availability`() = runTest {
-        every { application.packageManager.getPackageInfo("com.google.android.apps.maps", 0) } returns
-            android.content.pm.PackageInfo()
+        every { googleMapsIntentHelper.isInstalled() } returns true
         activeSessionFlow.value = true
 
         viewModel = createViewModel()
@@ -561,9 +564,7 @@ class RideMapViewModelTest {
 
     @Test
     fun `ActiveSession arePoiActionsVisible is false when Google Maps not installed`() = runTest {
-        every {
-            application.packageManager.getPackageInfo("com.google.android.apps.maps", 0)
-        } throws android.content.pm.PackageManager.NameNotFoundException()
+        every { googleMapsIntentHelper.isInstalled() } returns false
         activeSessionFlow.value = true
 
         viewModel = createViewModel()
@@ -578,8 +579,7 @@ class RideMapViewModelTest {
     @Test
     fun `DestinationIdle includes isNavigateVisible from Google Maps availability`() = runTest {
         every { distanceCalculator.calculateKm(any(), any(), any(), any()) } returns 0.0
-        every { application.packageManager.getPackageInfo("com.google.android.apps.maps", 0) } returns
-            android.content.pm.PackageInfo()
+        every { googleMapsIntentHelper.isInstalled() } returns true
         ridingModeFlow.value = RidingMode.DESTINATION
 
         viewModel = createViewModel()

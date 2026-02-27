@@ -50,10 +50,9 @@ import com.koflox.destinations.presentation.destinations.model.DestinationUiMode
 import com.koflox.destinations.presentation.permission.LocationPermissionHandler
 import com.koflox.destinationsession.bridge.navigator.CyclingSessionUiNavigator
 import com.koflox.location.settings.LocationSettingsHandler
+import com.koflox.map.intent.GoogleMapsIntentHelper
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
-
-private const val GOOGLE_MAPS_PACKAGE = "com.google.android.apps.maps"
 
 @Composable
 fun RideMapScreen(
@@ -144,11 +143,12 @@ private fun NavigationEffect(
     action: NavigationAction?,
     context: Context,
     onNavigationActionHandled: () -> Unit,
+    googleMapsIntentHelper: GoogleMapsIntentHelper = koinInject(),
 ) {
     LaunchedEffect(action) {
         when (action) {
             is NavigationAction.OpenGoogleMaps -> {
-                val intent = Intent(Intent.ACTION_VIEW, action.uri).apply { setPackage(GOOGLE_MAPS_PACKAGE) }
+                val intent = googleMapsIntentHelper.createViewIntent(action.uri)
                 context.startActivity(intent)
                 onNavigationActionHandled()
             }

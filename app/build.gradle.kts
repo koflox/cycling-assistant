@@ -145,6 +145,7 @@ dependencies {
     implementation(project(":shared:id"))
     implementation(project(":shared:location"))
     implementation(project(":shared:error"))
+    implementation(project(":shared:map"))
 
     // Testing
     testImplementation(project(":shared:testing"))

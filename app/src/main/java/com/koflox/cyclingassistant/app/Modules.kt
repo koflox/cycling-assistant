@@ -23,6 +23,7 @@ import com.koflox.id.di.idModule
 import com.koflox.locale.di.LocaleQualifier
 import com.koflox.locale.di.localeModule
 import com.koflox.location.locationModule
+import com.koflox.map.di.mapModule
 import com.koflox.nutrition.di.nutritionModule
 import com.koflox.nutritionsession.bridge.impl.di.nutritionSessionBridgeImplModule
 import com.koflox.nutritionsettings.bridge.impl.di.nutritionSettingsBridgeImplModule
@@ -93,6 +94,7 @@ internal val appModule = module {
         localeModule,
         locationModule,
         mainModule,
+        mapModule,
         nutritionModule,
         nutritionSessionBridgeImplModule,
         nutritionSettingsBridgeImplModule,
