@@ -18,6 +18,13 @@
     <string name="poi_selection_hint">Выберите 2 типа POI для отображения во время поездки</string>
     <string name="poi_selection_save">Сохранить</string>
 
+    <!-- More POIs Dialog -->
+    <string name="poi_more_button_description">Больше точек интереса</string>
+    <string name="poi_more_dialog_title">Другие точки интереса</string>
+    <string name="poi_more_dialog_reselect_prefix">"Вы можете "</string>
+    <string name="poi_more_dialog_reselect_action">изменить</string>
+    <string name="poi_more_dialog_reselect_suffix">" активные POI"</string>
+
     <!-- Settings Section -->
     <string name="poi_settings_label">Быстрый доступ к POI</string>
 

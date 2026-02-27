@@ -8,6 +8,7 @@ interface PoiUiNavigator {
     @Composable
     fun ActivePoiButtons(
         onPoiClicked: (query: String) -> Unit,
+        onNavigateToPoiSelection: () -> Unit,
         modifier: Modifier,
     )
 }

@@ -18,6 +18,13 @@
     <string name="poi_selection_hint">ライド中に表示するPOIタイプを2つ選択してください</string>
     <string name="poi_selection_save">保存</string>
 
+    <!-- More POIs Dialog -->
+    <string name="poi_more_button_description">その他のPOI</string>
+    <string name="poi_more_dialog_title">その他のPOI</string>
+    <string name="poi_more_dialog_reselect_prefix">アクティブPOIを</string>
+    <string name="poi_more_dialog_reselect_action">再選択</string>
+    <string name="poi_more_dialog_reselect_suffix">できます</string>
+
     <!-- Settings Section -->
     <string name="poi_settings_label">クイックアクセスPOI</string>
 
