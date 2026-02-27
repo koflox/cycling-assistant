@@ -10,4 +10,10 @@ interface PoiSettingsUiNavigator {
         onNavigateToPoiSelection: () -> Unit,
         modifier: Modifier,
     )
+
+    @Composable
+    fun PoiSelectionScreen(
+        onBackClick: () -> Unit,
+        modifier: Modifier,
+    )
 }
