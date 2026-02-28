@@ -41,7 +41,7 @@ sqliteKtx = "2.6.2"
 datastore = "1.2.0"
 
 # Google Maps Compose
-mapsCompose = "8.1.0"
+mapsCompose = "8.2.0"
 playServicesLocation = "21.3.0"
 playServicesMaps = "20.0.0"
 
