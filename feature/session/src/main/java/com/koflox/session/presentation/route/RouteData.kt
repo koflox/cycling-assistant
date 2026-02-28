@@ -115,6 +115,7 @@ private fun buildSpans(pointColors: List<Int>): Pair<List<StyleSpan>, List<Color
     for (t in transitions) {
         val gradStart = maxOf(pos, t - GRADIENT_HALF_WIDTH)
         val gradEnd = minOf(edgeCount - 1, t + GRADIENT_HALF_WIDTH)
+        if (gradEnd < gradStart) continue
         val solidBefore = gradStart - pos
         if (solidBefore > 0) {
             spans.add(StyleSpan(StrokeStyle.colorBuilder(pointColors[pos]).build(), solidBefore.toDouble()))
