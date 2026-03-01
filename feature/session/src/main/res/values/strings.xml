@@ -13,7 +13,8 @@
     <string name="session_stat_idle_time">Idle</string>
     <string name="session_stat_altitude_gain">Climb</string>
     <string name="session_stat_altitude_loss">Descent</string>
-    <string name="session_stat_calories">Calories</string>
+    <string name="session_stat_calories_weight">Cal (weight)</string>
+    <string name="session_stat_calories_power">Cal (power)</string>
     <string name="session_stat_value_km">%s km</string>
     <string name="session_stat_value_kmh">%s km/h</string>
     <string name="session_stat_value_m">%s m</string>
@@ -105,4 +106,21 @@
     <string name="share_chooser_title">Share session</string>
     <string name="share_content_description">Share</string>
     <string name="share_no_app_available">No app available to share</string>
+
+    <!-- Stats Config -->
+    <string name="stats_config_title">Stats Display</string>
+    <string name="stats_config_back">Back</string>
+    <string name="stats_config_section_active">Active Session</string>
+    <string name="stats_config_section_completed">Completed Session</string>
+    <string name="stats_config_section_share">Share Preview</string>
+    <string name="stats_config_hint_active">Select exactly 5 stats</string>
+    <string name="stats_config_hint_completed">Select at least 4 stats</string>
+    <string name="stats_config_hint_share">Select 4 to 8 stats</string>
+    <string name="stats_config_reset_section">Reset</string>
+    <string name="stats_config_save_section">Save</string>
+    <string name="stats_config_save_all">Save All</string>
+    <string name="stats_config_settings_label">Stats Display</string>
+    <string name="stats_config_settings_hint">Configure which stats are shown</string>
+    <string name="stats_config_edit_content_description">Edit stats</string>
+    <string name="stats_config_collected_data_title">Collected Data</string>
 </resources>

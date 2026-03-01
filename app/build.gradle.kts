@@ -130,6 +130,8 @@ dependencies {
     implementation(project(":feature:bridge:poi-settings:impl"))
     implementation(project(":feature:bridge:profile-session:api"))
     implementation(project(":feature:bridge:profile-session:impl"))
+    implementation(project(":feature:bridge:session-settings:api"))
+    implementation(project(":feature:bridge:session-settings:impl"))
     implementation(project(":feature:dashboard"))
     implementation(project(":feature:destinations"))
     implementation(project(":feature:locale"))

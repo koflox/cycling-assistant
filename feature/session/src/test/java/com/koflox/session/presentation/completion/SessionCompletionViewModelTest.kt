@@ -8,8 +8,10 @@ import com.koflox.designsystem.text.UiText
 import com.koflox.error.mapper.ErrorMessageMapper
 import com.koflox.session.domain.model.SessionDerivedStats
 import com.koflox.session.domain.model.SessionStatus
+import com.koflox.session.domain.model.StatsDisplayConfig
 import com.koflox.session.domain.usecase.CalculateSessionStatsUseCase
 import com.koflox.session.domain.usecase.GetSessionByIdUseCase
+import com.koflox.session.domain.usecase.ObserveStatsDisplayConfigUseCase
 import com.koflox.session.navigation.SESSION_ID_ARG
 import com.koflox.session.presentation.mapper.SessionUiMapper
 import com.koflox.session.presentation.share.SessionImageSharer
@@ -23,6 +25,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -52,6 +55,7 @@ class SessionCompletionViewModelTest {
 
     private val getSessionByIdUseCase: GetSessionByIdUseCase = mockk()
     private val calculateSessionStatsUseCase: CalculateSessionStatsUseCase = mockk()
+    private val observeStatsDisplayConfigUseCase: ObserveStatsDisplayConfigUseCase = mockk()
     private val sessionUiMapper: SessionUiMapper = mockk()
     private val errorMessageMapper: ErrorMessageMapper = mockk()
     private val imageSharer: SessionImageSharer = mockk()
@@ -85,12 +89,20 @@ class SessionCompletionViewModelTest {
             ),
         )
         coEvery { errorMessageMapper.map(any()) } returns ERROR_UI_TEXT
+        every {
+            observeStatsDisplayConfigUseCase.observeCompletedSessionStats()
+        } returns flowOf(StatsDisplayConfig.DEFAULT_COMPLETED_SESSION_STATS)
+        every {
+            observeStatsDisplayConfigUseCase.observeShareStats()
+        } returns flowOf(StatsDisplayConfig.DEFAULT_SHARE_STATS)
+        every { sessionUiMapper.buildCompletedSessionStats(any(), any(), any()) } returns emptyList()
     }
 
     private fun createViewModel(): SessionCompletionViewModel {
         return SessionCompletionViewModel(
             getSessionByIdUseCase = getSessionByIdUseCase,
             calculateSessionStatsUseCase = calculateSessionStatsUseCase,
+            observeStatsDisplayConfigUseCase = observeStatsDisplayConfigUseCase,
             sessionUiMapper = sessionUiMapper,
             errorMessageMapper = errorMessageMapper,
             imageSharer = imageSharer,

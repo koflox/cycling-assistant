@@ -39,6 +39,9 @@ dependencies {
     // Permissions
     implementation(libs.accompanist.permissions)
 
+    // DataStore
+    implementation(libs.androidx.datastore.preferences)
+
     // Coroutines
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.android)

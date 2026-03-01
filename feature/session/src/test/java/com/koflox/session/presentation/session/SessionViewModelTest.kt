@@ -6,10 +6,12 @@ import com.koflox.designsystem.text.UiText
 import com.koflox.error.mapper.ErrorMessageMapper
 import com.koflox.session.domain.model.Session
 import com.koflox.session.domain.model.SessionStatus
+import com.koflox.session.domain.model.StatsDisplayConfig
 import com.koflox.session.domain.usecase.ActiveSessionUseCase
 import com.koflox.session.domain.usecase.CheckLocationEnabledUseCase
 import com.koflox.session.domain.usecase.CreateSessionParams
 import com.koflox.session.domain.usecase.CreateSessionUseCase
+import com.koflox.session.domain.usecase.ObserveStatsDisplayConfigUseCase
 import com.koflox.session.domain.usecase.UpdateSessionStatusUseCase
 import com.koflox.session.presentation.mapper.SessionUiMapper
 import com.koflox.session.presentation.session.timer.SessionTimer
@@ -26,6 +28,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -63,6 +66,7 @@ class SessionViewModelTest {
     private val sessionTimer: SessionTimer = mockk(relaxed = true)
     private val sessionTimerFactory: SessionTimerFactory = mockk()
     private val sessionPowerMeterUseCase: SessionPowerMeterUseCase = mockk()
+    private val observeStatsDisplayConfigUseCase: ObserveStatsDisplayConfigUseCase = mockk()
 
     private val pendingSessionAction = PendingSessionActionImpl()
     private val activeSessionFlow = MutableStateFlow<Session?>(null)
@@ -89,6 +93,10 @@ class SessionViewModelTest {
         every { checkLocationEnabledUseCase.observeLocationEnabled() } returns locationEnabledFlow
         every { checkLocationEnabledUseCase.isLocationEnabled() } returns true
         coEvery { sessionPowerMeterUseCase.getSessionPowerDevice() } returns null
+        every {
+            observeStatsDisplayConfigUseCase.observeActiveSessionStats()
+        } returns flowOf(StatsDisplayConfig.DEFAULT_ACTIVE_SESSION_STATS)
+        every { sessionUiMapper.buildActiveSessionStats(any(), any()) } returns emptyList()
     }
 
     private fun createViewModel(): SessionViewModel {
@@ -97,6 +105,7 @@ class SessionViewModelTest {
             updateSessionStatusUseCase = updateSessionStatusUseCase,
             activeSessionUseCase = activeSessionUseCase,
             checkLocationEnabledUseCase = checkLocationEnabledUseCase,
+            observeStatsDisplayConfigUseCase = observeStatsDisplayConfigUseCase,
             sessionServiceController = sessionServiceController,
             pendingSessionAction = pendingSessionAction,
             pendingSessionActionConsumer = pendingSessionAction,

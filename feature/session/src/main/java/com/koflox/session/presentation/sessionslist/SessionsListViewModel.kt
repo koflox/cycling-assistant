@@ -9,6 +9,7 @@ import com.koflox.location.model.Location
 import com.koflox.session.domain.usecase.CalculateSessionStatsUseCase
 import com.koflox.session.domain.usecase.GetAllSessionsUseCase
 import com.koflox.session.domain.usecase.GetSessionByIdUseCase
+import com.koflox.session.domain.usecase.ObserveStatsDisplayConfigUseCase
 import com.koflox.session.presentation.mapper.SessionUiMapper
 import com.koflox.session.presentation.route.buildRouteDisplayData
 import com.koflox.session.presentation.share.SessionImageSharer
@@ -21,12 +22,14 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 internal class SessionsListViewModel(
     private val getAllSessionsUseCase: GetAllSessionsUseCase,
     private val getSessionByIdUseCase: GetSessionByIdUseCase,
     private val calculateSessionStatsUseCase: CalculateSessionStatsUseCase,
+    private val observeStatsDisplayConfigUseCase: ObserveStatsDisplayConfigUseCase,
     private val mapper: SessionsListUiMapper,
     private val sessionUiMapper: SessionUiMapper,
     private val imageSharer: SessionImageSharer,
@@ -88,6 +91,8 @@ internal class SessionsListViewModel(
                 } else {
                     derivedStats.caloriesBurned?.let(sessionUiMapper::formatCalories)
                 }
+                val shareConfig = observeStatsDisplayConfigUseCase.observeShareStats().first()
+                val shareStats = sessionUiMapper.buildCompletedSessionStats(session, derivedStats, shareConfig)
                 val previewData = SharePreviewData(
                     sessionId = session.id,
                     destinationName = session.destinationName,
@@ -103,6 +108,7 @@ internal class SessionsListViewModel(
                     caloriesFormatted = caloriesFormatted,
                     averagePowerFormatted = session.averagePowerWatts?.let(sessionUiMapper::formatPower),
                     maxPowerFormatted = session.maxPowerWatts?.let(sessionUiMapper::formatPower),
+                    shareStats = shareStats,
                     routeDisplayData = routeDisplayData,
                     endMarkerRotation = endRotation,
                 )

@@ -6,11 +6,14 @@ import com.koflox.connectionsession.bridge.usecase.SessionPowerMeterUseCase
 import com.koflox.error.mapper.ErrorMessageMapper
 import com.koflox.location.model.Location
 import com.koflox.session.domain.model.Session
+import com.koflox.session.domain.model.SessionStatType
 import com.koflox.session.domain.model.SessionStatus
+import com.koflox.session.domain.model.StatsDisplayConfig
 import com.koflox.session.domain.usecase.ActiveSessionUseCase
 import com.koflox.session.domain.usecase.CheckLocationEnabledUseCase
 import com.koflox.session.domain.usecase.CreateSessionParams
 import com.koflox.session.domain.usecase.CreateSessionUseCase
+import com.koflox.session.domain.usecase.ObserveStatsDisplayConfigUseCase
 import com.koflox.session.domain.usecase.UpdateSessionStatusUseCase
 import com.koflox.session.presentation.mapper.SessionUiMapper
 import com.koflox.session.presentation.session.timer.SessionTimer
@@ -33,6 +36,7 @@ internal class SessionViewModel(
     private val updateSessionStatusUseCase: UpdateSessionStatusUseCase,
     private val activeSessionUseCase: ActiveSessionUseCase,
     private val checkLocationEnabledUseCase: CheckLocationEnabledUseCase,
+    private val observeStatsDisplayConfigUseCase: ObserveStatsDisplayConfigUseCase,
     private val sessionServiceController: SessionServiceController,
     private val pendingSessionAction: PendingSessionAction,
     private val pendingSessionActionConsumer: PendingSessionActionConsumer,
@@ -53,6 +57,7 @@ internal class SessionViewModel(
 
     private var isPausedDueToLocation = false
     private var isPowerMeterConfigured = false
+    private var activeStatsConfig: List<SessionStatType> = StatsDisplayConfig.DEFAULT_ACTIVE_SESSION_STATS
 
     init {
         initialize()
@@ -64,6 +69,7 @@ internal class SessionViewModel(
         observeActiveSession()
         observeLocationEnabled()
         observeStopRequest()
+        observeStatsConfig()
     }
 
     private fun checkPowerMeterConfiguration() {
@@ -113,6 +119,18 @@ internal class SessionViewModel(
             pendingSessionAction.isStopRequested.collect { requested ->
                 if (requested && _uiState.value is SessionUiState.Active) {
                     showStopConfirmation()
+                }
+            }
+        }
+    }
+
+    private fun observeStatsConfig() {
+        viewModelScope.launch(dispatcherDefault) {
+            observeStatsDisplayConfigUseCase.observeActiveSessionStats().collect { config ->
+                activeStatsConfig = config
+                val session = activeSessionUseCase.observeActiveSession().first() ?: return@collect
+                updateActive { current ->
+                    current.copy(stats = sessionUiMapper.buildActiveSessionStats(session, activeStatsConfig))
                 }
             }
         }
@@ -260,6 +278,7 @@ internal class SessionViewModel(
             averageSpeedFormatted = formattedData.averageSpeedFormatted,
             topSpeedFormatted = formattedData.topSpeedFormatted,
             altitudeGainFormatted = formattedData.altitudeGainFormatted,
+            stats = sessionUiMapper.buildActiveSessionStats(session, activeStatsConfig),
             currentLocation = session.trackPoints.lastOrNull()?.let {
                 Location(it.latitude, it.longitude)
             },

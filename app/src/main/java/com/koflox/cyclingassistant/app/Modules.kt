@@ -39,6 +39,7 @@ import com.koflox.profilesession.bridge.impl.di.profileSessionBridgeImplModule
 import com.koflox.sensor.power.di.powerSensorModule
 import com.koflox.session.di.SessionQualifier
 import com.koflox.session.di.sessionModule
+import com.koflox.sessionsettings.bridge.impl.di.sessionSettingsBridgeImplModule
 import com.koflox.settings.di.settingsModule
 import com.koflox.theme.di.themeModule
 import org.koin.android.ext.koin.androidContext
@@ -113,6 +114,7 @@ internal val appModule = module {
         profileModule,
         profileSessionBridgeImplModule,
         sessionModule,
+        sessionSettingsBridgeImplModule,
         settingsModule,
         themeModule,
     )
