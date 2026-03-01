@@ -45,6 +45,8 @@ internal val serviceModule = module {
             locationDataSource = get(),
             locationSettingsDataSource = get(),
             nutritionReminderUseCase = get(),
+            sessionPowerMeterUseCase = get(),
+            updateSessionPowerUseCase = get(),
         )
     }
 }

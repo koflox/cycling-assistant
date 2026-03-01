@@ -17,6 +17,8 @@ import com.koflox.session.domain.usecase.ObserveActiveSessionRouteUseCase
 import com.koflox.session.domain.usecase.ObserveActiveSessionRouteUseCaseImpl
 import com.koflox.session.domain.usecase.UpdateSessionLocationUseCase
 import com.koflox.session.domain.usecase.UpdateSessionLocationUseCaseImpl
+import com.koflox.session.domain.usecase.UpdateSessionPowerUseCase
+import com.koflox.session.domain.usecase.UpdateSessionPowerUseCaseImpl
 import com.koflox.session.domain.usecase.UpdateSessionStatusUseCase
 import com.koflox.session.domain.usecase.UpdateSessionStatusUseCaseImpl
 import kotlinx.coroutines.sync.Mutex
@@ -58,6 +60,15 @@ internal val domainModule = module {
             locationValidator = get(),
             locationSmoother = get(),
             idGenerator = get(),
+        )
+    }
+    // single: holds stateful lastReadingTimestampMs for energy delta calculation.
+    single<UpdateSessionPowerUseCase> {
+        UpdateSessionPowerUseCaseImpl(
+            dispatcherDefault = get(DispatchersQualifier.Default),
+            mutex = get(SessionQualifier.SessionMutex),
+            activeSessionUseCase = get(),
+            sessionRepository = get(),
         )
     }
     factory<CalculateSessionStatsUseCase> {

@@ -17,7 +17,12 @@
     <string name="session_stat_value_km">%s km</string>
     <string name="session_stat_value_kmh">%s km/h</string>
     <string name="session_stat_value_m">%s m</string>
+    <string name="session_stat_power">Power</string>
+    <string name="session_stat_avg_power">Avg Power</string>
+    <string name="session_stat_max_power">Max Power</string>
+    <string name="session_stat_value_w">%s W</string>
     <string name="session_stat_value_kcal">%s kcal</string>
+    <string name="session_stat_power_connecting">Connecting power meter</string>
 
     <!-- Session Buttons -->
     <string name="session_button_pause">Pause</string>

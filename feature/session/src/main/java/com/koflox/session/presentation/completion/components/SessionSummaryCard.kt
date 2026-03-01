@@ -32,6 +32,9 @@ internal fun SessionSummaryCard(
     altitudeLoss: String,
     calories: String?,
     modifier: Modifier = Modifier,
+    averagePower: String? = null,
+    maxPower: String? = null,
+    isSharePreview: Boolean = false,
 ) {
     Card(
         modifier = modifier.padding(Spacing.Small),
@@ -51,6 +54,9 @@ internal fun SessionSummaryCard(
             altitudeGain = altitudeGain,
             altitudeLoss = altitudeLoss,
             calories = calories,
+            averagePower = averagePower,
+            maxPower = maxPower,
+            isSharePreview = isSharePreview,
         )
     }
 }
@@ -66,6 +72,9 @@ private fun SessionSummaryContent(
     altitudeGain: String,
     altitudeLoss: String,
     calories: String?,
+    averagePower: String?,
+    maxPower: String?,
+    isSharePreview: Boolean,
 ) {
     val typography = MaterialTheme.typography
     val valueStyle = typography.labelLarge
@@ -83,7 +92,12 @@ private fun SessionSummaryContent(
             val distanceValue = stringResource(R.string.session_stat_value_km, distance)
             StatItem(stringResource(R.string.session_stat_distance), distanceValue, valueStyle, labelStyle, w)
             StatItem(stringResource(R.string.session_stat_moving_time), movingTime, valueStyle, labelStyle, w)
-            StatItem(stringResource(R.string.session_stat_idle_time), idleTime, valueStyle, labelStyle, w)
+            if (isSharePreview && averagePower != null) {
+                val avgPowerValue = stringResource(R.string.session_stat_value_w, averagePower)
+                StatItem(stringResource(R.string.session_stat_avg_power), avgPowerValue, valueStyle, labelStyle, w)
+            } else {
+                StatItem(stringResource(R.string.session_stat_idle_time), idleTime, valueStyle, labelStyle, w)
+            }
         }
         Row(modifier = rowModifier) {
             val w = Modifier.weight(1f)
@@ -96,7 +110,19 @@ private fun SessionSummaryContent(
             val altLossValue = stringResource(R.string.session_stat_value_m, altitudeLoss)
             StatItem(stringResource(R.string.session_stat_altitude_loss), altLossValue, valueStyle, labelStyle, w)
         }
-        if (calories != null) {
+        if (averagePower != null && maxPower != null) {
+            Row(modifier = rowModifier) {
+                val w = Modifier.weight(1f)
+                val avgPowerValue = stringResource(R.string.session_stat_value_w, averagePower)
+                StatItem(stringResource(R.string.session_stat_avg_power), avgPowerValue, valueStyle, labelStyle, w)
+                val maxPowerValue = stringResource(R.string.session_stat_value_w, maxPower)
+                StatItem(stringResource(R.string.session_stat_max_power), maxPowerValue, valueStyle, labelStyle, w)
+                if (calories != null) {
+                    val caloriesValue = stringResource(R.string.session_stat_value_kcal, calories)
+                    StatItem(stringResource(R.string.session_stat_calories), caloriesValue, valueStyle, labelStyle, w)
+                }
+            }
+        } else if (calories != null) {
             Row(modifier = rowModifier, horizontalArrangement = Arrangement.Center) {
                 val caloriesValue = stringResource(R.string.session_stat_value_kcal, calories)
                 StatItem(stringResource(R.string.session_stat_calories), caloriesValue, valueStyle, labelStyle)

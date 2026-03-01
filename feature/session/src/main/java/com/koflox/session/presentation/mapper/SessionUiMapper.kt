@@ -8,6 +8,7 @@ interface SessionUiMapper {
     fun formatSpeed(speedKmh: Double): String
     fun formatAltitudeGain(altitudeGainMeters: Double): String
     fun formatCalories(calories: Double): String
+    fun formatPower(powerWatts: Int): String
     fun formatStartDate(startTimeMs: Long): String
     fun toSessionUiModel(session: Session): SessionUiModel
 }

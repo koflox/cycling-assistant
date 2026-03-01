@@ -211,6 +211,8 @@ private fun SessionCompletionLayout(
             altitudeGain = uiState.altitudeGainFormatted,
             altitudeLoss = uiState.altitudeLossFormatted,
             calories = uiState.caloriesFormatted,
+            averagePower = uiState.averagePowerFormatted,
+            maxPower = uiState.maxPowerFormatted,
             modifier = Modifier.fillMaxWidth(),
         )
     }

@@ -12,11 +12,6 @@ android {
         compose = true
     }
 
-    defaultConfig {
-        ksp {
-            arg("room.schemaLocation", "${rootProject.projectDir}/schemas/destinations")
-        }
-    }
 }
 
 dependencies {

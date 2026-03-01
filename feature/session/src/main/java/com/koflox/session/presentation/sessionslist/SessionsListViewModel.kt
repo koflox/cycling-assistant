@@ -35,6 +35,10 @@ internal class SessionsListViewModel(
     private val dispatcherDefault: CoroutineDispatcher,
 ) : ViewModel() {
 
+    companion object {
+        private const val JOULES_PER_KCAL = 1000.0
+    }
+
     private val _uiState = MutableStateFlow<SessionsListUiState>(SessionsListUiState.Loading)
     val uiState: StateFlow<SessionsListUiState> = _uiState.asStateFlow()
 
@@ -79,6 +83,11 @@ internal class SessionsListViewModel(
                 } else {
                     0f
                 }
+                val caloriesFormatted = if (session.hasPowerData && session.totalEnergyJoules != null) {
+                    sessionUiMapper.formatCalories(session.totalEnergyJoules / JOULES_PER_KCAL)
+                } else {
+                    derivedStats.caloriesBurned?.let(sessionUiMapper::formatCalories)
+                }
                 val previewData = SharePreviewData(
                     sessionId = session.id,
                     destinationName = session.destinationName,
@@ -91,7 +100,9 @@ internal class SessionsListViewModel(
                     topSpeedFormatted = formattedData.topSpeedFormatted,
                     altitudeGainFormatted = formattedData.altitudeGainFormatted,
                     altitudeLossFormatted = sessionUiMapper.formatAltitudeGain(derivedStats.altitudeLossMeters),
-                    caloriesFormatted = derivedStats.caloriesBurned?.let { sessionUiMapper.formatCalories(it) },
+                    caloriesFormatted = caloriesFormatted,
+                    averagePowerFormatted = session.averagePowerWatts?.let(sessionUiMapper::formatPower),
+                    maxPowerFormatted = session.maxPowerWatts?.let(sessionUiMapper::formatPower),
                     routeDisplayData = routeDisplayData,
                     endMarkerRotation = endRotation,
                 )

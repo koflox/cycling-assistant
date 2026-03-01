@@ -36,6 +36,10 @@ internal class SessionCompletionViewModel(
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
+    companion object {
+        private const val JOULES_PER_KCAL = 1000.0
+    }
+
     private val sessionId: String = checkNotNull(savedStateHandle[SESSION_ID_ARG])
 
     private val _uiState = MutableStateFlow<SessionCompletionUiState>(SessionCompletionUiState.Loading)
@@ -130,6 +134,11 @@ internal class SessionCompletionViewModel(
                 } else {
                     0f
                 }
+                val caloriesFormatted = if (session.hasPowerData && session.totalEnergyJoules != null) {
+                    sessionUiMapper.formatCalories(session.totalEnergyJoules / JOULES_PER_KCAL)
+                } else {
+                    derivedStats.caloriesBurned?.let(sessionUiMapper::formatCalories)
+                }
                 _uiState.value = SessionCompletionUiState.Content(
                     sessionId = sessionId,
                     destinationName = session.destinationName,
@@ -142,7 +151,9 @@ internal class SessionCompletionViewModel(
                     topSpeedFormatted = formattedData.topSpeedFormatted,
                     altitudeGainFormatted = formattedData.altitudeGainFormatted,
                     altitudeLossFormatted = sessionUiMapper.formatAltitudeGain(derivedStats.altitudeLossMeters),
-                    caloriesFormatted = derivedStats.caloriesBurned?.let { sessionUiMapper.formatCalories(it) },
+                    caloriesFormatted = caloriesFormatted,
+                    averagePowerFormatted = session.averagePowerWatts?.let(sessionUiMapper::formatPower),
+                    maxPowerFormatted = session.maxPowerWatts?.let(sessionUiMapper::formatPower),
                     routeDisplayData = routeDisplayData,
                     endMarkerRotation = endRotation,
                 )
@@ -173,6 +184,8 @@ internal class SessionCompletionViewModel(
         altitudeGainFormatted = content.altitudeGainFormatted,
         altitudeLossFormatted = content.altitudeLossFormatted,
         caloriesFormatted = content.caloriesFormatted,
+        averagePowerFormatted = content.averagePowerFormatted,
+        maxPowerFormatted = content.maxPowerFormatted,
         routeDisplayData = content.routeDisplayData,
         endMarkerRotation = content.endMarkerRotation,
     )

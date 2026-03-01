@@ -2,6 +2,7 @@ package com.koflox.session.presentation.session
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.koflox.connectionsession.bridge.usecase.SessionPowerMeterUseCase
 import com.koflox.error.mapper.ErrorMessageMapper
 import com.koflox.location.model.Location
 import com.koflox.session.domain.model.Session
@@ -37,6 +38,7 @@ internal class SessionViewModel(
     private val pendingSessionActionConsumer: PendingSessionActionConsumer,
     private val sessionUiMapper: SessionUiMapper,
     private val errorMessageMapper: ErrorMessageMapper,
+    private val sessionPowerMeterUseCase: SessionPowerMeterUseCase,
     sessionTimerFactory: SessionTimerFactory,
     private val dispatcherDefault: CoroutineDispatcher,
 ) : ViewModel() {
@@ -50,6 +52,7 @@ internal class SessionViewModel(
     private val sessionTimer: SessionTimer = sessionTimerFactory.create(viewModelScope)
 
     private var isPausedDueToLocation = false
+    private var isPowerMeterConfigured = false
 
     init {
         initialize()
@@ -57,9 +60,16 @@ internal class SessionViewModel(
 
     private fun initialize() {
         showNotificationForStartedSession()
+        checkPowerMeterConfiguration()
         observeActiveSession()
         observeLocationEnabled()
         observeStopRequest()
+    }
+
+    private fun checkPowerMeterConfiguration() {
+        viewModelScope.launch(dispatcherDefault) {
+            isPowerMeterConfigured = sessionPowerMeterUseCase.getSessionPowerDevice() != null
+        }
     }
 
     private fun observeActiveSession() {
@@ -255,7 +265,17 @@ internal class SessionViewModel(
             },
             isLocationDisabled = !checkLocationEnabledUseCase.isLocationEnabled(),
             overlay = currentOverlay,
+            powerDisplayState = computePowerDisplayState(session),
         )
+    }
+
+    private fun computePowerDisplayState(session: Session): PowerDisplayState = when {
+        !isPowerMeterConfigured -> PowerDisplayState.None
+        session.hasPowerData -> PowerDisplayState.Receiving(
+            avgPowerFormatted = sessionUiMapper.formatPower(session.averagePowerWatts ?: 0),
+        )
+        session.status == SessionStatus.RUNNING -> PowerDisplayState.Connecting
+        else -> PowerDisplayState.None
     }
 
     private inline fun updateActive(transform: (SessionUiState.Active) -> SessionUiState.Active) {

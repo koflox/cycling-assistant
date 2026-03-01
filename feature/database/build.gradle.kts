@@ -6,11 +6,6 @@ plugins {
 android {
     namespace = "com.koflox.database"
 
-    defaultConfig {
-        ksp {
-            arg("room.schemaLocation", "${rootProject.projectDir}/schemas/database")
-        }
-    }
 }
 
 dependencies {

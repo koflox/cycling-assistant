@@ -25,7 +25,7 @@ internal class ObserveNutritionEventsUseCaseImpl(
 ) : ObserveNutritionEventsUseCase {
 
     companion object {
-        private const val CHECK_INTERVAL_MS = 1000L
+        private const val CHECK_INTERVAL_MS = 30_000L
         private const val MINUTES_TO_MS = 60L * 1000L
     }
 

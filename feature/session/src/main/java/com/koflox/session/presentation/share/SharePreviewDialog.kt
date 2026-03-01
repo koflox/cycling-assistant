@@ -204,6 +204,9 @@ private fun SharePreviewContent(
                 altitudeGain = data.altitudeGainFormatted,
                 altitudeLoss = data.altitudeLossFormatted,
                 calories = data.caloriesFormatted,
+                averagePower = data.averagePowerFormatted,
+                maxPower = data.maxPowerFormatted,
+                isSharePreview = true,
                 modifier = Modifier.fillMaxWidth(),
             )
         }

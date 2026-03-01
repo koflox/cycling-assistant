@@ -5,11 +5,7 @@ plugins {
 
 android {
     namespace = "com.koflox.profile"
-    defaultConfig {
-        ksp {
-            arg("room.schemaLocation", "${rootProject.projectDir}/schemas/profile")
-        }
-    }
+
 }
 
 dependencies {

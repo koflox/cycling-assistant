@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="power_test_title">パワーテストモード</string>
+    <string name="power_test_back">戻る</string>
+    <string name="power_test_connecting">パワーメーターに接続中…</string>
+    <string name="power_test_connecting_hint">ペダルを回してセンサーを起動してください</string>
+    <string name="power_test_current_power">現在のパワー</string>
+    <string name="power_test_cadence">ケイデンス</string>
+    <string name="power_test_average_power">平均</string>
+    <string name="power_test_max_power">最大</string>
+    <string name="power_test_unit_watts">W</string>
+    <string name="power_test_unit_rpm">RPM</string>
+    <string name="power_test_reconnect">再接続</string>
+    <string name="power_test_disconnected">デバイスが切断されました</string>
+    <string name="power_test_connection_failed">接続に失敗しました。もう一度お試しください。</string>
+    <string name="power_test_bluetooth_disabled_title">Bluetoothがオフです</string>
+    <string name="power_test_bluetooth_disabled_message">パワーメーターに接続するにはBluetoothを有効にしてください。</string>
+    <string name="power_test_bluetooth_disabled_enable">OK</string>
+    <string name="power_test_calories">カロリー</string>
+    <string name="power_test_unit_kcal">kcal</string>
+</resources>

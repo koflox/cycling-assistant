@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="connections_title">Подключения</string>
+    <string name="connections_back">Назад</string>
+    <string name="connections_empty_hint">Нет сопряжённых устройств. Нажмите + для добавления.</string>
+    <string name="connections_add_device">Добавить устройство</string>
+    <string name="connections_device_session_usage">Использовать в сессиях</string>
+    <string name="connections_device_test_mode">Тест</string>
+    <string name="connections_device_type_power_meter">Измеритель мощности</string>
+    <string name="connections_scan_title">Поиск устройств</string>
+    <string name="connections_scan_subtitle">Поиск: Измерители мощности</string>
+    <string name="connections_scan_empty">Поиск ближайших устройств…</string>
+    <string name="connections_scan_already_paired">Уже сопряжено</string>
+    <string name="connections_scan_stop">Остановить поиск</string>
+    <string name="connections_permission_title">Требуется разрешение Bluetooth</string>
+    <string name="connections_permission_rationale">Доступ к Bluetooth необходим для поиска и подключения велосипедных датчиков.</string>
+    <string name="connections_permission_grant">Предоставить разрешение</string>
+    <string name="connections_permission_skip">Пропустить</string>
+    <string name="connections_bluetooth_disabled_title">Bluetooth выключен</string>
+    <string name="connections_bluetooth_disabled_message">Включите Bluetooth для поиска и подключения велосипедных датчиков.</string>
+    <string name="connections_bluetooth_disabled_enable">ОК</string>
+    <string name="connections_delete_title">Удалить устройство</string>
+    <string name="connections_delete_message">Удалить %1$s из сопряжённых устройств?</string>
+    <string name="connections_delete_confirm">Удалить</string>
+    <string name="connections_delete_cancel">Отмена</string>
+    <string name="connections_error_save_failed">Не удалось сохранить устройство</string>
+    <string name="connections_error_delete_failed">Не удалось удалить устройство</string>
+    <string name="connections_error_scan_failed">Ошибка поиска. Попробуйте снова.</string>
+</resources>

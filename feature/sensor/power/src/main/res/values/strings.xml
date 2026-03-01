@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="power_test_title">Power Test Mode</string>
+    <string name="power_test_back">Back</string>
+    <string name="power_test_connecting">Connecting to power meter…</string>
+    <string name="power_test_connecting_hint">Start spinning the pedals to wake up the sensor</string>
+    <string name="power_test_current_power">Current Power</string>
+    <string name="power_test_cadence">Cadence</string>
+    <string name="power_test_average_power">Average</string>
+    <string name="power_test_max_power">Maximum</string>
+    <string name="power_test_unit_watts">W</string>
+    <string name="power_test_unit_rpm">RPM</string>
+    <string name="power_test_calories">Calories</string>
+    <string name="power_test_unit_kcal">kcal</string>
+    <string name="power_test_reconnect">Reconnect</string>
+    <string name="power_test_disconnected">Device disconnected</string>
+    <string name="power_test_connection_failed">Connection failed. Please try again.</string>
+    <string name="power_test_bluetooth_disabled_title">Bluetooth is off</string>
+    <string name="power_test_bluetooth_disabled_message">Enable Bluetooth to connect to the power meter.</string>
+    <string name="power_test_bluetooth_disabled_enable">OK</string>
+</resources>
