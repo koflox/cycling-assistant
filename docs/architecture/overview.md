@@ -90,13 +90,16 @@ Dispatchers are injected via `DispatchersQualifier`, never hardcoded:
 Centralized Room database in the `app` module (`AppDatabase`):
 
 - `DestinationDao` — cycling POI data
+- `LocaleDao` — language/locale settings
+- `PairedDeviceDao` — paired BLE devices
+- `ProfileDao` — rider profile data
 - `SessionDao` — session and track points
 
 `@Dao` interfaces use suspend functions for one-shot operations and `Flow` for observable queries. Default conflict strategy: `OnConflictStrategy.REPLACE`.
 
 ## Data Persistence
 
-| Storage   | Purpose                                  |
-|-----------|------------------------------------------|
-| Room      | Destinations, sessions, and track points |
-| DataStore | User preferences (theme, language, profile) |
+| Storage   | Purpose                                                  |
+|-----------|----------------------------------------------------------|
+| Room      | Destinations, sessions, track points, locale, profile, paired devices |
+| DataStore | User preferences (theme, language, profile, stats display configuration) |

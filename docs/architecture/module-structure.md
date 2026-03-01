@@ -9,21 +9,33 @@ CyclingAssistant/
 ├── app/                              # Shell — navigation, theme, Koin bootstrap, Room DB
 ├── feature/
 │   ├── bridge/                       # Cross-feature communication (alphabetical pair names)
+│   │   ├── connection-session/       # connections ↔ session
 │   │   ├── destination-nutrition/    # destinations ↔ nutrition
+│   │   ├── destination-poi/          # destinations ↔ poi
 │   │   ├── destination-session/      # destinations ↔ session
 │   │   ├── nutrition-session/        # nutrition ↔ session
 │   │   ├── nutrition-settings/       # nutrition ↔ settings
-│   │   └── profile-session/          # profile ↔ session
+│   │   ├── poi-settings/             # poi ↔ settings
+│   │   ├── profile-session/          # profile ↔ session
+│   │   └── session-settings/         # session ↔ settings
 │   │       ├── api/                  # Interfaces exposed to consumers
 │   │       └── impl/                 # Implementations wiring to provider internals
+│   ├── connections/                  # BLE device connection and management
 │   ├── dashboard/                    # Main dashboard with expandable menu
 │   ├── destinations/                 # Destination selection feature
+│   ├── locale/                       # App language persistence and observation
 │   ├── nutrition/                    # Nutrition tracking and reminders
+│   ├── poi/                          # POI type selection and active session POI actions
 │   ├── profile/                      # Rider profile management
+│   ├── sensor/
+│   │   └── power/                    # Power meter test mode and observation
 │   ├── session/                      # Session tracking with foreground service
-│   └── settings/                     # App settings (theme, language)
+│   ├── settings/                     # App settings (theme, language, stats display)
+│   └── theme/                        # App theme persistence and observation
 └── shared/
-    ├── concurrent/                   # Coroutine dispatchers, suspendRunCatching
+    ├── altitude/                     # Altitude gain calculator
+    ├── ble/                          # BLE primitives (GATT, scanning, permissions)
+    ├── concurrent/                   # Coroutine dispatchers, suspendRunCatching, ConcurrentFactory
     ├── design-system/                # UI theme, colors, spacing, components
     ├── di/                           # Koin qualifiers
     ├── distance/                     # Distance calculator
@@ -31,6 +43,8 @@ CyclingAssistant/
     ├── graphics/                     # Bitmap utilities
     ├── id/                           # ID generator
     ├── location/                     # Location services (validator, smoother, data sources)
+    ├── map/                          # Google Maps route rendering constants & utilities
+    ├── sensor-protocol/              # BLE sensor data parsing (cycling power)
     └── testing/                      # Test utilities
 ```
 
@@ -48,17 +62,21 @@ Bridge modules live under `feature/bridge/` and are named as alphabetically-orde
 
 Utility modules consumed by features:
 
-| Module          | Purpose                                          |
-|-----------------|--------------------------------------------------|
-| `concurrent`    | Coroutine dispatchers, `suspendRunCatching`      |
-| `design-system` | Material 3 theme, colors, spacing, components    |
-| `di`            | Koin qualifier definitions                       |
-| `distance`      | Distance calculator                              |
-| `error`         | Error mapping utilities                          |
-| `graphics`      | Bitmap utilities                                 |
-| `id`            | ID generator                                     |
-| `location`      | Location services, validation, smoothing         |
-| `testing`       | Shared test utilities (`MainDispatcherRule`, etc) |
+| Module            | Purpose                                            |
+|-------------------|----------------------------------------------------|
+| `altitude`        | Altitude gain calculator                           |
+| `ble`             | BLE primitives (GATT, scanning, state, permissions)|
+| `concurrent`      | Coroutine dispatchers, `suspendRunCatching`, `ConcurrentFactory` |
+| `design-system`   | Material 3 theme, colors, spacing, components      |
+| `di`              | Koin qualifier definitions                         |
+| `distance`        | Distance calculator                                |
+| `error`           | Error mapping utilities                            |
+| `graphics`        | Bitmap utilities                                   |
+| `id`              | ID generator                                       |
+| `location`        | Location services, validation, smoothing           |
+| `map`             | Google Maps route rendering constants & utilities  |
+| `sensor-protocol` | BLE sensor data parsing (cycling power measurement)|
+| `testing`         | Shared test utilities (`MainDispatcherRule`, etc)  |
 
 ## Module Dependency Graph
 

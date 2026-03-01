@@ -19,6 +19,9 @@ An Android app that helps cyclists discover cycling destinations, track sessions
 
 - **Destination Discovery** — browse and select cycling destinations with randomized suggestions
 - **Session Tracking** — track cycling sessions with real-time stats (distance, speed, duration)
+- **Power Meter Connection** — connect BLE cycling power meters for real-time wattage and cadence
+- **Device Management** — scan, save, and manage BLE sensor devices
+- **Configurable Stats** — customize which statistics are displayed during sessions and sharing
 - **Route Visualization** — view the traveled route on an interactive map
 - **Session History** — review past cycling sessions and their details
 - **Share Results** — share session summaries as images

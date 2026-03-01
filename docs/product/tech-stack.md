@@ -12,6 +12,7 @@
 | **Navigation**           | Navigation Compose           |
 | **Maps**                 | Google Maps Compose          |
 | **Location**             | Play Services Location       |
+| **Bluetooth**            | Android BLE (BluetoothGatt, BluetoothLeScanner) |
 | **Testing**              | JUnit 4, MockK, Turbine      |
 | **Code Quality**         | Detekt                       |
 | **Coverage**             | Kover                        |
@@ -26,13 +27,16 @@
 Room is used as the local database, centralized in the `app` module (`AppDatabase`):
 
 - **DestinationDao** — cycling POI data
+- **LocaleDao** — language/locale settings
+- **PairedDeviceDao** — paired BLE devices
+- **ProfileDao** — rider profile data
 - **SessionDao** — session and track points
 
 DAO conventions: `@Dao` interfaces with suspend functions for one-shot operations and `Flow` for observable queries.
 
 ## Data Persistence
 
-| Storage   | Purpose                                     |
-|-----------|---------------------------------------------|
-| Room      | Destinations, sessions, and track points    |
-| DataStore | User preferences (theme, language, profile) |
+| Storage   | Purpose                                                  |
+|-----------|----------------------------------------------------------|
+| Room      | Destinations, sessions, track points, locale, profile, paired devices |
+| DataStore | User preferences (theme, language, profile, stats display configuration) |

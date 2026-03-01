@@ -58,11 +58,13 @@ nav:
   - Features:
       - Destinations: features/destinations.md
       - Session Tracking: features/session-tracking.md
+      - Power Meter: features/power-meter.md
       - Nutrition: features/nutrition.md
       - Other Features: features/other-features.md
   - Infrastructure:
       - CI/CD: infrastructure/ci-cd.md
       - Concurrency: infrastructure/concurrency.md
+      - Performance: infrastructure/performance.md
       - Security: infrastructure/security.md
       - Testing: infrastructure/testing.md
       - Code Quality: infrastructure/code-quality.md
