@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "4d66a57744daf49d43d52398c115b9fc",
+    "identityHash": "a3f33ad89e4d26f5a28d0cb3c2a7a6ad",
     "entities": [
       {
         "tableName": "destinations",
@@ -64,6 +64,48 @@
         }
       },
       {
+        "tableName": "paired_devices",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `macAddress` TEXT NOT NULL, `name` TEXT NOT NULL, `deviceType` TEXT NOT NULL, `isSessionUsageEnabled` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "macAddress",
+            "columnName": "macAddress",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "deviceType",
+            "columnName": "deviceType",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isSessionUsageEnabled",
+            "columnName": "isSessionUsageEnabled",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
         "tableName": "profile_settings",
         "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `riderWeightKg` REAL, PRIMARY KEY(`id`))",
         "fields": [
@@ -88,7 +130,7 @@
       },
       {
         "tableName": "sessions",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `destinationId` TEXT, `destinationName` TEXT, `destinationLatitude` REAL, `destinationLongitude` REAL, `startLatitude` REAL NOT NULL, `startLongitude` REAL NOT NULL, `startTimeMs` INTEGER NOT NULL, `lastResumedTimeMs` INTEGER NOT NULL, `endTimeMs` INTEGER, `elapsedTimeMs` INTEGER NOT NULL, `traveledDistanceKm` REAL NOT NULL, `averageSpeedKmh` REAL NOT NULL, `topSpeedKmh` REAL NOT NULL, `totalAltitudeGainMeters` REAL NOT NULL, `status` TEXT NOT NULL, PRIMARY KEY(`id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `destinationId` TEXT, `destinationName` TEXT, `destinationLatitude` REAL, `destinationLongitude` REAL, `startLatitude` REAL NOT NULL, `startLongitude` REAL NOT NULL, `startTimeMs` INTEGER NOT NULL, `lastResumedTimeMs` INTEGER NOT NULL, `endTimeMs` INTEGER, `elapsedTimeMs` INTEGER NOT NULL, `traveledDistanceKm` REAL NOT NULL, `averageSpeedKmh` REAL NOT NULL, `topSpeedKmh` REAL NOT NULL, `totalAltitudeGainMeters` REAL NOT NULL, `status` TEXT NOT NULL, `totalPowerReadings` INTEGER, `sumPowerWatts` INTEGER, `maxPowerWatts` INTEGER, `totalEnergyJoules` REAL, PRIMARY KEY(`id`))",
         "fields": [
           {
             "fieldPath": "id",
@@ -180,6 +222,26 @@
             "columnName": "status",
             "affinity": "TEXT",
             "notNull": true
+          },
+          {
+            "fieldPath": "totalPowerReadings",
+            "columnName": "totalPowerReadings",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "sumPowerWatts",
+            "columnName": "sumPowerWatts",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "maxPowerWatts",
+            "columnName": "maxPowerWatts",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "totalEnergyJoules",
+            "columnName": "totalEnergyJoules",
+            "affinity": "REAL"
           }
         ],
         "primaryKey": {
@@ -280,7 +342,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '4d66a57744daf49d43d52398c115b9fc')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'a3f33ad89e4d26f5a28d0cb3c2a7a6ad')"
     ]
   }
 }

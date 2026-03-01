@@ -5,11 +5,7 @@ plugins {
 
 android {
     namespace = "com.koflox.locale"
-    defaultConfig {
-        ksp {
-            arg("room.schemaLocation", "${rootProject.projectDir}/schemas/locale")
-        }
-    }
+
 }
 
 dependencies {

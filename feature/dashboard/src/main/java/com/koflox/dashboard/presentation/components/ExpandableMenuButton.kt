@@ -8,6 +8,7 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Bluetooth
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Route
 import androidx.compose.material.icons.filled.Settings
@@ -24,6 +25,7 @@ internal fun ExpandableMenuButton(
     isExpanded: Boolean,
     onToggleExpand: () -> Unit,
     onSessionsClick: () -> Unit,
+    onConnectionsClick: () -> Unit,
     onSettingsClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -50,6 +52,11 @@ internal fun ExpandableMenuButton(
                     icon = Icons.Default.Route,
                     contentDescription = stringResource(R.string.menu_sessions),
                     onClick = onSessionsClick,
+                )
+                FloatingMenuButton(
+                    icon = Icons.Default.Bluetooth,
+                    contentDescription = stringResource(R.string.menu_connections),
+                    onClick = onConnectionsClick,
                 )
                 FloatingMenuButton(
                     icon = Icons.Default.Settings,

@@ -38,6 +38,8 @@ internal class SessionUiMapperImpl(
     override fun formatCalories(calories: Double): String =
         String.format(appLocale, FORMAT_WHOLE_NUMBER, calories)
 
+    override fun formatPower(powerWatts: Int): String = powerWatts.toString()
+
     override fun formatStartDate(startTimeMs: Long): String {
         val dateFormat = SimpleDateFormat(DATE_FORMAT_PATTERN, appLocale)
         return dateFormat.format(Date(startTimeMs))

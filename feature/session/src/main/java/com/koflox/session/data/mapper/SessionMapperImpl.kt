@@ -31,6 +31,10 @@ internal class SessionMapperImpl(
             topSpeedKmh = session.topSpeedKmh,
             totalAltitudeGainMeters = session.totalAltitudeGainMeters,
             status = session.status.name,
+            totalPowerReadings = session.totalPowerReadings,
+            sumPowerWatts = session.sumPowerWatts,
+            maxPowerWatts = session.maxPowerWatts,
+            totalEnergyJoules = session.totalEnergyJoules,
         )
     }
 
@@ -85,6 +89,10 @@ internal class SessionMapperImpl(
                     accuracyMeters = trackPointEntity.accuracyMeters,
                 )
             },
+            totalPowerReadings = entity.totalPowerReadings,
+            sumPowerWatts = entity.sumPowerWatts,
+            maxPowerWatts = entity.maxPowerWatts,
+            totalEnergyJoules = entity.totalEnergyJoules,
         )
     }
 
@@ -122,6 +130,10 @@ internal class SessionMapperImpl(
                             accuracyMeters = trackPointEntity.accuracyMeters,
                         )
                     },
+                    totalPowerReadings = entity.totalPowerReadings,
+                    sumPowerWatts = entity.sumPowerWatts,
+                    maxPowerWatts = entity.maxPowerWatts,
+                    totalEnergyJoules = entity.totalEnergyJoules,
                 )
             }
         }

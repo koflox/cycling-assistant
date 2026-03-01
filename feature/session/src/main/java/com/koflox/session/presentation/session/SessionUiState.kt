@@ -20,9 +20,16 @@ internal sealed interface SessionUiState {
         val currentLocation: Location?,
         val isLocationDisabled: Boolean = false,
         val overlay: SessionOverlay? = null,
+        val powerDisplayState: PowerDisplayState = PowerDisplayState.None,
     ) : SessionUiState {
         val isPaused: Boolean get() = status == SessionStatus.PAUSED
     }
+}
+
+internal sealed interface PowerDisplayState {
+    data object None : PowerDisplayState
+    data object Connecting : PowerDisplayState
+    data class Receiving(val avgPowerFormatted: String) : PowerDisplayState
 }
 
 internal sealed interface SessionOverlay {

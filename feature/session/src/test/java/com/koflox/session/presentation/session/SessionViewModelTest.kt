@@ -1,6 +1,7 @@
 package com.koflox.session.presentation.session
 
 import app.cash.turbine.test
+import com.koflox.connectionsession.bridge.usecase.SessionPowerMeterUseCase
 import com.koflox.designsystem.text.UiText
 import com.koflox.error.mapper.ErrorMessageMapper
 import com.koflox.session.domain.model.Session
@@ -61,6 +62,7 @@ class SessionViewModelTest {
     private val errorMessageMapper: ErrorMessageMapper = mockk()
     private val sessionTimer: SessionTimer = mockk(relaxed = true)
     private val sessionTimerFactory: SessionTimerFactory = mockk()
+    private val sessionPowerMeterUseCase: SessionPowerMeterUseCase = mockk()
 
     private val pendingSessionAction = PendingSessionActionImpl()
     private val activeSessionFlow = MutableStateFlow<Session?>(null)
@@ -86,6 +88,7 @@ class SessionViewModelTest {
         every { sessionTimerFactory.create(any()) } returns sessionTimer
         every { checkLocationEnabledUseCase.observeLocationEnabled() } returns locationEnabledFlow
         every { checkLocationEnabledUseCase.isLocationEnabled() } returns true
+        coEvery { sessionPowerMeterUseCase.getSessionPowerDevice() } returns null
     }
 
     private fun createViewModel(): SessionViewModel {
@@ -99,6 +102,7 @@ class SessionViewModelTest {
             pendingSessionActionConsumer = pendingSessionAction,
             sessionUiMapper = sessionUiMapper,
             errorMessageMapper = errorMessageMapper,
+            sessionPowerMeterUseCase = sessionPowerMeterUseCase,
             sessionTimerFactory = sessionTimerFactory,
             dispatcherDefault = mainDispatcherRule.testDispatcher,
         )

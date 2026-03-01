@@ -59,6 +59,7 @@ internal fun SessionControlsOverlay(
                 averageSpeed = state.averageSpeedFormatted,
                 topSpeed = state.topSpeedFormatted,
                 altitudeGain = state.altitudeGainFormatted,
+                powerDisplayState = state.powerDisplayState,
             )
             Spacer(modifier = Modifier.height(Spacing.Large))
             SessionControlButtons(

@@ -3,5 +3,6 @@
     <string name="sessions_list_button">View sessions</string>
     <string name="menu_button">Menu</string>
     <string name="menu_sessions">Sessions</string>
+    <string name="menu_connections">Connections</string>
     <string name="menu_settings">Settings</string>
 </resources>
