@@ -22,6 +22,7 @@ import com.koflox.destinations.presentation.destinations.RideMapScreen
 @Composable
 internal fun DashboardScreen(
     onNavigateToSessionsList: () -> Unit,
+    onNavigateToConnections: () -> Unit,
     onNavigateToSettings: () -> Unit,
     onNavigateToSessionCompletion: (sessionId: String) -> Unit,
     onNavigateToPoiSelection: () -> Unit,
@@ -50,6 +51,10 @@ internal fun DashboardScreen(
             onSessionsClick = {
                 isMenuExpanded = false
                 onNavigateToSessionsList()
+            },
+            onConnectionsClick = {
+                isMenuExpanded = false
+                onNavigateToConnections()
             },
             onSettingsClick = {
                 isMenuExpanded = false

@@ -13,12 +13,13 @@ The session feature manages the cycling session lifecycle with a foreground serv
 
 ## Use Cases
 
-| Use Case                      | Purpose                     |
-|-------------------------------|-----------------------------|
-| `ActiveSessionUseCase`        | Observe/get active session  |
-| `CreateSessionUseCase`        | Create new session          |
-| `UpdateSessionStatusUseCase`  | Pause/resume/stop/onServiceRestart |
-| `UpdateSessionLocationUseCase`| Add track points            |
+| Use Case                      | Purpose                              |
+|-------------------------------|--------------------------------------|
+| `ActiveSessionUseCase`        | Observe/get active session           |
+| `CreateSessionUseCase`        | Create new session                   |
+| `UpdateSessionStatusUseCase`  | Pause/resume/stop/onServiceRestart   |
+| `UpdateSessionLocationUseCase`| Add track points                     |
+| `UpdateSessionPowerUseCase`   | Process power meter readings         |
 
 ## Service Flow
 
@@ -30,6 +31,7 @@ SessionTrackingService (foreground, type=location)
     └── delegates to SessionTrackerImpl
             ├── Observes ActiveSessionUseCase
             ├── Collects location every 3s / 5m
+            ├── Collects power meter readings (with exponential backoff retry)
             ├── Monitors location enabled state (auto-pause)
             ├── Updates notification every 1s
             ├── Handles notification actions (pause/resume)
@@ -40,7 +42,7 @@ The service runs as a **foreground service** with `START_STICKY` and `foreground
 
 ### Concurrency
 
-`UpdateSessionStatusUseCase` and `UpdateSessionLocationUseCase` share a `Mutex` singleton (via `SessionQualifier.SessionMutex`) to serialize concurrent state mutations, preventing races between status changes and location updates.
+`UpdateSessionStatusUseCase`, `UpdateSessionLocationUseCase`, and `UpdateSessionPowerUseCase` share a `Mutex` singleton (via `SessionQualifier.SessionMutex`) to serialize concurrent state mutations, preventing races between status changes, location updates, and power readings.
 
 ## Location Processing
 
@@ -65,3 +67,29 @@ The session notification provides direct controls:
 - **Stop** — stop the session and navigate to completion
 
 Notification updates happen every 1 second to show current duration, distance, and speed.
+
+## Power Tracking
+
+When a paired power meter with session usage enabled is available, `SessionTrackerImpl` automatically connects and streams power data during the session.
+
+### Session Power Fields
+
+| Field                 | Type      | Description                          |
+|-----------------------|-----------|--------------------------------------|
+| `totalPowerReadings`  | `Int?`    | Count of readings received           |
+| `sumPowerWatts`       | `Long?`   | Sum of all power values              |
+| `maxPowerWatts`       | `Int?`    | Peak power recorded                  |
+| `totalEnergyJoules`   | `Double?` | Accumulated energy                   |
+| `averagePowerWatts`   | `Int?`    | Computed: `sumPowerWatts / totalPowerReadings` |
+
+All fields are nullable — sessions without a power meter have no power data.
+
+### Retry Strategy
+
+BLE connections can drop during a ride. Power collection uses exponential backoff to reconnect automatically:
+
+- Initial delay: 2 seconds, max delay: 5 minutes, factor: 2x
+- Successful reading resets delay to initial value
+- Power collection starts on `RUNNING`, stops on `PAUSED`/`COMPLETED`
+
+See [Power Meter](power-meter.md) for the full power meter architecture.

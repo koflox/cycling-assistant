@@ -18,4 +18,17 @@ data class Session(
     val totalAltitudeGainMeters: Double,
     val status: SessionStatus,
     val trackPoints: List<TrackPoint>,
-)
+    val totalPowerReadings: Int? = null,
+    val sumPowerWatts: Long? = null,
+    val maxPowerWatts: Int? = null,
+    val totalEnergyJoules: Double? = null,
+) {
+    val averagePowerWatts: Int?
+        get() {
+            val readings = totalPowerReadings ?: return null
+            val sum = sumPowerWatts ?: return null
+            if (readings == 0) return null
+            return (sum / readings).toInt()
+        }
+    val hasPowerData: Boolean get() = totalPowerReadings != null && totalPowerReadings > 0
+}

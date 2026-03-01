@@ -113,6 +113,9 @@ dependencies {
     implementation(libs.androidx.sqlite)
 
     // Feature modules
+    implementation(project(":feature:connections"))
+    implementation(project(":feature:bridge:connection-session:api"))
+    implementation(project(":feature:bridge:connection-session:impl"))
     implementation(project(":feature:bridge:destination-nutrition:api"))
     implementation(project(":feature:bridge:destination-nutrition:impl"))
     implementation(project(":feature:bridge:destination-poi:api"))
@@ -127,18 +130,22 @@ dependencies {
     implementation(project(":feature:bridge:poi-settings:impl"))
     implementation(project(":feature:bridge:profile-session:api"))
     implementation(project(":feature:bridge:profile-session:impl"))
+    implementation(project(":feature:bridge:session-settings:api"))
+    implementation(project(":feature:bridge:session-settings:impl"))
     implementation(project(":feature:dashboard"))
     implementation(project(":feature:destinations"))
     implementation(project(":feature:locale"))
     implementation(project(":feature:nutrition"))
     implementation(project(":feature:poi"))
     implementation(project(":feature:profile"))
+    implementation(project(":feature:sensor:power"))
     implementation(project(":feature:session"))
     implementation(project(":feature:settings"))
     implementation(project(":feature:theme"))
 
     // Shared modules
     implementation(project(":shared:altitude"))
+    implementation(project(":shared:ble"))
     implementation(project(":shared:concurrent"))
     implementation(project(":shared:design-system"))
     implementation(project(":shared:distance"))
@@ -146,6 +153,7 @@ dependencies {
     implementation(project(":shared:location"))
     implementation(project(":shared:error"))
     implementation(project(":shared:map"))
+    implementation(project(":shared:sensor-protocol"))
 
     // Testing
     testImplementation(project(":shared:testing"))

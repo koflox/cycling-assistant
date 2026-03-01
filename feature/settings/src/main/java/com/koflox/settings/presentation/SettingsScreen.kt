@@ -36,6 +36,7 @@ import com.koflox.designsystem.component.LocalizedExposedDropdownMenu
 import com.koflox.designsystem.theme.Spacing
 import com.koflox.nutritionsettings.bridge.navigator.NutritionSettingsUiNavigator
 import com.koflox.poisettings.bridge.navigator.PoiSettingsUiNavigator
+import com.koflox.sessionsettings.bridge.navigator.StatsDisplaySettingsUiNavigator
 import com.koflox.settings.R
 import com.koflox.theme.domain.model.AppTheme
 import org.koin.androidx.compose.koinViewModel
@@ -45,9 +46,11 @@ import org.koin.compose.koinInject
 internal fun SettingsRoute(
     onBackClick: () -> Unit,
     onNavigateToPoiSelection: () -> Unit,
+    onNavigateToStatsConfig: () -> Unit,
     modifier: Modifier = Modifier,
     nutritionSettingsUiNavigator: NutritionSettingsUiNavigator = koinInject(),
     poiSettingsUiNavigator: PoiSettingsUiNavigator = koinInject(),
+    statsDisplaySettingsUiNavigator: StatsDisplaySettingsUiNavigator = koinInject(),
 ) {
     val viewModel: SettingsViewModel = koinViewModel()
     val uiState by viewModel.uiState.collectAsState()
@@ -55,9 +58,11 @@ internal fun SettingsRoute(
         uiState = uiState,
         onBackClick = onBackClick,
         onNavigateToPoiSelection = onNavigateToPoiSelection,
+        onNavigateToStatsConfig = onNavigateToStatsConfig,
         onEvent = viewModel::onEvent,
         nutritionSettingsUiNavigator = nutritionSettingsUiNavigator,
         poiSettingsUiNavigator = poiSettingsUiNavigator,
+        statsDisplaySettingsUiNavigator = statsDisplaySettingsUiNavigator,
         modifier = modifier,
     )
 }
@@ -68,9 +73,11 @@ internal fun SettingsContent(
     uiState: SettingsUiState,
     onBackClick: () -> Unit,
     onNavigateToPoiSelection: () -> Unit,
+    onNavigateToStatsConfig: () -> Unit,
     onEvent: (SettingsUiEvent) -> Unit,
     nutritionSettingsUiNavigator: NutritionSettingsUiNavigator,
     poiSettingsUiNavigator: PoiSettingsUiNavigator,
+    statsDisplaySettingsUiNavigator: StatsDisplaySettingsUiNavigator,
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
@@ -93,8 +100,10 @@ internal fun SettingsContent(
             uiState = uiState,
             onEvent = onEvent,
             onNavigateToPoiSelection = onNavigateToPoiSelection,
+            onNavigateToStatsConfig = onNavigateToStatsConfig,
             nutritionSettingsUiNavigator = nutritionSettingsUiNavigator,
             poiSettingsUiNavigator = poiSettingsUiNavigator,
+            statsDisplaySettingsUiNavigator = statsDisplaySettingsUiNavigator,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
@@ -108,8 +117,10 @@ private fun SettingsBody(
     uiState: SettingsUiState,
     onEvent: (SettingsUiEvent) -> Unit,
     onNavigateToPoiSelection: () -> Unit,
+    onNavigateToStatsConfig: () -> Unit,
     nutritionSettingsUiNavigator: NutritionSettingsUiNavigator,
     poiSettingsUiNavigator: PoiSettingsUiNavigator,
+    statsDisplaySettingsUiNavigator: StatsDisplaySettingsUiNavigator,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -158,6 +169,10 @@ private fun SettingsBody(
                 modifier = Modifier,
             )
             nutritionSettingsUiNavigator.NutritionSettingsSection(modifier = Modifier)
+            statsDisplaySettingsUiNavigator.StatsDisplaySettingsSection(
+                onNavigateToStatsConfig = onNavigateToStatsConfig,
+                modifier = Modifier,
+            )
         }
         BuildInfoText(text = uiState.buildInfoText)
     }

@@ -29,6 +29,10 @@ fun createSession(
     totalAltitudeGainMeters: Double = 0.0,
     status: SessionStatus = SessionStatus.RUNNING,
     trackPoints: List<TrackPoint> = emptyList(),
+    totalPowerReadings: Int? = null,
+    sumPowerWatts: Long? = null,
+    maxPowerWatts: Int? = null,
+    totalEnergyJoules: Double? = null,
 ) = Session(
     id = id,
     destinationId = destinationId,
@@ -47,6 +51,10 @@ fun createSession(
     totalAltitudeGainMeters = totalAltitudeGainMeters,
     status = status,
     trackPoints = trackPoints,
+    totalPowerReadings = totalPowerReadings,
+    sumPowerWatts = sumPowerWatts,
+    maxPowerWatts = maxPowerWatts,
+    totalEnergyJoules = totalEnergyJoules,
 )
 
 fun createTrackPoint(
@@ -86,6 +94,10 @@ fun createSessionEntity(
     topSpeedKmh: Double = 0.0,
     totalAltitudeGainMeters: Double = 0.0,
     status: String = "",
+    totalPowerReadings: Int? = null,
+    sumPowerWatts: Long? = null,
+    maxPowerWatts: Int? = null,
+    totalEnergyJoules: Double? = null,
 ) = SessionEntity(
     id = id,
     destinationId = destinationId,
@@ -103,6 +115,10 @@ fun createSessionEntity(
     topSpeedKmh = topSpeedKmh,
     totalAltitudeGainMeters = totalAltitudeGainMeters,
     status = status,
+    totalPowerReadings = totalPowerReadings,
+    sumPowerWatts = sumPowerWatts,
+    maxPowerWatts = maxPowerWatts,
+    totalEnergyJoules = totalEnergyJoules,
 )
 
 fun createTrackPointEntity(

@@ -24,7 +24,7 @@ Calculates project metrics and updates dynamic badges:
 - Code coverage percentage (Kover)
 - Lines of Kotlin code
 - Module count
-- Screen count
+- UI component count (screens + standalone dialogs)
 - Workflow count
 
 Badges are stored as JSON on a GitHub Gist and rendered via shields.io.

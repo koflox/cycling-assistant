@@ -13,11 +13,17 @@
     <string name="session_stat_idle_time">Простой</string>
     <string name="session_stat_altitude_gain">Подъём</string>
     <string name="session_stat_altitude_loss">Спуск</string>
-    <string name="session_stat_calories">Калории</string>
+    <string name="session_stat_calories_weight">Кал (вес)</string>
+    <string name="session_stat_calories_power">Кал (мощн)</string>
     <string name="session_stat_value_km">%s км</string>
     <string name="session_stat_value_kmh">%s км/ч</string>
     <string name="session_stat_value_m">%s м</string>
+    <string name="session_stat_power">Мощность</string>
+    <string name="session_stat_avg_power">Сред мощность</string>
+    <string name="session_stat_max_power">Макс мощность</string>
+    <string name="session_stat_value_w">%s Вт</string>
     <string name="session_stat_value_kcal">%s ккал</string>
+    <string name="session_stat_power_connecting">Подключение датчика мощности</string>
 
     <!-- Session Buttons -->
     <string name="session_button_pause">Пауза</string>
@@ -100,4 +106,21 @@
     <string name="share_chooser_title">Поделиться сессией</string>
     <string name="share_content_description">Поделиться</string>
     <string name="share_no_app_available">Нет приложения для отправки</string>
+
+    <!-- Stats Config -->
+    <string name="stats_config_title">Отображение данных</string>
+    <string name="stats_config_back">Назад</string>
+    <string name="stats_config_section_active">Активная сессия</string>
+    <string name="stats_config_section_completed">Завершённая сессия</string>
+    <string name="stats_config_section_share">Превью для отправки</string>
+    <string name="stats_config_hint_active">Выберите ровно 5 показателей</string>
+    <string name="stats_config_hint_completed">Выберите минимум 4 показателя</string>
+    <string name="stats_config_hint_share">Выберите от 4 до 8 показателей</string>
+    <string name="stats_config_reset_section">Сброс</string>
+    <string name="stats_config_save_section">Сохранить</string>
+    <string name="stats_config_save_all">Сохранить всё</string>
+    <string name="stats_config_settings_label">Отображение данных</string>
+    <string name="stats_config_settings_hint">Настройте отображаемые показатели</string>
+    <string name="stats_config_edit_content_description">Редактировать</string>
+    <string name="stats_config_collected_data_title">Собранные данные</string>
 </resources>

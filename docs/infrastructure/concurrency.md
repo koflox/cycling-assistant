@@ -112,3 +112,27 @@ by the call site (e.g., single-threaded access or already synchronized).
 ```kotlin
 fun <T> lazyUnsafe(initializer: () -> T) = lazy(mode = LazyThreadSafetyMode.NONE) { initializer.invoke() }
 ```
+
+## Exponential Backoff Retry
+
+Used by `SessionTrackerImpl` for BLE power meter reconnection. When a connection drops, the retry loop waits with increasing delay before attempting to reconnect:
+
+```
+retryDelay = INITIAL_DELAY
+loop:
+    try:
+        collect power readings
+        on each success: retryDelay = INITIAL_DELAY  // reset on success
+    catch PowerConnectionException:
+        // connection lost — retry with backoff
+    delay(retryDelay)
+    retryDelay = min(retryDelay * FACTOR, MAX_DELAY)
+```
+
+| Parameter     | Value       | Constant                        |
+|---------------|-------------|---------------------------------|
+| Initial delay | 2 seconds   | `POWER_RETRY_INITIAL_DELAY_MS`  |
+| Max delay     | 5 minutes   | `POWER_RETRY_MAX_DELAY_MS`      |
+| Factor        | 2x          | `POWER_RETRY_FACTOR`            |
+
+Only `PowerConnectionException` triggers retry — `CancellationException` propagates normally to respect structured concurrency. The retry loop runs until the `powerCollectionJob` is cancelled (on session pause/stop).

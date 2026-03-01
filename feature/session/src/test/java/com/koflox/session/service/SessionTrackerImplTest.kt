@@ -1,5 +1,6 @@
 package com.koflox.session.service
 
+import com.koflox.connectionsession.bridge.usecase.SessionPowerMeterUseCase
 import com.koflox.location.geolocation.LocationDataSource
 import com.koflox.location.model.Location
 import com.koflox.location.settings.LocationSettingsDataSource
@@ -8,6 +9,7 @@ import com.koflox.session.domain.model.Session
 import com.koflox.session.domain.model.SessionStatus
 import com.koflox.session.domain.usecase.ActiveSessionUseCase
 import com.koflox.session.domain.usecase.UpdateSessionLocationUseCase
+import com.koflox.session.domain.usecase.UpdateSessionPowerUseCase
 import com.koflox.session.domain.usecase.UpdateSessionStatusUseCase
 import com.koflox.session.testutil.createSession
 import io.mockk.coEvery
@@ -45,6 +47,8 @@ class SessionTrackerImplTest {
     private val locationDataSource: LocationDataSource = mockk()
     private val locationSettingsDataSource: LocationSettingsDataSource = mockk()
     private val nutritionReminderUseCase: NutritionReminderUseCase = mockk()
+    private val sessionPowerMeterUseCase: SessionPowerMeterUseCase = mockk(relaxed = true)
+    private val updateSessionPowerUseCase: UpdateSessionPowerUseCase = mockk(relaxed = true)
     private val delegate: SessionTrackingDelegate = mockk(relaxed = true)
     private var currentTimeMs = LAST_RESUMED_TIME_MS
 
@@ -65,7 +69,8 @@ class SessionTrackerImplTest {
         coEvery { updateSessionStatusUseCase.resume() } returns Result.success(Unit)
         coEvery { updateSessionStatusUseCase.stop() } returns Result.success(Unit)
         coEvery { updateSessionStatusUseCase.onServiceRestart() } returns Result.success(Unit)
-        every { locationDataSource.observeLocationUpdates(any(), any()) } returns locationFlow
+        every { locationDataSource.observeLocationUpdates(any(), any(), any()) } returns locationFlow
+        coEvery { sessionPowerMeterUseCase.getSessionPowerDevice() } returns null
         tracker = createTracker()
     }
 
@@ -93,7 +98,7 @@ class SessionTrackerImplTest {
         tracker.startTracking(delegate)
         advanceTimeBy(1)
 
-        verify { locationDataSource.observeLocationUpdates(any(), any()) }
+        verify { locationDataSource.observeLocationUpdates(any(), any(), any()) }
     }
 
     @Test
@@ -327,6 +332,8 @@ class SessionTrackerImplTest {
         locationDataSource = locationDataSource,
         locationSettingsDataSource = locationSettingsDataSource,
         nutritionReminderUseCase = nutritionReminderUseCase,
+        sessionPowerMeterUseCase = sessionPowerMeterUseCase,
+        updateSessionPowerUseCase = updateSessionPowerUseCase,
         currentTimeProvider = { currentTimeMs },
     )
 

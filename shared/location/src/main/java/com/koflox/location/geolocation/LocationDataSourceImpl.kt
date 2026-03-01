@@ -60,12 +60,14 @@ internal class LocationDataSourceImpl(
     override fun observeLocationUpdates(
         intervalMs: Long,
         inUpdateDistanceMeters: Float,
+        maxUpdateDelayMs: Long,
     ): Flow<Location> = callbackFlow {
         val locationRequest = LocationRequest.Builder(
             Priority.PRIORITY_HIGH_ACCURACY,
             intervalMs,
         )
             .setMinUpdateDistanceMeters(inUpdateDistanceMeters)
+            .apply { if (maxUpdateDelayMs > 0L) setMaxUpdateDelayMillis(maxUpdateDelayMs) }
             .build()
         val locationCallback = object : LocationCallback() {
             override fun onLocationResult(result: LocationResult) {

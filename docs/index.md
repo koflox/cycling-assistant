@@ -5,7 +5,7 @@ An Android app that helps cyclists discover cycling destinations, track sessions
 ![Unit Test Coverage](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/koflox/b2cb29f069e3c32f4b1ecf3c007eeba6/raw/coverage.json)
 ![Lines of Code](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/koflox/b2cb29f069e3c32f4b1ecf3c007eeba6/raw/loc.json)
 ![Modules](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/koflox/b2cb29f069e3c32f4b1ecf3c007eeba6/raw/modules.json)
-![Screens](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/koflox/b2cb29f069e3c32f4b1ecf3c007eeba6/raw/screens.json)
+![UI Components](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/koflox/b2cb29f069e3c32f4b1ecf3c007eeba6/raw/screens.json)
 ![CI Workflows](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/koflox/b2cb29f069e3c32f4b1ecf3c007eeba6/raw/workflows.json)
 
 ## Quick Links
@@ -19,6 +19,9 @@ An Android app that helps cyclists discover cycling destinations, track sessions
 
 - **Destination Discovery** — browse and select cycling destinations with randomized suggestions
 - **Session Tracking** — track cycling sessions with real-time stats (distance, speed, duration)
+- **Power Meter Connection** — connect BLE cycling power meters for real-time wattage and cadence
+- **Device Management** — scan, save, and manage BLE sensor devices
+- **Configurable Stats** — customize which statistics are displayed during sessions and sharing
 - **Route Visualization** — view the traveled route on an interactive map
 - **Session History** — review past cycling sessions and their details
 - **Share Results** — share session summaries as images

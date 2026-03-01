@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="connections_title">Connections</string>
+    <string name="connections_back">Back</string>
+    <string name="connections_empty_hint">No paired devices. Tap + to add one.</string>
+    <string name="connections_add_device">Add device</string>
+    <string name="connections_device_session_usage">Use in sessions</string>
+    <string name="connections_device_test_mode">Test</string>
+    <string name="connections_device_type_power_meter">Power Meter</string>
+    <string name="connections_scan_title">Scan for devices</string>
+    <string name="connections_scan_subtitle">Searching for: Power Meters</string>
+    <string name="connections_scan_empty">Searching for nearby devices…</string>
+    <string name="connections_scan_already_paired">Already paired</string>
+    <string name="connections_scan_stop">Stop scan</string>
+    <string name="connections_permission_title">Bluetooth permission required</string>
+    <string name="connections_permission_rationale">Bluetooth access is needed to find and connect to cycling sensors.</string>
+    <string name="connections_permission_grant">Grant permission</string>
+    <string name="connections_permission_skip">Skip</string>
+    <string name="connections_bluetooth_disabled_title">Bluetooth is off</string>
+    <string name="connections_bluetooth_disabled_message">Enable Bluetooth to scan for and connect to cycling sensors.</string>
+    <string name="connections_bluetooth_disabled_enable">OK</string>
+    <string name="connections_delete_title">Delete device</string>
+    <string name="connections_delete_message">Remove %1$s from paired devices?</string>
+    <string name="connections_delete_confirm">Delete</string>
+    <string name="connections_delete_cancel">Cancel</string>
+    <string name="connections_error_save_failed">Failed to save device</string>
+    <string name="connections_error_delete_failed">Failed to delete device</string>
+    <string name="connections_error_scan_failed">Scan failed. Please try again.</string>
+</resources>

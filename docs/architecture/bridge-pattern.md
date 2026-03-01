@@ -6,11 +6,15 @@ Features in CyclingAssistant are fully isolated — they never depend on each ot
 
 Each bridge lives under `feature/bridge/` and is named as an alphabetically-ordered pair of the two features it connects:
 
+- `connection-session` (connections ↔ session)
 - `destination-nutrition` (destinations ↔ nutrition)
+- `destination-poi` (destinations ↔ poi)
 - `destination-session` (destinations ↔ session)
 - `nutrition-session` (nutrition ↔ session)
 - `nutrition-settings` (nutrition ↔ settings)
+- `poi-settings` (poi ↔ settings)
 - `profile-session` (profile ↔ session)
+- `session-settings` (session ↔ settings)
 
 Every bridge contains two submodules:
 
@@ -64,9 +68,15 @@ interface CyclingSessionUiNavigator {
 
 Bridge `impl` modules register their implementations in Koin. The DI module name follows the pattern `<aB>BridgeImplModule`:
 
+- `connectionSessionBridgeImplModule`
+- `destinationNutritionBridgeImplModule`
+- `destinationPoiBridgeImplModule`
 - `destinationSessionBridgeImplModule`
 - `nutritionSessionBridgeImplModule`
+- `nutritionSettingsBridgeImplModule`
+- `poiSettingsBridgeImplModule`
 - `profileSessionBridgeImplModule`
+- `sessionSettingsBridgeImplModule`
 
 ## Adding a New Bridge
 

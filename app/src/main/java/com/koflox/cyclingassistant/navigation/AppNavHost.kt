@@ -8,6 +8,8 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
+import com.koflox.connections.navigation.CONNECTIONS_GRAPH_ROUTE
+import com.koflox.connections.navigation.connectionsGraph
 import com.koflox.dashboard.navigation.DASHBOARD_ROUTE
 import com.koflox.dashboard.navigation.dashboardScreen
 import com.koflox.poi.navigation.POI_SELECTION_ROUTE
@@ -19,6 +21,7 @@ import com.koflox.session.navigation.sessionsListScreen
 import com.koflox.session.service.PendingSessionAction
 import com.koflox.settings.navigation.SETTINGS_GRAPH_ROUTE
 import com.koflox.settings.navigation.settingsGraph
+import com.koflox.settings.navigation.settingsStatsDisplayRoute
 import org.koin.compose.koinInject
 
 @Composable
@@ -41,22 +44,33 @@ fun AppNavHost(
     ) {
         dashboardScreen(
             onNavigateToSessionsList = { navController.navigate(SESSIONS_LIST_ROUTE) },
+            onNavigateToConnections = { navController.navigate(CONNECTIONS_GRAPH_ROUTE) },
             onNavigateToSettings = { navController.navigate(SETTINGS_GRAPH_ROUTE) },
             onNavigateToSessionCompletion = { sessionId ->
                 navController.navigate(sessionCompletionRoute(sessionId))
             },
             onNavigateToPoiSelection = { navController.navigate(POI_SELECTION_ROUTE) },
         )
+        connectionsGraph(
+            navController = navController,
+            onBackClick = { navController.popBackStack() },
+        )
         sessionsListScreen(
             onBackClick = { navController.popBackStack() },
             onSessionClick = { sessionId ->
                 navController.navigate(sessionCompletionRoute(sessionId))
+            },
+            onNavigateToStatsConfig = { section ->
+                navController.navigate(settingsStatsDisplayRoute(section))
             },
         )
         sessionCompletionScreen(
             onBackClick = { navController.popBackStack() },
             onNavigateToDashboard = {
                 navController.popBackStack(DASHBOARD_ROUTE, inclusive = false)
+            },
+            onNavigateToStatsConfig = { section ->
+                navController.navigate(settingsStatsDisplayRoute(section))
             },
         )
         poiSelectionScreen(
