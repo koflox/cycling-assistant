@@ -1,8 +1,11 @@
 package com.koflox.session.presentation.mapper
 
 import com.koflox.session.domain.model.Session
+import com.koflox.session.domain.model.SessionDerivedStats
+import com.koflox.session.domain.model.SessionStatType
+import com.koflox.session.presentation.model.DisplayStat
 
-interface SessionUiMapper {
+interface SessionFormatMapper {
     fun formatElapsedTime(elapsedMs: Long): String
     fun formatDistance(distanceKm: Double): String
     fun formatSpeed(speedKmh: Double): String
@@ -10,8 +13,22 @@ interface SessionUiMapper {
     fun formatCalories(calories: Double): String
     fun formatPower(powerWatts: Int): String
     fun formatStartDate(startTimeMs: Long): String
-    fun toSessionUiModel(session: Session): SessionUiModel
 }
+
+interface SessionStatsMapper {
+    fun toSessionUiModel(session: Session): SessionUiModel
+    fun buildActiveSessionStats(
+        session: Session,
+        statTypes: List<SessionStatType>,
+    ): List<DisplayStat>
+    fun buildCompletedSessionStats(
+        session: Session,
+        derivedStats: SessionDerivedStats,
+        statTypes: List<SessionStatType>,
+    ): List<DisplayStat>
+}
+
+interface SessionUiMapper : SessionFormatMapper, SessionStatsMapper
 
 data class SessionUiModel(
     val elapsedTimeFormatted: String,

@@ -13,7 +13,8 @@
     <string name="session_stat_idle_time">停止時間</string>
     <string name="session_stat_altitude_gain">獲得標高</string>
     <string name="session_stat_altitude_loss">下降</string>
-    <string name="session_stat_calories">カロリー</string>
+    <string name="session_stat_calories_weight">カロリー(体重)</string>
+    <string name="session_stat_calories_power">カロリー(パワー)</string>
     <string name="session_stat_value_km">%s km</string>
     <string name="session_stat_value_kmh">%s km/h</string>
     <string name="session_stat_value_m">%s m</string>
@@ -105,4 +106,21 @@
     <string name="share_chooser_title">セッションを共有</string>
     <string name="share_content_description">共有</string>
     <string name="share_no_app_available">共有できるアプリがありません</string>
+
+    <!-- Stats Config -->
+    <string name="stats_config_title">統計表示</string>
+    <string name="stats_config_back">戻る</string>
+    <string name="stats_config_section_active">アクティブセッション</string>
+    <string name="stats_config_section_completed">完了セッション</string>
+    <string name="stats_config_section_share">共有プレビュー</string>
+    <string name="stats_config_hint_active">統計を5つ選択してください</string>
+    <string name="stats_config_hint_completed">統計を4つ以上選択してください</string>
+    <string name="stats_config_hint_share">4〜8個の統計を選択してください</string>
+    <string name="stats_config_reset_section">リセット</string>
+    <string name="stats_config_save_section">保存</string>
+    <string name="stats_config_save_all">すべて保存</string>
+    <string name="stats_config_settings_label">統計表示</string>
+    <string name="stats_config_settings_hint">表示する統計を設定</string>
+    <string name="stats_config_edit_content_description">統計を編集</string>
+    <string name="stats_config_collected_data_title">収集データ</string>
 </resources>

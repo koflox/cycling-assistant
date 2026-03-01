@@ -6,9 +6,11 @@ import app.cash.turbine.test
 import com.koflox.designsystem.text.UiText
 import com.koflox.error.mapper.ErrorMessageMapper
 import com.koflox.session.domain.model.SessionDerivedStats
+import com.koflox.session.domain.model.StatsDisplayConfig
 import com.koflox.session.domain.usecase.CalculateSessionStatsUseCase
 import com.koflox.session.domain.usecase.GetAllSessionsUseCase
 import com.koflox.session.domain.usecase.GetSessionByIdUseCase
+import com.koflox.session.domain.usecase.ObserveStatsDisplayConfigUseCase
 import com.koflox.session.presentation.mapper.SessionUiMapper
 import com.koflox.session.presentation.share.SessionImageSharer
 import com.koflox.session.presentation.share.ShareErrorMapper
@@ -51,6 +53,7 @@ class SessionsListViewModelTest {
     private val getAllSessionsUseCase: GetAllSessionsUseCase = mockk()
     private val getSessionByIdUseCase: GetSessionByIdUseCase = mockk()
     private val calculateSessionStatsUseCase: CalculateSessionStatsUseCase = mockk()
+    private val observeStatsDisplayConfigUseCase: ObserveStatsDisplayConfigUseCase = mockk()
     private val mapper: SessionsListUiMapper = mockk()
     private val sessionUiMapper: SessionUiMapper = mockk()
     private val imageSharer: SessionImageSharer = mockk()
@@ -75,6 +78,10 @@ class SessionsListViewModelTest {
         every { sessionUiMapper.formatElapsedTime(any()) } returns "00:00:00"
         every { sessionUiMapper.formatAltitudeGain(any()) } returns "0"
         every { sessionUiMapper.formatCalories(any()) } returns "0"
+        every {
+            observeStatsDisplayConfigUseCase.observeShareStats()
+        } returns flowOf(StatsDisplayConfig.DEFAULT_SHARE_STATS)
+        every { sessionUiMapper.buildCompletedSessionStats(any(), any(), any()) } returns emptyList()
         coEvery { calculateSessionStatsUseCase.calculate(any()) } returns Result.success(
             SessionDerivedStats(
                 idleTimeMs = 0L,
@@ -98,6 +105,7 @@ class SessionsListViewModelTest {
             getAllSessionsUseCase = getAllSessionsUseCase,
             getSessionByIdUseCase = getSessionByIdUseCase,
             calculateSessionStatsUseCase = calculateSessionStatsUseCase,
+            observeStatsDisplayConfigUseCase = observeStatsDisplayConfigUseCase,
             mapper = mapper,
             sessionUiMapper = sessionUiMapper,
             imageSharer = imageSharer,

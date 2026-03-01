@@ -7,9 +7,12 @@ import androidx.lifecycle.viewModelScope
 import com.koflox.error.mapper.ErrorMessageMapper
 import com.koflox.location.bearing.calculateBearingDegrees
 import com.koflox.location.model.Location
+import com.koflox.session.domain.model.Session
+import com.koflox.session.domain.model.SessionDerivedStats
 import com.koflox.session.domain.model.SessionStatus
 import com.koflox.session.domain.usecase.CalculateSessionStatsUseCase
 import com.koflox.session.domain.usecase.GetSessionByIdUseCase
+import com.koflox.session.domain.usecase.ObserveStatsDisplayConfigUseCase
 import com.koflox.session.navigation.SESSION_ID_ARG
 import com.koflox.session.presentation.mapper.SessionUiMapper
 import com.koflox.session.presentation.route.buildRouteDisplayData
@@ -22,12 +25,15 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 
 internal class SessionCompletionViewModel(
     private val getSessionByIdUseCase: GetSessionByIdUseCase,
     private val calculateSessionStatsUseCase: CalculateSessionStatsUseCase,
+    private val observeStatsDisplayConfigUseCase: ObserveStatsDisplayConfigUseCase,
     private val sessionUiMapper: SessionUiMapper,
     private val errorMessageMapper: ErrorMessageMapper,
     private val imageSharer: SessionImageSharer,
@@ -48,6 +54,9 @@ internal class SessionCompletionViewModel(
     private val _navigation = Channel<SessionCompletionNavigation>()
     val navigation = _navigation.receiveAsFlow()
 
+    private var cachedSession: Session? = null
+    private var cachedDerivedStats: SessionDerivedStats? = null
+
     init {
         initialize()
     }
@@ -55,6 +64,24 @@ internal class SessionCompletionViewModel(
     private fun initialize() {
         viewModelScope.launch(dispatcherDefault) {
             loadSession()
+        }
+        observeStatsConfig()
+    }
+
+    private fun observeStatsConfig() {
+        viewModelScope.launch(dispatcherDefault) {
+            combine(
+                observeStatsDisplayConfigUseCase.observeCompletedSessionStats(),
+                observeStatsDisplayConfigUseCase.observeShareStats(),
+            ) { completedConfig, shareConfig ->
+                completedConfig to shareConfig
+            }.collect { (completedConfig, shareConfig) ->
+                val session = cachedSession ?: return@collect
+                val derivedStats = cachedDerivedStats ?: return@collect
+                val completedStats = sessionUiMapper.buildCompletedSessionStats(session, derivedStats, completedConfig)
+                val shareStats = sessionUiMapper.buildCompletedSessionStats(session, derivedStats, shareConfig)
+                updateContent { it.copy(completedStats = completedStats, shareStats = shareStats) }
+            }
         }
     }
 
@@ -115,6 +142,7 @@ internal class SessionCompletionViewModel(
         }
     }
 
+    @Suppress("CyclomaticComplexity")
     private suspend fun loadSession() {
         getSessionByIdUseCase.getSession(sessionId)
             .onSuccess { session ->
@@ -139,6 +167,12 @@ internal class SessionCompletionViewModel(
                 } else {
                     derivedStats.caloriesBurned?.let(sessionUiMapper::formatCalories)
                 }
+                cachedSession = session
+                cachedDerivedStats = derivedStats
+                val completedConfig = observeStatsDisplayConfigUseCase.observeCompletedSessionStats().first()
+                val shareConfig = observeStatsDisplayConfigUseCase.observeShareStats().first()
+                val completedStats = sessionUiMapper.buildCompletedSessionStats(session, derivedStats, completedConfig)
+                val shareStats = sessionUiMapper.buildCompletedSessionStats(session, derivedStats, shareConfig)
                 _uiState.value = SessionCompletionUiState.Content(
                     sessionId = sessionId,
                     destinationName = session.destinationName,
@@ -154,6 +188,8 @@ internal class SessionCompletionViewModel(
                     caloriesFormatted = caloriesFormatted,
                     averagePowerFormatted = session.averagePowerWatts?.let(sessionUiMapper::formatPower),
                     maxPowerFormatted = session.maxPowerWatts?.let(sessionUiMapper::formatPower),
+                    completedStats = completedStats,
+                    shareStats = shareStats,
                     routeDisplayData = routeDisplayData,
                     endMarkerRotation = endRotation,
                 )
@@ -186,6 +222,7 @@ internal class SessionCompletionViewModel(
         caloriesFormatted = content.caloriesFormatted,
         averagePowerFormatted = content.averagePowerFormatted,
         maxPowerFormatted = content.maxPowerFormatted,
+        shareStats = content.shareStats,
         routeDisplayData = content.routeDisplayData,
         endMarkerRotation = content.endMarkerRotation,
     )

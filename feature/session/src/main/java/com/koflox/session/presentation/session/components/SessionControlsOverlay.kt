@@ -54,11 +54,7 @@ internal fun SessionControlsOverlay(
             )
             Spacer(modifier = Modifier.height(Spacing.Medium))
             SessionStatsDisplay(
-                elapsedTime = state.elapsedTimeFormatted,
-                distance = state.traveledDistanceFormatted,
-                averageSpeed = state.averageSpeedFormatted,
-                topSpeed = state.topSpeedFormatted,
-                altitudeGain = state.altitudeGainFormatted,
+                stats = state.stats,
                 powerDisplayState = state.powerDisplayState,
             )
             Spacer(modifier = Modifier.height(Spacing.Large))

@@ -15,12 +15,16 @@ import com.koflox.session.domain.usecase.GetSessionByIdUseCase
 import com.koflox.session.domain.usecase.GetSessionByIdUseCaseImpl
 import com.koflox.session.domain.usecase.ObserveActiveSessionRouteUseCase
 import com.koflox.session.domain.usecase.ObserveActiveSessionRouteUseCaseImpl
+import com.koflox.session.domain.usecase.ObserveStatsDisplayConfigUseCase
+import com.koflox.session.domain.usecase.ObserveStatsDisplayConfigUseCaseImpl
 import com.koflox.session.domain.usecase.UpdateSessionLocationUseCase
 import com.koflox.session.domain.usecase.UpdateSessionLocationUseCaseImpl
 import com.koflox.session.domain.usecase.UpdateSessionPowerUseCase
 import com.koflox.session.domain.usecase.UpdateSessionPowerUseCaseImpl
 import com.koflox.session.domain.usecase.UpdateSessionStatusUseCase
 import com.koflox.session.domain.usecase.UpdateSessionStatusUseCaseImpl
+import com.koflox.session.domain.usecase.UpdateStatsDisplayConfigUseCase
+import com.koflox.session.domain.usecase.UpdateStatsDisplayConfigUseCaseImpl
 import kotlinx.coroutines.sync.Mutex
 import org.koin.dsl.module
 
@@ -95,6 +99,16 @@ internal val domainModule = module {
     factory<ObserveActiveSessionRouteUseCase> {
         ObserveActiveSessionRouteUseCaseImpl(
             activeSessionUseCase = get(),
+        )
+    }
+    factory<ObserveStatsDisplayConfigUseCase> {
+        ObserveStatsDisplayConfigUseCaseImpl(
+            repository = get(),
+        )
+    }
+    factory<UpdateStatsDisplayConfigUseCase> {
+        UpdateStatsDisplayConfigUseCaseImpl(
+            repository = get(),
         )
     }
 }

@@ -30,6 +30,8 @@ import androidx.compose.ui.res.stringResource
 import com.koflox.designsystem.text.resolve
 import com.koflox.designsystem.theme.Spacing
 import com.koflox.session.R
+import com.koflox.session.navigation.STATS_SECTION_COMPLETED
+import com.koflox.session.navigation.STATS_SECTION_SHARE
 import com.koflox.session.presentation.completion.components.MapHeaderOverlay
 import com.koflox.session.presentation.completion.components.MapLegendButton
 import com.koflox.session.presentation.completion.components.RouteMapView
@@ -41,12 +43,12 @@ import org.koin.androidx.compose.koinViewModel
 internal fun SessionCompletionRoute(
     onBackClick: () -> Unit,
     onNavigateToDashboard: () -> Unit,
+    onNavigateToStatsConfig: (section: String) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: SessionCompletionViewModel = koinViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
-
     LaunchedEffect(Unit) {
         viewModel.navigation.collect { event ->
             when (event) {
@@ -61,18 +63,17 @@ internal fun SessionCompletionRoute(
                 context.startActivity(overlay.intent)
                 viewModel.onEvent(SessionCompletionUiEvent.ShareIntentLaunched)
             }
-
             is Overlay.ShareError -> {
                 Toast.makeText(context, overlay.message.resolve(context), Toast.LENGTH_SHORT).show()
                 viewModel.onEvent(SessionCompletionUiEvent.ErrorDismissed)
             }
-
             else -> Unit
         }
     }
     SessionCompletionContent(
         uiState = uiState,
         onBackClick = onBackClick,
+        onNavigateToStatsConfig = onNavigateToStatsConfig,
         onEvent = viewModel::onEvent,
         modifier = modifier,
     )
@@ -82,6 +83,7 @@ internal fun SessionCompletionRoute(
 internal fun SessionCompletionContent(
     uiState: SessionCompletionUiState,
     onBackClick: () -> Unit,
+    onNavigateToStatsConfig: (section: String) -> Unit,
     onEvent: (SessionCompletionUiEvent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -99,6 +101,10 @@ internal fun SessionCompletionContent(
                 onEvent(SessionCompletionUiEvent.ShareConfirmed(bitmap, shareText, chooserTitle))
             },
             onDismiss = { onEvent(SessionCompletionUiEvent.ShareDialogDismissed) },
+            onEditStatsClick = {
+                onEvent(SessionCompletionUiEvent.ShareDialogDismissed)
+                onNavigateToStatsConfig(STATS_SECTION_SHARE)
+            },
         )
     }
     Scaffold(
@@ -111,7 +117,11 @@ internal fun SessionCompletionContent(
             )
         },
     ) { paddingValues ->
-        SessionCompletionBody(uiState = uiState, paddingValues = paddingValues)
+        SessionCompletionBody(
+            uiState = uiState,
+            paddingValues = paddingValues,
+            onNavigateToStatsConfig = onNavigateToStatsConfig,
+        )
     }
 }
 
@@ -148,6 +158,7 @@ private fun SessionCompletionTopBar(
 private fun SessionCompletionBody(
     uiState: SessionCompletionUiState,
     paddingValues: PaddingValues,
+    onNavigateToStatsConfig: (section: String) -> Unit,
 ) {
     val modifier = Modifier
         .fillMaxSize()
@@ -158,15 +169,17 @@ private fun SessionCompletionBody(
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
             }
         }
-
         is SessionCompletionUiState.Error -> {
             Box(modifier = modifier) {
                 Text(text = uiState.message.resolve(LocalContext.current), modifier = Modifier.align(Alignment.Center))
             }
         }
-
         is SessionCompletionUiState.Content -> {
-            SessionCompletionLayout(uiState = uiState, modifier = modifier)
+            SessionCompletionLayout(
+                uiState = uiState,
+                onNavigateToStatsConfig = onNavigateToStatsConfig,
+                modifier = modifier,
+            )
         }
     }
 }
@@ -174,6 +187,7 @@ private fun SessionCompletionBody(
 @Composable
 private fun SessionCompletionLayout(
     uiState: SessionCompletionUiState.Content,
+    onNavigateToStatsConfig: (section: String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier) {
@@ -201,18 +215,9 @@ private fun SessionCompletionLayout(
             )
         }
         SessionSummaryCard(
-            startDate = uiState.startDateFormatted,
-            elapsedTime = uiState.elapsedTimeFormatted,
-            movingTime = uiState.movingTimeFormatted,
-            idleTime = uiState.idleTimeFormatted,
-            distance = uiState.traveledDistanceFormatted,
-            averageSpeed = uiState.averageSpeedFormatted,
-            topSpeed = uiState.topSpeedFormatted,
-            altitudeGain = uiState.altitudeGainFormatted,
-            altitudeLoss = uiState.altitudeLossFormatted,
-            calories = uiState.caloriesFormatted,
-            averagePower = uiState.averagePowerFormatted,
-            maxPower = uiState.maxPowerFormatted,
+            stats = uiState.completedStats,
+            title = stringResource(R.string.stats_config_collected_data_title),
+            onEditClick = { onNavigateToStatsConfig(STATS_SECTION_COMPLETED) },
             modifier = Modifier.fillMaxWidth(),
         )
     }

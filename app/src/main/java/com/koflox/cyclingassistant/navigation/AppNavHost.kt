@@ -21,6 +21,7 @@ import com.koflox.session.navigation.sessionsListScreen
 import com.koflox.session.service.PendingSessionAction
 import com.koflox.settings.navigation.SETTINGS_GRAPH_ROUTE
 import com.koflox.settings.navigation.settingsGraph
+import com.koflox.settings.navigation.settingsStatsDisplayRoute
 import org.koin.compose.koinInject
 
 @Composable
@@ -59,11 +60,17 @@ fun AppNavHost(
             onSessionClick = { sessionId ->
                 navController.navigate(sessionCompletionRoute(sessionId))
             },
+            onNavigateToStatsConfig = { section ->
+                navController.navigate(settingsStatsDisplayRoute(section))
+            },
         )
         sessionCompletionScreen(
             onBackClick = { navController.popBackStack() },
             onNavigateToDashboard = {
                 navController.popBackStack(DASHBOARD_ROUTE, inclusive = false)
+            },
+            onNavigateToStatsConfig = { section ->
+                navController.navigate(settingsStatsDisplayRoute(section))
             },
         )
         poiSelectionScreen(

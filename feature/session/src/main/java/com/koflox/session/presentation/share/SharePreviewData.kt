@@ -1,5 +1,6 @@
 package com.koflox.session.presentation.share
 
+import com.koflox.session.presentation.model.DisplayStat
 import com.koflox.session.presentation.route.RouteDisplayData
 
 data class SharePreviewData(
@@ -17,6 +18,7 @@ data class SharePreviewData(
     val caloriesFormatted: String?,
     val averagePowerFormatted: String? = null,
     val maxPowerFormatted: String? = null,
+    val shareStats: List<DisplayStat> = emptyList(),
     val routeDisplayData: RouteDisplayData,
     val endMarkerRotation: Float = 0f,
 )

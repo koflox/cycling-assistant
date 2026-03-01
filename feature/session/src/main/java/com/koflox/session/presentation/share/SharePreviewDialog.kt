@@ -1,15 +1,22 @@
 package com.koflox.session.presentation.share
 
 import android.graphics.Bitmap
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -29,6 +36,7 @@ import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import com.koflox.designsystem.component.LocalizedDialog
 import com.koflox.designsystem.theme.Spacing
@@ -46,6 +54,7 @@ fun SharePreviewDialog(
     onShareClick: (bitmap: Bitmap, shareText: String, chooserTitle: String) -> Unit,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
+    onEditStatsClick: (() -> Unit)? = null,
 ) {
     val graphicsLayer = rememberGraphicsLayer()
     val scope = rememberCoroutineScope()
@@ -75,6 +84,7 @@ fun SharePreviewDialog(
                     onShareClick(bitmap, shareText, chooserTitle)
                 }
             },
+            onEditStatsClick = onEditStatsClick,
             modifier = modifier,
         )
     }
@@ -88,6 +98,7 @@ private fun SharePreviewDialogContent(
     graphicsLayer: GraphicsLayer,
     onMapLoaded: () -> Unit,
     onShareClick: () -> Unit,
+    onEditStatsClick: (() -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
     Surface(
@@ -131,35 +142,55 @@ private fun SharePreviewDialogContent(
                 }
             }
             Spacer(modifier = Modifier.height(Spacing.Large))
-            ShareButton(
+            ShareActionRow(
                 isSharing = isSharing,
                 isEnabled = isMapLoaded && !isSharing,
                 onShareClick = onShareClick,
+                onEditStatsClick = onEditStatsClick,
             )
         }
     }
 }
 
 @Composable
-private fun ShareButton(
+private fun ShareActionRow(
     isSharing: Boolean,
     isEnabled: Boolean,
     onShareClick: () -> Unit,
+    onEditStatsClick: (() -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
-    Button(
-        onClick = onShareClick,
-        enabled = isEnabled,
+    Row(
         modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(Spacing.Small),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        if (isSharing) {
-            CircularProgressIndicator(
-                modifier = Modifier.height(Spacing.Large),
-                color = MaterialTheme.colorScheme.onPrimary,
-                strokeWidth = Spacing.Tiny / 2,
-            )
-        } else {
-            Text(stringResource(R.string.share_button))
+        Button(
+            onClick = onShareClick,
+            enabled = isEnabled,
+            modifier = Modifier.weight(1f),
+        ) {
+            if (isSharing) {
+                CircularProgressIndicator(
+                    modifier = Modifier.height(Spacing.Large),
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    strokeWidth = Spacing.Tiny / 2,
+                )
+            } else {
+                Text(stringResource(R.string.share_button))
+            }
+        }
+        if (onEditStatsClick != null) {
+            IconButton(
+                onClick = onEditStatsClick,
+                modifier = Modifier.size(40.dp),
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Edit,
+                    contentDescription = stringResource(R.string.stats_config_edit_content_description),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
         }
     }
 }
@@ -194,19 +225,7 @@ private fun SharePreviewContent(
                 )
             }
             SessionSummaryCard(
-                startDate = data.startDateFormatted,
-                elapsedTime = data.elapsedTimeFormatted,
-                movingTime = data.movingTimeFormatted,
-                idleTime = data.idleTimeFormatted,
-                distance = data.traveledDistanceFormatted,
-                averageSpeed = data.averageSpeedFormatted,
-                topSpeed = data.topSpeedFormatted,
-                altitudeGain = data.altitudeGainFormatted,
-                altitudeLoss = data.altitudeLossFormatted,
-                calories = data.caloriesFormatted,
-                averagePower = data.averagePowerFormatted,
-                maxPower = data.maxPowerFormatted,
-                isSharePreview = true,
+                stats = data.shareStats,
                 modifier = Modifier.fillMaxWidth(),
             )
         }

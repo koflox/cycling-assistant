@@ -22,15 +22,12 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import com.koflox.session.R
+import com.koflox.session.presentation.model.DisplayStat
 import com.koflox.session.presentation.session.PowerDisplayState
 
 @Composable
 internal fun SessionStatsDisplay(
-    elapsedTime: String,
-    distance: String,
-    averageSpeed: String,
-    topSpeed: String,
-    altitudeGain: String,
+    stats: List<DisplayStat>,
     modifier: Modifier = Modifier,
     powerDisplayState: PowerDisplayState = PowerDisplayState.None,
 ) {
@@ -38,39 +35,16 @@ internal fun SessionStatsDisplay(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceEvenly,
     ) {
-        StatItem(
-            label = stringResource(R.string.session_stat_time),
-            value = elapsedTime,
-        )
-        StatItem(
-            label = stringResource(R.string.session_stat_distance),
-            value = stringResource(R.string.session_stat_value_km, distance),
-        )
-        StatItem(
-            label = stringResource(R.string.session_stat_avg_speed),
-            value = stringResource(R.string.session_stat_value_kmh, averageSpeed),
-        )
-        when (powerDisplayState) {
-            PowerDisplayState.None -> {
-                StatItem(
-                    label = stringResource(R.string.session_stat_top_speed),
-                    value = stringResource(R.string.session_stat_value_kmh, topSpeed),
-                )
-            }
-            PowerDisplayState.Connecting -> {
+        stats.forEach { stat ->
+            if (stat.label == stringResource(R.string.session_stat_avg_power) && powerDisplayState is PowerDisplayState.Connecting) {
                 PowerConnectingItem()
-            }
-            is PowerDisplayState.Receiving -> {
+            } else {
                 StatItem(
-                    label = stringResource(R.string.session_stat_power),
-                    value = stringResource(R.string.session_stat_value_w, powerDisplayState.avgPowerFormatted),
+                    label = stat.label,
+                    value = stat.value,
                 )
             }
         }
-        StatItem(
-            label = stringResource(R.string.session_stat_altitude_gain),
-            value = stringResource(R.string.session_stat_value_m, altitudeGain),
-        )
     }
 }
 
