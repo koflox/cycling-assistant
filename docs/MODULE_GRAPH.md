@@ -11,6 +11,7 @@ graph LR
   subgraph :feature
     :feature:nutrition["nutrition"]
     :feature:profile["profile"]
+    :feature:connections["connections"]
     :feature:poi["poi"]
     :feature:settings["settings"]
     :feature:theme["theme"]
@@ -18,6 +19,10 @@ graph LR
     :feature:dashboard["dashboard"]
     :feature:destinations["destinations"]
     :feature:session["session"]
+  end
+  subgraph :feature:bridge:connection-session
+    :feature:bridge:connection-session:api["api"]
+    :feature:bridge:connection-session:impl["impl"]
   end
   subgraph :feature:bridge:destination-nutrition
     :feature:bridge:destination-nutrition:impl["impl"]
@@ -47,15 +52,24 @@ graph LR
     :feature:bridge:profile-session:impl["impl"]
     :feature:bridge:profile-session:api["api"]
   end
+  subgraph :feature:bridge:session-settings
+    :feature:bridge:session-settings:api["api"]
+    :feature:bridge:session-settings:impl["impl"]
+  end
+  subgraph :feature:sensor
+    :feature:sensor:power["power"]
+  end
   subgraph :shared
+    :shared:ble["ble"]
     :shared:concurrent["concurrent"]
     :shared:design-system["design-system"]
     :shared:di["di"]
+    :shared:error["error"]
+    :shared:id["id"]
+    :shared:sensor-protocol["sensor-protocol"]
     :shared:altitude["altitude"]
     :shared:distance["distance"]
-    :shared:id["id"]
     :shared:location["location"]
-    :shared:error["error"]
     :shared:map["map"]
     :shared:graphics["graphics"]
   end
@@ -63,6 +77,14 @@ graph LR
   :feature:bridge:destination-nutrition:impl --> :feature:nutrition
   :feature:bridge:profile-session:impl --> :feature:bridge:profile-session:api
   :feature:bridge:profile-session:impl --> :feature:profile
+  :feature:connections --> :feature:sensor:power
+  :feature:connections --> :shared:ble
+  :feature:connections --> :shared:concurrent
+  :feature:connections --> :shared:design-system
+  :feature:connections --> :shared:di
+  :feature:connections --> :shared:error
+  :feature:connections --> :shared:id
+  :feature:connections --> :shared:sensor-protocol
   :feature:bridge:destination-poi:impl --> :feature:bridge:destination-poi:api
   :feature:bridge:destination-poi:impl --> :feature:poi
   :feature:settings --> :feature:theme
@@ -70,9 +92,13 @@ graph LR
   :feature:settings --> :feature:profile
   :feature:settings --> :feature:bridge:nutrition-settings:api
   :feature:settings --> :feature:bridge:poi-settings:api
+  :feature:settings --> :feature:bridge:session-settings:api
   :feature:settings --> :shared:concurrent
   :feature:settings --> :shared:design-system
   :feature:settings --> :shared:di
+  :app --> :feature:connections
+  :app --> :feature:bridge:connection-session:api
+  :app --> :feature:bridge:connection-session:impl
   :app --> :feature:bridge:destination-nutrition:api
   :app --> :feature:bridge:destination-nutrition:impl
   :app --> :feature:bridge:destination-poi:api
@@ -87,16 +113,20 @@ graph LR
   :app --> :feature:bridge:poi-settings:impl
   :app --> :feature:bridge:profile-session:api
   :app --> :feature:bridge:profile-session:impl
+  :app --> :feature:bridge:session-settings:api
+  :app --> :feature:bridge:session-settings:impl
   :app --> :feature:dashboard
   :app --> :feature:destinations
   :app --> :feature:locale
   :app --> :feature:nutrition
   :app --> :feature:poi
   :app --> :feature:profile
+  :app --> :feature:sensor:power
   :app --> :feature:session
   :app --> :feature:settings
   :app --> :feature:theme
   :app --> :shared:altitude
+  :app --> :shared:ble
   :app --> :shared:concurrent
   :app --> :shared:design-system
   :app --> :shared:distance
@@ -104,6 +134,7 @@ graph LR
   :app --> :shared:location
   :app --> :shared:error
   :app --> :shared:map
+  :app --> :shared:sensor-protocol
   :feature:bridge:destination-session:api --> :shared:location
   :feature:session --> :shared:altitude
   :feature:session --> :shared:concurrent
@@ -115,6 +146,7 @@ graph LR
   :feature:session --> :shared:id
   :feature:session --> :shared:map
   :feature:session --> :shared:location
+  :feature:session --> :feature:bridge:connection-session:api
   :feature:session --> :feature:bridge:nutrition-session:api
   :feature:session --> :feature:bridge:profile-session:api
   :feature:session --> :feature:theme
@@ -130,13 +162,25 @@ graph LR
   :feature:bridge:destination-session:impl --> :shared:concurrent
   :feature:bridge:destination-session:impl --> :shared:location
   :shared:concurrent --> :shared:di
+  :feature:bridge:connection-session:impl --> :feature:bridge:connection-session:api
+  :feature:bridge:connection-session:impl --> :feature:connections
+  :feature:bridge:connection-session:impl --> :feature:sensor:power
   :feature:bridge:nutrition-session:impl --> :feature:nutrition
   :feature:bridge:nutrition-session:impl --> :feature:bridge:nutrition-session:api
   :feature:bridge:nutrition-session:impl --> :feature:session
+  :feature:bridge:session-settings:impl --> :feature:bridge:session-settings:api
+  :feature:bridge:session-settings:impl --> :feature:session
   :shared:error --> :shared:concurrent
   :shared:error --> :shared:design-system
+  :feature:sensor:power --> :shared:ble
+  :feature:sensor:power --> :shared:concurrent
+  :feature:sensor:power --> :shared:design-system
+  :feature:sensor:power --> :shared:di
+  :feature:sensor:power --> :shared:error
+  :feature:sensor:power --> :shared:sensor-protocol
   :feature:theme --> :shared:concurrent
   :feature:theme --> :shared:di
+  :shared:ble --> :shared:concurrent
   :feature:locale --> :shared:concurrent
   :feature:locale --> :shared:di
   :feature:bridge:nutrition-settings:impl --> :feature:bridge:nutrition-settings:api
