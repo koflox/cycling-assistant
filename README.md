@@ -1,13 +1,11 @@
 # CyclingAssistant
 
-An Android app that helps cyclists discover cycling destinations, track sessions in real time, and review ride history.
-
-Built as an experiment in developing a production-ready application from scratch via an AI agent with only architectural directions.
+An Android app that helps cyclists discover cycling destinations, track sessions in real time, connect BLE power meters, and review ride history.
 
 ![Unit Test Coverage](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/koflox/b2cb29f069e3c32f4b1ecf3c007eeba6/raw/coverage.json)
 ![Lines of Code](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/koflox/b2cb29f069e3c32f4b1ecf3c007eeba6/raw/loc.json)
 ![Modules](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/koflox/b2cb29f069e3c32f4b1ecf3c007eeba6/raw/modules.json)
-![Screens](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/koflox/b2cb29f069e3c32f4b1ecf3c007eeba6/raw/screens.json)
+![UI Components](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/koflox/b2cb29f069e3c32f4b1ecf3c007eeba6/raw/screens.json)
 ![CI Workflows](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/koflox/b2cb29f069e3c32f4b1ecf3c007eeba6/raw/workflows.json)
 
 <p align="center">
@@ -23,6 +21,8 @@ Built as an experiment in developing a production-ready application from scratch
 
 - **Multi-module Clean Architecture** with bridge pattern for cross-feature communication
 - **Session tracking** with foreground service, Kalman-filter location smoothing, and notification controls
+- **Power meter connection** — BLE power meters for real-time wattage, cadence, and energy
+- **Configurable stats** — choose which statistics to display during sessions and sharing
 - **Destination discovery** — randomized cycling POIs loaded from JSON assets based on user proximity
 - **Jetpack Compose** UI with Material 3, light/dark theme, and 3-language localization
 - **CI/CD** — automated testing, coverage badges, signed releases, and dependency management

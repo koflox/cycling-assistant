@@ -17,6 +17,7 @@ import com.koflox.session.presentation.share.SessionImageSharer
 import com.koflox.session.presentation.share.SessionImageSharerImpl
 import com.koflox.session.presentation.share.ShareErrorMapper
 import com.koflox.session.presentation.share.ShareErrorMapperImpl
+import com.koflox.session.presentation.statsdisplay.StatsDisplayConfigViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModel
@@ -47,11 +48,13 @@ internal val presentationModule = module {
             updateSessionStatusUseCase = get(),
             activeSessionUseCase = get(),
             checkLocationEnabledUseCase = get(),
+            observeStatsDisplayConfigUseCase = get(),
             sessionServiceController = get(),
             pendingSessionAction = get(),
             pendingSessionActionConsumer = get(),
             sessionUiMapper = get(),
             errorMessageMapper = get(PresentationModuleQualifier.SessionErrorMessageMapper),
+            sessionPowerMeterUseCase = get(),
             sessionTimerFactory = get(),
             dispatcherDefault = get(DispatchersQualifier.Default),
         )
@@ -75,6 +78,7 @@ internal val presentationModule = module {
             getAllSessionsUseCase = get(),
             getSessionByIdUseCase = get(),
             calculateSessionStatsUseCase = get(),
+            observeStatsDisplayConfigUseCase = get(),
             mapper = get(),
             sessionUiMapper = get(),
             imageSharer = get(),
@@ -87,12 +91,20 @@ internal val presentationModule = module {
         SessionCompletionViewModel(
             getSessionByIdUseCase = get(),
             calculateSessionStatsUseCase = get(),
+            observeStatsDisplayConfigUseCase = get(),
             sessionUiMapper = get(),
             errorMessageMapper = get(PresentationModuleQualifier.SessionErrorMessageMapper),
             imageSharer = get(),
             shareErrorMapper = get(),
             dispatcherDefault = get(DispatchersQualifier.Default),
             savedStateHandle = get(),
+        )
+    }
+    viewModel {
+        StatsDisplayConfigViewModel(
+            observeStatsDisplayConfigUseCase = get(),
+            updateStatsDisplayConfigUseCase = get(),
+            dispatcherDefault = get(DispatchersQualifier.Default),
         )
     }
 }

@@ -1,9 +1,13 @@
 package com.koflox.cyclingassistant.app
 
 import com.koflox.altitude.di.altitudeModule
+import com.koflox.ble.di.bleModule
 import com.koflox.concurrent.ConcurrentFactory
 import com.koflox.concurrent.DispatchersQualifier
 import com.koflox.concurrent.concurrentModule
+import com.koflox.connections.di.ConnectionsQualifier
+import com.koflox.connections.di.connectionsModule
+import com.koflox.connectionsession.bridge.impl.di.connectionSessionBridgeImplModule
 import com.koflox.cyclingassistant.BuildConfig
 import com.koflox.cyclingassistant.MainViewModel
 import com.koflox.cyclingassistant.data.AppDatabase
@@ -32,8 +36,10 @@ import com.koflox.poisettings.bridge.impl.di.poiSettingsBridgeImplModule
 import com.koflox.profile.di.ProfileQualifier
 import com.koflox.profile.di.profileModule
 import com.koflox.profilesession.bridge.impl.di.profileSessionBridgeImplModule
+import com.koflox.sensor.power.di.powerSensorModule
 import com.koflox.session.di.SessionQualifier
 import com.koflox.session.di.sessionModule
+import com.koflox.sessionsettings.bridge.impl.di.sessionSettingsBridgeImplModule
 import com.koflox.settings.di.settingsModule
 import com.koflox.theme.di.themeModule
 import org.koin.android.ext.koin.androidContext
@@ -66,6 +72,7 @@ private val databaseModule = module {
             isEncryptionEnabled = !BuildConfig.DEBUG,
         )
     }
+    single(ConnectionsQualifier.DaoFactory) { get<ConcurrentFactory<AppDatabase>>().asDaoFactory { it.pairedDeviceDao() } }
     single(DestinationsQualifier.DaoFactory) { get<ConcurrentFactory<AppDatabase>>().asDaoFactory { it.destinationDao() } }
     single(LocaleQualifier.DaoFactory) { get<ConcurrentFactory<AppDatabase>>().asDaoFactory { it.localeDao() } }
     single(ProfileQualifier.DaoFactory) { get<ConcurrentFactory<AppDatabase>>().asDaoFactory { it.profileDao() } }
@@ -82,7 +89,10 @@ internal val appModule = module {
     // alphabetically sorted
     includes(
         altitudeModule,
+        bleModule,
         concurrentModule,
+        connectionSessionBridgeImplModule,
+        connectionsModule,
         databaseModule,
         destinationNutritionBridgeImplModule,
         destinationPoiBridgeImplModule,
@@ -100,9 +110,11 @@ internal val appModule = module {
         nutritionSettingsBridgeImplModule,
         poiModule,
         poiSettingsBridgeImplModule,
+        powerSensorModule,
         profileModule,
         profileSessionBridgeImplModule,
         sessionModule,
+        sessionSettingsBridgeImplModule,
         settingsModule,
         themeModule,
     )

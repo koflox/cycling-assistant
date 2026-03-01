@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="power_test_title">Тестовый режим мощности</string>
+    <string name="power_test_back">Назад</string>
+    <string name="power_test_connecting">Подключение к измерителю мощности…</string>
+    <string name="power_test_connecting_hint">Начните крутить педали, чтобы активировать датчик</string>
+    <string name="power_test_current_power">Текущая мощность</string>
+    <string name="power_test_cadence">Каденс</string>
+    <string name="power_test_average_power">Средняя</string>
+    <string name="power_test_max_power">Максимальная</string>
+    <string name="power_test_unit_watts">Вт</string>
+    <string name="power_test_unit_rpm">об/мин</string>
+    <string name="power_test_reconnect">Переподключить</string>
+    <string name="power_test_disconnected">Устройство отключено</string>
+    <string name="power_test_connection_failed">Ошибка подключения. Попробуйте снова.</string>
+    <string name="power_test_bluetooth_disabled_title">Bluetooth выключен</string>
+    <string name="power_test_bluetooth_disabled_message">Включите Bluetooth для подключения к измерителю мощности.</string>
+    <string name="power_test_bluetooth_disabled_enable">OK</string>
+    <string name="power_test_calories">Калории</string>
+    <string name="power_test_unit_kcal">ккал</string>
+</resources>

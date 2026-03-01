@@ -3,5 +3,6 @@
     <string name="sessions_list_button">Посмотреть сессии</string>
     <string name="menu_button">Меню</string>
     <string name="menu_sessions">Сессии</string>
+    <string name="menu_connections">Подключения</string>
     <string name="menu_settings">Настройки</string>
 </resources>

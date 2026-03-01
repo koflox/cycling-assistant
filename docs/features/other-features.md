@@ -8,14 +8,29 @@ The main screen of the app. Provides an expandable menu for navigating to destin
 
 Rider profile management. Stores personalized settings and preferences via DataStore. Connected to the session feature through the `profile-session` bridge.
 
+## Connections
+
+BLE device connection and management. Currently supports cycling power meters, extensible for future sensor types.
+
+- **Device List** — view saved devices with swipe-to-delete, toggle session usage per device
+- **BLE Scanning** — scan for nearby BLE devices (modal bottom sheet with 30s timeout)
+- **Permission Handling** — runtime BLE permission requests (API 31+ split permissions)
+- **Test Mode** — navigate to power test mode screen for verifying device connectivity
+
+Navigation uses a nested graph (`connections_graph`) containing device list, scanning sheet, and power test mode screens.
+
+Connected to sessions through the `connection-session` bridge (`SessionPowerMeterUseCase`). See [Power Meter](power-meter.md) for full details.
+
 ## Settings
 
 App settings screen providing:
 
 - **Theme** — toggle between light and dark mode (Material 3 color schemes)
 - **Language** — switch between English, Russian, and Japanese
+- **Stats Display** — configure which statistics are shown during active sessions, on the completion screen, and when sharing (via `session-settings` bridge)
+- **POI Selection** — configure active POI types (via `poi-settings` bridge)
 
-The settings module depends on the `theme`, `locale`, and `profile` feature modules, as well as the `nutrition-settings` bridge API.
+The settings module depends on the `theme`, `locale`, and `profile` feature modules, as well as the `nutrition-settings`, `poi-settings`, and `session-settings` bridge APIs.
 
 ## Theme
 

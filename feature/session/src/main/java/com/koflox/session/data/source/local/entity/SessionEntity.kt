@@ -22,4 +22,8 @@ data class SessionEntity(
     val topSpeedKmh: Double,
     val totalAltitudeGainMeters: Double,
     val status: String,
+    val totalPowerReadings: Int? = null,
+    val sumPowerWatts: Long? = null,
+    val maxPowerWatts: Int? = null,
+    val totalEnergyJoules: Double? = null,
 )

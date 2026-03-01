@@ -13,11 +13,7 @@ android {
         enable = true
         androidResources = true
     }
-    defaultConfig {
-        ksp {
-            arg("room.schemaLocation", "${rootProject.projectDir}/schemas/session")
-        }
-    }
+
 }
 
 dependencies {
@@ -42,6 +38,9 @@ dependencies {
 
     // Permissions
     implementation(libs.accompanist.permissions)
+
+    // DataStore
+    implementation(libs.androidx.datastore.preferences)
 
     // Coroutines
     implementation(libs.kotlinx.coroutines.core)
@@ -74,6 +73,7 @@ dependencies {
     implementation(project(":shared:location"))
 
     // Feature modules
+    implementation(project(":feature:bridge:connection-session:api"))
     implementation(project(":feature:bridge:nutrition-session:api"))
     implementation(project(":feature:bridge:profile-session:api"))
     implementation(project(":feature:theme"))

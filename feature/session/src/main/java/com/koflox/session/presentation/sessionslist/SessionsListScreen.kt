@@ -39,6 +39,7 @@ import com.koflox.designsystem.text.resolve
 import com.koflox.designsystem.theme.Elevation
 import com.koflox.designsystem.theme.Spacing
 import com.koflox.session.R
+import com.koflox.session.navigation.STATS_SECTION_SHARE
 import com.koflox.session.presentation.share.SharePreviewDialog
 import org.koin.androidx.compose.koinViewModel
 
@@ -46,6 +47,7 @@ import org.koin.androidx.compose.koinViewModel
 internal fun SessionsListRoute(
     onBackClick: () -> Unit,
     onSessionClick: (sessionId: String) -> Unit,
+    onNavigateToStatsConfig: (section: String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val viewModel: SessionsListViewModel = koinViewModel()
@@ -71,6 +73,7 @@ internal fun SessionsListRoute(
         uiState = uiState,
         onBackClick = onBackClick,
         onSessionClick = onSessionClick,
+        onNavigateToStatsConfig = onNavigateToStatsConfig,
         onEvent = viewModel::onEvent,
         modifier = modifier,
     )
@@ -82,6 +85,7 @@ private fun SessionsListContent(
     uiState: SessionsListUiState,
     onBackClick: () -> Unit,
     onSessionClick: (sessionId: String) -> Unit,
+    onNavigateToStatsConfig: (section: String) -> Unit,
     onEvent: (SessionsListUiEvent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -103,6 +107,10 @@ private fun SessionsListContent(
                     onEvent(SessionsListUiEvent.ShareConfirmed(bitmap, shareText, chooserTitle))
                 },
                 onDismiss = { onEvent(SessionsListUiEvent.ShareDialogDismissed) },
+                onEditStatsClick = {
+                    onEvent(SessionsListUiEvent.ShareDialogDismissed)
+                    onNavigateToStatsConfig(STATS_SECTION_SHARE)
+                },
             )
         }
     }

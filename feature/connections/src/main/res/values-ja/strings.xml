@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="connections_title">接続</string>
+    <string name="connections_back">戻る</string>
+    <string name="connections_empty_hint">ペアリング済みデバイスがありません。+をタップして追加してください。</string>
+    <string name="connections_add_device">デバイスを追加</string>
+    <string name="connections_device_session_usage">セッションで使用</string>
+    <string name="connections_device_test_mode">テスト</string>
+    <string name="connections_device_type_power_meter">パワーメーター</string>
+    <string name="connections_scan_title">デバイスを検索</string>
+    <string name="connections_scan_subtitle">検索対象：パワーメーター</string>
+    <string name="connections_scan_empty">近くのデバイスを検索中…</string>
+    <string name="connections_scan_already_paired">ペアリング済み</string>
+    <string name="connections_scan_stop">検索を停止</string>
+    <string name="connections_permission_title">Bluetooth権限が必要です</string>
+    <string name="connections_permission_rationale">サイクリングセンサーの検索と接続にBluetooth権限が必要です。</string>
+    <string name="connections_permission_grant">権限を許可</string>
+    <string name="connections_permission_skip">スキップ</string>
+    <string name="connections_bluetooth_disabled_title">Bluetoothがオフです</string>
+    <string name="connections_bluetooth_disabled_message">サイクリングセンサーの検索と接続にはBluetoothを有効にしてください。</string>
+    <string name="connections_bluetooth_disabled_enable">OK</string>
+    <string name="connections_delete_title">デバイスを削除</string>
+    <string name="connections_delete_message">%1$sをペアリング済みデバイスから削除しますか？</string>
+    <string name="connections_delete_confirm">削除</string>
+    <string name="connections_delete_cancel">キャンセル</string>
+    <string name="connections_error_save_failed">デバイスの保存に失敗しました</string>
+    <string name="connections_error_delete_failed">デバイスの削除に失敗しました</string>
+    <string name="connections_error_scan_failed">検索に失敗しました。もう一度お試しください。</string>
+</resources>

@@ -77,14 +77,26 @@ jobs:
           MODULES=$(grep -c '^include(' settings.gradle.kts)
           echo "Modules: $MODULES"
 
-          # Screens count (Composable *Route functions, excluding private/non-composable)
+          # UI components count (screens + standalone dialogs)
+          # 1. Screens: *Route composable functions
           SCREENS=$(grep -rn 'fun [A-Z][a-zA-Z]*Route(' --include='*.kt' \
             --exclude-dir=build \
             | grep -v 'private ' \
             | grep -v 'fun sessionCompletionRoute' \
             | grep -v 'fun animateCameraToRoute' \
             | wc -l)
-          echo "Screens: $SCREENS"
+          # 2. Standalone dialogs: files importing LocalizedDialog/LocalizedAlertDialog
+          #    that don't contain a *Route function (to avoid double-counting)
+          ROUTE_FILES=$(grep -rln 'fun [A-Z][a-zA-Z]*Route(' --include='*.kt' --exclude-dir=build)
+          DIALOG_FILES=$(grep -rln 'import.*Localized\(Dialog\|AlertDialog\)' --include='*.kt' --exclude-dir=build)
+          STANDALONE_DIALOGS=0
+          for f in $DIALOG_FILES; do
+            if ! echo "$ROUTE_FILES" | grep -qxF "$f"; then
+              STANDALONE_DIALOGS=$((STANDALONE_DIALOGS + 1))
+            fi
+          done
+          UI_COMPONENTS=$((SCREENS + STANDALONE_DIALOGS))
+          echo "UI components: $UI_COMPONENTS (screens: $SCREENS, standalone dialogs: $STANDALONE_DIALOGS)"
 
           # Workflows count
           WORKFLOWS=$(ls -1 .github/workflows/*.yml 2>/dev/null | wc -l)
@@ -99,7 +111,7 @@ jobs:
 
           echo "loc=$LOC_DISPLAY" >> $GITHUB_OUTPUT
           echo "modules=$MODULES" >> $GITHUB_OUTPUT
-          echo "screens=$SCREENS" >> $GITHUB_OUTPUT
+          echo "ui_components=$UI_COMPONENTS" >> $GITHUB_OUTPUT
           echo "workflows=$WORKFLOWS" >> $GITHUB_OUTPUT
 
       - name: Update Lines of Code badge
@@ -122,14 +134,14 @@ jobs:
           message: ${{ steps.stats.outputs.modules }}
           color: blue
 
-      - name: Update Screens badge
+      - name: Update UI Components badge
         uses: schneegans/dynamic-badges-action@v1.7.0
         with:
           auth: ${{ secrets.GIST_TOKEN }}
           gistID: ${{ vars.COVERAGE_GIST_ID }}
           filename: screens.json
-          label: screens
-          message: ${{ steps.stats.outputs.screens }}
+          label: UI components
+          message: ${{ steps.stats.outputs.ui_components }}
           color: blue
 
       - name: Update Workflows badge

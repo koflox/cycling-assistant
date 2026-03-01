@@ -2,14 +2,18 @@ package com.koflox.session.presentation.session
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.koflox.connectionsession.bridge.usecase.SessionPowerMeterUseCase
 import com.koflox.error.mapper.ErrorMessageMapper
 import com.koflox.location.model.Location
 import com.koflox.session.domain.model.Session
+import com.koflox.session.domain.model.SessionStatType
 import com.koflox.session.domain.model.SessionStatus
+import com.koflox.session.domain.model.StatsDisplayConfig
 import com.koflox.session.domain.usecase.ActiveSessionUseCase
 import com.koflox.session.domain.usecase.CheckLocationEnabledUseCase
 import com.koflox.session.domain.usecase.CreateSessionParams
 import com.koflox.session.domain.usecase.CreateSessionUseCase
+import com.koflox.session.domain.usecase.ObserveStatsDisplayConfigUseCase
 import com.koflox.session.domain.usecase.UpdateSessionStatusUseCase
 import com.koflox.session.presentation.mapper.SessionUiMapper
 import com.koflox.session.presentation.session.timer.SessionTimer
@@ -32,11 +36,13 @@ internal class SessionViewModel(
     private val updateSessionStatusUseCase: UpdateSessionStatusUseCase,
     private val activeSessionUseCase: ActiveSessionUseCase,
     private val checkLocationEnabledUseCase: CheckLocationEnabledUseCase,
+    private val observeStatsDisplayConfigUseCase: ObserveStatsDisplayConfigUseCase,
     private val sessionServiceController: SessionServiceController,
     private val pendingSessionAction: PendingSessionAction,
     private val pendingSessionActionConsumer: PendingSessionActionConsumer,
     private val sessionUiMapper: SessionUiMapper,
     private val errorMessageMapper: ErrorMessageMapper,
+    private val sessionPowerMeterUseCase: SessionPowerMeterUseCase,
     sessionTimerFactory: SessionTimerFactory,
     private val dispatcherDefault: CoroutineDispatcher,
 ) : ViewModel() {
@@ -50,6 +56,8 @@ internal class SessionViewModel(
     private val sessionTimer: SessionTimer = sessionTimerFactory.create(viewModelScope)
 
     private var isPausedDueToLocation = false
+    private var isPowerMeterConfigured = false
+    private var activeStatsConfig: List<SessionStatType> = StatsDisplayConfig.DEFAULT_ACTIVE_SESSION_STATS
 
     init {
         initialize()
@@ -57,9 +65,17 @@ internal class SessionViewModel(
 
     private fun initialize() {
         showNotificationForStartedSession()
+        checkPowerMeterConfiguration()
         observeActiveSession()
         observeLocationEnabled()
         observeStopRequest()
+        observeStatsConfig()
+    }
+
+    private fun checkPowerMeterConfiguration() {
+        viewModelScope.launch(dispatcherDefault) {
+            isPowerMeterConfigured = sessionPowerMeterUseCase.getSessionPowerDevice() != null
+        }
     }
 
     private fun observeActiveSession() {
@@ -103,6 +119,18 @@ internal class SessionViewModel(
             pendingSessionAction.isStopRequested.collect { requested ->
                 if (requested && _uiState.value is SessionUiState.Active) {
                     showStopConfirmation()
+                }
+            }
+        }
+    }
+
+    private fun observeStatsConfig() {
+        viewModelScope.launch(dispatcherDefault) {
+            observeStatsDisplayConfigUseCase.observeActiveSessionStats().collect { config ->
+                activeStatsConfig = config
+                val session = activeSessionUseCase.observeActiveSession().first() ?: return@collect
+                updateActive { current ->
+                    current.copy(stats = sessionUiMapper.buildActiveSessionStats(session, activeStatsConfig))
                 }
             }
         }
@@ -250,12 +278,23 @@ internal class SessionViewModel(
             averageSpeedFormatted = formattedData.averageSpeedFormatted,
             topSpeedFormatted = formattedData.topSpeedFormatted,
             altitudeGainFormatted = formattedData.altitudeGainFormatted,
+            stats = sessionUiMapper.buildActiveSessionStats(session, activeStatsConfig),
             currentLocation = session.trackPoints.lastOrNull()?.let {
                 Location(it.latitude, it.longitude)
             },
             isLocationDisabled = !checkLocationEnabledUseCase.isLocationEnabled(),
             overlay = currentOverlay,
+            powerDisplayState = computePowerDisplayState(session),
         )
+    }
+
+    private fun computePowerDisplayState(session: Session): PowerDisplayState = when {
+        !isPowerMeterConfigured -> PowerDisplayState.None
+        session.hasPowerData -> PowerDisplayState.Receiving(
+            avgPowerFormatted = sessionUiMapper.formatPower(session.averagePowerWatts ?: 0),
+        )
+        session.status == SessionStatus.RUNNING -> PowerDisplayState.Connecting
+        else -> PowerDisplayState.None
     }
 
     private inline fun updateActive(transform: (SessionUiState.Active) -> SessionUiState.Active) {

@@ -4,10 +4,15 @@ import com.koflox.concurrent.DispatchersQualifier
 import com.koflox.session.data.mapper.SessionMapper
 import com.koflox.session.data.mapper.SessionMapperImpl
 import com.koflox.session.data.repository.SessionRepositoryImpl
+import com.koflox.session.data.repository.StatsDisplayRepositoryImpl
 import com.koflox.session.data.source.local.SessionLocalDataSource
 import com.koflox.session.data.source.local.SessionLocalDataSourceImpl
+import com.koflox.session.data.source.local.StatsDisplayLocalDataSource
+import com.koflox.session.data.source.local.StatsDisplayPreferencesDataStore
 import com.koflox.session.domain.repository.SessionRepository
+import com.koflox.session.domain.repository.StatsDisplayRepository
 import kotlinx.coroutines.CoroutineDispatcher
+import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.Module
 import org.koin.dsl.module
 
@@ -26,6 +31,12 @@ private val dataSourceModule = module {
             daoFactory = get(SessionQualifier.DaoFactory),
         )
     }
+    single<StatsDisplayLocalDataSource> {
+        StatsDisplayPreferencesDataStore(
+            context = androidContext(),
+            dispatcherIo = get<CoroutineDispatcher>(DispatchersQualifier.Io),
+        )
+    }
 }
 
 private val repoModule = module {
@@ -33,6 +44,11 @@ private val repoModule = module {
         SessionRepositoryImpl(
             localDataSource = get(),
             mapper = get(),
+        )
+    }
+    single<StatsDisplayRepository> {
+        StatsDisplayRepositoryImpl(
+            localDataSource = get(),
         )
     }
 }

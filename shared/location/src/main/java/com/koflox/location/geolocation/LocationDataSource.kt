@@ -8,5 +8,6 @@ interface LocationDataSource {
     fun observeLocationUpdates(
         intervalMs: Long,
         inUpdateDistanceMeters: Float,
+        maxUpdateDelayMs: Long = 0L,
     ): Flow<Location>
 }

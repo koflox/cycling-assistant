@@ -2,6 +2,8 @@ package com.koflox.cyclingassistant.data
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
+import com.koflox.connections.data.source.local.dao.PairedDeviceDao
+import com.koflox.connections.data.source.local.entity.PairedDeviceEntity
 import com.koflox.destinations.data.source.local.database.dao.DestinationDao
 import com.koflox.destinations.data.source.local.entity.DestinationLocal
 import com.koflox.locale.data.source.local.dao.LocaleDao
@@ -17,6 +19,7 @@ import com.koflox.session.data.source.local.entity.TrackPointEntity
     entities = [
         DestinationLocal::class,
         LocaleSettingsEntity::class,
+        PairedDeviceEntity::class,
         ProfileSettingsEntity::class,
         SessionEntity::class,
         TrackPointEntity::class,
@@ -33,6 +36,8 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun destinationDao(): DestinationDao
 
     abstract fun localeDao(): LocaleDao
+
+    abstract fun pairedDeviceDao(): PairedDeviceDao
 
     abstract fun profileDao(): ProfileDao
 

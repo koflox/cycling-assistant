@@ -2,6 +2,7 @@ package com.koflox.session.presentation.completion
 
 import android.content.Intent
 import com.koflox.designsystem.text.UiText
+import com.koflox.session.presentation.model.DisplayStat
 import com.koflox.session.presentation.route.RouteDisplayData
 import com.koflox.session.presentation.share.SharePreviewData
 
@@ -22,6 +23,10 @@ internal sealed interface SessionCompletionUiState {
         val altitudeGainFormatted: String,
         val altitudeLossFormatted: String,
         val caloriesFormatted: String?,
+        val averagePowerFormatted: String? = null,
+        val maxPowerFormatted: String? = null,
+        val completedStats: List<DisplayStat> = emptyList(),
+        val shareStats: List<DisplayStat> = emptyList(),
         val routeDisplayData: RouteDisplayData,
         val endMarkerRotation: Float = 0f,
         val overlay: Overlay? = null,
