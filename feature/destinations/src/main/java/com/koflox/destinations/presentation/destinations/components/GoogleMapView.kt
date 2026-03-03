@@ -304,12 +304,17 @@ private fun LastPositionMarker(
                 anchor = Offset(0.5f, 0.5f),
             )
         } else if (routeData.segments.isNotEmpty()) {
+            val markerPosition = if (routeData.showGapToUserLocation && userLocation != null) {
+                LatLng(userLocation.latitude, userLocation.longitude)
+            } else {
+                endLatLng
+            }
             val activeEndMarkerIcon = remember(density, routeData.lastBearingDegrees) {
                 createActiveEndMarkerIcon(density, routeData.lastBearingDegrees ?: 0f)
             }
-            MarkerRipple(center = endLatLng, color = RouteColors.ActiveEndMarker, cameraZoom = cameraZoom, isDarkTheme = isDarkTheme)
+            MarkerRipple(center = markerPosition, color = RouteColors.ActiveEndMarker, cameraZoom = cameraZoom, isDarkTheme = isDarkTheme)
             Marker(
-                state = rememberUpdatedMarkerState(position = endLatLng),
+                state = rememberUpdatedMarkerState(position = markerPosition),
                 icon = activeEndMarkerIcon,
                 anchor = Offset(0.5f, 0.5f),
             )
