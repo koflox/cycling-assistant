@@ -13,6 +13,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
@@ -84,5 +85,5 @@ internal class LocationDataSourceImpl(
         awaitClose {
             fusedLocationClient.removeLocationUpdates(locationCallback)
         }
-    }
+    }.flowOn(dispatcherIo)
 }

@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.seconds
 
 internal class LocationDelegate(
     private val getUserLocationUseCase: GetUserLocationUseCase,
@@ -23,9 +24,9 @@ internal class LocationDelegate(
 ) {
 
     companion object {
-        private const val IDLE_LOCATION_INTERVAL_MS = 15_000L
+        private val IDLE_LOCATION_INTERVAL = 15.seconds
         private const val IDLE_MIN_UPDATE_DISTANCE_METERS = 50F
-        private const val PAUSE_LOCATION_INTERVAL_MS = 5_000L
+        private val PAUSE_LOCATION_INTERVAL = 5.seconds
         private const val PAUSE_MIN_UPDATE_DISTANCE_METERS = 10F
         private const val CAMERA_MOVEMENT_THRESHOLD_METERS = 50.0
         private const val METERS_IN_KILOMETER = 1000.0
@@ -64,7 +65,7 @@ internal class LocationDelegate(
     fun startLocationObservation() {
         locationObservationJob?.cancel()
         locationObservationJob = scope.launch {
-            observeUserLocationUseCase.observe(IDLE_LOCATION_INTERVAL_MS, IDLE_MIN_UPDATE_DISTANCE_METERS)
+            observeUserLocationUseCase.observe(IDLE_LOCATION_INTERVAL.inWholeMilliseconds, IDLE_MIN_UPDATE_DISTANCE_METERS)
                 .collect { newLocation ->
                     updateUserLocation(newLocation)
                     _observedLocations.emit(newLocation)
@@ -75,7 +76,7 @@ internal class LocationDelegate(
     fun startPauseLocationObservation() {
         locationObservationJob?.cancel()
         locationObservationJob = scope.launch {
-            observeUserLocationUseCase.observe(PAUSE_LOCATION_INTERVAL_MS, PAUSE_MIN_UPDATE_DISTANCE_METERS)
+            observeUserLocationUseCase.observe(PAUSE_LOCATION_INTERVAL.inWholeMilliseconds, PAUSE_MIN_UPDATE_DISTANCE_METERS)
                 .collect { newLocation ->
                     updateUserLocation(newLocation)
                     _observedLocations.emit(newLocation)

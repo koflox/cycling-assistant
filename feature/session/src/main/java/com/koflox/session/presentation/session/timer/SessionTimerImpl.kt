@@ -7,6 +7,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.seconds
 
 internal class SessionTimerImpl(
     private val scope: CoroutineScope,
@@ -14,7 +15,7 @@ internal class SessionTimerImpl(
 ) : SessionTimer {
 
     companion object {
-        private const val TIMER_UPDATE_INTERVAL_MS = 1000L
+        private val TIMER_UPDATE_INTERVAL = 1.seconds
     }
 
     private var timerJob: Job? = null
@@ -23,7 +24,7 @@ internal class SessionTimerImpl(
         stop()
         timerJob = scope.launch {
             while (isActive) {
-                delay(TIMER_UPDATE_INTERVAL_MS)
+                delay(TIMER_UPDATE_INTERVAL)
                 if (session.status == SessionStatus.RUNNING) {
                     val elapsedSinceLastResume = currentTimeProvider() - session.lastResumedTimeMs
                     val totalElapsedMs = session.elapsedTimeMs + elapsedSinceLastResume

@@ -189,6 +189,29 @@ wrapping for flows).
 | Repository | delegates (or `dispatcherDefault`) |
 | DataSource | `dispatcherIo`      |
 
+**Flow threading rule:** DataSource and IO-bound UseCase flows must have `.flowOn(dispatcherIo)` at
+the source. This ensures collectors (VMs on Default) never accidentally run IO work on the wrong
+dispatcher.
+
+### Temporal Constants
+
+Use `kotlin.time.Duration` for all temporal constants (timeouts, intervals, delays, durations).
+`const val` is not supported for `Duration` (inline class), use `val` instead.
+
+```kotlin
+// ✓ Good
+private val SCAN_TIMEOUT = 30.seconds
+private val DEBOUNCE_INTERVAL = 400.milliseconds
+delay(SCAN_TIMEOUT)
+locationRequest.intervalMs = SCAN_TIMEOUT.inWholeMilliseconds  // when API requires Long
+
+// ✗ Bad
+private const val SCAN_TIMEOUT_MS = 30_000L
+```
+
+**Excluded:** Pure arithmetic conversion factors (`MILLISECONDS_PER_SECOND`, `MINUTES_TO_MS`) remain
+`const val Long` — they are math constants, not temporal durations.
+
 ### Visibility Modifiers
 
 | Element                        | Visibility |

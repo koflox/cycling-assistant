@@ -23,6 +23,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.milliseconds
 
 internal class SettingsViewModel(
     private val application: Application,
@@ -36,7 +37,7 @@ internal class SettingsViewModel(
 ) : ViewModel() {
 
     companion object {
-        private const val WEIGHT_INPUT_DEBOUNCE_MS = 300L
+        private val WEIGHT_INPUT_DEBOUNCE = 300.milliseconds
         private const val BUILD_INFO_SEPARATOR = "\u2022"
         private const val BUILD_TYPE_DEBUG = "debug"
         private const val BUILD_TYPE_RELEASE = "release"
@@ -153,7 +154,7 @@ internal class SettingsViewModel(
         _uiState.update { it.copy(riderWeightKg = input) }
         weightUpdateJob?.cancel()
         weightUpdateJob = viewModelScope.launch(dispatcherDefault) {
-            delay(WEIGHT_INPUT_DEBOUNCE_MS)
+            delay(WEIGHT_INPUT_DEBOUNCE)
             updateRiderWeightUseCase.updateRiderWeightKg(input)
                 .onSuccess {
                     _uiState.update { it.copy(riderWeightError = null) }

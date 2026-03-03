@@ -16,6 +16,7 @@ import com.koflox.session.domain.usecase.CreateSessionUseCase
 import com.koflox.session.domain.usecase.ObserveStatsDisplayConfigUseCase
 import com.koflox.session.domain.usecase.UpdateSessionStatusUseCase
 import com.koflox.session.presentation.mapper.SessionUiMapper
+import com.koflox.session.presentation.model.DisplayStat
 import com.koflox.session.presentation.session.timer.SessionTimer
 import com.koflox.session.presentation.session.timer.SessionTimerFactory
 import com.koflox.session.service.PendingSessionAction
@@ -249,9 +250,21 @@ internal class SessionViewModel(
 
     private fun startTimer(session: Session) {
         sessionTimer.start(session) { totalElapsedMs ->
+            val formattedTime = sessionUiMapper.formatElapsedTime(totalElapsedMs)
             updateActive {
-                it.copy(elapsedTimeFormatted = sessionUiMapper.formatElapsedTime(totalElapsedMs))
+                it.copy(
+                    elapsedTimeFormatted = formattedTime,
+                    stats = updateTimeStat(it.stats, formattedTime),
+                )
             }
+        }
+    }
+
+    private fun updateTimeStat(stats: List<DisplayStat>, formattedTime: String): List<DisplayStat> {
+        val timeIndex = activeStatsConfig.indexOf(SessionStatType.TIME)
+        if (timeIndex < 0 || timeIndex >= stats.size) return stats
+        return stats.toMutableList().apply {
+            this[timeIndex] = this[timeIndex].copy(value = formattedTime)
         }
     }
 

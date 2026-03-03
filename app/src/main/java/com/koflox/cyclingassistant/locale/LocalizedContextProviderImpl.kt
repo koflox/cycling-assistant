@@ -5,8 +5,8 @@ import android.content.res.Configuration
 import com.koflox.designsystem.context.LocalizedContextProvider
 import com.koflox.locale.domain.model.AppLanguage
 import com.koflox.locale.domain.usecase.ObserveLocaleUseCase
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -16,11 +16,12 @@ import java.util.Locale
 internal class LocalizedContextProviderImpl(
     private val applicationContext: Context,
     observeLocaleUseCase: ObserveLocaleUseCase,
+    dispatcherDefault: CoroutineDispatcher,
 ) : LocalizedContextProvider {
 
     private val currentLanguage: StateFlow<AppLanguage> = observeLocaleUseCase.observeLanguage()
         .stateIn(
-            scope = CoroutineScope(SupervisorJob() + Dispatchers.Default),
+            scope = CoroutineScope(SupervisorJob() + dispatcherDefault),
             started = SharingStarted.Eagerly,
             initialValue = AppLanguage.DEFAULT,
         )
