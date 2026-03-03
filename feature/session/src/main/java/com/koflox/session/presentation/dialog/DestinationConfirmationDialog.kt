@@ -4,8 +4,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.material3.Button
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -16,6 +14,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
+import com.koflox.designsystem.component.DebouncedButton
+import com.koflox.designsystem.component.DebouncedOutlinedButton
 import com.koflox.designsystem.component.LocalizedAlertDialog
 import com.koflox.designsystem.theme.Spacing
 import com.koflox.location.model.Location
@@ -110,7 +110,7 @@ fun DestinationConfirmationDialog(
         confirmButton = {
             Column {
                 if (isNavigateVisible) {
-                    Button(
+                    DebouncedButton(
                         onClick = onNavigateClick,
                         modifier = Modifier.fillMaxWidth(),
                     ) {
@@ -118,7 +118,7 @@ fun DestinationConfirmationDialog(
                     }
                     Spacer(modifier = Modifier.height(Spacing.Small))
                 }
-                OutlinedButton(
+                DebouncedOutlinedButton(
                     onClick = onStartSessionClick,
                     modifier = Modifier.fillMaxWidth(),
                 ) {

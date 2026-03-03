@@ -106,7 +106,7 @@ class SessionTrackerImplTest {
         val session = createTestSession(status = SessionStatus.RUNNING)
         sessionFlow.value = session
         tracker.startTracking(delegate)
-        advanceTimeBy(SessionTrackerImpl.TIMER_UPDATE_INTERVAL_MS + 1)
+        advanceTimeBy(SessionTrackerImpl.TIMER_UPDATE_INTERVAL.inWholeMilliseconds + 1)
 
         verify { delegate.onNotificationUpdate(session, any()) }
     }
@@ -184,7 +184,7 @@ class SessionTrackerImplTest {
         val session = createTestSession(status = SessionStatus.RUNNING)
         sessionFlow.value = session
         tracker.startTracking(delegate)
-        advanceTimeBy(SessionTrackerImpl.TIMER_UPDATE_INTERVAL_MS * 3 + 1)
+        advanceTimeBy(SessionTrackerImpl.TIMER_UPDATE_INTERVAL.inWholeMilliseconds * 3 + 1)
 
         verify(atLeast = 3) { delegate.onNotificationUpdate(session, any()) }
     }
@@ -287,7 +287,7 @@ class SessionTrackerImplTest {
         val session = createTestSession(status = SessionStatus.RUNNING)
         sessionFlow.value = session
         tracker.startTracking(delegate)
-        advanceTimeBy(SessionTrackerImpl.TIMER_UPDATE_INTERVAL_MS + 1)
+        advanceTimeBy(SessionTrackerImpl.TIMER_UPDATE_INTERVAL.inWholeMilliseconds + 1)
 
         verify(atLeast = 1) { delegate.onNotificationUpdate(session, any()) }
 
@@ -298,7 +298,7 @@ class SessionTrackerImplTest {
 
         // Reset notification mock and advance time — no more updates should happen
         io.mockk.clearMocks(delegate, answers = false, recordedCalls = true, verificationMarks = true)
-        advanceTimeBy(SessionTrackerImpl.TIMER_UPDATE_INTERVAL_MS * 3)
+        advanceTimeBy(SessionTrackerImpl.TIMER_UPDATE_INTERVAL.inWholeMilliseconds * 3)
 
         verify(exactly = 0) { delegate.onNotificationUpdate(any(), any()) }
     }

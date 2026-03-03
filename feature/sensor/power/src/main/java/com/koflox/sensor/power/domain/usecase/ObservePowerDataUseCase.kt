@@ -6,9 +6,11 @@ import com.koflox.sensor.power.domain.model.PowerReading
 import com.koflox.sensorprotocol.power.CadenceCalculator
 import com.koflox.sensorprotocol.power.CyclingPowerConstants
 import com.koflox.sensorprotocol.power.CyclingPowerParser
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onEach
 
@@ -21,6 +23,7 @@ class PowerMeterConnectionException(cause: Throwable) :
     Exception("Failed to connect to power meter", cause)
 
 internal class ObservePowerDataUseCaseImpl(
+    private val dispatcherIo: CoroutineDispatcher,
     private val gattManager: BleGattManager,
     private val parser: CyclingPowerParser,
     private val cadenceCalculator: CadenceCalculator,
@@ -57,6 +60,7 @@ internal class ObservePowerDataUseCaseImpl(
                 )
             }
             .catch { throw PowerMeterConnectionException(it) }
+            .flowOn(dispatcherIo)
 
     override fun disconnect() {
         gattManager.disconnect()

@@ -67,6 +67,8 @@ import com.koflox.map.createActiveEndMarkerIcon
 import com.koflox.map.createPauseMarkerIcon
 import com.koflox.map.createStartMarkerIcon
 import kotlin.math.pow
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 import android.graphics.Color as AndroidColor
 import com.koflox.designsystem.R as DesignSystemR
 
@@ -77,11 +79,11 @@ private const val USER_LOCATION_STROKE_WIDTH_DP = 3
 private val UserLocationBlue = Color(0xFF4285F4)
 private const val RIPPLE_BASE_RADIUS_METERS = 200.0
 private const val RIPPLE_REFERENCE_ZOOM = 15f
-private const val RIPPLE_DURATION_MS = 1500
+private val RIPPLE_DURATION = 1500.milliseconds
 private const val RIPPLE_START_ALPHA = 0.4f
 private const val ROUTE_BOUNDS_PADDING_FRACTION = 0.25f
 private const val DESTINATION_BOUNDS_PADDING_FRACTION = 0.15f
-private const val USER_INTERACTION_COOLDOWN_MS = 10_000L
+private val USER_INTERACTION_COOLDOWN = 10.seconds
 private const val SESSION_BOUNDS_PADDING_PX = 50
 private const val MIN_BOUNDS_SPAN_DEGREES = 0.003
 
@@ -346,7 +348,7 @@ private fun MarkerRipple(center: LatLng, color: Color, cameraZoom: Float, isDark
         initialValue = 0f,
         targetValue = 1f,
         animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = RIPPLE_DURATION_MS, easing = LinearEasing),
+            animation = tween(durationMillis = RIPPLE_DURATION.inWholeMilliseconds.toInt(), easing = LinearEasing),
             repeatMode = RepeatMode.Restart,
         ),
         label = "rippleProgress",
@@ -530,7 +532,7 @@ private fun ActiveSessionCameraEffect(
             }
     }
     LaunchedEffect(routeData, userLocation) {
-        if (System.currentTimeMillis() - lastGestureTimeMs < USER_INTERACTION_COOLDOWN_MS) return@LaunchedEffect
+        if (System.currentTimeMillis() - lastGestureTimeMs < USER_INTERACTION_COOLDOWN.inWholeMilliseconds) return@LaunchedEffect
         val bounds = computeSessionBounds(routeData, selectedDestination, userLocation) ?: return@LaunchedEffect
         cameraPositionState.animate(CameraUpdateFactory.newLatLngBounds(bounds, SESSION_BOUNDS_PADDING_PX))
     }

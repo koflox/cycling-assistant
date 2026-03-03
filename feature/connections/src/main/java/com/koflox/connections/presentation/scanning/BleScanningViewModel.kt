@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.seconds
 
 internal class BleScanningViewModel(
     private val bleScanner: BleScanner,
@@ -30,7 +31,7 @@ internal class BleScanningViewModel(
 ) : ViewModel() {
 
     companion object {
-        private const val SCAN_TIMEOUT_MS = 30_000L
+        private val SCAN_TIMEOUT = 30.seconds
     }
 
     private val _uiState = MutableStateFlow<BleScanningUiState>(BleScanningUiState.Scanning(emptyList()))
@@ -77,7 +78,7 @@ internal class BleScanningViewModel(
                     .toSet()
                 bleScanner.scan(
                     serviceUuids = listOf(CyclingPowerConstants.SERVICE_UUID),
-                    timeoutMs = SCAN_TIMEOUT_MS,
+                    timeoutMs = SCAN_TIMEOUT.inWholeMilliseconds,
                 ).collect { device ->
                     val currentState = _uiState.value
                     if (currentState is BleScanningUiState.Scanning) {
