@@ -9,6 +9,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
 
 internal class SessionLocalDataSourceImpl(
@@ -29,9 +30,9 @@ internal class SessionLocalDataSourceImpl(
 
     override fun observeFirstSessionByStatuses(statuses: List<String>): Flow<SessionWithTrackPoints?> = flow {
         emitAll(daoFactory.get().observeFirstSessionByStatuses(statuses))
-    }
+    }.flowOn(dispatcherIo)
 
     override fun observeAllSessions(): Flow<List<SessionWithTrackPoints>> = flow {
         emitAll(daoFactory.get().observeAllSessions())
-    }
+    }.flowOn(dispatcherIo)
 }

@@ -4,6 +4,7 @@ import com.koflox.nutrition.domain.model.NutritionEvent
 import com.koflox.nutrition.domain.model.NutritionSettings
 import com.koflox.nutritionsession.bridge.model.SessionTimeInfo
 import com.koflox.nutritionsession.bridge.usecase.SessionElapsedTimeUseCase
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -11,21 +12,25 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.merge
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 interface ObserveNutritionEventsUseCase {
     fun observeNutritionEvents(): Flow<NutritionEvent>
 }
 
 internal class ObserveNutritionEventsUseCaseImpl(
+    private val dispatcherIo: CoroutineDispatcher,
     private val sessionElapsedTimeUseCase: SessionElapsedTimeUseCase,
     private val observeNutritionSettingsUseCase: ObserveNutritionSettingsUseCase,
     private val currentTimeProvider: () -> Long = { System.currentTimeMillis() },
-    private val checkIntervalMs: Long = CHECK_INTERVAL_MS,
+    private val checkInterval: Duration = CHECK_INTERVAL,
 ) : ObserveNutritionEventsUseCase {
 
     companion object {
-        private const val CHECK_INTERVAL_MS = 30_000L
+        private val CHECK_INTERVAL = 30.seconds
         private const val MINUTES_TO_MS = 60L * 1000L
     }
 
@@ -83,7 +88,7 @@ internal class ObserveNutritionEventsUseCaseImpl(
                     }
                 }
             }
-    }
+    }.flowOn(dispatcherIo)
 
     private fun createTickerFlow(
         timeInfo: SessionTimeInfo,
@@ -92,7 +97,7 @@ internal class ObserveNutritionEventsUseCaseImpl(
         flowOf(NutritionCheckResult.TimeCheck(timeInfo, settings)),
         flow {
             while (true) {
-                delay(checkIntervalMs)
+                delay(checkInterval)
                 emit(NutritionCheckResult.TimeCheck(timeInfo, settings))
             }
         },

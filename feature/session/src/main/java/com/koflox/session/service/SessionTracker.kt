@@ -19,6 +19,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 
 interface SessionTrackingDelegate {
     fun onStartForeground(): Boolean
@@ -50,12 +52,12 @@ internal class SessionTrackerImpl(
 ) : SessionTracker {
 
     companion object {
-        internal const val LOCATION_INTERVAL_MS = 5000L
-        internal const val LOCATION_MAX_UPDATE_DELAY_MS = 15_000L
+        internal val LOCATION_INTERVAL = 5.seconds
+        internal val LOCATION_MAX_UPDATE_DELAY = 15.seconds
         internal const val MIN_UPDATE_DISTANCE_METERS = 5F
-        internal const val TIMER_UPDATE_INTERVAL_MS = 1000L
-        internal const val POWER_RETRY_INITIAL_DELAY_MS = 2000L
-        internal const val POWER_RETRY_MAX_DELAY_MS = 300_000L
+        internal val TIMER_UPDATE_INTERVAL = 1.seconds
+        internal val POWER_RETRY_INITIAL_DELAY = 2.seconds
+        internal val POWER_RETRY_MAX_DELAY = 5.minutes
         internal const val POWER_RETRY_FACTOR = 2
     }
 
@@ -165,9 +167,9 @@ internal class SessionTrackerImpl(
         if (locationCollectionJob?.isActive == true) return
         locationCollectionJob = scope?.launch {
             locationDataSource.observeLocationUpdates(
-                intervalMs = LOCATION_INTERVAL_MS,
+                intervalMs = LOCATION_INTERVAL.inWholeMilliseconds,
                 inUpdateDistanceMeters = MIN_UPDATE_DISTANCE_METERS,
-                maxUpdateDelayMs = LOCATION_MAX_UPDATE_DELAY_MS,
+                maxUpdateDelayMs = LOCATION_MAX_UPDATE_DELAY.inWholeMilliseconds,
             ).collect { location ->
                 updateSessionLocationUseCase.update(
                     location = location,
@@ -205,7 +207,7 @@ internal class SessionTrackerImpl(
                 val elapsedSinceLastResume = currentTimeProvider() - session.lastResumedTimeMs
                 val totalElapsedMs = session.elapsedTimeMs + elapsedSinceLastResume
                 delegate?.onNotificationUpdate(session, totalElapsedMs)
-                delay(TIMER_UPDATE_INTERVAL_MS)
+                delay(TIMER_UPDATE_INTERVAL)
             }
         }
     }
@@ -233,11 +235,11 @@ internal class SessionTrackerImpl(
     }
 
     private suspend fun collectPowerWithRetry(macAddress: String) {
-        var retryDelay = POWER_RETRY_INITIAL_DELAY_MS
+        var retryDelay = POWER_RETRY_INITIAL_DELAY
         while (true) {
             try {
                 sessionPowerMeterUseCase.observePowerReadings(macAddress).collect { reading ->
-                    retryDelay = POWER_RETRY_INITIAL_DELAY_MS
+                    retryDelay = POWER_RETRY_INITIAL_DELAY
                     updateSessionPowerUseCase.update(
                         powerWatts = reading.powerWatts,
                         timestampMs = reading.timestampMs,
@@ -247,7 +249,7 @@ internal class SessionTrackerImpl(
                 // Connection error — retry with backoff
             }
             delay(retryDelay)
-            retryDelay = (retryDelay * POWER_RETRY_FACTOR).coerceAtMost(POWER_RETRY_MAX_DELAY_MS)
+            retryDelay = (retryDelay.times(POWER_RETRY_FACTOR)).coerceAtMost(POWER_RETRY_MAX_DELAY)
         }
     }
 

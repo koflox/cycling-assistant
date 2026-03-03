@@ -11,6 +11,7 @@ import io.mockk.every
 import io.mockk.justRun
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -37,6 +38,7 @@ class ObservePowerDataUseCaseImplTest {
     fun setup() {
         justRun { gattManager.enableNotifications(any(), any()) }
         useCase = ObservePowerDataUseCaseImpl(
+            dispatcherIo = Dispatchers.Unconfined,
             gattManager = gattManager,
             parser = parser,
             cadenceCalculator = cadenceCalculator,

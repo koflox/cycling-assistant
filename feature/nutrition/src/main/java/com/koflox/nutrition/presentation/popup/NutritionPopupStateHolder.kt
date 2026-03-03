@@ -2,6 +2,7 @@ package com.koflox.nutrition.presentation.popup
 
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -10,6 +11,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.util.Locale
+import kotlin.time.Duration.Companion.seconds
 
 internal class NutritionPopupStateHolder(
     private val suggestionTimeMs: Long,
@@ -17,10 +19,10 @@ internal class NutritionPopupStateHolder(
 ) {
 
     companion object {
-        private const val TIMER_UPDATE_INTERVAL_MS = 1000L
+        private val TIMER_UPDATE_INTERVAL = 1.seconds
     }
 
-    private val scope = CoroutineScope(dispatcherDefault)
+    private val scope = CoroutineScope(SupervisorJob() + dispatcherDefault)
 
     private val _uiState = MutableStateFlow<NutritionPopupUiState>(NutritionPopupUiState.Hidden)
     val uiState: StateFlow<NutritionPopupUiState> = _uiState.asStateFlow()
@@ -33,7 +35,7 @@ internal class NutritionPopupStateHolder(
         scope.launch {
             updateElapsedTime()
             while (isActive) {
-                delay(TIMER_UPDATE_INTERVAL_MS)
+                delay(TIMER_UPDATE_INTERVAL)
                 updateElapsedTime()
             }
         }

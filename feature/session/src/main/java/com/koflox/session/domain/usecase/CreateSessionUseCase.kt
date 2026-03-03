@@ -10,6 +10,7 @@ import com.koflox.session.domain.model.SessionStatus
 import com.koflox.session.domain.model.TrackPoint
 import com.koflox.session.domain.repository.SessionRepository
 import kotlinx.coroutines.delay
+import kotlin.time.Duration.Companion.seconds
 
 interface CreateSessionUseCase {
     suspend fun create(params: CreateSessionParams): Result<String>
@@ -34,7 +35,7 @@ internal class CreateSessionUseCaseImpl(
 
     companion object {
         private const val LOCATION_MAX_RETRIES = 3
-        private const val LOCATION_RETRY_DELAY_MS = 2000L
+        private val LOCATION_RETRY_DELAY = 2.seconds
     }
 
     override suspend fun create(params: CreateSessionParams): Result<String> {
@@ -83,7 +84,7 @@ internal class CreateSessionUseCaseImpl(
                     bestLocation = location
                     if (locationValidator.isAccuracyValid(location)) return location
                 }
-            if (attempt < LOCATION_MAX_RETRIES - 1) delay(LOCATION_RETRY_DELAY_MS)
+            if (attempt < LOCATION_MAX_RETRIES - 1) delay(LOCATION_RETRY_DELAY)
         }
         return bestLocation
     }

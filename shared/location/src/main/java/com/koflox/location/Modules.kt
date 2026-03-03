@@ -36,6 +36,7 @@ val locationModule = module {
     single<LocationSettingsDataSource> {
         LocationSettingsDataSourceImpl(
             context = androidContext(),
+            dispatcherIo = get<CoroutineDispatcher>(DispatchersQualifier.Io),
         )
     }
     single<UserLocationRepository> {

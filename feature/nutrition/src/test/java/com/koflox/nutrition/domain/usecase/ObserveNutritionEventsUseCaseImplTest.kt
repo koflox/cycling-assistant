@@ -7,6 +7,7 @@ import com.koflox.nutritionsession.bridge.model.SessionTimeInfo
 import com.koflox.nutritionsession.bridge.usecase.SessionElapsedTimeUseCase
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
@@ -15,6 +16,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import java.util.concurrent.atomic.AtomicLong
+import kotlin.time.Duration
 
 class ObserveNutritionEventsUseCaseImplTest {
 
@@ -38,10 +40,11 @@ class ObserveNutritionEventsUseCaseImplTest {
         every { sessionElapsedTimeUseCase.observeSessionTimeInfo() } returns sessionTimeInfoFlow
         every { observeNutritionSettingsUseCase.observeSettings() } returns settingsFlow
         useCase = ObserveNutritionEventsUseCaseImpl(
+            dispatcherIo = Dispatchers.Unconfined,
             sessionElapsedTimeUseCase = sessionElapsedTimeUseCase,
             observeNutritionSettingsUseCase = observeNutritionSettingsUseCase,
             currentTimeProvider = { currentTime.get() },
-            checkIntervalMs = Long.MAX_VALUE,
+            checkInterval = Duration.INFINITE,
         )
     }
 

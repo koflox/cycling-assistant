@@ -13,6 +13,7 @@ import android.os.VibratorManager
 import androidx.core.app.ServiceCompat
 import com.koflox.session.domain.model.Session
 import org.koin.android.ext.android.inject
+import kotlin.time.Duration.Companion.milliseconds
 
 class SessionTrackingService : Service(), SessionTrackingDelegate {
 
@@ -21,7 +22,7 @@ class SessionTrackingService : Service(), SessionTrackingDelegate {
         const val ACTION_PAUSE = "com.koflox.session.PAUSE"
         const val ACTION_RESUME = "com.koflox.session.RESUME"
 
-        private const val VIBRATION_DURATION_MS = 200L
+        private val VIBRATION_DURATION = 200.milliseconds
     }
 
     private val sessionTracker: SessionTracker by inject()
@@ -102,11 +103,11 @@ class SessionTrackingService : Service(), SessionTrackingDelegate {
             getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val effect = VibrationEffect.createOneShot(VIBRATION_DURATION_MS, VibrationEffect.DEFAULT_AMPLITUDE)
+            val effect = VibrationEffect.createOneShot(VIBRATION_DURATION.inWholeMilliseconds, VibrationEffect.DEFAULT_AMPLITUDE)
             vibrator.vibrate(effect)
         } else {
             @Suppress("DEPRECATION")
-            vibrator.vibrate(VIBRATION_DURATION_MS)
+            vibrator.vibrate(VIBRATION_DURATION.inWholeMilliseconds)
         }
     }
 }
