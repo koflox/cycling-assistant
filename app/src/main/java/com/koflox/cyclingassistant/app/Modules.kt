@@ -51,6 +51,7 @@ private val mainModule = module {
         LocalizedContextProviderImpl(
             applicationContext = androidContext(),
             observeLocaleUseCase = get(),
+            dispatcherDefault = get(DispatchersQualifier.Default),
         )
     }
     viewModel {

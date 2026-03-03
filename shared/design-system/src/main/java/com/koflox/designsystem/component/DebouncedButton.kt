@@ -11,8 +11,9 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import kotlin.time.Duration.Companion.milliseconds
 
-private const val DEBOUNCE_INTERVAL_MS = 400L
+private val DEBOUNCE_INTERVAL = 400.milliseconds
 
 @Composable
 fun DebouncedButton(
@@ -26,7 +27,7 @@ fun DebouncedButton(
     Button(
         onClick = {
             val now = System.currentTimeMillis()
-            if (now - lastClickTimeMs >= DEBOUNCE_INTERVAL_MS) {
+            if (now - lastClickTimeMs >= DEBOUNCE_INTERVAL.inWholeMilliseconds) {
                 lastClickTimeMs = now
                 onClick()
             }
@@ -51,7 +52,7 @@ fun DebouncedOutlinedButton(
     OutlinedButton(
         onClick = {
             val now = System.currentTimeMillis()
-            if (now - lastClickTimeMs >= DEBOUNCE_INTERVAL_MS) {
+            if (now - lastClickTimeMs >= DEBOUNCE_INTERVAL.inWholeMilliseconds) {
                 lastClickTimeMs = now
                 onClick()
             }

@@ -10,19 +10,23 @@ import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.LocationSettingsRequest
 import com.google.android.gms.location.Priority
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flowOn
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
+import kotlin.time.Duration.Companion.seconds
 
 internal class LocationSettingsDataSourceImpl(
     private val context: Context,
+    private val dispatcherIo: CoroutineDispatcher,
 ) : LocationSettingsDataSource {
 
     companion object {
-        private const val LOCATION_CHECK_INTERVAL_MS = 3000L
+        private val LOCATION_CHECK_INTERVAL = 3.seconds
     }
 
     private val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
@@ -42,12 +46,13 @@ internal class LocationSettingsDataSourceImpl(
             IntentFilter(LocationManager.PROVIDERS_CHANGED_ACTION),
         )
         awaitClose { context.unregisterReceiver(receiver) }
-    }.distinctUntilChanged()
+    }.flowOn(dispatcherIo)
+        .distinctUntilChanged()
 
     override suspend fun resolveLocationSettings(): LocationSettingsResult {
         val locationRequest = LocationRequest.Builder(
             Priority.PRIORITY_HIGH_ACCURACY,
-            LOCATION_CHECK_INTERVAL_MS,
+            LOCATION_CHECK_INTERVAL.inWholeMilliseconds,
         ).build()
         val settingsRequest = LocationSettingsRequest.Builder()
             .addLocationRequest(locationRequest)
