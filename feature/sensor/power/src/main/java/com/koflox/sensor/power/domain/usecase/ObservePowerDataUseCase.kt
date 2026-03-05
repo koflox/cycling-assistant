@@ -6,6 +6,7 @@ import com.koflox.sensor.power.domain.model.PowerReading
 import com.koflox.sensorprotocol.power.CadenceCalculator
 import com.koflox.sensorprotocol.power.CyclingPowerConstants
 import com.koflox.sensorprotocol.power.CyclingPowerParser
+import com.koflox.sensorprotocol.power.WheelSpeedCalculator
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
@@ -27,6 +28,7 @@ internal class ObservePowerDataUseCaseImpl(
     private val gattManager: BleGattManager,
     private val parser: CyclingPowerParser,
     private val cadenceCalculator: CadenceCalculator,
+    private val wheelSpeedCalculator: WheelSpeedCalculator,
 ) : ObservePowerDataUseCase {
 
     override fun observePowerData(macAddress: String): Flow<PowerReading> =
@@ -45,7 +47,7 @@ internal class ObservePowerDataUseCaseImpl(
                 if (changed.characteristicUuid != CyclingPowerConstants.MEASUREMENT_CHARACTERISTIC_UUID) {
                     return@mapNotNull null
                 }
-                val measurement = parser.parse(changed.data)
+                val measurement = parser.parse(changed.data) ?: return@mapNotNull null
                 val crankRevs = measurement.crankRevolutions
                 val crankTime = measurement.lastCrankEventTime
                 val cadence = if (crankRevs != null && crankTime != null) {
@@ -53,10 +55,21 @@ internal class ObservePowerDataUseCaseImpl(
                 } else {
                     null
                 }
+                val wheelRevs = measurement.cumulativeWheelRevolutions
+                val wheelTime = measurement.lastWheelEventTime
+                val wheelSpeed = if (wheelRevs != null && wheelTime != null) {
+                    wheelSpeedCalculator.calculate(wheelRevs, wheelTime)
+                } else {
+                    null
+                }
                 PowerReading(
                     timestampMs = System.currentTimeMillis(),
                     powerWatts = measurement.instantaneousPowerWatts,
                     cadenceRpm = cadence,
+                    pedalPowerBalancePercent = measurement.pedalPowerBalancePercent,
+                    accumulatedTorqueNm = measurement.accumulatedTorqueNm,
+                    wheelSpeedKmh = wheelSpeed,
+                    accumulatedEnergyKj = measurement.accumulatedEnergyKj,
                 )
             }
             .catch { throw PowerMeterConnectionException(it) }

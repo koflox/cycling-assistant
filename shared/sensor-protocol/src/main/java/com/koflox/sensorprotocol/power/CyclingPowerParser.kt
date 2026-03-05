@@ -12,6 +12,11 @@ fun CyclingPowerParser(): CyclingPowerParser = CyclingPowerParserImpl()
 
 internal class CyclingPowerParserImpl : CyclingPowerParser {
 
+    companion object {
+        private const val PEDAL_POWER_BALANCE_DIVISOR = 2f
+        private const val ACCUMULATED_TORQUE_DIVISOR = 32f
+    }
+
     /**
      * Parses a raw Cycling Power Measurement characteristic value (UUID `0x2A63`).
      *
@@ -31,9 +36,14 @@ internal class CyclingPowerParserImpl : CyclingPowerParser {
      * | Accumulated Torque             | `uint16`       | bit 2                 |
      * | Wheel Revolution Data          | `uint32`+`uint16` | bit 4              |
      * | Crank Revolution Data          | `uint16`+`uint16` | bit 5              |
+     * | Extreme Force Magnitudes       | 2×`sint16`     | bit 6 (skipped)       |
+     * | Extreme Torque Magnitudes      | 2×`sint16`     | bit 7 (skipped)       |
+     * | Extreme Angles                 | 3 bytes        | bit 8 (skipped)       |
+     * | Top Dead Spot Angle            | `uint16`       | bit 9 (skipped)       |
+     * | Bottom Dead Spot Angle         | `uint16`       | bit 10 (skipped)      |
+     * | Accumulated Energy             | `uint16`       | bit 11                |
      *
-     * Optional fields preceding Crank Revolution Data are skipped based on their flags.
-     * Unsigned fields use `and 0xFFFF` to prevent sign extension from [Short.toInt].
+     * Unsigned fields use `and 0xFFFF` / `and 0xFFFFFFFFL` to prevent sign extension.
      *
      * @return parsed measurement, or `null` if [data] is too short (malformed BLE packet).
      */
@@ -42,36 +52,73 @@ internal class CyclingPowerParserImpl : CyclingPowerParser {
             val buffer = ByteBuffer.wrap(data).order(ByteOrder.LITTLE_ENDIAN)
             val flags = buffer.short.toInt() and 0xFFFF
             val instantaneousPower = buffer.short.toInt()
-            skipOptionalFieldsBeforeCrankData(buffer, flags)
-            val hasCrankData = flags and CyclingPowerConstants.FLAG_CRANK_REVOLUTION_DATA_PRESENT != 0
-            val crankRevolutions: Int?
-            val lastCrankEventTime: Int?
-            if (hasCrankData) {
-                crankRevolutions = buffer.short.toInt() and 0xFFFF
-                lastCrankEventTime = buffer.short.toInt() and 0xFFFF
-            } else {
-                crankRevolutions = null
-                lastCrankEventTime = null
-            }
+            val pedalPowerBalance = parsePedalPowerBalance(buffer, flags)
+            val accumulatedTorque = parseAccumulatedTorque(buffer, flags)
+            val wheelData = parseWheelRevolutionData(buffer, flags)
+            val crankData = parseCrankRevolutionData(buffer, flags)
+            skipUnusedFields(buffer, flags)
+            val accumulatedEnergy = parseAccumulatedEnergy(buffer, flags)
             CyclingPowerMeasurement(
                 instantaneousPowerWatts = instantaneousPower,
-                crankRevolutions = crankRevolutions,
-                lastCrankEventTime = lastCrankEventTime,
+                pedalPowerBalancePercent = pedalPowerBalance,
+                accumulatedTorqueNm = accumulatedTorque,
+                cumulativeWheelRevolutions = wheelData?.first,
+                lastWheelEventTime = wheelData?.second,
+                crankRevolutions = crankData?.first,
+                lastCrankEventTime = crankData?.second,
+                accumulatedEnergyKj = accumulatedEnergy,
             )
         } catch (_: BufferUnderflowException) {
             null
         }
     }
 
-    private fun skipOptionalFieldsBeforeCrankData(buffer: ByteBuffer, flags: Int) {
-        if (flags and CyclingPowerConstants.FLAG_PEDAL_POWER_BALANCE_PRESENT != 0) {
-            buffer.position(buffer.position() + CyclingPowerConstants.PEDAL_POWER_BALANCE_SIZE)
+    private fun parsePedalPowerBalance(buffer: ByteBuffer, flags: Int): Float? {
+        if (flags and CyclingPowerConstants.FLAG_PEDAL_POWER_BALANCE_PRESENT == 0) return null
+        val raw = buffer.get().toInt() and 0xFF
+        return raw / PEDAL_POWER_BALANCE_DIVISOR
+    }
+
+    private fun parseAccumulatedTorque(buffer: ByteBuffer, flags: Int): Float? {
+        if (flags and CyclingPowerConstants.FLAG_ACCUMULATED_TORQUE_PRESENT == 0) return null
+        val raw = buffer.short.toInt() and 0xFFFF
+        return raw / ACCUMULATED_TORQUE_DIVISOR
+    }
+
+    private fun parseWheelRevolutionData(buffer: ByteBuffer, flags: Int): Pair<Long, Int>? {
+        if (flags and CyclingPowerConstants.FLAG_WHEEL_REVOLUTION_DATA_PRESENT == 0) return null
+        val revolutions = buffer.int.toLong() and 0xFFFFFFFFL
+        val eventTime = buffer.short.toInt() and 0xFFFF
+        return revolutions to eventTime
+    }
+
+    private fun parseCrankRevolutionData(buffer: ByteBuffer, flags: Int): Pair<Int, Int>? {
+        if (flags and CyclingPowerConstants.FLAG_CRANK_REVOLUTION_DATA_PRESENT == 0) return null
+        val revolutions = buffer.short.toInt() and 0xFFFF
+        val eventTime = buffer.short.toInt() and 0xFFFF
+        return revolutions to eventTime
+    }
+
+    private fun skipUnusedFields(buffer: ByteBuffer, flags: Int) {
+        if (flags and CyclingPowerConstants.FLAG_EXTREME_FORCE_PRESENT != 0) {
+            buffer.position(buffer.position() + CyclingPowerConstants.EXTREME_FORCE_SIZE)
         }
-        if (flags and CyclingPowerConstants.FLAG_ACCUMULATED_TORQUE_PRESENT != 0) {
-            buffer.position(buffer.position() + CyclingPowerConstants.ACCUMULATED_TORQUE_SIZE)
+        if (flags and CyclingPowerConstants.FLAG_EXTREME_TORQUE_PRESENT != 0) {
+            buffer.position(buffer.position() + CyclingPowerConstants.EXTREME_TORQUE_SIZE)
         }
-        if (flags and CyclingPowerConstants.FLAG_WHEEL_REVOLUTION_DATA_PRESENT != 0) {
-            buffer.position(buffer.position() + CyclingPowerConstants.WHEEL_REVOLUTION_DATA_SIZE)
+        if (flags and CyclingPowerConstants.FLAG_EXTREME_ANGLES_PRESENT != 0) {
+            buffer.position(buffer.position() + CyclingPowerConstants.EXTREME_ANGLES_SIZE)
         }
+        if (flags and CyclingPowerConstants.FLAG_TOP_DEAD_SPOT_PRESENT != 0) {
+            buffer.position(buffer.position() + CyclingPowerConstants.TOP_DEAD_SPOT_SIZE)
+        }
+        if (flags and CyclingPowerConstants.FLAG_BOTTOM_DEAD_SPOT_PRESENT != 0) {
+            buffer.position(buffer.position() + CyclingPowerConstants.BOTTOM_DEAD_SPOT_SIZE)
+        }
+    }
+
+    private fun parseAccumulatedEnergy(buffer: ByteBuffer, flags: Int): Int? {
+        if (flags and CyclingPowerConstants.FLAG_ACCUMULATED_ENERGY_PRESENT == 0) return null
+        return buffer.short.toInt() and 0xFFFF
     }
 }
