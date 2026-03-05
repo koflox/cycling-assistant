@@ -18,7 +18,7 @@ fun HintCard(
     Card(
         modifier = modifier,
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = SurfaceAlpha.Transparant),
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = SurfaceAlpha.Transparent),
         ),
     ) {
         Text(
