@@ -39,4 +39,40 @@ object CyclingPowerConstants {
 
     /** Size of Wheel Revolution Data fields in bytes (cumulative revolutions `uint32` + last event time `uint16`). */
     const val WHEEL_REVOLUTION_DATA_SIZE = 6
+
+    /** Bit 6 — Extreme Force Magnitudes field is present (4 bytes: 2× `sint16`). */
+    const val FLAG_EXTREME_FORCE_PRESENT = 0x0040
+
+    /** Bit 7 — Extreme Torque Magnitudes field is present (4 bytes: 2× `sint16`). */
+    const val FLAG_EXTREME_TORQUE_PRESENT = 0x0080
+
+    /** Bit 8 — Extreme Angles field is present (3 bytes: 12-bit + 12-bit packed). */
+    const val FLAG_EXTREME_ANGLES_PRESENT = 0x0100
+
+    /** Bit 9 — Top Dead Spot Angle field is present (2 bytes: `uint16`). */
+    const val FLAG_TOP_DEAD_SPOT_PRESENT = 0x0200
+
+    /** Bit 10 — Bottom Dead Spot Angle field is present (2 bytes: `uint16`). */
+    const val FLAG_BOTTOM_DEAD_SPOT_PRESENT = 0x0400
+
+    /** Bit 11 — Accumulated Energy field is present (2 bytes: `uint16`). */
+    const val FLAG_ACCUMULATED_ENERGY_PRESENT = 0x0800
+
+    /** Size of Extreme Force Magnitudes field in bytes. */
+    const val EXTREME_FORCE_SIZE = 4
+
+    /** Size of Extreme Torque Magnitudes field in bytes. */
+    const val EXTREME_TORQUE_SIZE = 4
+
+    /** Size of Extreme Angles field in bytes. */
+    const val EXTREME_ANGLES_SIZE = 3
+
+    /** Size of Top Dead Spot Angle field in bytes. */
+    const val TOP_DEAD_SPOT_SIZE = 2
+
+    /** Size of Bottom Dead Spot Angle field in bytes. */
+    const val BOTTOM_DEAD_SPOT_SIZE = 2
+
+    /** Size of Accumulated Energy field in bytes. */
+    const val ACCUMULATED_ENERGY_SIZE = 2
 }

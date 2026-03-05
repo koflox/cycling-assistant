@@ -33,6 +33,7 @@ import androidx.compose.ui.res.stringResource
 import com.koflox.designsystem.component.DebouncedButton
 import com.koflox.designsystem.component.LocalizedAlertDialog
 import com.koflox.designsystem.text.resolve
+import com.koflox.designsystem.theme.Grid
 import com.koflox.designsystem.theme.Spacing
 import com.koflox.sensor.power.R
 import com.koflox.sensor.power.presentation.testmode.components.CadenceDisplay
@@ -182,26 +183,10 @@ private fun ConnectedContent(
             modifier = Modifier.fillMaxWidth(),
         )
         Spacer(modifier = Modifier.height(Spacing.Medium))
-        Row(
+        SensorStatsGrid(
+            stats = state.sensorStats,
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-        ) {
-            StatItem(
-                label = stringResource(R.string.power_test_average_power),
-                value = "${state.averagePowerWatts}",
-                unit = stringResource(R.string.power_test_unit_watts),
-            )
-            StatItem(
-                label = stringResource(R.string.power_test_max_power),
-                value = "${state.maxPowerWatts}",
-                unit = stringResource(R.string.power_test_unit_watts),
-            )
-            StatItem(
-                label = stringResource(R.string.power_test_calories),
-                value = "${state.caloriesKcal}",
-                unit = stringResource(R.string.power_test_unit_kcal),
-            )
-        }
+        )
         Spacer(modifier = Modifier.height(Spacing.Medium))
         PowerChart(
             readings = state.recentReadings,
@@ -215,6 +200,34 @@ private fun ConnectedContent(
             modifier = Modifier.fillMaxWidth(),
         ) {
             Text(text = stringResource(R.string.power_test_back))
+        }
+    }
+}
+
+@Composable
+private fun SensorStatsGrid(
+    stats: List<PowerTestStatItem>,
+    modifier: Modifier = Modifier,
+) {
+    val context = LocalContext.current
+    val chunked = stats.chunked(Grid.StatsPerRow)
+    Column(modifier = modifier) {
+        chunked.forEach { rowStats ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+            ) {
+                rowStats.forEach { stat ->
+                    StatItem(
+                        label = stat.label.resolve(context),
+                        value = stat.value,
+                        unit = stat.unit.resolve(context),
+                    )
+                }
+            }
+            if (rowStats != chunked.last()) {
+                Spacer(modifier = Modifier.height(Spacing.Small))
+            }
         }
     }
 }

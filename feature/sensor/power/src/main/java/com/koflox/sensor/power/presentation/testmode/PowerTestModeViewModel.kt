@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.koflox.ble.state.BluetoothStateMonitor
 import com.koflox.designsystem.text.UiText
 import com.koflox.sensor.power.R
+import com.koflox.sensor.power.domain.model.PowerReading
 import com.koflox.sensor.power.domain.usecase.ObservePowerDataUseCase
 import com.koflox.sensor.power.domain.usecase.PowerMeterConnectionException
 import com.koflox.sensor.power.navigation.MAC_ADDRESS_ARG
@@ -31,6 +32,8 @@ internal class PowerTestModeViewModel(
         private const val MAX_READINGS = 60
         private const val MS_TO_SECONDS = 1000.0
         private const val WATTS_SECONDS_TO_KJ = 1000.0
+        private const val STAT_DECIMAL_FORMAT = "%.1f"
+        private const val UNAVAILABLE_VALUE = "---"
     }
 
     private val macAddress: String = checkNotNull(savedStateHandle[MAC_ADDRESS_ARG])
@@ -102,9 +105,7 @@ internal class PowerTestModeViewModel(
                     _uiState.value = PowerTestModeUiState.Connected(
                         currentPowerWatts = reading.powerWatts,
                         currentCadenceRpm = reading.cadenceRpm,
-                        averagePowerWatts = if (readingCount > 0) (totalPower / readingCount).toInt() else 0,
-                        maxPowerWatts = maxPower,
-                        caloriesKcal = totalEnergyKj.toInt(),
+                        sensorStats = buildSensorStats(reading),
                         recentReadings = readings.toList(),
                     )
                 }
@@ -119,6 +120,48 @@ internal class PowerTestModeViewModel(
                 )
             }
         }
+    }
+
+    private fun buildSensorStats(reading: PowerReading): List<PowerTestStatItem> {
+        val unavailable = UNAVAILABLE_VALUE
+        val averagePower = if (readingCount > 0) (totalPower / readingCount).toInt() else 0
+        return listOf(
+            PowerTestStatItem(
+                label = UiText.Resource(R.string.power_test_pedal_balance),
+                value = reading.pedalPowerBalancePercent?.let { STAT_DECIMAL_FORMAT.format(it) } ?: unavailable,
+                unit = UiText.Resource(R.string.power_test_unit_percent),
+            ),
+            PowerTestStatItem(
+                label = UiText.Resource(R.string.power_test_torque),
+                value = reading.accumulatedTorqueNm?.let { STAT_DECIMAL_FORMAT.format(it) } ?: unavailable,
+                unit = UiText.Resource(R.string.power_test_unit_nm),
+            ),
+            PowerTestStatItem(
+                label = UiText.Resource(R.string.power_test_wheel_speed),
+                value = reading.wheelSpeedKmh?.let { STAT_DECIMAL_FORMAT.format(it) } ?: unavailable,
+                unit = UiText.Resource(R.string.power_test_unit_kmh),
+            ),
+            PowerTestStatItem(
+                label = UiText.Resource(R.string.power_test_energy),
+                value = reading.accumulatedEnergyKj?.toString() ?: unavailable,
+                unit = UiText.Resource(R.string.power_test_unit_kj),
+            ),
+            PowerTestStatItem(
+                label = UiText.Resource(R.string.power_test_average_power),
+                value = "$averagePower",
+                unit = UiText.Resource(R.string.power_test_unit_watts),
+            ),
+            PowerTestStatItem(
+                label = UiText.Resource(R.string.power_test_max_power),
+                value = "$maxPower",
+                unit = UiText.Resource(R.string.power_test_unit_watts),
+            ),
+            PowerTestStatItem(
+                label = UiText.Resource(R.string.power_test_calories),
+                value = "${totalEnergyKj.toInt()}",
+                unit = UiText.Resource(R.string.power_test_unit_kcal),
+            ),
+        )
     }
 
     private fun handleDisconnect() {

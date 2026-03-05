@@ -27,6 +27,7 @@ class PowerTestModeViewModelTest {
         private const val POWER_WATTS = 200
         private const val CADENCE_RPM = 60f
         private const val TIMESTAMP_MS = 1000L
+        private const val EXPECTED_SENSOR_STATS_COUNT = 7
     }
 
     @get:Rule
@@ -50,6 +51,24 @@ class PowerTestModeViewModelTest {
         savedStateHandle = savedStateHandle,
     )
 
+    private fun createReading(
+        timestampMs: Long = TIMESTAMP_MS,
+        powerWatts: Int = POWER_WATTS,
+        cadenceRpm: Float? = CADENCE_RPM,
+        pedalPowerBalancePercent: Float? = null,
+        accumulatedTorqueNm: Float? = null,
+        wheelSpeedKmh: Float? = null,
+        accumulatedEnergyKj: Int? = null,
+    ) = PowerReading(
+        timestampMs = timestampMs,
+        powerWatts = powerWatts,
+        cadenceRpm = cadenceRpm,
+        pedalPowerBalancePercent = pedalPowerBalancePercent,
+        accumulatedTorqueNm = accumulatedTorqueNm,
+        wheelSpeedKmh = wheelSpeedKmh,
+        accumulatedEnergyKj = accumulatedEnergyKj,
+    )
+
     @Test
     fun `initial state is Connecting`() = runTest {
         every { observePowerDataUseCase.observePowerData(MAC_ADDRESS) } returns flowOf()
@@ -62,11 +81,7 @@ class PowerTestModeViewModelTest {
 
     @Test
     fun `power reading updates to Connected state`() = runTest {
-        val reading = PowerReading(
-            timestampMs = TIMESTAMP_MS,
-            powerWatts = POWER_WATTS,
-            cadenceRpm = CADENCE_RPM,
-        )
+        val reading = createReading()
         every { observePowerDataUseCase.observePowerData(MAC_ADDRESS) } returns flowOf(reading)
         viewModel = createViewModel()
         viewModel.uiState.test {
@@ -74,8 +89,7 @@ class PowerTestModeViewModelTest {
             val connected = awaitItem() as PowerTestModeUiState.Connected
             assertEquals(POWER_WATTS, connected.currentPowerWatts)
             assertEquals(CADENCE_RPM, connected.currentCadenceRpm)
-            assertEquals(POWER_WATTS, connected.averagePowerWatts)
-            assertEquals(POWER_WATTS, connected.maxPowerWatts)
+            assertEquals(EXPECTED_SENSOR_STATS_COUNT, connected.sensorStats.size)
             assertEquals(1, connected.recentReadings.size)
             cancelAndIgnoreRemainingEvents()
         }

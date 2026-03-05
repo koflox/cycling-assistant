@@ -23,11 +23,10 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.koflox.designsystem.theme.Elevation
+import com.koflox.designsystem.theme.Grid
 import com.koflox.designsystem.theme.Spacing
 import com.koflox.session.R
 import com.koflox.session.presentation.model.DisplayStat
-
-private const val STATS_PER_ROW = 4
 
 @Composable
 internal fun SessionSummaryCard(
@@ -106,7 +105,7 @@ private fun DynamicStatsGrid(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(Spacing.Tiny),
     ) {
-        stats.chunked(STATS_PER_ROW).forEach { row ->
+        stats.chunked(Grid.StatsPerRow).forEach { row ->
             Row(modifier = Modifier.fillMaxWidth()) {
                 row.forEach { stat ->
                     StatItem(
@@ -117,7 +116,7 @@ private fun DynamicStatsGrid(
                         modifier = Modifier.weight(1f),
                     )
                 }
-                repeat(STATS_PER_ROW - row.size) {
+                repeat(Grid.StatsPerRow - row.size) {
                     Box(modifier = Modifier.weight(1f))
                 }
             }
