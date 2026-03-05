@@ -16,6 +16,7 @@ class CyclingPowerParserImplTest {
         private const val LAST_CRANK_EVENT_TIME = 1024
         private const val FLAGS_NO_CRANK = 0x0000
         private const val FLAGS_WITH_CRANK = 0x0020
+        private const val FLAGS_ALL_OPTIONAL_AND_CRANK = 0x0035
     }
 
     private val parser: CyclingPowerParser = CyclingPowerParserImpl()
@@ -26,7 +27,7 @@ class CyclingPowerParserImplTest {
             flags = FLAGS_NO_CRANK,
             power = POWER_150W,
         )
-        val result = parser.parse(data)
+        val result = parser.parse(data)!!
         assertEquals(POWER_150W, result.instantaneousPowerWatts)
         assertNull(result.crankRevolutions)
         assertNull(result.lastCrankEventTime)
@@ -40,7 +41,7 @@ class CyclingPowerParserImplTest {
             crankRevolutions = CRANK_REVOLUTIONS,
             lastCrankEventTime = LAST_CRANK_EVENT_TIME,
         )
-        val result = parser.parse(data)
+        val result = parser.parse(data)!!
         assertEquals(POWER_150W, result.instantaneousPowerWatts)
         assertNotNull(result.crankRevolutions)
         assertEquals(CRANK_REVOLUTIONS, result.crankRevolutions)
@@ -54,8 +55,36 @@ class CyclingPowerParserImplTest {
             flags = FLAGS_NO_CRANK,
             power = POWER_0W,
         )
-        val result = parser.parse(data)
+        val result = parser.parse(data)!!
         assertEquals(POWER_0W, result.instantaneousPowerWatts)
+    }
+
+    @Test
+    fun `parse crank data with preceding optional fields skipped`() {
+        val flags = FLAGS_ALL_OPTIONAL_AND_CRANK
+        val buffer = ByteBuffer.allocate(
+            2 + 2 + CyclingPowerConstants.PEDAL_POWER_BALANCE_SIZE +
+                CyclingPowerConstants.ACCUMULATED_TORQUE_SIZE +
+                CyclingPowerConstants.WHEEL_REVOLUTION_DATA_SIZE + 2 + 2,
+        ).order(ByteOrder.LITTLE_ENDIAN)
+        buffer.putShort(flags.toShort())
+        buffer.putShort(POWER_150W.toShort())
+        buffer.put(50.toByte())
+        buffer.putShort(0x1234.toShort())
+        buffer.putInt(100)
+        buffer.putShort(0x5678.toShort())
+        buffer.putShort(CRANK_REVOLUTIONS.toShort())
+        buffer.putShort(LAST_CRANK_EVENT_TIME.toShort())
+        val result = parser.parse(buffer.array())!!
+        assertEquals(POWER_150W, result.instantaneousPowerWatts)
+        assertEquals(CRANK_REVOLUTIONS, result.crankRevolutions)
+        assertEquals(LAST_CRANK_EVENT_TIME, result.lastCrankEventTime)
+    }
+
+    @Test
+    fun `parse malformed data returns null`() {
+        val result = parser.parse(byteArrayOf(0x00))
+        assertNull(result)
     }
 
     private fun createMeasurementData(
