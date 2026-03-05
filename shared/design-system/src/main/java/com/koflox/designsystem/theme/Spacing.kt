@@ -69,7 +69,7 @@ object Grid {
  */
 object SurfaceAlpha {
     /** 0.5f - Ultra-light overlay transparency */
-    const val Transparant = 0.5f
+    const val Transparent = 0.5f
 
     /** 0.9f - Light overlay transparency */
     const val Light = 0.9f

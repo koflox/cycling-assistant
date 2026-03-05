@@ -24,7 +24,7 @@ internal fun MapHeaderOverlay(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surface.copy(alpha = SurfaceAlpha.Transparant))
+            .background(MaterialTheme.colorScheme.surface.copy(alpha = SurfaceAlpha.Transparent))
             .padding(horizontal = Spacing.Medium, vertical = Spacing.Small),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
