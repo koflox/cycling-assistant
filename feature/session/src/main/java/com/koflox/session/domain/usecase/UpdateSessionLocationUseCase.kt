@@ -2,7 +2,6 @@ package com.koflox.session.domain.usecase
 
 import com.koflox.altitude.AltitudeCalculator
 import com.koflox.distance.DistanceCalculator
-import com.koflox.id.IdGenerator
 import com.koflox.location.model.Location
 import com.koflox.location.smoother.LocationSmoother
 import com.koflox.location.validator.LocationValidator
@@ -21,14 +20,14 @@ interface UpdateSessionLocationUseCase {
 
 internal class UpdateSessionLocationUseCaseImpl(
     private val dispatcherDefault: CoroutineDispatcher,
-    private val mutex: Mutex,
+    private val sessionMutex: Mutex,
     private val activeSessionUseCase: ActiveSessionUseCase,
     private val sessionRepository: SessionRepository,
     private val distanceCalculator: DistanceCalculator,
     private val altitudeCalculator: AltitudeCalculator,
     private val locationValidator: LocationValidator,
     private val locationSmoother: LocationSmoother,
-    private val idGenerator: IdGenerator,
+    private val powerReadingBuffer: PowerReadingBuffer,
 ) : UpdateSessionLocationUseCase {
 
     companion object {
@@ -45,7 +44,7 @@ internal class UpdateSessionLocationUseCaseImpl(
     private var lastAcceptedSpeedKmh = 0.0
 
     override suspend fun update(location: Location, timestampMs: Long) = withContext(dispatcherDefault) {
-        mutex.withLock {
+        sessionMutex.withLock {
             if (!locationValidator.isAccuracyValid(location)) return@withLock
             val session = activeSessionUseCase.getActiveSession()
             if (session.status != SessionStatus.RUNNING) return@withLock
@@ -65,10 +64,11 @@ internal class UpdateSessionLocationUseCaseImpl(
     ) {
         locationSmoother.reset()
         speedBuffer.clear()
+        powerReadingBuffer.clear()
         lastAcceptedSpeedKmh = 0.0
         val smoothedLocation = locationSmoother.smooth(location, timestampMs)
         val newTrackPoint = TrackPoint(
-            id = idGenerator.generate(),
+            pointIndex = session.trackPoints.size,
             latitude = smoothedLocation.latitude,
             longitude = smoothedLocation.longitude,
             timestampMs = timestampMs,
@@ -146,8 +146,11 @@ internal class UpdateSessionLocationUseCaseImpl(
         val altitudeGain = altitudeCalculator.calculateGain(
             previousTrackPoint?.altitudeMeters, originalLocation.altitudeMeters,
         )
+        val medianPower = previousTrackPoint?.let {
+            powerReadingBuffer.drainMedian(fromMs = it.timestampMs, toMs = timestampMs)
+        }
         val newTrackPoint = TrackPoint(
-            id = idGenerator.generate(),
+            pointIndex = session.trackPoints.size,
             latitude = smoothedLocation.latitude,
             longitude = smoothedLocation.longitude,
             timestampMs = timestampMs,
@@ -155,6 +158,7 @@ internal class UpdateSessionLocationUseCaseImpl(
             altitudeMeters = originalLocation.altitudeMeters,
             isSegmentStart = false,
             accuracyMeters = originalLocation.accuracyMeters,
+            powerWatts = medianPower,
         )
         val totalDistanceKm = session.traveledDistanceKm + distanceKm
         val elapsedTimeMs = session.elapsedTimeMs + (timestampMs - session.lastResumedTimeMs)

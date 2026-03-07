@@ -6,16 +6,16 @@ targetSdk = "36"
 javaVersion = "11"
 
 # Build tools
-agp = "9.0.1"
+agp = "9.1.0"
 kotlin = "2.3.10"
-ksp = "2.3.5"
+ksp = "2.3.6"
 coreKtx = "1.17.0"
 junit = "4.13.2"
 junitVersion = "1.3.0"
 espressoCore = "3.7.0"
 lifecycleRuntimeKtx = "2.10.0"
 activityCompose = "1.12.4"
-composeBom = "2026.02.00"
+composeBom = "2026.02.01"
 detekt = "1.23.8"
 kover = "0.9.7"
 moduleGraph = "0.13.0"
@@ -41,7 +41,7 @@ sqliteKtx = "2.6.2"
 datastore = "1.2.0"
 
 # Google Maps Compose
-mapsCompose = "8.1.0"
+mapsCompose = "8.2.0"
 playServicesLocation = "21.3.0"
 playServicesMaps = "20.0.0"
 

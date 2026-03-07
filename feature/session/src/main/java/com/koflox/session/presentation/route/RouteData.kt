@@ -1,15 +1,14 @@
 package com.koflox.session.presentation.route
 
-import androidx.compose.ui.graphics.toArgb
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.StrokeStyle
 import com.google.android.gms.maps.model.StyleSpan
-import com.koflox.map.RouteColors
 import com.koflox.session.domain.model.TrackPoint
 
 internal data class RoutePoint(
     val latLng: LatLng,
     val speedKmh: Double,
+    val powerWatts: Int? = null,
 )
 
 internal data class RouteSegment(
@@ -42,10 +41,6 @@ data class SegmentDisplayData(
     val colorSpans: List<ColorSpanData> = emptyList(),
 )
 
-private const val SPEED_THRESHOLD_FAST = 30.0
-private val SPEED_COLOR_NORMAL_ARGB = RouteColors.NormalSpeed.toArgb()
-private val SPEED_COLOR_FAST_ARGB = RouteColors.FastSpeed.toArgb()
-private const val SPEED_SMOOTHING_WINDOW = 5
 private const val GRADIENT_HALF_WIDTH = 3
 
 data class RouteDisplayData(
@@ -59,7 +54,14 @@ data class RouteDisplayData(
     }
 }
 
-internal fun buildRouteDisplayData(trackPoints: List<TrackPoint>): RouteDisplayData {
+fun buildRouteDisplayData(
+    trackPoints: List<TrackPoint>,
+): RouteDisplayData = buildRouteDisplayData(trackPoints, DefaultRouteColorStrategy())
+
+internal fun buildRouteDisplayData(
+    trackPoints: List<TrackPoint>,
+    colorStrategy: RouteColorStrategy,
+): RouteDisplayData {
     if (trackPoints.isEmpty()) return RouteDisplayData.EMPTY
     val rawSegments = buildRawSegments(trackPoints)
     val gapPolylines = (0 until rawSegments.size - 1).map { i ->
@@ -67,7 +69,7 @@ internal fun buildRouteDisplayData(trackPoints: List<TrackPoint>): RouteDisplayD
     }
     val routeSegments = rawSegments.filter { it.size >= 2 }.map(::RouteSegment)
     val segments = routeSegments.map { segment ->
-        val pointColors = smoothSpeedColors(segment.points)
+        val pointColors = colorStrategy.assignColors(segment.points)
         val (spans, colorSpans) = buildSpans(pointColors)
         SegmentDisplayData(
             points = segment.points.map { it.latLng },
@@ -85,25 +87,10 @@ private fun buildRawSegments(trackPoints: List<TrackPoint>): List<List<RoutePoin
         if (tp.isSegmentStart || segments.isEmpty()) {
             segments.add(mutableListOf())
         }
-        segments.last().add(RoutePoint(LatLng(tp.latitude, tp.longitude), tp.speedKmh))
+        segments.last().add(RoutePoint(LatLng(tp.latitude, tp.longitude), tp.speedKmh, tp.powerWatts))
     }
     return segments
 }
-
-private fun smoothSpeedColors(points: List<RoutePoint>): List<Int> {
-    val halfWindow = SPEED_SMOOTHING_WINDOW / 2
-    return List(points.size) { i ->
-        val start = maxOf(0, i - halfWindow)
-        val end = minOf(points.size, i + halfWindow + 1)
-        var sum = 0.0
-        for (j in start until end) {
-            sum += points[j].speedKmh
-        }
-        speedToColor(sum / (end - start))
-    }
-}
-
-private fun speedToColor(speedKmh: Double): Int = if (speedKmh < SPEED_THRESHOLD_FAST) SPEED_COLOR_NORMAL_ARGB else SPEED_COLOR_FAST_ARGB
 
 private fun buildSpans(pointColors: List<Int>): Pair<List<StyleSpan>, List<ColorSpanData>> {
     val edgeCount = pointColors.size - 1

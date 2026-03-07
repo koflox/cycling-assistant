@@ -57,11 +57,19 @@ object ComponentSize {
 }
 
 /**
+ * Standard grid column counts for stat layouts.
+ */
+object Grid {
+    /** 4 columns per row for stat item grids */
+    const val StatsPerRow = 4
+}
+
+/**
  * Common alpha values for surface overlays.
  */
 object SurfaceAlpha {
     /** 0.5f - Ultra-light overlay transparency */
-    const val Transparant = 0.5f
+    const val Transparent = 0.5f
 
     /** 0.9f - Light overlay transparency */
     const val Light = 0.9f

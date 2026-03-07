@@ -17,6 +17,8 @@ import com.koflox.session.domain.usecase.ObserveActiveSessionRouteUseCase
 import com.koflox.session.domain.usecase.ObserveActiveSessionRouteUseCaseImpl
 import com.koflox.session.domain.usecase.ObserveStatsDisplayConfigUseCase
 import com.koflox.session.domain.usecase.ObserveStatsDisplayConfigUseCaseImpl
+import com.koflox.session.domain.usecase.PowerReadingBuffer
+import com.koflox.session.domain.usecase.PowerReadingBufferImpl
 import com.koflox.session.domain.usecase.UpdateSessionLocationUseCase
 import com.koflox.session.domain.usecase.UpdateSessionLocationUseCaseImpl
 import com.koflox.session.domain.usecase.UpdateSessionPowerUseCase
@@ -29,6 +31,9 @@ import kotlinx.coroutines.sync.Mutex
 import org.koin.dsl.module
 
 internal val domainModule = module {
+    single<PowerReadingBuffer> {
+        PowerReadingBufferImpl()
+    }
     single<Mutex>(SessionQualifier.SessionMutex) { Mutex() }
     single<ActiveSessionUseCase> {
         ActiveSessionUseCaseImpl(
@@ -41,14 +46,16 @@ internal val domainModule = module {
             idGenerator = get(),
             locationDataSource = get(),
             locationValidator = get(),
+            currentTimeProvider = get(),
         )
     }
     single<UpdateSessionStatusUseCase> {
         UpdateSessionStatusUseCaseImpl(
             dispatcherDefault = get(DispatchersQualifier.Default),
-            mutex = get(SessionQualifier.SessionMutex),
+            sessionMutex = get(SessionQualifier.SessionMutex),
             activeSessionUseCase = get(),
             sessionRepository = get(),
+            currentTimeProvider = get(),
         )
     }
     // single: holds stateful speedBuffer and locationSmoother that must not be
@@ -56,23 +63,24 @@ internal val domainModule = module {
     single<UpdateSessionLocationUseCase> {
         UpdateSessionLocationUseCaseImpl(
             dispatcherDefault = get(DispatchersQualifier.Default),
-            mutex = get(SessionQualifier.SessionMutex),
+            sessionMutex = get(SessionQualifier.SessionMutex),
             activeSessionUseCase = get(),
             sessionRepository = get(),
             distanceCalculator = get(),
             altitudeCalculator = get(),
             locationValidator = get(),
             locationSmoother = get(),
-            idGenerator = get(),
+            powerReadingBuffer = get(),
         )
     }
-    // single: holds stateful lastReadingTimestampMs for energy delta calculation.
+    // single: holds stateful lastReadingTimestampMs and powerBuffer for energy delta and max power filtering.
     single<UpdateSessionPowerUseCase> {
         UpdateSessionPowerUseCaseImpl(
             dispatcherDefault = get(DispatchersQualifier.Default),
-            mutex = get(SessionQualifier.SessionMutex),
+            sessionMutex = get(SessionQualifier.SessionMutex),
             activeSessionUseCase = get(),
             sessionRepository = get(),
+            powerReadingBuffer = get(),
         )
     }
     factory<CalculateSessionStatsUseCase> {

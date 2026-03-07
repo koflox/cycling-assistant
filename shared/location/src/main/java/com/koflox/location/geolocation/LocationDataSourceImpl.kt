@@ -72,7 +72,7 @@ internal class LocationDataSourceImpl(
             .build()
         val locationCallback = object : LocationCallback() {
             override fun onLocationResult(result: LocationResult) {
-                result.lastLocation?.let { location ->
+                for (location in result.locations) {
                     trySend(mapLocation(location))
                 }
             }

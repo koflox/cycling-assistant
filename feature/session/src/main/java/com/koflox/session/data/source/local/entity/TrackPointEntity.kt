@@ -2,11 +2,10 @@ package com.koflox.session.data.source.local.entity
 
 import androidx.room.Entity
 import androidx.room.ForeignKey
-import androidx.room.Index
-import androidx.room.PrimaryKey
 
 @Entity(
     tableName = "track_points",
+    primaryKeys = ["sessionId", "pointIndex"],
     foreignKeys = [
         ForeignKey(
             entity = SessionEntity::class,
@@ -15,12 +14,10 @@ import androidx.room.PrimaryKey
             onDelete = ForeignKey.CASCADE,
         ),
     ],
-    indices = [Index("sessionId")],
 )
 data class TrackPointEntity(
-    @PrimaryKey
-    val id: String,
     val sessionId: String,
+    val pointIndex: Int,
     val latitude: Double,
     val longitude: Double,
     val timestampMs: Long,
@@ -28,4 +25,5 @@ data class TrackPointEntity(
     val altitudeMeters: Double?,
     val isSegmentStart: Boolean,
     val accuracyMeters: Float?,
+    val powerWatts: Int? = null,
 )

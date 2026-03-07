@@ -40,7 +40,7 @@ internal val presentationModule = module {
         )
     }
     single<SessionTimerFactory> {
-        SessionTimerFactory { scope -> SessionTimerImpl(scope) }
+        SessionTimerFactory { scope -> SessionTimerImpl(scope, get()) }
     }
     viewModel {
         SessionViewModel(

@@ -12,6 +12,7 @@ import com.koflox.session.domain.usecase.ObserveActiveSessionRouteUseCase
 import com.koflox.session.domain.usecase.SessionRouteSnapshot
 import com.koflox.session.presentation.route.ColorSpanData
 import com.koflox.session.presentation.route.SegmentDisplayData
+import com.koflox.session.presentation.route.buildRouteDisplayData
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -35,7 +36,7 @@ internal class CyclingSessionUseCaseImpl(
         }
 
     private fun mapToActiveSessionRouteData(snapshot: SessionRouteSnapshot): ActiveSessionRouteData {
-        val routeData = snapshot.routeDisplayData
+        val routeData = buildRouteDisplayData(snapshot.trackPoints)
         val segments = routeData.segments.map { it.toActiveRouteSegment() }
         val gapPolylines = routeData.gapPolylines.map { points ->
             val first = points.first()

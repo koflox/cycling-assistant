@@ -1,0 +1,10 @@
+# Default owner for everything
+* @koflox
+
+# Core infrastructure
+/app/ @koflox
+/shared/ @koflox
+
+# Feature modules
+/feature/session/ @koflox
+/feature/connections/ @koflox

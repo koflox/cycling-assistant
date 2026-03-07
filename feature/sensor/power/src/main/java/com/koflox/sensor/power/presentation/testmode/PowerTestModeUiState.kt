@@ -10,9 +10,7 @@ internal sealed interface PowerTestModeUiState {
     data class Connected(
         val currentPowerWatts: Int,
         val currentCadenceRpm: Float?,
-        val averagePowerWatts: Int,
-        val maxPowerWatts: Int,
-        val caloriesKcal: Int,
+        val sensorStats: List<PowerTestStatItem>,
         val recentReadings: List<PowerReadingUiModel>,
     ) : PowerTestModeUiState {
         override val overlay: PowerTestModeOverlay? = null
@@ -30,6 +28,12 @@ internal sealed interface PowerTestModeUiState {
 internal sealed interface PowerTestModeOverlay {
     data object BluetoothDisabled : PowerTestModeOverlay
 }
+
+internal data class PowerTestStatItem(
+    val label: UiText,
+    val value: String,
+    val unit: UiText,
+)
 
 internal data class PowerReadingUiModel(
     val timestampMs: Long,

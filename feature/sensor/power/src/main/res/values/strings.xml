@@ -18,4 +18,13 @@
     <string name="power_test_bluetooth_disabled_title">Bluetooth is off</string>
     <string name="power_test_bluetooth_disabled_message">Enable Bluetooth to connect to the power meter.</string>
     <string name="power_test_bluetooth_disabled_enable">OK</string>
+    <string name="power_test_pedal_balance">Pedal Balance</string>
+    <string name="power_test_torque">Torque</string>
+    <string name="power_test_wheel_speed">Wheel Speed</string>
+    <string name="power_test_energy">Energy</string>
+    <string name="power_test_unit_kmh">km/h</string>
+    <string name="power_test_unit_nm">Nm</string>
+    <string name="power_test_unit_kj">kJ</string>
+    <string name="power_test_unit_percent">%</string>
+    <string name="power_test_unavailable" translatable="false">---</string>
 </resources>
