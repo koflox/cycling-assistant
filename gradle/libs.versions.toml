@@ -6,7 +6,7 @@ targetSdk = "36"
 javaVersion = "11"
 
 # Build tools
-agp = "9.0.1"
+agp = "9.1.0"
 kotlin = "2.3.10"
 ksp = "2.3.5"
 coreKtx = "1.17.0"
