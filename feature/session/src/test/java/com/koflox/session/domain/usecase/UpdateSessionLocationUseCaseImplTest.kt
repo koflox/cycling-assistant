@@ -70,7 +70,7 @@ class UpdateSessionLocationUseCaseImplTest {
         every { idGenerator.generate() } returns TRACK_POINT_ID
         useCase = UpdateSessionLocationUseCaseImpl(
             dispatcherDefault = mainDispatcherRule.testDispatcher,
-            mutex = Mutex(),
+            sessionMutex = Mutex(),
             activeSessionUseCase = activeSessionUseCase,
             sessionRepository = sessionRepository,
             distanceCalculator = distanceCalculator,

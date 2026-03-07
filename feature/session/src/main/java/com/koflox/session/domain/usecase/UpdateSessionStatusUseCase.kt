@@ -17,7 +17,7 @@ interface UpdateSessionStatusUseCase {
 
 internal class UpdateSessionStatusUseCaseImpl(
     private val dispatcherDefault: CoroutineDispatcher,
-    private val mutex: Mutex,
+    private val sessionMutex: Mutex,
     private val activeSessionUseCase: ActiveSessionUseCase,
     private val sessionRepository: SessionRepository,
 ) : UpdateSessionStatusUseCase {
@@ -27,7 +27,7 @@ internal class UpdateSessionStatusUseCaseImpl(
     }
 
     override suspend fun pause(): Result<Unit> = withContext(dispatcherDefault) {
-        mutex.withLock {
+        sessionMutex.withLock {
             suspendRunCatching {
                 val session = activeSessionUseCase.getActiveSession()
                 if (session.status != SessionStatus.RUNNING) return@suspendRunCatching
@@ -46,7 +46,7 @@ internal class UpdateSessionStatusUseCaseImpl(
     }
 
     override suspend fun resume(): Result<Unit> = withContext(dispatcherDefault) {
-        mutex.withLock {
+        sessionMutex.withLock {
             suspendRunCatching {
                 val session = activeSessionUseCase.getActiveSession()
                 if (session.status != SessionStatus.PAUSED) return@suspendRunCatching
@@ -61,7 +61,7 @@ internal class UpdateSessionStatusUseCaseImpl(
     }
 
     override suspend fun stop(): Result<Unit> = withContext(dispatcherDefault) {
-        mutex.withLock {
+        sessionMutex.withLock {
             suspendRunCatching {
                 val session = activeSessionUseCase.getActiveSession()
                 if (session.status == SessionStatus.COMPLETED) return@suspendRunCatching
@@ -85,7 +85,7 @@ internal class UpdateSessionStatusUseCaseImpl(
     }
 
     override suspend fun onServiceRestart(): Result<Unit> = withContext(dispatcherDefault) {
-        mutex.withLock {
+        sessionMutex.withLock {
             suspendRunCatching {
                 val session = activeSessionUseCase.getActiveSession()
                 if (session.status != SessionStatus.RUNNING) return@suspendRunCatching

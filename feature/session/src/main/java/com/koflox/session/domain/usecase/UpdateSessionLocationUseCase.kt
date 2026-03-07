@@ -21,7 +21,7 @@ interface UpdateSessionLocationUseCase {
 
 internal class UpdateSessionLocationUseCaseImpl(
     private val dispatcherDefault: CoroutineDispatcher,
-    private val mutex: Mutex,
+    private val sessionMutex: Mutex,
     private val activeSessionUseCase: ActiveSessionUseCase,
     private val sessionRepository: SessionRepository,
     private val distanceCalculator: DistanceCalculator,
@@ -45,7 +45,7 @@ internal class UpdateSessionLocationUseCaseImpl(
     private var lastAcceptedSpeedKmh = 0.0
 
     override suspend fun update(location: Location, timestampMs: Long) = withContext(dispatcherDefault) {
-        mutex.withLock {
+        sessionMutex.withLock {
             if (!locationValidator.isAccuracyValid(location)) return@withLock
             val session = activeSessionUseCase.getActiveSession()
             if (session.status != SessionStatus.RUNNING) return@withLock

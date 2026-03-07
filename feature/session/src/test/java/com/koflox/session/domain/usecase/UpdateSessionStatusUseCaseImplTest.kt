@@ -41,7 +41,7 @@ class UpdateSessionStatusUseCaseImplTest {
     fun setup() {
         useCase = UpdateSessionStatusUseCaseImpl(
             dispatcherDefault = mainDispatcherRule.testDispatcher,
-            mutex = Mutex(),
+            sessionMutex = Mutex(),
             activeSessionUseCase = activeSessionUseCase,
             sessionRepository = sessionRepository,
         )

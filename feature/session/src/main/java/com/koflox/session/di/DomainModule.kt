@@ -46,7 +46,7 @@ internal val domainModule = module {
     single<UpdateSessionStatusUseCase> {
         UpdateSessionStatusUseCaseImpl(
             dispatcherDefault = get(DispatchersQualifier.Default),
-            mutex = get(SessionQualifier.SessionMutex),
+            sessionMutex = get(SessionQualifier.SessionMutex),
             activeSessionUseCase = get(),
             sessionRepository = get(),
         )
@@ -56,7 +56,7 @@ internal val domainModule = module {
     single<UpdateSessionLocationUseCase> {
         UpdateSessionLocationUseCaseImpl(
             dispatcherDefault = get(DispatchersQualifier.Default),
-            mutex = get(SessionQualifier.SessionMutex),
+            sessionMutex = get(SessionQualifier.SessionMutex),
             activeSessionUseCase = get(),
             sessionRepository = get(),
             distanceCalculator = get(),
@@ -66,11 +66,11 @@ internal val domainModule = module {
             idGenerator = get(),
         )
     }
-    // single: holds stateful lastReadingTimestampMs for energy delta calculation.
+    // single: holds stateful lastReadingTimestampMs and powerBuffer for energy delta and max power filtering.
     single<UpdateSessionPowerUseCase> {
         UpdateSessionPowerUseCaseImpl(
             dispatcherDefault = get(DispatchersQualifier.Default),
-            mutex = get(SessionQualifier.SessionMutex),
+            sessionMutex = get(SessionQualifier.SessionMutex),
             activeSessionUseCase = get(),
             sessionRepository = get(),
         )
