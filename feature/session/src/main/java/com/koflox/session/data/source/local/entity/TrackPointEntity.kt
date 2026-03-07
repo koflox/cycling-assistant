@@ -28,4 +28,5 @@ data class TrackPointEntity(
     val altitudeMeters: Double?,
     val isSegmentStart: Boolean,
     val accuracyMeters: Float?,
+    val powerWatts: Int? = null,
 )

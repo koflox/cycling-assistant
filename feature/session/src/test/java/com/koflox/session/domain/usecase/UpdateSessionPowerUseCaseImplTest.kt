@@ -7,8 +7,10 @@ import com.koflox.session.testutil.createSession
 import com.koflox.testing.coroutine.MainDispatcherRule
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.justRun
 import io.mockk.mockk
 import io.mockk.slot
+import io.mockk.verify
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -30,6 +32,7 @@ class UpdateSessionPowerUseCaseImplTest {
 
     private val activeSessionUseCase: ActiveSessionUseCase = mockk()
     private val sessionRepository: SessionRepository = mockk()
+    private val powerReadingBuffer: PowerReadingBuffer = mockk()
     private val mutex = Mutex()
     private lateinit var useCase: UpdateSessionPowerUseCaseImpl
 
@@ -40,6 +43,7 @@ class UpdateSessionPowerUseCaseImplTest {
 
     private fun setupDefaultMocks() {
         coEvery { sessionRepository.saveSession(any()) } returns Result.success(Unit)
+        justRun { powerReadingBuffer.addReading(any(), any()) }
     }
 
     private fun createUseCase() = UpdateSessionPowerUseCaseImpl(
@@ -47,6 +51,7 @@ class UpdateSessionPowerUseCaseImplTest {
         sessionMutex = mutex,
         activeSessionUseCase = activeSessionUseCase,
         sessionRepository = sessionRepository,
+        powerReadingBuffer = powerReadingBuffer,
     )
 
     @Test
@@ -196,6 +201,15 @@ class UpdateSessionPowerUseCaseImplTest {
         val lastSaved = savedSessions.last()
         assertEquals(powers.size, lastSaved.totalPowerReadings)
         assertEquals(powers.sumOf { it.toLong() }, lastSaved.sumPowerWatts)
+    }
+
+    @Test
+    fun `update adds reading to power reading buffer`() = runTest {
+        val session = createSession(status = SessionStatus.RUNNING)
+        coEvery { activeSessionUseCase.getActiveSession() } returns session
+        useCase = createUseCase()
+        useCase.update(POWER_WATTS, TIMESTAMP_1_MS)
+        verify { powerReadingBuffer.addReading(POWER_WATTS, TIMESTAMP_1_MS) }
     }
 
     @Test

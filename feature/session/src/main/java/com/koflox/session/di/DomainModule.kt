@@ -17,6 +17,8 @@ import com.koflox.session.domain.usecase.ObserveActiveSessionRouteUseCase
 import com.koflox.session.domain.usecase.ObserveActiveSessionRouteUseCaseImpl
 import com.koflox.session.domain.usecase.ObserveStatsDisplayConfigUseCase
 import com.koflox.session.domain.usecase.ObserveStatsDisplayConfigUseCaseImpl
+import com.koflox.session.domain.usecase.PowerReadingBuffer
+import com.koflox.session.domain.usecase.PowerReadingBufferImpl
 import com.koflox.session.domain.usecase.UpdateSessionLocationUseCase
 import com.koflox.session.domain.usecase.UpdateSessionLocationUseCaseImpl
 import com.koflox.session.domain.usecase.UpdateSessionPowerUseCase
@@ -29,6 +31,9 @@ import kotlinx.coroutines.sync.Mutex
 import org.koin.dsl.module
 
 internal val domainModule = module {
+    single<PowerReadingBuffer> {
+        PowerReadingBufferImpl()
+    }
     single<Mutex>(SessionQualifier.SessionMutex) { Mutex() }
     single<ActiveSessionUseCase> {
         ActiveSessionUseCaseImpl(
@@ -64,6 +69,7 @@ internal val domainModule = module {
             locationValidator = get(),
             locationSmoother = get(),
             idGenerator = get(),
+            powerReadingBuffer = get(),
         )
     }
     // single: holds stateful lastReadingTimestampMs and powerBuffer for energy delta and max power filtering.
@@ -73,6 +79,7 @@ internal val domainModule = module {
             sessionMutex = get(SessionQualifier.SessionMutex),
             activeSessionUseCase = get(),
             sessionRepository = get(),
+            powerReadingBuffer = get(),
         )
     }
     factory<CalculateSessionStatsUseCase> {

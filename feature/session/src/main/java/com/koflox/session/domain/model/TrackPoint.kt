@@ -9,4 +9,5 @@ data class TrackPoint(
     val altitudeMeters: Double?,
     val isSegmentStart: Boolean,
     val accuracyMeters: Float?,
+    val powerWatts: Int? = null,
 )
