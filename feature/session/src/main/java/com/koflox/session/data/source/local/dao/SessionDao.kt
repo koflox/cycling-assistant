@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
+import androidx.room.Upsert
 import com.koflox.session.data.source.local.entity.SessionEntity
 import com.koflox.session.data.source.local.entity.SessionWithTrackPoints
 import com.koflox.session.data.source.local.entity.TrackPointEntity
@@ -14,7 +15,7 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface SessionDao {
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun insertSession(session: SessionEntity)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
