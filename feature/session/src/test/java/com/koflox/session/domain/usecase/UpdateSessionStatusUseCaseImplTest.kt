@@ -1,5 +1,6 @@
 package com.koflox.session.domain.usecase
 
+import com.koflox.concurrent.CurrentTimeProvider
 import com.koflox.session.domain.model.Session
 import com.koflox.session.domain.model.SessionStatus
 import com.koflox.session.domain.repository.SessionRepository
@@ -35,15 +36,18 @@ class UpdateSessionStatusUseCaseImplTest {
 
     private val activeSessionUseCase: ActiveSessionUseCase = mockk()
     private val sessionRepository: SessionRepository = mockk()
+    private var currentTimeMs = LAST_RESUMED_TIME_MS + 2_000_000L
+    private val currentTimeProvider = CurrentTimeProvider { currentTimeMs }
     private lateinit var useCase: UpdateSessionStatusUseCaseImpl
 
     @Before
     fun setup() {
         useCase = UpdateSessionStatusUseCaseImpl(
             dispatcherDefault = mainDispatcherRule.testDispatcher,
-            mutex = Mutex(),
+            sessionMutex = Mutex(),
             activeSessionUseCase = activeSessionUseCase,
             sessionRepository = sessionRepository,
+            currentTimeProvider = currentTimeProvider,
         )
     }
 

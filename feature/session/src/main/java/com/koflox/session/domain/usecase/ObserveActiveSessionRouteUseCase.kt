@@ -4,13 +4,11 @@ import com.koflox.location.bearing.calculateBearingDegrees
 import com.koflox.location.model.Location
 import com.koflox.session.domain.model.SessionStatus
 import com.koflox.session.domain.model.TrackPoint
-import com.koflox.session.presentation.route.RouteDisplayData
-import com.koflox.session.presentation.route.buildRouteDisplayData
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
 data class SessionRouteSnapshot(
-    val routeDisplayData: RouteDisplayData,
+    val trackPoints: List<TrackPoint>,
     val isPaused: Boolean,
     val showGapToUserLocation: Boolean,
     val firstTrackPointPosition: Location?,
@@ -35,7 +33,7 @@ internal class ObserveActiveSessionRouteUseCaseImpl(
                 val isAwaitingResumePoint = it.status == SessionStatus.RUNNING &&
                     trackPoints.lastOrNull()?.let { tp -> tp.timestampMs < it.lastResumedTimeMs } == true
                 SessionRouteSnapshot(
-                    routeDisplayData = buildRouteDisplayData(trackPoints),
+                    trackPoints = trackPoints,
                     isPaused = isPaused,
                     showGapToUserLocation = isPaused || isAwaitingResumePoint,
                     firstTrackPointPosition = trackPoints.firstOrNull()?.toLocation(),

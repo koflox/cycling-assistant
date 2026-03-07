@@ -1,5 +1,6 @@
 package com.koflox.session.domain.usecase
 
+import com.koflox.concurrent.CurrentTimeProvider
 import com.koflox.id.IdGenerator
 import com.koflox.location.error.LocationUnavailableException
 import com.koflox.location.geolocation.LocationDataSource
@@ -31,6 +32,7 @@ internal class CreateSessionUseCaseImpl(
     private val idGenerator: IdGenerator,
     private val locationDataSource: LocationDataSource,
     private val locationValidator: LocationValidator,
+    private val currentTimeProvider: CurrentTimeProvider,
 ) : CreateSessionUseCase {
 
     companion object {
@@ -41,7 +43,7 @@ internal class CreateSessionUseCaseImpl(
     override suspend fun create(params: CreateSessionParams): Result<String> {
         val startLocation = getValidLocation()
             ?: return Result.failure(LocationUnavailableException())
-        val currentTimeMs = System.currentTimeMillis()
+        val currentTimeMs = currentTimeProvider.currentTimeMs()
         val destination = params as? CreateSessionParams.Destination
         val session = Session(
             id = idGenerator.generate(),
@@ -62,7 +64,7 @@ internal class CreateSessionUseCaseImpl(
             status = SessionStatus.RUNNING,
             trackPoints = listOf(
                 TrackPoint(
-                    id = idGenerator.generate(),
+                    pointIndex = 0,
                     latitude = startLocation.latitude,
                     longitude = startLocation.longitude,
                     timestampMs = currentTimeMs,

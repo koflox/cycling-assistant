@@ -1,5 +1,6 @@
 package com.koflox.session.presentation.session.timer
 
+import com.koflox.concurrent.CurrentTimeProvider
 import com.koflox.session.domain.model.Session
 import com.koflox.session.domain.model.SessionStatus
 import kotlinx.coroutines.CoroutineScope
@@ -11,7 +12,7 @@ import kotlin.time.Duration.Companion.seconds
 
 internal class SessionTimerImpl(
     private val scope: CoroutineScope,
-    private val currentTimeProvider: () -> Long = { System.currentTimeMillis() },
+    private val currentTimeProvider: CurrentTimeProvider,
 ) : SessionTimer {
 
     companion object {
@@ -26,7 +27,7 @@ internal class SessionTimerImpl(
             while (isActive) {
                 delay(TIMER_UPDATE_INTERVAL)
                 if (session.status == SessionStatus.RUNNING) {
-                    val elapsedSinceLastResume = currentTimeProvider() - session.lastResumedTimeMs
+                    val elapsedSinceLastResume = currentTimeProvider.currentTimeMs() - session.lastResumedTimeMs
                     val totalElapsedMs = session.elapsedTimeMs + elapsedSinceLastResume
                     onTick(totalElapsedMs)
                 }

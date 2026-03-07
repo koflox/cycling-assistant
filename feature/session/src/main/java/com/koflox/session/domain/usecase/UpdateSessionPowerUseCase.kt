@@ -6,6 +6,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import kotlin.time.Duration.Companion.seconds
 
 interface UpdateSessionPowerUseCase {
     suspend fun update(powerWatts: Int, timestampMs: Long)
@@ -13,35 +14,56 @@ interface UpdateSessionPowerUseCase {
 
 internal class UpdateSessionPowerUseCaseImpl(
     private val dispatcherDefault: CoroutineDispatcher,
-    private val mutex: Mutex,
+    private val sessionMutex: Mutex,
     private val activeSessionUseCase: ActiveSessionUseCase,
     private val sessionRepository: SessionRepository,
+    private val powerReadingBuffer: PowerReadingBuffer,
 ) : UpdateSessionPowerUseCase {
 
     companion object {
         private const val MILLISECONDS_PER_SECOND = 1000.0
+        private val POWER_WINDOW = 10.seconds
+        private const val MIN_WINDOW_READINGS = 3
     }
 
     private var lastReadingTimestampMs: Long? = null
+    private val powerWindow = ArrayDeque<TimestampedPower>()
 
     override suspend fun update(powerWatts: Int, timestampMs: Long) = withContext(dispatcherDefault) {
-        mutex.withLock {
+        sessionMutex.withLock {
             val session = activeSessionUseCase.getActiveSession()
             if (session.status != SessionStatus.RUNNING) return@withLock
+            powerReadingBuffer.addReading(powerWatts, timestampMs)
             val currentReadings = session.totalPowerReadings ?: 0
             val currentSumWatts = session.sumPowerWatts ?: 0L
-            val currentMaxWatts = session.maxPowerWatts ?: 0
+            val smoothedPower = medianSmoothedPower(powerWatts, timestampMs)
+            val maxPowerWatts = if (smoothedPower != null && session.maxPowerWatts != null) {
+                maxOf(session.maxPowerWatts, smoothedPower)
+            } else {
+                session.maxPowerWatts
+            }
             val currentEnergyJoules = session.totalEnergyJoules ?: 0.0
             val energyDelta = calculateEnergyDelta(powerWatts, timestampMs)
             lastReadingTimestampMs = timestampMs
             val updatedSession = session.copy(
                 totalPowerReadings = currentReadings + 1,
                 sumPowerWatts = currentSumWatts + powerWatts,
-                maxPowerWatts = maxOf(currentMaxWatts, powerWatts),
+                maxPowerWatts = maxPowerWatts,
                 totalEnergyJoules = currentEnergyJoules + energyDelta,
             )
             sessionRepository.saveSession(updatedSession)
         }
+    }
+
+    private fun medianSmoothedPower(rawPowerWatts: Int, timestampMs: Long): Int? {
+        val windowStartMs = timestampMs - POWER_WINDOW.inWholeMilliseconds
+        while (powerWindow.isNotEmpty() && powerWindow.first().timestampMs < windowStartMs) {
+            powerWindow.removeFirst()
+        }
+        powerWindow.addLast(TimestampedPower(timestampMs, rawPowerWatts))
+        if (powerWindow.size < MIN_WINDOW_READINGS) return null
+        val sorted = powerWindow.map(TimestampedPower::powerWatts).sorted()
+        return sorted[sorted.size / 2]
     }
 
     private fun calculateEnergyDelta(powerWatts: Int, timestampMs: Long): Double {
@@ -49,4 +71,6 @@ internal class UpdateSessionPowerUseCaseImpl(
         val deltaSec = (timestampMs - lastTs) / MILLISECONDS_PER_SECOND
         return if (deltaSec <= 0) 0.0 else powerWatts * deltaSec
     }
+
+    private data class TimestampedPower(val timestampMs: Long, val powerWatts: Int)
 }

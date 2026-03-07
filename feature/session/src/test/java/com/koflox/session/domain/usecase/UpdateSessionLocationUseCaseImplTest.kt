@@ -2,7 +2,6 @@ package com.koflox.session.domain.usecase
 
 import com.koflox.altitude.AltitudeCalculator
 import com.koflox.distance.DistanceCalculator
-import com.koflox.id.IdGenerator
 import com.koflox.location.model.Location
 import com.koflox.location.smoother.LocationSmoother
 import com.koflox.location.validator.LocationValidator
@@ -23,6 +22,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -32,7 +32,6 @@ class UpdateSessionLocationUseCaseImplTest {
 
     companion object {
         private const val SESSION_ID = "session-123"
-        private const val TRACK_POINT_ID = "tp-uuid"
         private const val START_TIME_MS = 1000000L
         private const val START_LAT = 52.50
         private const val START_LONG = 13.40
@@ -58,7 +57,7 @@ class UpdateSessionLocationUseCaseImplTest {
     private val altitudeCalculator: AltitudeCalculator = mockk()
     private val locationValidator: LocationValidator = mockk()
     private val locationSmoother: LocationSmoother = mockk()
-    private val idGenerator: IdGenerator = mockk()
+    private val powerReadingBuffer: PowerReadingBuffer = mockk()
     private lateinit var useCase: UpdateSessionLocationUseCaseImpl
 
     @Before
@@ -67,17 +66,18 @@ class UpdateSessionLocationUseCaseImplTest {
         every { locationValidator.isAccuracyValid(any()) } returns true
         every { locationSmoother.smooth(any(), any()) } answers { firstArg() }
         justRun { locationSmoother.reset() }
-        every { idGenerator.generate() } returns TRACK_POINT_ID
+        every { powerReadingBuffer.drainMedian(any(), any()) } returns null
+        justRun { powerReadingBuffer.clear() }
         useCase = UpdateSessionLocationUseCaseImpl(
             dispatcherDefault = mainDispatcherRule.testDispatcher,
-            mutex = Mutex(),
+            sessionMutex = Mutex(),
             activeSessionUseCase = activeSessionUseCase,
             sessionRepository = sessionRepository,
             distanceCalculator = distanceCalculator,
             altitudeCalculator = altitudeCalculator,
             locationValidator = locationValidator,
             locationSmoother = locationSmoother,
-            idGenerator = idGenerator,
+            powerReadingBuffer = powerReadingBuffer,
         )
     }
 
@@ -136,7 +136,7 @@ class UpdateSessionLocationUseCaseImplTest {
     }
 
     @Test
-    fun `update adds new track point with generated id`() = runTest {
+    fun `update adds new track point with correct pointIndex`() = runTest {
         val session = createTestSession()
         val sessionSlot = slot<Session>()
         coEvery { activeSessionUseCase.getActiveSession() } returns session
@@ -147,7 +147,7 @@ class UpdateSessionLocationUseCaseImplTest {
 
         assertEquals(2, sessionSlot.captured.trackPoints.size)
         val newTrackPoint = sessionSlot.captured.trackPoints[1]
-        assertEquals(TRACK_POINT_ID, newTrackPoint.id)
+        assertEquals(1, newTrackPoint.pointIndex)
         assertEquals(NEW_LAT, newTrackPoint.latitude, 0.0)
         assertEquals(NEW_LONG, newTrackPoint.longitude, 0.0)
         assertEquals(NEW_TIMESTAMP_MS, newTrackPoint.timestampMs)
@@ -525,6 +525,59 @@ class UpdateSessionLocationUseCaseImplTest {
         useCase.update(createNewLocation(), resumeTimeMs + 3000L)
 
         verify(exactly = 1) { locationSmoother.reset() }
+    }
+
+    @Test
+    fun `update drains median power for track point`() = runTest {
+        val medianPower = 250
+        every { powerReadingBuffer.drainMedian(START_TIME_MS, NEW_TIMESTAMP_MS) } returns medianPower
+        val session = createTestSession()
+        val sessionSlot = slot<Session>()
+        coEvery { activeSessionUseCase.getActiveSession() } returns session
+        every { distanceCalculator.calculateKm(any(), any(), any(), any()) } returns DISTANCE_KM
+        coEvery { sessionRepository.saveSession(capture(sessionSlot)) } returns Result.success(Unit)
+
+        useCase.update(createNewLocation(), NEW_TIMESTAMP_MS)
+
+        verify { powerReadingBuffer.drainMedian(START_TIME_MS, NEW_TIMESTAMP_MS) }
+        assertEquals(medianPower, sessionSlot.captured.trackPoints[1].powerWatts)
+    }
+
+    @Test
+    fun `update sets null power when buffer has no readings`() = runTest {
+        every { powerReadingBuffer.drainMedian(any(), any()) } returns null
+        val session = createTestSession()
+        val sessionSlot = slot<Session>()
+        coEvery { activeSessionUseCase.getActiveSession() } returns session
+        every { distanceCalculator.calculateKm(any(), any(), any(), any()) } returns DISTANCE_KM
+        coEvery { sessionRepository.saveSession(capture(sessionSlot)) } returns Result.success(Unit)
+
+        useCase.update(createNewLocation(), NEW_TIMESTAMP_MS)
+
+        assertNull(sessionSlot.captured.trackPoints[1].powerWatts)
+    }
+
+    @Test
+    fun `update clears power reading buffer on segment start`() = runTest {
+        val session = createTestSession().copy(trackPoints = emptyList())
+        coEvery { activeSessionUseCase.getActiveSession() } returns session
+        coEvery { sessionRepository.saveSession(any()) } returns Result.success(Unit)
+
+        useCase.update(createNewLocation(), NEW_TIMESTAMP_MS)
+
+        verify { powerReadingBuffer.clear() }
+    }
+
+    @Test
+    fun `update segment start has null power`() = runTest {
+        val session = createTestSession().copy(trackPoints = emptyList())
+        val sessionSlot = slot<Session>()
+        coEvery { activeSessionUseCase.getActiveSession() } returns session
+        coEvery { sessionRepository.saveSession(capture(sessionSlot)) } returns Result.success(Unit)
+
+        useCase.update(createNewLocation(), NEW_TIMESTAMP_MS)
+
+        assertNull(sessionSlot.captured.trackPoints[0].powerWatts)
     }
 
     @Test

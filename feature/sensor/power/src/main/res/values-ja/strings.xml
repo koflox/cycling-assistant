@@ -18,4 +18,12 @@
     <string name="power_test_bluetooth_disabled_enable">OK</string>
     <string name="power_test_calories">カロリー</string>
     <string name="power_test_unit_kcal">kcal</string>
+    <string name="power_test_pedal_balance">ペダルバランス</string>
+    <string name="power_test_torque">トルク</string>
+    <string name="power_test_wheel_speed">ホイール速度</string>
+    <string name="power_test_energy">エネルギー</string>
+    <string name="power_test_unit_kmh">km/h</string>
+    <string name="power_test_unit_nm">Nm</string>
+    <string name="power_test_unit_kj">kJ</string>
+    <string name="power_test_unit_percent">%</string>
 </resources>

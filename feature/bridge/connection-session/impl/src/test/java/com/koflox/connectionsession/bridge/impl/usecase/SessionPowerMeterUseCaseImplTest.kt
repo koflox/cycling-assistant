@@ -75,7 +75,15 @@ class SessionPowerMeterUseCaseImplTest {
     @Test
     fun `observePowerReadings maps PowerReading to PowerReadingData`() = runTest {
         every { observePowerDataUseCase.observePowerData(MAC_ADDRESS) } returns flowOf(
-            PowerReading(timestampMs = TIMESTAMP_MS, powerWatts = POWER_WATTS, cadenceRpm = CADENCE_RPM),
+            PowerReading(
+                timestampMs = TIMESTAMP_MS,
+                powerWatts = POWER_WATTS,
+                cadenceRpm = CADENCE_RPM,
+                pedalPowerBalancePercent = null,
+                accumulatedTorqueNm = null,
+                wheelSpeedKmh = null,
+                accumulatedEnergyKj = null,
+            ),
         )
         useCase.observePowerReadings(MAC_ADDRESS).test {
             val reading = awaitItem()

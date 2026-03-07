@@ -25,6 +25,18 @@ internal class BleGattManagerImpl(
 ) : BleGattManager {
 
     companion object {
+        /**
+         * UUID of the Client Characteristic Configuration Descriptor (CCCD) defined by
+         * Bluetooth SIG as assigned number **0x2902**.
+         *
+         * Full 128-bit UUID is derived from the Bluetooth Base UUID:
+         * `XXXXXXXX-0000-1000-8000-00805f9b34fb`, where `XXXXXXXX` is the 16-bit assigned number.
+         *
+         * Writing [BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE] to this descriptor
+         * subscribes the client to characteristic notifications.
+         *
+         * @see [Bluetooth Assigned Numbers – GATT Descriptors](https://www.bluetooth.com/specifications/assigned-numbers/)
+         */
         private val CLIENT_CHARACTERISTIC_CONFIG: UUID =
             UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")
     }

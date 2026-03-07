@@ -26,6 +26,7 @@ internal val domainModule = module {
             dispatcherIo = get<CoroutineDispatcher>(DispatchersQualifier.Io),
             sessionElapsedTimeUseCase = get(),
             observeNutritionSettingsUseCase = get(),
+            currentTimeProvider = get(),
         )
     }
 }

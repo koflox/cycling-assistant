@@ -1,5 +1,6 @@
 package com.koflox.session.domain.usecase
 
+import com.koflox.concurrent.CurrentTimeProvider
 import com.koflox.concurrent.suspendRunCatching
 import com.koflox.session.domain.model.SessionStatus
 import com.koflox.session.domain.repository.SessionRepository
@@ -17,9 +18,10 @@ interface UpdateSessionStatusUseCase {
 
 internal class UpdateSessionStatusUseCaseImpl(
     private val dispatcherDefault: CoroutineDispatcher,
-    private val mutex: Mutex,
+    private val sessionMutex: Mutex,
     private val activeSessionUseCase: ActiveSessionUseCase,
     private val sessionRepository: SessionRepository,
+    private val currentTimeProvider: CurrentTimeProvider,
 ) : UpdateSessionStatusUseCase {
 
     companion object {
@@ -27,11 +29,11 @@ internal class UpdateSessionStatusUseCaseImpl(
     }
 
     override suspend fun pause(): Result<Unit> = withContext(dispatcherDefault) {
-        mutex.withLock {
+        sessionMutex.withLock {
             suspendRunCatching {
                 val session = activeSessionUseCase.getActiveSession()
                 if (session.status != SessionStatus.RUNNING) return@suspendRunCatching
-                val currentTimeMs = System.currentTimeMillis()
+                val currentTimeMs = currentTimeProvider.currentTimeMs()
                 val elapsedSinceLastResume = currentTimeMs - session.lastResumedTimeMs
                 val totalElapsedTimeMs = session.elapsedTimeMs + elapsedSinceLastResume
                 val averageSpeedKmh = calculateAverageSpeed(session.traveledDistanceKm, totalElapsedTimeMs)
@@ -46,11 +48,11 @@ internal class UpdateSessionStatusUseCaseImpl(
     }
 
     override suspend fun resume(): Result<Unit> = withContext(dispatcherDefault) {
-        mutex.withLock {
+        sessionMutex.withLock {
             suspendRunCatching {
                 val session = activeSessionUseCase.getActiveSession()
                 if (session.status != SessionStatus.PAUSED) return@suspendRunCatching
-                val currentTimeMs = System.currentTimeMillis()
+                val currentTimeMs = currentTimeProvider.currentTimeMs()
                 val resumedSession = session.copy(
                     status = SessionStatus.RUNNING,
                     lastResumedTimeMs = currentTimeMs,
@@ -61,11 +63,11 @@ internal class UpdateSessionStatusUseCaseImpl(
     }
 
     override suspend fun stop(): Result<Unit> = withContext(dispatcherDefault) {
-        mutex.withLock {
+        sessionMutex.withLock {
             suspendRunCatching {
                 val session = activeSessionUseCase.getActiveSession()
                 if (session.status == SessionStatus.COMPLETED) return@suspendRunCatching
-                val currentTimeMs = System.currentTimeMillis()
+                val currentTimeMs = currentTimeProvider.currentTimeMs()
                 val finalElapsedTimeMs = if (session.status == SessionStatus.RUNNING) {
                     session.elapsedTimeMs + (currentTimeMs - session.lastResumedTimeMs)
                 } else {
@@ -85,11 +87,11 @@ internal class UpdateSessionStatusUseCaseImpl(
     }
 
     override suspend fun onServiceRestart(): Result<Unit> = withContext(dispatcherDefault) {
-        mutex.withLock {
+        sessionMutex.withLock {
             suspendRunCatching {
                 val session = activeSessionUseCase.getActiveSession()
                 if (session.status != SessionStatus.RUNNING) return@suspendRunCatching
-                val currentTimeMs = System.currentTimeMillis()
+                val currentTimeMs = currentTimeProvider.currentTimeMs()
                 val updatedSession = session.copy(
                     lastResumedTimeMs = currentTimeMs,
                 )

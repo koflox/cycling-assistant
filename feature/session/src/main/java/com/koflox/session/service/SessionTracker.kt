@@ -1,5 +1,6 @@
 package com.koflox.session.service
 
+import com.koflox.concurrent.CurrentTimeProvider
 import com.koflox.connectionsession.bridge.usecase.PowerConnectionException
 import com.koflox.connectionsession.bridge.usecase.SessionPowerMeterUseCase
 import com.koflox.location.geolocation.LocationDataSource
@@ -48,7 +49,7 @@ internal class SessionTrackerImpl(
     private val nutritionReminderUseCase: NutritionReminderUseCase,
     private val sessionPowerMeterUseCase: SessionPowerMeterUseCase,
     private val updateSessionPowerUseCase: UpdateSessionPowerUseCase,
-    private val currentTimeProvider: () -> Long = { System.currentTimeMillis() },
+    private val currentTimeProvider: CurrentTimeProvider,
 ) : SessionTracker {
 
     companion object {
@@ -173,7 +174,7 @@ internal class SessionTrackerImpl(
             ).collect { location ->
                 updateSessionLocationUseCase.update(
                     location = location,
-                    timestampMs = currentTimeProvider(),
+                    timestampMs = currentTimeProvider.currentTimeMs(),
                 )
             }
         }
@@ -204,7 +205,7 @@ internal class SessionTrackerImpl(
         timerJob?.cancel()
         timerJob = scope?.launch {
             while (isActive) {
-                val elapsedSinceLastResume = currentTimeProvider() - session.lastResumedTimeMs
+                val elapsedSinceLastResume = currentTimeProvider.currentTimeMs() - session.lastResumedTimeMs
                 val totalElapsedMs = session.elapsedTimeMs + elapsedSinceLastResume
                 delegate?.onNotificationUpdate(session, totalElapsedMs)
                 delay(TIMER_UPDATE_INTERVAL)

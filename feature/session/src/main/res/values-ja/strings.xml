@@ -87,6 +87,16 @@
     <string name="map_legend_gap">一時停止</string>
     <string name="map_legend_start">スタート</string>
     <string name="map_legend_finish">ゴール</string>
+    <string name="map_legend_route">ルート</string>
+    <string name="map_legend_low_power">低パワー (&lt; 150 W)</string>
+    <string name="map_legend_medium_power">中パワー (150–250 W)</string>
+    <string name="map_legend_high_power">高パワー (≥ 250 W)</string>
+
+    <!-- Map Layers -->
+    <string name="map_layer_content_description">マップレイヤー</string>
+    <string name="map_layer_default">デフォルト</string>
+    <string name="map_layer_speed">速度</string>
+    <string name="map_layer_power">パワー</string>
 
     <!-- Location Disabled Dialog -->
     <string name="location_disabled_title">位置情報が無効</string>

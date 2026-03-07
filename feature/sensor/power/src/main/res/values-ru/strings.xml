@@ -18,4 +18,12 @@
     <string name="power_test_bluetooth_disabled_enable">OK</string>
     <string name="power_test_calories">Калории</string>
     <string name="power_test_unit_kcal">ккал</string>
+    <string name="power_test_pedal_balance">Баланс педалей</string>
+    <string name="power_test_torque">Крутящий момент</string>
+    <string name="power_test_wheel_speed">Скорость колеса</string>
+    <string name="power_test_energy">Энергия</string>
+    <string name="power_test_unit_kmh">км/ч</string>
+    <string name="power_test_unit_nm">Н·м</string>
+    <string name="power_test_unit_kj">кДж</string>
+    <string name="power_test_unit_percent">%</string>
 </resources>

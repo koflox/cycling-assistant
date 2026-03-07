@@ -47,6 +47,7 @@ internal val serviceModule = module {
             nutritionReminderUseCase = get(),
             sessionPowerMeterUseCase = get(),
             updateSessionPowerUseCase = get(),
+            currentTimeProvider = get(),
         )
     }
 }

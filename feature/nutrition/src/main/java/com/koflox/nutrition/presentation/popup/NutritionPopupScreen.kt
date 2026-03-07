@@ -20,6 +20,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import com.koflox.concurrent.CurrentTimeProvider
 import com.koflox.concurrent.DispatchersQualifier
 import com.koflox.designsystem.theme.Elevation
 import com.koflox.designsystem.theme.Spacing
@@ -33,10 +34,12 @@ fun NutritionPopupRoute(
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val currentTimeProvider: CurrentTimeProvider = koinInject()
     val dispatcherDefault: CoroutineDispatcher = koinInject(qualifier = DispatchersQualifier.Default)
     val stateHolder = remember(suggestionTimeMs) {
         NutritionPopupStateHolder(
             suggestionTimeMs = suggestionTimeMs,
+            currentTimeProvider = currentTimeProvider,
             dispatcherDefault = dispatcherDefault,
         )
     }
