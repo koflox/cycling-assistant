@@ -2,7 +2,6 @@ package com.koflox.session.domain.usecase
 
 import com.koflox.altitude.AltitudeCalculator
 import com.koflox.distance.DistanceCalculator
-import com.koflox.id.IdGenerator
 import com.koflox.location.model.Location
 import com.koflox.location.smoother.LocationSmoother
 import com.koflox.location.validator.LocationValidator
@@ -28,7 +27,6 @@ internal class UpdateSessionLocationUseCaseImpl(
     private val altitudeCalculator: AltitudeCalculator,
     private val locationValidator: LocationValidator,
     private val locationSmoother: LocationSmoother,
-    private val idGenerator: IdGenerator,
     private val powerReadingBuffer: PowerReadingBuffer,
 ) : UpdateSessionLocationUseCase {
 
@@ -70,7 +68,7 @@ internal class UpdateSessionLocationUseCaseImpl(
         lastAcceptedSpeedKmh = 0.0
         val smoothedLocation = locationSmoother.smooth(location, timestampMs)
         val newTrackPoint = TrackPoint(
-            id = idGenerator.generate(),
+            pointIndex = session.trackPoints.size,
             latitude = smoothedLocation.latitude,
             longitude = smoothedLocation.longitude,
             timestampMs = timestampMs,
@@ -152,7 +150,7 @@ internal class UpdateSessionLocationUseCaseImpl(
             powerReadingBuffer.drainMedian(fromMs = it.timestampMs, toMs = timestampMs)
         }
         val newTrackPoint = TrackPoint(
-            id = idGenerator.generate(),
+            pointIndex = session.trackPoints.size,
             latitude = smoothedLocation.latitude,
             longitude = smoothedLocation.longitude,
             timestampMs = timestampMs,
