@@ -17,6 +17,7 @@ internal class UpdateSessionPowerUseCaseImpl(
     private val sessionMutex: Mutex,
     private val activeSessionUseCase: ActiveSessionUseCase,
     private val sessionRepository: SessionRepository,
+    private val powerReadingBuffer: PowerReadingBuffer,
 ) : UpdateSessionPowerUseCase {
 
     companion object {
@@ -32,6 +33,7 @@ internal class UpdateSessionPowerUseCaseImpl(
         sessionMutex.withLock {
             val session = activeSessionUseCase.getActiveSession()
             if (session.status != SessionStatus.RUNNING) return@withLock
+            powerReadingBuffer.addReading(powerWatts, timestampMs)
             val currentReadings = session.totalPowerReadings ?: 0
             val currentSumWatts = session.sumPowerWatts ?: 0L
             val smoothedPower = medianSmoothedPower(powerWatts, timestampMs)

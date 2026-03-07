@@ -29,6 +29,7 @@ internal class UpdateSessionLocationUseCaseImpl(
     private val locationValidator: LocationValidator,
     private val locationSmoother: LocationSmoother,
     private val idGenerator: IdGenerator,
+    private val powerReadingBuffer: PowerReadingBuffer,
 ) : UpdateSessionLocationUseCase {
 
     companion object {
@@ -65,6 +66,7 @@ internal class UpdateSessionLocationUseCaseImpl(
     ) {
         locationSmoother.reset()
         speedBuffer.clear()
+        powerReadingBuffer.clear()
         lastAcceptedSpeedKmh = 0.0
         val smoothedLocation = locationSmoother.smooth(location, timestampMs)
         val newTrackPoint = TrackPoint(
@@ -146,6 +148,9 @@ internal class UpdateSessionLocationUseCaseImpl(
         val altitudeGain = altitudeCalculator.calculateGain(
             previousTrackPoint?.altitudeMeters, originalLocation.altitudeMeters,
         )
+        val medianPower = previousTrackPoint?.let {
+            powerReadingBuffer.drainMedian(fromMs = it.timestampMs, toMs = timestampMs)
+        }
         val newTrackPoint = TrackPoint(
             id = idGenerator.generate(),
             latitude = smoothedLocation.latitude,
@@ -155,6 +160,7 @@ internal class UpdateSessionLocationUseCaseImpl(
             altitudeMeters = originalLocation.altitudeMeters,
             isSegmentStart = false,
             accuracyMeters = originalLocation.accuracyMeters,
+            powerWatts = medianPower,
         )
         val totalDistanceKm = session.traveledDistanceKm + distanceKm
         val elapsedTimeMs = session.elapsedTimeMs + (timestampMs - session.lastResumedTimeMs)

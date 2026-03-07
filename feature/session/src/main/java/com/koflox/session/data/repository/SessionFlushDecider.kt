@@ -14,6 +14,6 @@ internal class SessionFlushDeciderImpl : SessionFlushDecider {
     }
 
     override fun shouldFlush(status: SessionStatus, lastFlushTimeMs: Long): Boolean = status == SessionStatus.PAUSED
-            || status == SessionStatus.COMPLETED
-            || System.currentTimeMillis() - lastFlushTimeMs >= FLUSH_INTERVAL.inWholeMilliseconds
+        || status == SessionStatus.COMPLETED
+        || System.currentTimeMillis() - lastFlushTimeMs >= FLUSH_INTERVAL.inWholeMilliseconds
 }

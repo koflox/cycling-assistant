@@ -53,6 +53,7 @@ internal class SessionMapperImpl(
                 altitudeMeters = trackPoint.altitudeMeters,
                 isSegmentStart = trackPoint.isSegmentStart,
                 accuracyMeters = trackPoint.accuracyMeters,
+                powerWatts = trackPoint.powerWatts,
             )
         }
     }
@@ -87,6 +88,7 @@ internal class SessionMapperImpl(
                     altitudeMeters = trackPointEntity.altitudeMeters,
                     isSegmentStart = trackPointEntity.isSegmentStart,
                     accuracyMeters = trackPointEntity.accuracyMeters,
+                    powerWatts = trackPointEntity.powerWatts,
                 )
             },
             totalPowerReadings = entity.totalPowerReadings,
@@ -128,6 +130,7 @@ internal class SessionMapperImpl(
                             altitudeMeters = trackPointEntity.altitudeMeters,
                             isSegmentStart = trackPointEntity.isSegmentStart,
                             accuracyMeters = trackPointEntity.accuracyMeters,
+                            powerWatts = trackPointEntity.powerWatts,
                         )
                     },
                     totalPowerReadings = entity.totalPowerReadings,

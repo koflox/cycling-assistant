@@ -66,6 +66,7 @@ fun createTrackPoint(
     altitudeMeters: Double? = null,
     isSegmentStart: Boolean = false,
     accuracyMeters: Float? = null,
+    powerWatts: Int? = null,
 ) = TrackPoint(
     id = id,
     latitude = latitude,
@@ -75,6 +76,7 @@ fun createTrackPoint(
     altitudeMeters = altitudeMeters,
     isSegmentStart = isSegmentStart,
     accuracyMeters = accuracyMeters,
+    powerWatts = powerWatts,
 )
 
 fun createSessionEntity(
@@ -131,6 +133,7 @@ fun createTrackPointEntity(
     altitudeMeters: Double? = null,
     isSegmentStart: Boolean = false,
     accuracyMeters: Float? = null,
+    powerWatts: Int? = null,
 ) = TrackPointEntity(
     id = id,
     sessionId = sessionId,
@@ -141,6 +144,7 @@ fun createTrackPointEntity(
     altitudeMeters = altitudeMeters,
     isSegmentStart = isSegmentStart,
     accuracyMeters = accuracyMeters,
+    powerWatts = powerWatts,
 )
 
 fun createSessionWithTrackPoints(
