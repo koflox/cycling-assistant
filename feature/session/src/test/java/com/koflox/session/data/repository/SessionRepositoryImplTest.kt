@@ -4,11 +4,16 @@ import app.cash.turbine.test
 import com.koflox.session.data.mapper.SessionMapper
 import com.koflox.session.data.source.local.SessionLocalDataSource
 import com.koflox.session.data.source.local.entity.SessionWithTrackPoints
+import com.koflox.session.data.source.runtime.FlushInfo
+import com.koflox.session.data.source.runtime.SessionRuntimeDataSource
+import com.koflox.session.data.source.runtime.SessionRuntimeDataSourceImpl
 import com.koflox.session.domain.model.Session
 import com.koflox.session.domain.model.SessionStatus
+import com.koflox.session.domain.model.TrackPoint
 import com.koflox.session.testutil.createSession
 import com.koflox.session.testutil.createSessionEntity
 import com.koflox.session.testutil.createSessionWithTrackPoints
+import com.koflox.session.testutil.createTrackPoint
 import com.koflox.session.testutil.createTrackPointEntity
 import com.koflox.testing.coroutine.MainDispatcherRule
 import io.mockk.coEvery
@@ -36,18 +41,25 @@ class SessionRepositoryImplTest {
 
     private val localDataSource: SessionLocalDataSource = mockk()
     private val mapper: SessionMapper = mockk()
+    private val flushDecider: SessionFlushDecider = mockk()
+    private lateinit var runtimeDataSource: SessionRuntimeDataSource
     private lateinit var repository: SessionRepositoryImpl
 
     @Before
     fun setup() {
+        runtimeDataSource = SessionRuntimeDataSourceImpl()
+        every { flushDecider.shouldFlush(any(), any()) } returns false
         repository = SessionRepositoryImpl(
             localDataSource = localDataSource,
+            runtimeDataSource = runtimeDataSource,
             mapper = mapper,
+            flushDecider = flushDecider,
+            dispatcherDefault = mainDispatcherRule.testDispatcher,
         )
     }
 
     @Test
-    fun `observeActiveSession queries for running and paused statuses`() = runTest {
+    fun `observeActiveSession loads from db on first collection`() = runTest {
         every {
             localDataSource.observeFirstSessionByStatuses(
                 listOf(SessionStatus.RUNNING.name, SessionStatus.PAUSED.name),
@@ -61,7 +73,7 @@ class SessionRepositoryImplTest {
     }
 
     @Test
-    fun `observeActiveSession maps session when found`() = runTest {
+    fun `observeActiveSession populates runtime cache from db`() = runTest {
         val sessionWithTrackPoints = createTestSessionWithTrackPoints()
         val domainSession = createTestSession()
         every {
@@ -77,7 +89,7 @@ class SessionRepositoryImplTest {
     }
 
     @Test
-    fun `observeActiveSession returns null when no active session`() = runTest {
+    fun `observeActiveSession emits null when no active session in db`() = runTest {
         every { localDataSource.observeFirstSessionByStatuses(any()) } returns flowOf(null)
 
         repository.observeActiveSession().test {
@@ -124,38 +136,43 @@ class SessionRepositoryImplTest {
     }
 
     @Test
-    fun `saveSession maps session to entity`() = runTest {
-        val session = createTestSession()
-        val sessionEntity = createSessionEntity()
-        val trackPointEntities = listOf(createTrackPointEntity())
-        coEvery { mapper.toEntity(session) } returns sessionEntity
-        coEvery { mapper.toTrackPointEntities(SESSION_ID, session.trackPoints) } returns trackPointEntities
-        coJustRun { localDataSource.insertSessionWithTrackPoints(sessionEntity, trackPointEntities) }
+    fun `saveSession updates runtime cache`() = runTest {
+        val session = createTestSession(status = SessionStatus.RUNNING)
 
         repository.saveSession(session)
 
-        coVerify { mapper.toEntity(session) }
+        assertEquals(session, runtimeDataSource.activeSession.value)
     }
 
     @Test
-    fun `saveSession maps track points to entities`() = runTest {
-        val session = createTestSession()
-        val sessionEntity = createSessionEntity()
-        val trackPointEntities = listOf(createTrackPointEntity())
-        coEvery { mapper.toEntity(session) } returns sessionEntity
-        coEvery { mapper.toTrackPointEntities(SESSION_ID, session.trackPoints) } returns trackPointEntities
-        coJustRun { localDataSource.insertSessionWithTrackPoints(sessionEntity, trackPointEntities) }
+    fun `saveSession does not flush to db when flushDecider returns false`() = runTest {
+        val session = createTestSession(status = SessionStatus.RUNNING)
 
         repository.saveSession(session)
 
-        coVerify { mapper.toTrackPointEntities(SESSION_ID, session.trackPoints) }
+        coVerify(exactly = 0) { localDataSource.insertSessionWithTrackPoints(any(), any()) }
     }
 
     @Test
-    fun `saveSession inserts session with track points`() = runTest {
-        val session = createTestSession()
+    fun `saveSession flushes to db when flushDecider returns true`() = runTest {
+        val session = createTestSession(status = SessionStatus.PAUSED)
+        val sessionEntity = createSessionEntity()
+        every { flushDecider.shouldFlush(any(), any()) } returns true
+        coEvery { mapper.toEntity(session) } returns sessionEntity
+        coEvery { mapper.toTrackPointEntities(any(), any()) } returns emptyList()
+        coJustRun { localDataSource.insertSessionWithTrackPoints(any(), any()) }
+
+        repository.saveSession(session)
+
+        coVerify { localDataSource.insertSessionWithTrackPoints(sessionEntity, any()) }
+    }
+
+    @Test
+    fun `saveSession passes all track points on first flush`() = runTest {
+        val session = createTestSession(status = SessionStatus.PAUSED)
         val sessionEntity = createSessionEntity()
         val trackPointEntities = listOf(createTrackPointEntity())
+        every { flushDecider.shouldFlush(any(), any()) } returns true
         coEvery { mapper.toEntity(session) } returns sessionEntity
         coEvery { mapper.toTrackPointEntities(SESSION_ID, session.trackPoints) } returns trackPointEntities
         coJustRun { localDataSource.insertSessionWithTrackPoints(sessionEntity, trackPointEntities) }
@@ -166,11 +183,74 @@ class SessionRepositoryImplTest {
     }
 
     @Test
-    fun `saveSession returns success on successful save`() = runTest {
-        val session = createTestSession()
+    fun `saveSession only inserts new track points on subsequent flushes`() = runTest {
+        val trackPoints = listOf(
+            createTrackPoint(id = "tp1"),
+            createTrackPoint(id = "tp2"),
+            createTrackPoint(id = "tp3"),
+        )
+        val session = createTestSession(
+            status = SessionStatus.PAUSED,
+            trackPoints = trackPoints,
+        )
+        val sessionEntity = createSessionEntity()
+        runtimeDataSource.setFlushInfo(FlushInfo(trackPointCount = 1, timeMs = 0L))
+        val newTrackPoints = trackPoints.drop(1)
+        val newTrackPointEntities = listOf(createTrackPointEntity(id = "tp2"), createTrackPointEntity(id = "tp3"))
+        every { flushDecider.shouldFlush(any(), any()) } returns true
+        coEvery { mapper.toEntity(session) } returns sessionEntity
+        coEvery { mapper.toTrackPointEntities(SESSION_ID, newTrackPoints) } returns newTrackPointEntities
+        coJustRun { localDataSource.insertSessionWithTrackPoints(sessionEntity, newTrackPointEntities) }
+
+        repository.saveSession(session)
+
+        coVerify { localDataSource.insertSessionWithTrackPoints(sessionEntity, newTrackPointEntities) }
+    }
+
+    @Test
+    fun `saveSession updates flush info after flush`() = runTest {
+        val trackPoints = listOf(createTrackPoint(id = "tp1"), createTrackPoint(id = "tp2"))
+        val session = createTestSession(status = SessionStatus.PAUSED, trackPoints = trackPoints)
+        every { flushDecider.shouldFlush(any(), any()) } returns true
         coEvery { mapper.toEntity(session) } returns createSessionEntity()
         coEvery { mapper.toTrackPointEntities(any(), any()) } returns emptyList()
         coJustRun { localDataSource.insertSessionWithTrackPoints(any(), any()) }
+
+        repository.saveSession(session)
+
+        assertEquals(2, runtimeDataSource.getFlushInfo().trackPointCount)
+    }
+
+    @Test
+    fun `saveSession clears runtime on completion`() = runTest {
+        val session = createTestSession(status = SessionStatus.COMPLETED)
+        every { flushDecider.shouldFlush(any(), any()) } returns true
+        coEvery { mapper.toEntity(session) } returns createSessionEntity()
+        coEvery { mapper.toTrackPointEntities(any(), any()) } returns emptyList()
+        coJustRun { localDataSource.insertSessionWithTrackPoints(any(), any()) }
+
+        repository.saveSession(session)
+
+        assertEquals(null, runtimeDataSource.activeSession.value)
+        assertEquals(FlushInfo(), runtimeDataSource.getFlushInfo())
+    }
+
+    @Test
+    fun `saveSession sets cache after flush`() = runTest {
+        val session = createTestSession(status = SessionStatus.PAUSED)
+        every { flushDecider.shouldFlush(any(), any()) } returns true
+        coEvery { mapper.toEntity(session) } returns createSessionEntity()
+        coEvery { mapper.toTrackPointEntities(any(), any()) } returns emptyList()
+        coJustRun { localDataSource.insertSessionWithTrackPoints(any(), any()) }
+
+        repository.saveSession(session)
+
+        assertEquals(session, runtimeDataSource.activeSession.value)
+    }
+
+    @Test
+    fun `saveSession returns success on successful save`() = runTest {
+        val session = createTestSession(status = SessionStatus.RUNNING)
 
         val result = repository.saveSession(session)
 
@@ -179,8 +259,9 @@ class SessionRepositoryImplTest {
 
     @Test
     fun `saveSession returns failure on error`() = runTest {
-        val session = createTestSession()
+        val session = createTestSession(status = SessionStatus.PAUSED)
         val exception = RuntimeException("Database error")
+        every { flushDecider.shouldFlush(any(), any()) } returns true
         coEvery { mapper.toEntity(session) } throws exception
 
         val result = repository.saveSession(session)
@@ -190,31 +271,29 @@ class SessionRepositoryImplTest {
     }
 
     @Test
-    fun `getSession fetches session from localDataSource`() = runTest {
-        val sessionWithTrackPoints = createTestSessionWithTrackPoints()
-        val domainSession = createTestSession()
-        coEvery { localDataSource.getSessionWithTrackPoints(SESSION_ID) } returns sessionWithTrackPoints
-        coEvery { mapper.toDomain(sessionWithTrackPoints) } returns domainSession
+    fun `saveSession does not update cache on flush error`() = runTest {
+        val session = createTestSession(status = SessionStatus.PAUSED)
+        every { flushDecider.shouldFlush(any(), any()) } returns true
+        coEvery { mapper.toEntity(session) } throws RuntimeException("Database error")
 
-        repository.getSession(SESSION_ID)
+        repository.saveSession(session)
 
-        coVerify { localDataSource.getSessionWithTrackPoints(SESSION_ID) }
+        assertEquals(null, runtimeDataSource.activeSession.value)
     }
 
     @Test
-    fun `getSession maps session to domain`() = runTest {
-        val sessionWithTrackPoints = createTestSessionWithTrackPoints()
-        val domainSession = createTestSession()
-        coEvery { localDataSource.getSessionWithTrackPoints(SESSION_ID) } returns sessionWithTrackPoints
-        coEvery { mapper.toDomain(sessionWithTrackPoints) } returns domainSession
+    fun `getSession returns cached session when id matches`() = runTest {
+        val session = createTestSession(id = SESSION_ID)
+        runtimeDataSource.setActiveSession(session)
 
-        repository.getSession(SESSION_ID)
+        val result = repository.getSession(SESSION_ID)
 
-        coVerify { mapper.toDomain(sessionWithTrackPoints) }
+        assertTrue(result.isSuccess)
+        assertEquals(session, result.getOrNull())
     }
 
     @Test
-    fun `getSession returns success with session when found`() = runTest {
+    fun `getSession fetches from db when not in cache`() = runTest {
         val sessionWithTrackPoints = createTestSessionWithTrackPoints()
         val domainSession = createTestSession()
         coEvery { localDataSource.getSessionWithTrackPoints(SESSION_ID) } returns sessionWithTrackPoints
@@ -224,6 +303,22 @@ class SessionRepositoryImplTest {
 
         assertTrue(result.isSuccess)
         assertEquals(domainSession, result.getOrNull())
+        coVerify { localDataSource.getSessionWithTrackPoints(SESSION_ID) }
+    }
+
+    @Test
+    fun `getSession fetches from db when cached session has different id`() = runTest {
+        val cachedSession = createTestSession(id = "other-id")
+        runtimeDataSource.setActiveSession(cachedSession)
+        val sessionWithTrackPoints = createTestSessionWithTrackPoints()
+        val domainSession = createTestSession()
+        coEvery { localDataSource.getSessionWithTrackPoints(SESSION_ID) } returns sessionWithTrackPoints
+        coEvery { mapper.toDomain(sessionWithTrackPoints) } returns domainSession
+
+        val result = repository.getSession(SESSION_ID)
+
+        assertTrue(result.isSuccess)
+        coVerify { localDataSource.getSessionWithTrackPoints(SESSION_ID) }
     }
 
     @Test
@@ -250,8 +345,12 @@ class SessionRepositoryImplTest {
 
     private fun createTestSession(
         id: String = SESSION_ID,
+        status: SessionStatus = SessionStatus.RUNNING,
+        trackPoints: List<TrackPoint> = emptyList(),
     ): Session = createSession(
         id = id,
+        status = status,
+        trackPoints = trackPoints,
     )
 
     private fun createTestSessionWithTrackPoints(): SessionWithTrackPoints = createSessionWithTrackPoints(

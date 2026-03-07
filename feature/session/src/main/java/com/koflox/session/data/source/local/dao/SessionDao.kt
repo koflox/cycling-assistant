@@ -5,7 +5,6 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
-import androidx.room.Update
 import com.koflox.session.data.source.local.entity.SessionEntity
 import com.koflox.session.data.source.local.entity.SessionWithTrackPoints
 import com.koflox.session.data.source.local.entity.TrackPointEntity
@@ -32,9 +31,6 @@ interface SessionDao {
     @Transaction
     @Query("SELECT * FROM sessions WHERE id = :sessionId")
     suspend fun getSessionWithTrackPoints(sessionId: String): SessionWithTrackPoints?
-
-    @Update
-    suspend fun updateSession(session: SessionEntity)
 
     @Transaction
     @Query("SELECT * FROM sessions WHERE status IN (:statuses) ORDER BY startTimeMs DESC")
