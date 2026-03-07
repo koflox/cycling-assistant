@@ -1,6 +1,7 @@
 package com.koflox.session.presentation.completion
 
 import android.widget.Toast
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -33,6 +34,7 @@ import com.koflox.session.R
 import com.koflox.session.navigation.STATS_SECTION_COMPLETED
 import com.koflox.session.navigation.STATS_SECTION_SHARE
 import com.koflox.session.presentation.completion.components.MapHeaderOverlay
+import com.koflox.session.presentation.completion.components.MapLayerSelector
 import com.koflox.session.presentation.completion.components.MapLegendButton
 import com.koflox.session.presentation.completion.components.RouteMapView
 import com.koflox.session.presentation.completion.components.SessionSummaryCard
@@ -121,6 +123,7 @@ internal fun SessionCompletionContent(
             uiState = uiState,
             paddingValues = paddingValues,
             onNavigateToStatsConfig = onNavigateToStatsConfig,
+            onEvent = onEvent,
         )
     }
 }
@@ -159,6 +162,7 @@ private fun SessionCompletionBody(
     uiState: SessionCompletionUiState,
     paddingValues: PaddingValues,
     onNavigateToStatsConfig: (section: String) -> Unit,
+    onEvent: (SessionCompletionUiEvent) -> Unit,
 ) {
     val modifier = Modifier
         .fillMaxSize()
@@ -178,6 +182,7 @@ private fun SessionCompletionBody(
             SessionCompletionLayout(
                 uiState = uiState,
                 onNavigateToStatsConfig = onNavigateToStatsConfig,
+                onEvent = onEvent,
                 modifier = modifier,
             )
         }
@@ -188,6 +193,7 @@ private fun SessionCompletionBody(
 private fun SessionCompletionLayout(
     uiState: SessionCompletionUiState.Content,
     onNavigateToStatsConfig: (section: String) -> Unit,
+    onEvent: (SessionCompletionUiEvent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier) {
@@ -208,11 +214,19 @@ private fun SessionCompletionLayout(
                 startDate = uiState.startDateFormatted,
                 modifier = Modifier.align(Alignment.BottomCenter),
             )
-            MapLegendButton(
+            Column(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
-                    .padding(Spacing.Small)
-            )
+                    .padding(Spacing.Large),
+                verticalArrangement = Arrangement.spacedBy(Spacing.Small),
+            ) {
+                MapLegendButton(selectedLayer = uiState.selectedLayer)
+                MapLayerSelector(
+                    selectedLayer = uiState.selectedLayer,
+                    availableLayers = uiState.availableLayers,
+                    onLayerSelected = { onEvent(SessionCompletionUiEvent.LayerSelected(it)) },
+                )
+            }
         }
         SessionSummaryCard(
             stats = uiState.completedStats,

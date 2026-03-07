@@ -27,9 +27,8 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
-import com.koflox.designsystem.component.LocalizedDropdownMenu
+import com.koflox.designsystem.component.AnchorStartPopupMenu
 import com.koflox.designsystem.theme.CornerRadius
 import com.koflox.designsystem.theme.Spacing
 import com.koflox.designsystem.theme.SurfaceAlpha
@@ -37,13 +36,17 @@ import com.koflox.graphics.figures.computeArrowVertices
 import com.koflox.map.ROUTE_WIDTH
 import com.koflox.map.RouteColors
 import com.koflox.session.R
+import com.koflox.session.presentation.route.MapLayer
 
 private val LEGEND_INDICATOR_SIZE = 20.dp
 private const val LEGEND_DASH_LENGTH = 6f
 private const val LEGEND_GAP_LENGTH = 4f
 
 @Composable
-internal fun MapLegendButton(modifier: Modifier = Modifier) {
+internal fun MapLegendButton(
+    selectedLayer: MapLayer,
+    modifier: Modifier = Modifier,
+) {
     var isExpanded by remember { mutableStateOf(false) }
     Surface(
         modifier = modifier,
@@ -58,11 +61,10 @@ internal fun MapLegendButton(modifier: Modifier = Modifier) {
                 tint = MaterialTheme.colorScheme.onSurface,
             )
         }
-        LocalizedDropdownMenu(
+        AnchorStartPopupMenu(
             expanded = isExpanded,
             onDismissRequest = { isExpanded = false },
-            offset = DpOffset(x = 0.dp, y = Spacing.Small),
-            shape = MaterialTheme.shapes.small,
+            modifier = Modifier.padding(end = Spacing.Small),
         ) {
             Column(modifier = Modifier.padding(horizontal = Spacing.Medium, vertical = Spacing.Small)) {
                 Text(
@@ -70,24 +72,85 @@ internal fun MapLegendButton(modifier: Modifier = Modifier) {
                     style = MaterialTheme.typography.titleSmall,
                     modifier = Modifier.padding(bottom = Spacing.Small),
                 )
-                LegendRow(indicator = {
-                    LineIndicator(color = RouteColors.NormalSpeed)
-                }, label = stringResource(R.string.map_legend_normal_speed))
-                LegendRow(indicator = {
-                    LineIndicator(color = RouteColors.FastSpeed)
-                }, label = stringResource(R.string.map_legend_fast_speed))
-                LegendRow(indicator = {
-                    DashedLineIndicator(color = RouteColors.Gap)
-                }, label = stringResource(R.string.map_legend_gap))
-                LegendRow(indicator = {
-                    CircleIndicator(color = RouteColors.StartMarker)
-                }, label = stringResource(R.string.map_legend_start))
-                LegendRow(indicator = {
-                    ArrowIndicator(color = RouteColors.EndMarker)
-                }, label = stringResource(R.string.map_legend_finish))
+                when (selectedLayer) {
+                    MapLayer.DEFAULT -> DefaultLegendContent()
+                    MapLayer.SPEED -> SpeedLegendContent()
+                    MapLayer.POWER -> PowerLegendContent()
+                }
+                CommonLegendContent()
             }
         }
     }
+}
+
+@Composable
+private fun DefaultLegendContent() {
+    LegendRow(
+        indicator = {
+            LineIndicator(color = RouteColors.NormalSpeed)
+        },
+        label = stringResource(R.string.map_legend_route),
+    )
+}
+
+@Composable
+private fun SpeedLegendContent() {
+    LegendRow(
+        indicator = {
+            LineIndicator(color = RouteColors.NormalSpeed)
+        },
+        label = stringResource(R.string.map_legend_normal_speed)
+    )
+    LegendRow(
+        indicator = {
+            LineIndicator(color = RouteColors.FastSpeed)
+        },
+        label = stringResource(R.string.map_legend_fast_speed)
+    )
+}
+
+@Composable
+private fun PowerLegendContent() {
+    LegendRow(
+        indicator = {
+            LineIndicator(color = RouteColors.LowPower)
+        },
+        label = stringResource(R.string.map_legend_low_power)
+    )
+    LegendRow(
+        indicator = {
+            LineIndicator(color = RouteColors.MediumPower)
+        },
+        label = stringResource(R.string.map_legend_medium_power)
+    )
+    LegendRow(
+        indicator = {
+            LineIndicator(color = RouteColors.HighPower)
+        },
+        label = stringResource(R.string.map_legend_high_power)
+    )
+}
+
+@Composable
+private fun CommonLegendContent() {
+    LegendRow(
+        indicator = {
+            DashedLineIndicator(color = RouteColors.Gap)
+        },
+        label = stringResource(R.string.map_legend_gap)
+    )
+    LegendRow(
+        indicator = {
+            CircleIndicator(color = RouteColors.StartMarker)
+        },
+        label = stringResource(R.string.map_legend_start)
+    )
+    LegendRow(
+        indicator = {
+            ArrowIndicator(color = RouteColors.EndMarker)
+        },
+        label = stringResource(R.string.map_legend_finish)
+    )
 }
 
 @Composable

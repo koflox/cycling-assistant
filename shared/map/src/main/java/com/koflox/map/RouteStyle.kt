@@ -12,6 +12,9 @@ import com.koflox.graphics.figures.createCircleBitmap
 object RouteColors {
     val NormalSpeed = Color(0xFF42A5F5)
     val FastSpeed = Color(0xFF7C4DFF)
+    val LowPower = Color(0xFF66BB6A)
+    val MediumPower = Color(0xFFFFA726)
+    val HighPower = Color(0xFFEF5350)
     val Gap = Color(0xFFBDBDBD)
     val StartMarker = Color(0xFF5A6BD5)
     val EndMarker = Color(0xFFE84940)
