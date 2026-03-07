@@ -44,8 +44,8 @@ internal class SessionMapperImpl(
     ): List<TrackPointEntity> = withContext(dispatcherDefault) {
         trackPoints.map { trackPoint ->
             TrackPointEntity(
-                id = trackPoint.id,
                 sessionId = sessionId,
+                pointIndex = trackPoint.pointIndex,
                 latitude = trackPoint.latitude,
                 longitude = trackPoint.longitude,
                 timestampMs = trackPoint.timestampMs,
@@ -80,7 +80,7 @@ internal class SessionMapperImpl(
             status = SessionStatus.valueOf(entity.status),
             trackPoints = trackPoints.map { trackPointEntity ->
                 TrackPoint(
-                    id = trackPointEntity.id,
+                    pointIndex = trackPointEntity.pointIndex,
                     latitude = trackPointEntity.latitude,
                     longitude = trackPointEntity.longitude,
                     timestampMs = trackPointEntity.timestampMs,
@@ -122,7 +122,7 @@ internal class SessionMapperImpl(
                     status = SessionStatus.valueOf(entity.status),
                     trackPoints = trackPoints.map { trackPointEntity ->
                         TrackPoint(
-                            id = trackPointEntity.id,
+                            pointIndex = trackPointEntity.pointIndex,
                             latitude = trackPointEntity.latitude,
                             longitude = trackPointEntity.longitude,
                             timestampMs = trackPointEntity.timestampMs,

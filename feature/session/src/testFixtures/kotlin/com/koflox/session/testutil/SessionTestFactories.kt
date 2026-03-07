@@ -58,7 +58,7 @@ fun createSession(
 )
 
 fun createTrackPoint(
-    id: String = "",
+    pointIndex: Int = 0,
     latitude: Double = 0.0,
     longitude: Double = 0.0,
     timestampMs: Long = 0L,
@@ -68,7 +68,7 @@ fun createTrackPoint(
     accuracyMeters: Float? = null,
     powerWatts: Int? = null,
 ) = TrackPoint(
-    id = id,
+    pointIndex = pointIndex,
     latitude = latitude,
     longitude = longitude,
     timestampMs = timestampMs,
@@ -124,8 +124,8 @@ fun createSessionEntity(
 )
 
 fun createTrackPointEntity(
-    id: String = "",
     sessionId: String = "",
+    pointIndex: Int = 0,
     latitude: Double = 0.0,
     longitude: Double = 0.0,
     timestampMs: Long = 0L,
@@ -135,8 +135,8 @@ fun createTrackPointEntity(
     accuracyMeters: Float? = null,
     powerWatts: Int? = null,
 ) = TrackPointEntity(
-    id = id,
     sessionId = sessionId,
+    pointIndex = pointIndex,
     latitude = latitude,
     longitude = longitude,
     timestampMs = timestampMs,

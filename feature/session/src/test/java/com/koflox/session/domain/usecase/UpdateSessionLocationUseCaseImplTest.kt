@@ -2,7 +2,6 @@ package com.koflox.session.domain.usecase
 
 import com.koflox.altitude.AltitudeCalculator
 import com.koflox.distance.DistanceCalculator
-import com.koflox.id.IdGenerator
 import com.koflox.location.model.Location
 import com.koflox.location.smoother.LocationSmoother
 import com.koflox.location.validator.LocationValidator
@@ -33,7 +32,6 @@ class UpdateSessionLocationUseCaseImplTest {
 
     companion object {
         private const val SESSION_ID = "session-123"
-        private const val TRACK_POINT_ID = "tp-uuid"
         private const val START_TIME_MS = 1000000L
         private const val START_LAT = 52.50
         private const val START_LONG = 13.40
@@ -59,7 +57,6 @@ class UpdateSessionLocationUseCaseImplTest {
     private val altitudeCalculator: AltitudeCalculator = mockk()
     private val locationValidator: LocationValidator = mockk()
     private val locationSmoother: LocationSmoother = mockk()
-    private val idGenerator: IdGenerator = mockk()
     private val powerReadingBuffer: PowerReadingBuffer = mockk()
     private lateinit var useCase: UpdateSessionLocationUseCaseImpl
 
@@ -69,7 +66,6 @@ class UpdateSessionLocationUseCaseImplTest {
         every { locationValidator.isAccuracyValid(any()) } returns true
         every { locationSmoother.smooth(any(), any()) } answers { firstArg() }
         justRun { locationSmoother.reset() }
-        every { idGenerator.generate() } returns TRACK_POINT_ID
         every { powerReadingBuffer.drainMedian(any(), any()) } returns null
         justRun { powerReadingBuffer.clear() }
         useCase = UpdateSessionLocationUseCaseImpl(
@@ -81,7 +77,6 @@ class UpdateSessionLocationUseCaseImplTest {
             altitudeCalculator = altitudeCalculator,
             locationValidator = locationValidator,
             locationSmoother = locationSmoother,
-            idGenerator = idGenerator,
             powerReadingBuffer = powerReadingBuffer,
         )
     }
@@ -141,7 +136,7 @@ class UpdateSessionLocationUseCaseImplTest {
     }
 
     @Test
-    fun `update adds new track point with generated id`() = runTest {
+    fun `update adds new track point with correct pointIndex`() = runTest {
         val session = createTestSession()
         val sessionSlot = slot<Session>()
         coEvery { activeSessionUseCase.getActiveSession() } returns session
@@ -152,7 +147,7 @@ class UpdateSessionLocationUseCaseImplTest {
 
         assertEquals(2, sessionSlot.captured.trackPoints.size)
         val newTrackPoint = sessionSlot.captured.trackPoints[1]
-        assertEquals(TRACK_POINT_ID, newTrackPoint.id)
+        assertEquals(1, newTrackPoint.pointIndex)
         assertEquals(NEW_LAT, newTrackPoint.latitude, 0.0)
         assertEquals(NEW_LONG, newTrackPoint.longitude, 0.0)
         assertEquals(NEW_TIMESTAMP_MS, newTrackPoint.timestampMs)

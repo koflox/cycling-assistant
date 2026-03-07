@@ -31,7 +31,7 @@ class SessionMapperImplTest {
         private const val TRAVELED_DISTANCE_KM = 5.5
         private const val AVERAGE_SPEED_KMH = 22.0
         private const val TOP_SPEED_KMH = 35.0
-        private const val TRACK_POINT_ID = "tp-123"
+        private const val TRACK_POINT_INDEX = 0
         private const val TRACK_POINT_LAT = 52.51
         private const val TRACK_POINT_LONG = 13.41
         private const val TRACK_POINT_TIMESTAMP = 1500000L
@@ -164,12 +164,12 @@ class SessionMapperImplTest {
     }
 
     @Test
-    fun `toTrackPointEntities maps id and new fields correctly`() = runTest {
+    fun `toTrackPointEntities maps pointIndex and new fields correctly`() = runTest {
         val trackPoints = listOf(createTestTrackPoint())
 
         val entities = mapper.toTrackPointEntities(SESSION_ID, trackPoints)
 
-        assertEquals(TRACK_POINT_ID, entities[0].id)
+        assertEquals(TRACK_POINT_INDEX, entities[0].pointIndex)
         assertTrue(entities[0].isSegmentStart)
         assertEquals(TRACK_POINT_ACCURACY, entities[0].accuracyMeters)
     }
@@ -264,13 +264,13 @@ class SessionMapperImplTest {
     }
 
     @Test
-    fun `toDomain maps track point id and new fields correctly`() = runTest {
+    fun `toDomain maps track point pointIndex and new fields correctly`() = runTest {
         val sessionWithTrackPoints = createTestSessionWithTrackPoints()
 
         val session = mapper.toDomain(sessionWithTrackPoints)
 
         val trackPoint = session.trackPoints[0]
-        assertEquals(TRACK_POINT_ID, trackPoint.id)
+        assertEquals(TRACK_POINT_INDEX, trackPoint.pointIndex)
         assertTrue(trackPoint.isSegmentStart)
         assertEquals(TRACK_POINT_ACCURACY, trackPoint.accuracyMeters)
     }
@@ -334,7 +334,7 @@ class SessionMapperImplTest {
     )
 
     private fun createTestTrackPoint(
-        id: String = TRACK_POINT_ID,
+        pointIndex: Int = TRACK_POINT_INDEX,
         latitude: Double = TRACK_POINT_LAT,
         longitude: Double = TRACK_POINT_LONG,
         timestampMs: Long = TRACK_POINT_TIMESTAMP,
@@ -342,7 +342,7 @@ class SessionMapperImplTest {
         isSegmentStart: Boolean = true,
         accuracyMeters: Float? = TRACK_POINT_ACCURACY,
     ) = createTrackPoint(
-        id = id,
+        pointIndex = pointIndex,
         latitude = latitude,
         longitude = longitude,
         timestampMs = timestampMs,
@@ -373,14 +373,14 @@ class SessionMapperImplTest {
     )
 
     private fun createTestTrackPointEntity(
-        id: String = TRACK_POINT_ID,
+        pointIndex: Int = TRACK_POINT_INDEX,
         latitude: Double = TRACK_POINT_LAT,
         longitude: Double = TRACK_POINT_LONG,
         isSegmentStart: Boolean = true,
         accuracyMeters: Float? = TRACK_POINT_ACCURACY,
     ) = createTrackPointEntity(
-        id = id,
         sessionId = SESSION_ID,
+        pointIndex = pointIndex,
         latitude = latitude,
         longitude = longitude,
         timestampMs = TRACK_POINT_TIMESTAMP,

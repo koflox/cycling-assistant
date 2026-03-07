@@ -185,9 +185,9 @@ class SessionRepositoryImplTest {
     @Test
     fun `saveSession only inserts new track points on subsequent flushes`() = runTest {
         val trackPoints = listOf(
-            createTrackPoint(id = "tp1"),
-            createTrackPoint(id = "tp2"),
-            createTrackPoint(id = "tp3"),
+            createTrackPoint(pointIndex = 0),
+            createTrackPoint(pointIndex = 1),
+            createTrackPoint(pointIndex = 2),
         )
         val session = createTestSession(
             status = SessionStatus.PAUSED,
@@ -196,7 +196,7 @@ class SessionRepositoryImplTest {
         val sessionEntity = createSessionEntity()
         runtimeDataSource.setFlushInfo(FlushInfo(trackPointCount = 1, timeMs = 0L))
         val newTrackPoints = trackPoints.drop(1)
-        val newTrackPointEntities = listOf(createTrackPointEntity(id = "tp2"), createTrackPointEntity(id = "tp3"))
+        val newTrackPointEntities = listOf(createTrackPointEntity(pointIndex = 1), createTrackPointEntity(pointIndex = 2))
         every { flushDecider.shouldFlush(any(), any()) } returns true
         coEvery { mapper.toEntity(session) } returns sessionEntity
         coEvery { mapper.toTrackPointEntities(SESSION_ID, newTrackPoints) } returns newTrackPointEntities
@@ -209,7 +209,7 @@ class SessionRepositoryImplTest {
 
     @Test
     fun `saveSession updates flush info after flush`() = runTest {
-        val trackPoints = listOf(createTrackPoint(id = "tp1"), createTrackPoint(id = "tp2"))
+        val trackPoints = listOf(createTrackPoint(pointIndex = 0), createTrackPoint(pointIndex = 1))
         val session = createTestSession(status = SessionStatus.PAUSED, trackPoints = trackPoints)
         every { flushDecider.shouldFlush(any(), any()) } returns true
         coEvery { mapper.toEntity(session) } returns createSessionEntity()

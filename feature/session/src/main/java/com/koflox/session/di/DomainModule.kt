@@ -68,7 +68,6 @@ internal val domainModule = module {
             altitudeCalculator = get(),
             locationValidator = get(),
             locationSmoother = get(),
-            idGenerator = get(),
             powerReadingBuffer = get(),
         )
     }
