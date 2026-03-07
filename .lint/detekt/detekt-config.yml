@@ -55,7 +55,7 @@ comments:
     active: true
     excludes: [ '**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**' ]
   CommentOverPrivateProperty:
-    active: true
+    active: false
     excludes: [ '**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**' ]
   DeprecatedBlockTag:
     active: true
