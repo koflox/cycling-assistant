@@ -48,7 +48,9 @@ private val dataSourceModule = module {
 
 private val repoModule = module {
     single<SessionFlushDecider> {
-        SessionFlushDeciderImpl()
+        SessionFlushDeciderImpl(
+            currentTimeProvider = get(),
+        )
     }
     single<SessionRepository> {
         SessionRepositoryImpl(
@@ -56,6 +58,7 @@ private val repoModule = module {
             runtimeDataSource = get(),
             mapper = get(),
             flushDecider = get(),
+            currentTimeProvider = get(),
             dispatcherDefault = get(DispatchersQualifier.Default),
         )
     }

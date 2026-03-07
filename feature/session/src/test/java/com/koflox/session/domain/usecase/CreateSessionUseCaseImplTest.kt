@@ -1,5 +1,6 @@
 package com.koflox.session.domain.usecase
 
+import com.koflox.concurrent.CurrentTimeProvider
 import com.koflox.id.IdGenerator
 import com.koflox.location.error.LocationUnavailableException
 import com.koflox.location.geolocation.LocationDataSource
@@ -43,6 +44,7 @@ class CreateSessionUseCaseImplTest {
     private val idGenerator: IdGenerator = mockk()
     private val locationDataSource: LocationDataSource = mockk()
     private val locationValidator: LocationValidator = mockk()
+    private val currentTimeProvider: CurrentTimeProvider = mockk()
     private lateinit var useCase: CreateSessionUseCaseImpl
 
     @Before
@@ -52,7 +54,8 @@ class CreateSessionUseCaseImplTest {
             Location(latitude = START_LAT, longitude = START_LONG),
         )
         every { locationValidator.isAccuracyValid(any()) } returns true
-        useCase = CreateSessionUseCaseImpl(sessionRepository, idGenerator, locationDataSource, locationValidator)
+        every { currentTimeProvider.currentTimeMs() } returns System.currentTimeMillis()
+        useCase = CreateSessionUseCaseImpl(sessionRepository, idGenerator, locationDataSource, locationValidator, currentTimeProvider)
     }
 
     @Test

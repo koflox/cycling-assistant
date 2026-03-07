@@ -46,6 +46,7 @@ internal val domainModule = module {
             idGenerator = get(),
             locationDataSource = get(),
             locationValidator = get(),
+            currentTimeProvider = get(),
         )
     }
     single<UpdateSessionStatusUseCase> {
@@ -54,6 +55,7 @@ internal val domainModule = module {
             sessionMutex = get(SessionQualifier.SessionMutex),
             activeSessionUseCase = get(),
             sessionRepository = get(),
+            currentTimeProvider = get(),
         )
     }
     // single: holds stateful speedBuffer and locationSmoother that must not be

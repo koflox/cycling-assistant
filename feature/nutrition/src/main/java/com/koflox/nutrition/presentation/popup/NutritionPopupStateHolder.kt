@@ -1,5 +1,6 @@
 package com.koflox.nutrition.presentation.popup
 
+import com.koflox.concurrent.CurrentTimeProvider
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
@@ -15,6 +16,7 @@ import kotlin.time.Duration.Companion.seconds
 
 internal class NutritionPopupStateHolder(
     private val suggestionTimeMs: Long,
+    private val currentTimeProvider: CurrentTimeProvider,
     dispatcherDefault: CoroutineDispatcher,
 ) {
 
@@ -46,7 +48,7 @@ internal class NutritionPopupStateHolder(
     }
 
     private fun updateElapsedTime() {
-        val elapsedMs = System.currentTimeMillis() - suggestionTimeMs
+        val elapsedMs = currentTimeProvider.currentTimeMs() - suggestionTimeMs
         _uiState.value = NutritionPopupUiState.Visible(
             elapsedTimerFormatted = formatElapsedTime(elapsedMs),
         )

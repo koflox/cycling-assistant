@@ -1,6 +1,7 @@
 package com.koflox.session.data.repository
 
 import app.cash.turbine.test
+import com.koflox.concurrent.CurrentTimeProvider
 import com.koflox.session.data.mapper.SessionMapper
 import com.koflox.session.data.source.local.SessionLocalDataSource
 import com.koflox.session.data.source.local.entity.SessionWithTrackPoints
@@ -42,6 +43,7 @@ class SessionRepositoryImplTest {
     private val localDataSource: SessionLocalDataSource = mockk()
     private val mapper: SessionMapper = mockk()
     private val flushDecider: SessionFlushDecider = mockk()
+    private val currentTimeProvider: CurrentTimeProvider = mockk(relaxed = true)
     private lateinit var runtimeDataSource: SessionRuntimeDataSource
     private lateinit var repository: SessionRepositoryImpl
 
@@ -54,6 +56,7 @@ class SessionRepositoryImplTest {
             runtimeDataSource = runtimeDataSource,
             mapper = mapper,
             flushDecider = flushDecider,
+            currentTimeProvider = currentTimeProvider,
             dispatcherDefault = mainDispatcherRule.testDispatcher,
         )
     }

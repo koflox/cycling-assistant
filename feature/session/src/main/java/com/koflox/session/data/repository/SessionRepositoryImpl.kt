@@ -1,5 +1,6 @@
 package com.koflox.session.data.repository
 
+import com.koflox.concurrent.CurrentTimeProvider
 import com.koflox.concurrent.suspendRunCatching
 import com.koflox.session.data.mapper.SessionMapper
 import com.koflox.session.data.source.local.SessionLocalDataSource
@@ -23,6 +24,7 @@ internal class SessionRepositoryImpl(
     private val runtimeDataSource: SessionRuntimeDataSource,
     private val mapper: SessionMapper,
     private val flushDecider: SessionFlushDecider,
+    private val currentTimeProvider: CurrentTimeProvider,
     private val dispatcherDefault: CoroutineDispatcher,
     private val mutex: Mutex = Mutex(),
 ) : SessionRepository {
@@ -71,7 +73,7 @@ internal class SessionRepositoryImpl(
         runtimeDataSource.setFlushInfo(
             FlushInfo(
                 trackPointCount = session.trackPoints.size,
-                timeMs = System.currentTimeMillis(),
+                timeMs = currentTimeProvider.currentTimeMs(),
             ),
         )
         if (session.status == SessionStatus.COMPLETED) {
@@ -89,7 +91,7 @@ internal class SessionRepositoryImpl(
             runtimeDataSource.setFlushInfo(
                 FlushInfo(
                     trackPointCount = session.trackPoints.size,
-                    timeMs = System.currentTimeMillis(),
+                    timeMs = currentTimeProvider.currentTimeMs(),
                 ),
             )
             runtimeDataSource.setActiveSession(session)

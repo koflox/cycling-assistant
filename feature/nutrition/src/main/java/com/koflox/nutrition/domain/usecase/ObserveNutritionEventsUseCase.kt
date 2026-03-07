@@ -1,5 +1,6 @@
 package com.koflox.nutrition.domain.usecase
 
+import com.koflox.concurrent.CurrentTimeProvider
 import com.koflox.nutrition.domain.model.NutritionEvent
 import com.koflox.nutrition.domain.model.NutritionSettings
 import com.koflox.nutritionsession.bridge.model.SessionTimeInfo
@@ -25,7 +26,7 @@ internal class ObserveNutritionEventsUseCaseImpl(
     private val dispatcherIo: CoroutineDispatcher,
     private val sessionElapsedTimeUseCase: SessionElapsedTimeUseCase,
     private val observeNutritionSettingsUseCase: ObserveNutritionSettingsUseCase,
-    private val currentTimeProvider: () -> Long = { System.currentTimeMillis() },
+    private val currentTimeProvider: CurrentTimeProvider,
     private val checkInterval: Duration = CHECK_INTERVAL,
 ) : ObserveNutritionEventsUseCase {
 
@@ -79,7 +80,7 @@ internal class ObserveNutritionEventsUseCaseImpl(
                         if (currentInterval > lastEmittedInterval) {
                             emit(
                                 NutritionEvent.BreakRequired(
-                                    suggestionTimeMs = currentTimeProvider(),
+                                    suggestionTimeMs = currentTimeProvider.currentTimeMs(),
                                     intervalNumber = currentInterval,
                                 ),
                             )
@@ -104,7 +105,7 @@ internal class ObserveNutritionEventsUseCaseImpl(
     )
 
     private fun calculateCurrentInterval(timeInfo: SessionTimeInfo, intervalMs: Long): Int {
-        val currentTimeMs = currentTimeProvider()
+        val currentTimeMs = currentTimeProvider.currentTimeMs()
         val realElapsedMs = timeInfo.elapsedTimeMs + (currentTimeMs - timeInfo.lastResumedTimeMs)
         return (realElapsedMs / intervalMs).toInt()
     }

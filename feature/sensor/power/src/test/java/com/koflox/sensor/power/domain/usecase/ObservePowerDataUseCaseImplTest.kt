@@ -3,6 +3,7 @@ package com.koflox.sensor.power.domain.usecase
 import app.cash.turbine.test
 import com.koflox.ble.connection.BleGattManager
 import com.koflox.ble.model.BleGattEvent
+import com.koflox.concurrent.CurrentTimeProvider
 import com.koflox.sensorprotocol.power.CadenceCalculator
 import com.koflox.sensorprotocol.power.CyclingPowerConstants
 import com.koflox.sensorprotocol.power.CyclingPowerMeasurement
@@ -40,6 +41,7 @@ class ObservePowerDataUseCaseImplTest {
     private val parser: CyclingPowerParser = mockk()
     private val cadenceCalculator: CadenceCalculator = mockk()
     private val wheelSpeedCalculator: WheelSpeedCalculator = mockk()
+    private val currentTimeProvider: CurrentTimeProvider = CurrentTimeProvider { 1000000L }
     private lateinit var useCase: ObservePowerDataUseCaseImpl
 
     @Before
@@ -51,6 +53,7 @@ class ObservePowerDataUseCaseImplTest {
             parser = parser,
             cadenceCalculator = cadenceCalculator,
             wheelSpeedCalculator = wheelSpeedCalculator,
+            currentTimeProvider = currentTimeProvider,
         )
     }
 

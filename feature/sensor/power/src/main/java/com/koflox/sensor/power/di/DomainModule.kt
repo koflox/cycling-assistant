@@ -20,6 +20,7 @@ internal val domainModule = module {
             parser = get(),
             cadenceCalculator = get(),
             wheelSpeedCalculator = get(),
+            currentTimeProvider = get(),
         )
     }
 }
