@@ -6,7 +6,6 @@ import com.koflox.session.domain.usecase.ActiveSessionUseCase
 import com.koflox.session.domain.usecase.NoActiveSessionException
 import com.koflox.session.domain.usecase.ObserveActiveSessionRouteUseCase
 import com.koflox.session.domain.usecase.SessionRouteSnapshot
-import com.koflox.session.presentation.route.RouteDisplayData
 import com.koflox.session.testutil.createSession
 import com.koflox.testing.coroutine.MainDispatcherRule
 import io.mockk.coEvery
@@ -157,7 +156,7 @@ class CyclingSessionUseCaseImplTest {
         val startPosition = Location(latitude = START_LAT, longitude = START_LNG)
         val lastPosition = Location(latitude = END_LAT, longitude = END_LNG)
         val snapshot = SessionRouteSnapshot(
-            routeDisplayData = RouteDisplayData.EMPTY,
+            trackPoints = emptyList(),
             isPaused = false,
             showGapToUserLocation = false,
             firstTrackPointPosition = startPosition,
@@ -178,7 +177,7 @@ class CyclingSessionUseCaseImplTest {
     @Test
     fun `observeActiveSessionRoute maps lastBearingDegrees from snapshot`() = runTest {
         val snapshot = SessionRouteSnapshot(
-            routeDisplayData = RouteDisplayData.EMPTY,
+            trackPoints = emptyList(),
             isPaused = false,
             showGapToUserLocation = false,
             firstTrackPointPosition = Location(latitude = START_LAT, longitude = START_LNG),
@@ -198,7 +197,7 @@ class CyclingSessionUseCaseImplTest {
     @Test
     fun `observeActiveSessionRoute maps null positions when snapshot has no track points`() = runTest {
         val snapshot = SessionRouteSnapshot(
-            routeDisplayData = RouteDisplayData.EMPTY,
+            trackPoints = emptyList(),
             isPaused = false,
             showGapToUserLocation = false,
             firstTrackPointPosition = null,
@@ -220,7 +219,7 @@ class CyclingSessionUseCaseImplTest {
     @Test
     fun `observeActiveSessionRoute maps isPaused from snapshot`() = runTest {
         val snapshot = SessionRouteSnapshot(
-            routeDisplayData = RouteDisplayData.EMPTY,
+            trackPoints = emptyList(),
             isPaused = true,
             showGapToUserLocation = true,
             firstTrackPointPosition = null,
@@ -240,7 +239,7 @@ class CyclingSessionUseCaseImplTest {
     @Test
     fun `observeActiveSessionRoute maps showGapToUserLocation from snapshot`() = runTest {
         val snapshot = SessionRouteSnapshot(
-            routeDisplayData = RouteDisplayData.EMPTY,
+            trackPoints = emptyList(),
             isPaused = false,
             showGapToUserLocation = true,
             firstTrackPointPosition = null,

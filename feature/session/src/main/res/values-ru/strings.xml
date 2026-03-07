@@ -87,6 +87,16 @@
     <string name="map_legend_gap">Пауза</string>
     <string name="map_legend_start">Старт</string>
     <string name="map_legend_finish">Финиш</string>
+    <string name="map_legend_route">Маршрут</string>
+    <string name="map_legend_low_power">Низкая мощность (&lt; 150 Вт)</string>
+    <string name="map_legend_medium_power">Средняя мощность (150–250 Вт)</string>
+    <string name="map_legend_high_power">Высокая мощность (≥ 250 Вт)</string>
+
+    <!-- Map Layers -->
+    <string name="map_layer_content_description">Слои карты</string>
+    <string name="map_layer_default">Стандарт</string>
+    <string name="map_layer_speed">Скорость</string>
+    <string name="map_layer_power">Мощность</string>
 
     <!-- Location Disabled Dialog -->
     <string name="location_disabled_title">Геолокация отключена</string>

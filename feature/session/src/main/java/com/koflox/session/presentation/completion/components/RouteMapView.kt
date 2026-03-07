@@ -45,7 +45,7 @@ internal fun RouteMapView(
     val isDarkTheme = LocalDarkTheme.current
     val context = LocalContext.current
     val cameraPositionState = rememberCameraPositionState()
-    LaunchedEffect(routeDisplayData) {
+    LaunchedEffect(routeDisplayData.allPoints) {
         animateCameraToRoute(routeDisplayData.allPoints, cameraPositionState)
     }
     val uiSettings = remember(isSharePreview) { buildMapUiSettings(isSharePreview) }

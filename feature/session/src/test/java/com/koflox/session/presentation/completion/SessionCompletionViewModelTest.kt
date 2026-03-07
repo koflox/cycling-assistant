@@ -14,6 +14,7 @@ import com.koflox.session.domain.usecase.GetSessionByIdUseCase
 import com.koflox.session.domain.usecase.ObserveStatsDisplayConfigUseCase
 import com.koflox.session.navigation.SESSION_ID_ARG
 import com.koflox.session.presentation.mapper.SessionUiMapper
+import com.koflox.session.presentation.route.MapLayer
 import com.koflox.session.presentation.share.SessionImageSharer
 import com.koflox.session.presentation.share.ShareErrorMapper
 import com.koflox.session.presentation.share.ShareResult
@@ -80,6 +81,7 @@ class SessionCompletionViewModelTest {
         every { sessionUiMapper.formatElapsedTime(any()) } returns "00:00:00"
         every { sessionUiMapper.formatAltitudeGain(any()) } returns "0"
         every { sessionUiMapper.formatCalories(any()) } returns "0"
+        every { sessionUiMapper.formatPower(any()) } returns "0 W"
         coEvery { calculateSessionStatsUseCase.calculate(any()) } returns Result.success(
             SessionDerivedStats(
                 idleTimeMs = 0L,
@@ -494,6 +496,143 @@ class SessionCompletionViewModelTest {
             expectNoEvents()
             // Verify the state still has ShareDialog
             assertTrue((viewModel.uiState.value as SessionCompletionUiState.Content).overlay is Overlay.ShareDialog)
+        }
+    }
+
+    @Test
+    fun `loadSession initializes with DEFAULT layer`() = runTest {
+        coEvery {
+            getSessionByIdUseCase.getSession(SESSION_ID)
+        } returns Result.success(createSession(id = SESSION_ID, status = SessionStatus.COMPLETED))
+
+        viewModel = createViewModel()
+
+        viewModel.uiState.test {
+            awaitItem() // Loading
+            val content = awaitItem() as SessionCompletionUiState.Content
+            assertEquals(MapLayer.DEFAULT, content.selectedLayer)
+        }
+    }
+
+    @Test
+    fun `loadSession with power data includes POWER in availableLayers`() = runTest {
+        val session = createSession(
+            id = SESSION_ID,
+            status = SessionStatus.COMPLETED,
+            totalPowerReadings = 10,
+            sumPowerWatts = 2000L,
+        )
+        coEvery { getSessionByIdUseCase.getSession(SESSION_ID) } returns Result.success(session)
+
+        viewModel = createViewModel()
+
+        viewModel.uiState.test {
+            awaitItem() // Loading
+            val content = awaitItem() as SessionCompletionUiState.Content
+            assertTrue(content.availableLayers.contains(MapLayer.POWER))
+            assertEquals(listOf(MapLayer.DEFAULT, MapLayer.SPEED, MapLayer.POWER), content.availableLayers)
+        }
+    }
+
+    @Test
+    fun `loadSession without power data excludes POWER from availableLayers`() = runTest {
+        val session = createSession(id = SESSION_ID, status = SessionStatus.COMPLETED)
+        coEvery { getSessionByIdUseCase.getSession(SESSION_ID) } returns Result.success(session)
+
+        viewModel = createViewModel()
+
+        viewModel.uiState.test {
+            awaitItem() // Loading
+            val content = awaitItem() as SessionCompletionUiState.Content
+            assertEquals(listOf(MapLayer.DEFAULT, MapLayer.SPEED), content.availableLayers)
+        }
+    }
+
+    @Test
+    fun `LayerSelected updates selectedLayer and rebuilds routeDisplayData`() = runTest {
+        val session = createSession(
+            id = SESSION_ID,
+            status = SessionStatus.COMPLETED,
+            trackPoints = listOf(
+                createTrackPoint(latitude = 52.51, longitude = 13.41, speedKmh = 15.0),
+                createTrackPoint(latitude = 52.52, longitude = 13.42, speedKmh = 35.0),
+            ),
+        )
+        coEvery { getSessionByIdUseCase.getSession(SESSION_ID) } returns Result.success(session)
+
+        viewModel = createViewModel()
+
+        viewModel.uiState.test {
+            awaitItem() // Loading
+            val initialContent = awaitItem() as SessionCompletionUiState.Content
+            assertEquals(MapLayer.DEFAULT, initialContent.selectedLayer)
+
+            viewModel.onEvent(SessionCompletionUiEvent.LayerSelected(MapLayer.SPEED))
+
+            val updatedContent = awaitItem() as SessionCompletionUiState.Content
+            assertEquals(MapLayer.SPEED, updatedContent.selectedLayer)
+            assertEquals(initialContent.routeDisplayData.allPoints, updatedContent.routeDisplayData.allPoints)
+        }
+    }
+
+    @Test
+    fun `LayerSelected caches built route data for subsequent switches`() = runTest {
+        val session = createSession(
+            id = SESSION_ID,
+            status = SessionStatus.COMPLETED,
+            trackPoints = listOf(
+                createTrackPoint(latitude = 52.51, longitude = 13.41, speedKmh = 15.0),
+                createTrackPoint(latitude = 52.52, longitude = 13.42, speedKmh = 35.0),
+            ),
+        )
+        coEvery { getSessionByIdUseCase.getSession(SESSION_ID) } returns Result.success(session)
+
+        viewModel = createViewModel()
+
+        viewModel.uiState.test {
+            awaitItem() // Loading
+            awaitItem() // Content - DEFAULT
+
+            viewModel.onEvent(SessionCompletionUiEvent.LayerSelected(MapLayer.SPEED))
+            val speedContent = awaitItem() as SessionCompletionUiState.Content
+            val speedRouteData = speedContent.routeDisplayData
+
+            viewModel.onEvent(SessionCompletionUiEvent.LayerSelected(MapLayer.DEFAULT))
+            awaitItem() // Content - DEFAULT again
+
+            viewModel.onEvent(SessionCompletionUiEvent.LayerSelected(MapLayer.SPEED))
+            val cachedSpeedContent = awaitItem() as SessionCompletionUiState.Content
+            assertTrue(speedRouteData === cachedSpeedContent.routeDisplayData)
+        }
+    }
+
+    @Test
+    fun `share preview always uses DEFAULT layer route data`() = runTest {
+        val session = createSession(
+            id = SESSION_ID,
+            destinationName = DESTINATION_NAME,
+            status = SessionStatus.COMPLETED,
+            trackPoints = listOf(
+                createTrackPoint(latitude = 52.51, longitude = 13.41, speedKmh = 15.0),
+                createTrackPoint(latitude = 52.52, longitude = 13.42, speedKmh = 35.0),
+            ),
+        )
+        coEvery { getSessionByIdUseCase.getSession(SESSION_ID) } returns Result.success(session)
+
+        viewModel = createViewModel()
+
+        viewModel.uiState.test {
+            awaitItem() // Loading
+            val defaultContent = awaitItem() as SessionCompletionUiState.Content
+            val defaultRouteData = defaultContent.routeDisplayData
+
+            viewModel.onEvent(SessionCompletionUiEvent.LayerSelected(MapLayer.SPEED))
+            awaitItem() // Content - SPEED
+
+            viewModel.onEvent(SessionCompletionUiEvent.ShareClicked)
+            val shareContent = awaitItem() as SessionCompletionUiState.Content
+            val shareDialog = shareContent.overlay as Overlay.ShareDialog
+            assertTrue(defaultRouteData === shareDialog.sharePreviewData.routeDisplayData)
         }
     }
 }

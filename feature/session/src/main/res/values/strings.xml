@@ -87,6 +87,16 @@
     <string name="map_legend_gap">Pause</string>
     <string name="map_legend_start">Start</string>
     <string name="map_legend_finish">Finish</string>
+    <string name="map_legend_route">Route</string>
+    <string name="map_legend_low_power">Low power (&lt; 150 W)</string>
+    <string name="map_legend_medium_power">Medium power (150–250 W)</string>
+    <string name="map_legend_high_power">High power (≥ 250 W)</string>
+
+    <!-- Map Layers -->
+    <string name="map_layer_content_description">Map layers</string>
+    <string name="map_layer_default">Default</string>
+    <string name="map_layer_speed">Speed</string>
+    <string name="map_layer_power">Power</string>
 
     <!-- Location Disabled Dialog -->
     <string name="location_disabled_title">Location Disabled</string>

@@ -10,11 +10,14 @@ import com.koflox.location.model.Location
 import com.koflox.session.domain.model.Session
 import com.koflox.session.domain.model.SessionDerivedStats
 import com.koflox.session.domain.model.SessionStatus
+import com.koflox.session.domain.model.TrackPoint
 import com.koflox.session.domain.usecase.CalculateSessionStatsUseCase
 import com.koflox.session.domain.usecase.GetSessionByIdUseCase
 import com.koflox.session.domain.usecase.ObserveStatsDisplayConfigUseCase
 import com.koflox.session.navigation.SESSION_ID_ARG
 import com.koflox.session.presentation.mapper.SessionUiMapper
+import com.koflox.session.presentation.route.MapLayer
+import com.koflox.session.presentation.route.RouteDisplayData
 import com.koflox.session.presentation.route.buildRouteDisplayData
 import com.koflox.session.presentation.share.SessionImageSharer
 import com.koflox.session.presentation.share.ShareErrorMapper
@@ -56,6 +59,8 @@ internal class SessionCompletionViewModel(
 
     private var cachedSession: Session? = null
     private var cachedDerivedStats: SessionDerivedStats? = null
+    private var cachedTrackPoints: List<TrackPoint> = emptyList()
+    private val routeCache = mutableMapOf<MapLayer, RouteDisplayData>()
 
     init {
         initialize()
@@ -93,6 +98,7 @@ internal class SessionCompletionViewModel(
                 SessionCompletionUiEvent.ShareDialogDismissed -> dismissShareDialog()
                 SessionCompletionUiEvent.ShareIntentLaunched -> clearShareIntent()
                 SessionCompletionUiEvent.ErrorDismissed -> clearOverlayError()
+                is SessionCompletionUiEvent.LayerSelected -> selectLayer(event.layer)
             }
         }
     }
@@ -152,7 +158,8 @@ internal class SessionCompletionViewModel(
                 }
                 val formattedData = sessionUiMapper.toSessionUiModel(session)
                 val derivedStats = calculateSessionStatsUseCase.calculate(sessionId).getOrNull() ?: return@onSuccess
-                val routeDisplayData = buildRouteDisplayData(session.trackPoints)
+                cachedTrackPoints = session.trackPoints
+                val routeDisplayData = getOrBuildRouteData(MapLayer.DEFAULT)
                 val allPoints = routeDisplayData.allPoints
                 val endRotation = if (allPoints.size >= 2) {
                     calculateBearingDegrees(
@@ -190,6 +197,7 @@ internal class SessionCompletionViewModel(
                     maxPowerFormatted = session.maxPowerWatts?.let(sessionUiMapper::formatPower),
                     completedStats = completedStats,
                     shareStats = shareStats,
+                    availableLayers = buildAvailableLayers(session.hasPowerData),
                     routeDisplayData = routeDisplayData,
                     endMarkerRotation = endRotation,
                 )
@@ -207,6 +215,26 @@ internal class SessionCompletionViewModel(
         }
     }
 
+    private fun buildAvailableLayers(hasPowerData: Boolean): List<MapLayer> = buildList {
+        add(MapLayer.DEFAULT)
+        add(MapLayer.SPEED)
+        if (hasPowerData) add(MapLayer.POWER)
+    }
+
+    private fun selectLayer(layer: MapLayer) {
+        updateContent { content ->
+            content.copy(
+                selectedLayer = layer,
+                routeDisplayData = getOrBuildRouteData(layer),
+            )
+        }
+    }
+
+    private fun getOrBuildRouteData(layer: MapLayer): RouteDisplayData =
+        routeCache.getOrPut(layer) {
+            buildRouteDisplayData(cachedTrackPoints, layer.toColorStrategy())
+        }
+
     private fun buildSharePreviewData(content: SessionCompletionUiState.Content) = SharePreviewData(
         sessionId = content.sessionId,
         destinationName = content.destinationName,
@@ -223,7 +251,7 @@ internal class SessionCompletionViewModel(
         averagePowerFormatted = content.averagePowerFormatted,
         maxPowerFormatted = content.maxPowerFormatted,
         shareStats = content.shareStats,
-        routeDisplayData = content.routeDisplayData,
+        routeDisplayData = getOrBuildRouteData(MapLayer.DEFAULT),
         endMarkerRotation = content.endMarkerRotation,
     )
 }
