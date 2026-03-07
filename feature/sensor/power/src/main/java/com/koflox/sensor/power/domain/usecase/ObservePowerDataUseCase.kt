@@ -2,6 +2,7 @@ package com.koflox.sensor.power.domain.usecase
 
 import com.koflox.ble.connection.BleGattManager
 import com.koflox.ble.model.BleGattEvent
+import com.koflox.concurrent.CurrentTimeProvider
 import com.koflox.sensor.power.domain.model.PowerReading
 import com.koflox.sensorprotocol.power.CadenceCalculator
 import com.koflox.sensorprotocol.power.CyclingPowerConstants
@@ -29,6 +30,7 @@ internal class ObservePowerDataUseCaseImpl(
     private val parser: CyclingPowerParser,
     private val cadenceCalculator: CadenceCalculator,
     private val wheelSpeedCalculator: WheelSpeedCalculator,
+    private val currentTimeProvider: CurrentTimeProvider,
 ) : ObservePowerDataUseCase {
 
     override fun observePowerData(macAddress: String): Flow<PowerReading> =
@@ -63,7 +65,7 @@ internal class ObservePowerDataUseCaseImpl(
                     null
                 }
                 PowerReading(
-                    timestampMs = System.currentTimeMillis(),
+                    timestampMs = currentTimeProvider.currentTimeMs(),
                     powerWatts = measurement.instantaneousPowerWatts,
                     cadenceRpm = cadence,
                     pedalPowerBalancePercent = measurement.pedalPowerBalancePercent,

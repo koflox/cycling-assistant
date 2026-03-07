@@ -1,6 +1,7 @@
 package com.koflox.nutrition.presentation.popup
 
 import app.cash.turbine.test
+import com.koflox.concurrent.CurrentTimeProvider
 import com.koflox.testing.coroutine.MainDispatcherRule
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -12,14 +13,19 @@ class NutritionPopupStateHolderTest {
 
     companion object {
         private const val SUGGESTION_TIME_MS = 1000L
+        private const val CURRENT_TIME_MS = 1000000L
     }
 
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
+    private var currentTimeMs = CURRENT_TIME_MS
+    private val currentTimeProvider = CurrentTimeProvider { currentTimeMs }
+
     private fun createStateHolder(suggestionTimeMs: Long = SUGGESTION_TIME_MS): NutritionPopupStateHolder {
         return NutritionPopupStateHolder(
             suggestionTimeMs = suggestionTimeMs,
+            currentTimeProvider = currentTimeProvider,
             dispatcherDefault = mainDispatcherRule.testDispatcher,
         )
     }
@@ -50,8 +56,8 @@ class NutritionPopupStateHolderTest {
 
     @Test
     fun `elapsed time is formatted correctly for seconds`() = runTest(mainDispatcherRule.testDispatcher) {
-        val currentTime = System.currentTimeMillis()
-        val suggestionTime = currentTime - 5000 // 5 seconds ago
+        currentTimeMs = CURRENT_TIME_MS
+        val suggestionTime = currentTimeMs - 5000 // 5 seconds ago
         val stateHolder = createStateHolder(suggestionTimeMs = suggestionTime)
 
         stateHolder.uiState.test {
@@ -65,8 +71,8 @@ class NutritionPopupStateHolderTest {
 
     @Test
     fun `elapsed time is formatted correctly for minutes`() = runTest(mainDispatcherRule.testDispatcher) {
-        val currentTime = System.currentTimeMillis()
-        val suggestionTime = currentTime - 125000 // 2 minutes 5 seconds ago
+        currentTimeMs = CURRENT_TIME_MS
+        val suggestionTime = currentTimeMs - 125000 // 2 minutes 5 seconds ago
         val stateHolder = createStateHolder(suggestionTimeMs = suggestionTime)
 
         stateHolder.uiState.test {
@@ -80,8 +86,8 @@ class NutritionPopupStateHolderTest {
 
     @Test
     fun `elapsed time shows 00 00 for current time`() = runTest(mainDispatcherRule.testDispatcher) {
-        val currentTime = System.currentTimeMillis()
-        val stateHolder = createStateHolder(suggestionTimeMs = currentTime)
+        currentTimeMs = CURRENT_TIME_MS
+        val stateHolder = createStateHolder(suggestionTimeMs = currentTimeMs)
 
         stateHolder.uiState.test {
             awaitItem() // Hidden
@@ -94,7 +100,8 @@ class NutritionPopupStateHolderTest {
 
     @Test
     fun `negative elapsed time is clamped to zero`() = runTest(mainDispatcherRule.testDispatcher) {
-        val futureTime = System.currentTimeMillis() + 10000 // Future time
+        currentTimeMs = CURRENT_TIME_MS
+        val futureTime = currentTimeMs + 10000
         val stateHolder = createStateHolder(suggestionTimeMs = futureTime)
 
         stateHolder.uiState.test {

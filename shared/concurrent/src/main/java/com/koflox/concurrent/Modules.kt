@@ -14,6 +14,9 @@ sealed class DispatchersQualifier : ClassNameQualifier(), Qualifier {
 }
 
 val concurrentModule = module {
+    single<CurrentTimeProvider> {
+        SystemCurrentTimeProvider()
+    }
     single<CoroutineDispatcher>(DispatchersQualifier.Io) {
         Dispatchers.IO
     }
