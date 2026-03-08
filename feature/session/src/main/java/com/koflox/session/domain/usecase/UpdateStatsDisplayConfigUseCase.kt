@@ -4,13 +4,13 @@ import com.koflox.session.domain.model.SessionStatType
 import com.koflox.session.domain.model.StatsDisplayConfig
 import com.koflox.session.domain.repository.StatsDisplayRepository
 
-interface UpdateStatsDisplayConfigUseCase {
+internal interface UpdateStatsDisplayConfigUseCase {
     suspend fun updateActiveSessionStats(stats: List<SessionStatType>)
     suspend fun updateCompletedSessionStats(stats: List<SessionStatType>)
     suspend fun updateShareStats(stats: List<SessionStatType>)
 }
 
-class InvalidStatsSelectionException(message: String) : IllegalArgumentException(message)
+internal class InvalidStatsSelectionException(message: String) : IllegalArgumentException(message)
 
 internal class UpdateStatsDisplayConfigUseCaseImpl(
     private val repository: StatsDisplayRepository,

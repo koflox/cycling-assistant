@@ -48,7 +48,7 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
-fun SharePreviewDialog(
+internal fun SharePreviewDialog(
     data: SharePreviewData,
     isSharing: Boolean,
     onShareClick: (bitmap: Bitmap, shareText: String, chooserTitle: String) -> Unit,

@@ -3,7 +3,7 @@ package com.koflox.session.presentation.share
 import com.koflox.designsystem.text.UiText
 import com.koflox.session.R
 
-interface ShareErrorMapper {
+internal interface ShareErrorMapper {
     fun map(result: ShareResult): UiText?
 }
 

@@ -5,7 +5,7 @@ import com.koflox.session.domain.model.SessionDerivedStats
 import com.koflox.session.domain.model.SessionStatType
 import com.koflox.session.presentation.model.DisplayStat
 
-interface SessionFormatMapper {
+internal interface SessionFormatMapper {
     fun formatElapsedTime(elapsedMs: Long): String
     fun formatDistance(distanceKm: Double): String
     fun formatSpeed(speedKmh: Double): String
@@ -15,7 +15,7 @@ interface SessionFormatMapper {
     fun formatStartDate(startTimeMs: Long): String
 }
 
-interface SessionStatsMapper {
+internal interface SessionStatsMapper {
     fun toSessionUiModel(session: Session): SessionUiModel
     fun buildActiveSessionStats(
         session: Session,
@@ -28,9 +28,9 @@ interface SessionStatsMapper {
     ): List<DisplayStat>
 }
 
-interface SessionUiMapper : SessionFormatMapper, SessionStatsMapper
+internal interface SessionUiMapper : SessionFormatMapper, SessionStatsMapper
 
-data class SessionUiModel(
+internal data class SessionUiModel(
     val elapsedTimeFormatted: String,
     val traveledDistanceFormatted: String,
     val averageSpeedFormatted: String,
