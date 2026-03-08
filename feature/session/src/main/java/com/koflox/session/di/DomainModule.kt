@@ -44,7 +44,7 @@ internal val domainModule = module {
         CreateSessionUseCaseImpl(
             sessionRepository = get(),
             idGenerator = get(),
-            locationDataSource = get(),
+            getUserLocationUseCase = get(),
             locationValidator = get(),
             currentTimeProvider = get(),
         )

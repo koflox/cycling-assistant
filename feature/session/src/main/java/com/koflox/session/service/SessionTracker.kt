@@ -1,12 +1,12 @@
 package com.koflox.session.service
 
 import com.koflox.concurrent.CurrentTimeProvider
-import com.koflox.location.geolocation.LocationDataSource
-import com.koflox.location.settings.LocationSettingsDataSource
+import com.koflox.location.usecase.ObserveUserLocationUseCase
 import com.koflox.nutritionsession.bridge.usecase.NutritionReminderUseCase
 import com.koflox.session.domain.model.Session
 import com.koflox.session.domain.model.SessionStatus
 import com.koflox.session.domain.usecase.ActiveSessionUseCase
+import com.koflox.session.domain.usecase.CheckLocationEnabledUseCase
 import com.koflox.session.domain.usecase.UpdateSessionLocationUseCase
 import com.koflox.session.domain.usecase.UpdateSessionStatusUseCase
 import kotlinx.coroutines.CoroutineDispatcher
@@ -41,8 +41,8 @@ internal class SessionTrackerImpl(
     private val activeSessionUseCase: ActiveSessionUseCase,
     private val updateSessionLocationUseCase: UpdateSessionLocationUseCase,
     private val updateSessionStatusUseCase: UpdateSessionStatusUseCase,
-    private val locationDataSource: LocationDataSource,
-    private val locationSettingsDataSource: LocationSettingsDataSource,
+    private val observeUserLocationUseCase: ObserveUserLocationUseCase,
+    private val checkLocationEnabledUseCase: CheckLocationEnabledUseCase,
     private val nutritionReminderUseCase: NutritionReminderUseCase,
     private val powerCollectionManager: PowerCollectionManager,
     private val currentTimeProvider: CurrentTimeProvider,
@@ -151,9 +151,9 @@ internal class SessionTrackerImpl(
     private fun startLocationCollection() {
         if (locationCollectionJob?.isActive == true) return
         locationCollectionJob = scope?.launch {
-            locationDataSource.observeLocationUpdates(
+            observeUserLocationUseCase.observe(
                 intervalMs = LOCATION_INTERVAL.inWholeMilliseconds,
-                inUpdateDistanceMeters = MIN_UPDATE_DISTANCE_METERS,
+                minUpdateDistanceMeters = MIN_UPDATE_DISTANCE_METERS,
                 maxUpdateDelayMs = LOCATION_MAX_UPDATE_DELAY.inWholeMilliseconds,
             ).collect { location ->
                 updateSessionLocationUseCase.update(
@@ -172,7 +172,7 @@ internal class SessionTrackerImpl(
     private fun startLocationMonitoring() {
         if (locationMonitorJob?.isActive == true) return
         locationMonitorJob = scope?.launch {
-            locationSettingsDataSource.observeLocationEnabled().collect { isEnabled ->
+            checkLocationEnabledUseCase.observeLocationEnabled().collect { isEnabled ->
                 if (!isEnabled) {
                     updateSessionStatusUseCase.pause()
                 }

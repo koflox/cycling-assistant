@@ -5,12 +5,12 @@ import com.koflox.location.repository.UserLocationRepository
 import kotlinx.coroutines.flow.Flow
 
 interface ObserveUserLocationUseCase {
-    fun observe(intervalMs: Long, minUpdateDistanceMeters: Float): Flow<Location>
+    fun observe(intervalMs: Long, minUpdateDistanceMeters: Float, maxUpdateDelayMs: Long = 0L): Flow<Location>
 }
 
 internal class ObserveUserLocationUseCaseImpl(
     private val repository: UserLocationRepository,
 ) : ObserveUserLocationUseCase {
-    override fun observe(intervalMs: Long, minUpdateDistanceMeters: Float): Flow<Location> =
-        repository.observeUserLocation(intervalMs, minUpdateDistanceMeters)
+    override fun observe(intervalMs: Long, minUpdateDistanceMeters: Float, maxUpdateDelayMs: Long): Flow<Location> =
+        repository.observeUserLocation(intervalMs, minUpdateDistanceMeters, maxUpdateDelayMs)
 }

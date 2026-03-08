@@ -1,12 +1,12 @@
 package com.koflox.session.service
 
-import com.koflox.location.geolocation.LocationDataSource
 import com.koflox.location.model.Location
-import com.koflox.location.settings.LocationSettingsDataSource
+import com.koflox.location.usecase.ObserveUserLocationUseCase
 import com.koflox.nutritionsession.bridge.usecase.NutritionReminderUseCase
 import com.koflox.session.domain.model.Session
 import com.koflox.session.domain.model.SessionStatus
 import com.koflox.session.domain.usecase.ActiveSessionUseCase
+import com.koflox.session.domain.usecase.CheckLocationEnabledUseCase
 import com.koflox.session.domain.usecase.UpdateSessionLocationUseCase
 import com.koflox.session.domain.usecase.UpdateSessionStatusUseCase
 import com.koflox.session.testutil.createSession
@@ -42,8 +42,8 @@ class SessionTrackerImplTest {
     private val activeSessionUseCase: ActiveSessionUseCase = mockk()
     private val updateSessionLocationUseCase: UpdateSessionLocationUseCase = mockk()
     private val updateSessionStatusUseCase: UpdateSessionStatusUseCase = mockk()
-    private val locationDataSource: LocationDataSource = mockk()
-    private val locationSettingsDataSource: LocationSettingsDataSource = mockk()
+    private val observeUserLocationUseCase: ObserveUserLocationUseCase = mockk()
+    private val checkLocationEnabledUseCase: CheckLocationEnabledUseCase = mockk()
     private val nutritionReminderUseCase: NutritionReminderUseCase = mockk()
     private val powerCollectionManager: PowerCollectionManager = mockk(relaxed = true)
     private val delegate: SessionTrackingDelegate = mockk(relaxed = true)
@@ -59,14 +59,14 @@ class SessionTrackerImplTest {
     @Before
     fun setup() {
         every { activeSessionUseCase.observeActiveSession() } returns sessionFlow
-        every { locationSettingsDataSource.observeLocationEnabled() } returns locationEnabledFlow
+        every { checkLocationEnabledUseCase.observeLocationEnabled() } returns locationEnabledFlow
         every { nutritionReminderUseCase.observeNutritionReminders() } returns nutritionFlow
         coEvery { updateSessionLocationUseCase.update(any(), any()) } returns Unit
         coEvery { updateSessionStatusUseCase.pause() } returns Result.success(Unit)
         coEvery { updateSessionStatusUseCase.resume() } returns Result.success(Unit)
         coEvery { updateSessionStatusUseCase.stop() } returns Result.success(Unit)
         coEvery { updateSessionStatusUseCase.onServiceRestart() } returns Result.success(Unit)
-        every { locationDataSource.observeLocationUpdates(any(), any(), any()) } returns locationFlow
+        every { observeUserLocationUseCase.observe(any(), any(), any()) } returns locationFlow
         tracker = createTracker()
     }
 
@@ -94,7 +94,7 @@ class SessionTrackerImplTest {
         tracker.startTracking(delegate)
         advanceTimeBy(1)
 
-        verify { locationDataSource.observeLocationUpdates(any(), any(), any()) }
+        verify { observeUserLocationUseCase.observe(any(), any(), any()) }
     }
 
     @Test
@@ -114,7 +114,7 @@ class SessionTrackerImplTest {
         tracker.startTracking(delegate)
         advanceTimeBy(1)
 
-        verify { locationSettingsDataSource.observeLocationEnabled() }
+        verify { checkLocationEnabledUseCase.observeLocationEnabled() }
     }
 
     @Test
@@ -325,8 +325,8 @@ class SessionTrackerImplTest {
         activeSessionUseCase = activeSessionUseCase,
         updateSessionLocationUseCase = updateSessionLocationUseCase,
         updateSessionStatusUseCase = updateSessionStatusUseCase,
-        locationDataSource = locationDataSource,
-        locationSettingsDataSource = locationSettingsDataSource,
+        observeUserLocationUseCase = observeUserLocationUseCase,
+        checkLocationEnabledUseCase = checkLocationEnabledUseCase,
         nutritionReminderUseCase = nutritionReminderUseCase,
         powerCollectionManager = powerCollectionManager,
         currentTimeProvider = { currentTimeMs },
