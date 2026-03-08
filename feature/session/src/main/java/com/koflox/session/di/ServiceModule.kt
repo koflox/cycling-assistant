@@ -1,6 +1,10 @@
 package com.koflox.session.di
 
 import com.koflox.concurrent.DispatchersQualifier
+import com.koflox.session.service.LocationCollectionManager
+import com.koflox.session.service.LocationCollectionManagerImpl
+import com.koflox.session.service.NutritionReminderManager
+import com.koflox.session.service.NutritionReminderManagerImpl
 import com.koflox.session.service.PendingSessionAction
 import com.koflox.session.service.PendingSessionActionConsumer
 import com.koflox.session.service.PendingSessionActionImpl
@@ -47,6 +51,20 @@ internal val serviceModule = module {
         PowerConnectionStateHolder::class,
         PowerConnectionStatePublisher::class,
     )
+    factory<LocationCollectionManager> {
+        LocationCollectionManagerImpl(
+            observeUserLocationUseCase = get(),
+            updateSessionLocationUseCase = get(),
+            checkLocationEnabledUseCase = get(),
+            updateSessionStatusUseCase = get(),
+            currentTimeProvider = get(),
+        )
+    }
+    factory<NutritionReminderManager> {
+        NutritionReminderManagerImpl(
+            nutritionReminderUseCase = get(),
+        )
+    }
     factory<PowerCollectionManager> {
         PowerCollectionManagerImpl(
             sessionPowerMeterUseCase = get(),
@@ -58,12 +76,10 @@ internal val serviceModule = module {
         SessionTrackerImpl(
             dispatcherIo = get<CoroutineDispatcher>(DispatchersQualifier.Io),
             activeSessionUseCase = get(),
-            updateSessionLocationUseCase = get(),
             updateSessionStatusUseCase = get(),
-            observeUserLocationUseCase = get(),
-            checkLocationEnabledUseCase = get(),
-            nutritionReminderUseCase = get(),
+            locationCollectionManager = get(),
             powerCollectionManager = get(),
+            nutritionReminderManager = get(),
             currentTimeProvider = get(),
         )
     }
