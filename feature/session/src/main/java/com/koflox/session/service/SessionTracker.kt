@@ -1,8 +1,6 @@
 package com.koflox.session.service
 
 import com.koflox.concurrent.CurrentTimeProvider
-import com.koflox.connectionsession.bridge.usecase.PowerConnectionException
-import com.koflox.connectionsession.bridge.usecase.SessionPowerMeterUseCase
 import com.koflox.location.geolocation.LocationDataSource
 import com.koflox.location.settings.LocationSettingsDataSource
 import com.koflox.nutritionsession.bridge.usecase.NutritionReminderUseCase
@@ -10,17 +8,16 @@ import com.koflox.session.domain.model.Session
 import com.koflox.session.domain.model.SessionStatus
 import com.koflox.session.domain.usecase.ActiveSessionUseCase
 import com.koflox.session.domain.usecase.UpdateSessionLocationUseCase
-import com.koflox.session.domain.usecase.UpdateSessionPowerUseCase
 import com.koflox.session.domain.usecase.UpdateSessionStatusUseCase
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 interface SessionTrackingDelegate {
@@ -47,8 +44,7 @@ internal class SessionTrackerImpl(
     private val locationDataSource: LocationDataSource,
     private val locationSettingsDataSource: LocationSettingsDataSource,
     private val nutritionReminderUseCase: NutritionReminderUseCase,
-    private val sessionPowerMeterUseCase: SessionPowerMeterUseCase,
-    private val updateSessionPowerUseCase: UpdateSessionPowerUseCase,
+    private val powerCollectionManager: PowerCollectionManager,
     private val currentTimeProvider: CurrentTimeProvider,
 ) : SessionTracker {
 
@@ -57,9 +53,6 @@ internal class SessionTrackerImpl(
         internal val LOCATION_MAX_UPDATE_DELAY = 15.seconds
         internal const val MIN_UPDATE_DISTANCE_METERS = 5F
         internal val TIMER_UPDATE_INTERVAL = 1.seconds
-        internal val POWER_RETRY_INITIAL_DELAY = 2.seconds
-        internal val POWER_RETRY_MAX_DELAY = 5.minutes
-        internal const val POWER_RETRY_FACTOR = 2
     }
 
     private var scope: CoroutineScope? = null
@@ -69,7 +62,6 @@ internal class SessionTrackerImpl(
     private var locationMonitorJob: Job? = null
     private var timerJob: Job? = null
     private var nutritionJob: Job? = null
-    private var powerCollectionJob: Job? = null
 
     override fun startTracking(delegate: SessionTrackingDelegate) {
         this.delegate = delegate
@@ -95,16 +87,8 @@ internal class SessionTrackerImpl(
     }
 
     override fun stopTracking() {
-        sessionObserverJob?.cancel()
-        locationCollectionJob?.cancel()
-        locationMonitorJob?.cancel()
-        timerJob?.cancel()
-        nutritionJob?.cancel()
-        stopPowerCollection()
-        scope?.let {
-            val job = it.coroutineContext[Job]
-            job?.cancel()
-        }
+        powerCollectionManager.stop()
+        scope?.cancel()
         scope = null
         delegate = null
     }
@@ -143,14 +127,14 @@ internal class SessionTrackerImpl(
                 startLocationCollection()
                 startLocationMonitoring()
                 startTimer(session)
-                startPowerCollection()
+                scope?.let { powerCollectionManager.start(it) }
             }
 
             SessionStatus.PAUSED -> {
                 stopLocationCollection()
                 stopLocationMonitoring()
                 stopTimer()
-                stopPowerCollection()
+                powerCollectionManager.stop()
                 delegate?.onNotificationUpdate(session, session.elapsedTimeMs)
             }
 
@@ -158,7 +142,7 @@ internal class SessionTrackerImpl(
                 stopLocationCollection()
                 stopLocationMonitoring()
                 stopTimer()
-                stopPowerCollection()
+                powerCollectionManager.stop()
                 delegate?.onStopService()
             }
         }
@@ -225,38 +209,5 @@ internal class SessionTrackerImpl(
                 delegate?.onVibrate()
             }
         }
-    }
-
-    private fun startPowerCollection() {
-        if (powerCollectionJob?.isActive == true) return
-        powerCollectionJob = scope?.launch {
-            val device = sessionPowerMeterUseCase.getSessionPowerDevice() ?: return@launch
-            collectPowerWithRetry(device.macAddress)
-        }
-    }
-
-    private suspend fun collectPowerWithRetry(macAddress: String) {
-        var retryDelay = POWER_RETRY_INITIAL_DELAY
-        while (true) {
-            try {
-                sessionPowerMeterUseCase.observePowerReadings(macAddress).collect { reading ->
-                    retryDelay = POWER_RETRY_INITIAL_DELAY
-                    updateSessionPowerUseCase.update(
-                        powerWatts = reading.powerWatts,
-                        timestampMs = reading.timestampMs,
-                    )
-                }
-            } catch (_: PowerConnectionException) {
-                // Connection error — retry with backoff
-            }
-            delay(retryDelay)
-            retryDelay = (retryDelay.times(POWER_RETRY_FACTOR)).coerceAtMost(POWER_RETRY_MAX_DELAY)
-        }
-    }
-
-    private fun stopPowerCollection() {
-        powerCollectionJob?.cancel()
-        powerCollectionJob = null
-        sessionPowerMeterUseCase.disconnect()
     }
 }

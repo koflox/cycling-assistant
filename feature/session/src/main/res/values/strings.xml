@@ -25,6 +25,11 @@
     <string name="session_stat_value_kcal">%s kcal</string>
     <string name="session_stat_power_connecting">Connecting power meter</string>
 
+    <!-- Device Connection Status -->
+    <string name="session_device_connecting">Connecting…</string>
+    <string name="session_device_retry_countdown">Retry in %ds</string>
+    <string name="session_device_offline">Offline</string>
+
     <!-- Session Buttons -->
     <string name="session_button_pause">Pause</string>
     <string name="session_button_continue">Continue</string>

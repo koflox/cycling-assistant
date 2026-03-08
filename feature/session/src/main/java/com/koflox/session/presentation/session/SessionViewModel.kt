@@ -2,7 +2,6 @@ package com.koflox.session.presentation.session
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.koflox.connectionsession.bridge.usecase.SessionPowerMeterUseCase
 import com.koflox.error.mapper.ErrorMessageMapper
 import com.koflox.location.model.Location
 import com.koflox.session.domain.model.Session
@@ -19,8 +18,11 @@ import com.koflox.session.presentation.mapper.SessionUiMapper
 import com.koflox.session.presentation.model.DisplayStat
 import com.koflox.session.presentation.session.timer.SessionTimer
 import com.koflox.session.presentation.session.timer.SessionTimerFactory
+import com.koflox.session.service.DeviceConnectionInfo
 import com.koflox.session.service.PendingSessionAction
 import com.koflox.session.service.PendingSessionActionConsumer
+import com.koflox.session.service.PowerConnectionState
+import com.koflox.session.service.PowerConnectionStateHolder
 import com.koflox.session.service.SessionServiceController
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.channels.Channel
@@ -43,7 +45,7 @@ internal class SessionViewModel(
     private val pendingSessionActionConsumer: PendingSessionActionConsumer,
     private val sessionUiMapper: SessionUiMapper,
     private val errorMessageMapper: ErrorMessageMapper,
-    private val sessionPowerMeterUseCase: SessionPowerMeterUseCase,
+    private val powerConnectionStateHolder: PowerConnectionStateHolder,
     sessionTimerFactory: SessionTimerFactory,
     private val dispatcherDefault: CoroutineDispatcher,
 ) : ViewModel() {
@@ -57,7 +59,6 @@ internal class SessionViewModel(
     private val sessionTimer: SessionTimer = sessionTimerFactory.create(viewModelScope)
 
     private var isPausedDueToLocation = false
-    private var isPowerMeterConfigured = false
     private var activeStatsConfig: List<SessionStatType> = StatsDisplayConfig.DEFAULT_ACTIVE_SESSION_STATS
 
     init {
@@ -66,17 +67,11 @@ internal class SessionViewModel(
 
     private fun initialize() {
         showNotificationForStartedSession()
-        checkPowerMeterConfiguration()
         observeActiveSession()
         observeLocationEnabled()
         observeStopRequest()
         observeStatsConfig()
-    }
-
-    private fun checkPowerMeterConfiguration() {
-        viewModelScope.launch(dispatcherDefault) {
-            isPowerMeterConfigured = sessionPowerMeterUseCase.getSessionPowerDevice() != null
-        }
+        observeDeviceConnectionState()
     }
 
     private fun observeActiveSession() {
@@ -137,6 +132,29 @@ internal class SessionViewModel(
         }
     }
 
+    private fun observeDeviceConnectionState() {
+        viewModelScope.launch(dispatcherDefault) {
+            powerConnectionStateHolder.deviceConnectionInfo.collect { info ->
+                updateActive { current ->
+                    current.copy(
+                        deviceStripItems = info?.let {
+                            listOf(mapToDeviceStripItem(it))
+                        } ?: emptyList()
+                    )
+                }
+            }
+        }
+    }
+
+    private fun mapToDeviceStripItem(info: DeviceConnectionInfo): DeviceStripItem {
+        val stripState = when (val state = info.state) {
+            is PowerConnectionState.Connected -> DeviceStripState.Connected(state.instantaneousPowerWatts)
+            PowerConnectionState.Connecting -> DeviceStripState.Connecting
+            is PowerConnectionState.Reconnecting -> DeviceStripState.Reconnecting(state.remaining)
+        }
+        return DeviceStripItem(deviceName = info.deviceName, state = stripState)
+    }
+
     private fun showNotificationForStartedSession() {
         viewModelScope.launch(dispatcherDefault) {
             activeSessionUseCase.observeActiveSession()
@@ -151,6 +169,7 @@ internal class SessionViewModel(
             when (event) {
                 is SessionUiEvent.SessionManagementEvent -> handleSessionManagementEvent(event)
                 is SessionUiEvent.LocationSettingsEvent -> handleLocationSettingsEvent(event)
+                is SessionUiEvent.DeviceEvent -> handleDeviceEvent(event)
             }
         }
     }
@@ -183,6 +202,12 @@ internal class SessionViewModel(
             SessionUiEvent.LocationSettingsEvent.LocationDisabledDismissed -> {
                 updateActive { it.copy(overlay = null) }
             }
+        }
+    }
+
+    private suspend fun handleDeviceEvent(event: SessionUiEvent.DeviceEvent) {
+        when (event) {
+            SessionUiEvent.DeviceEvent.StripClicked -> _navigation.send(SessionNavigation.ToConnections)
         }
     }
 
@@ -276,6 +301,7 @@ internal class SessionViewModel(
         val formattedData = sessionUiMapper.toSessionUiModel(session)
         val currentOverlay = (_uiState.value as? SessionUiState.Active)?.overlay
             ?: if (pendingSessionAction.isStopRequested.value) SessionOverlay.StopConfirmation else null
+        val currentDeviceStripItems = (_uiState.value as? SessionUiState.Active)?.deviceStripItems ?: emptyList()
         val destinationLocation = if (session.destinationLatitude != null && session.destinationLongitude != null) {
             Location(latitude = session.destinationLatitude, longitude = session.destinationLongitude)
         } else {
@@ -297,17 +323,8 @@ internal class SessionViewModel(
             },
             isLocationDisabled = !checkLocationEnabledUseCase.isLocationEnabled(),
             overlay = currentOverlay,
-            powerDisplayState = computePowerDisplayState(session),
+            deviceStripItems = currentDeviceStripItems,
         )
-    }
-
-    private fun computePowerDisplayState(session: Session): PowerDisplayState = when {
-        !isPowerMeterConfigured -> PowerDisplayState.None
-        session.hasPowerData -> PowerDisplayState.Receiving(
-            avgPowerFormatted = sessionUiMapper.formatPower(session.averagePowerWatts ?: 0),
-        )
-        session.status == SessionStatus.RUNNING -> PowerDisplayState.Connecting
-        else -> PowerDisplayState.None
     }
 
     private inline fun updateActive(transform: (SessionUiState.Active) -> SessionUiState.Active) {

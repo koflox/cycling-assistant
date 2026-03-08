@@ -58,11 +58,13 @@ import org.koin.compose.koinInject
 fun RideMapScreen(
     onNavigateToSessionCompletion: (sessionId: String) -> Unit,
     onNavigateToPoiSelection: () -> Unit,
+    onNavigateToConnections: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     RideMapRoute(
         onNavigateToSessionCompletion = onNavigateToSessionCompletion,
         onNavigateToPoiSelection = onNavigateToPoiSelection,
+        onNavigateToConnections = onNavigateToConnections,
         modifier = modifier,
     )
 }
@@ -71,6 +73,7 @@ fun RideMapScreen(
 internal fun RideMapRoute(
     onNavigateToSessionCompletion: (sessionId: String) -> Unit,
     onNavigateToPoiSelection: () -> Unit,
+    onNavigateToConnections: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: RideMapViewModel = koinViewModel(),
     sessionUiNavigator: CyclingSessionUiNavigator = koinInject(),
@@ -110,6 +113,7 @@ internal fun RideMapRoute(
             modifier = modifier,
             onNavigateToSessionCompletion = onNavigateToSessionCompletion,
             onNavigateToPoiSelection = onNavigateToPoiSelection,
+            onNavigateToConnections = onNavigateToConnections,
             onRetryPermission = { retryTrigger++ },
         )
     }
@@ -170,6 +174,7 @@ private fun RideMapContent(
     poiUiNavigator: PoiUiNavigator,
     onNavigateToSessionCompletion: (sessionId: String) -> Unit,
     onNavigateToPoiSelection: () -> Unit,
+    onNavigateToConnections: () -> Unit,
     onRetryPermission: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -194,6 +199,7 @@ private fun RideMapContent(
             poiUiNavigator = poiUiNavigator,
             onNavigateToSessionCompletion = onNavigateToSessionCompletion,
             onNavigateToPoiSelection = onNavigateToPoiSelection,
+            onNavigateToConnections = onNavigateToConnections,
             onRetryPermission = onRetryPermission,
         )
     }
@@ -239,6 +245,7 @@ private fun BoxScope.RideMapOverlay(
     poiUiNavigator: PoiUiNavigator,
     onNavigateToSessionCompletion: (sessionId: String) -> Unit,
     onNavigateToPoiSelection: () -> Unit,
+    onNavigateToConnections: () -> Unit,
     onRetryPermission: () -> Unit,
 ) {
     when (uiState) {
@@ -279,6 +286,7 @@ private fun BoxScope.RideMapOverlay(
             sessionUiNavigator = sessionUiNavigator,
             nutritionUiNavigator = nutritionUiNavigator,
             onNavigateToSessionCompletion = onNavigateToSessionCompletion,
+            onNavigateToConnections = onNavigateToConnections,
             modifier = Modifier.fillMaxWidth().align(Alignment.BottomCenter),
         )
     }
@@ -405,6 +413,7 @@ private fun ActiveSessionControls(
     sessionUiNavigator: CyclingSessionUiNavigator,
     nutritionUiNavigator: NutritionUiNavigator,
     onNavigateToSessionCompletion: (sessionId: String) -> Unit,
+    onNavigateToConnections: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val isWaitingForRoute = uiState.routeData == null || uiState.routeData.segments.isEmpty()
@@ -444,6 +453,7 @@ private fun ActiveSessionControls(
                 .padding(bottom = Spacing.Large)
                 .padding(horizontal = Spacing.Large),
             onNavigateToCompletion = onNavigateToSessionCompletion,
+            onNavigateToConnections = onNavigateToConnections,
         )
     }
 }
