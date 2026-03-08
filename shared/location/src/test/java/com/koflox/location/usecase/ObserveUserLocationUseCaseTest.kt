@@ -34,20 +34,20 @@ class ObserveUserLocationUseCaseTest {
     @Test
     fun `observe delegates to repository with params`() = runTest {
         val location = Location(latitude = DEFAULT_LAT, longitude = DEFAULT_LONG)
-        every { repository.observeUserLocation(any(), any()) } returns flowOf(location)
+        every { repository.observeUserLocation(any(), any(), any()) } returns flowOf(location)
 
         useCase.observe(TEST_INTERVAL_MS, TEST_MIN_DISTANCE)
             .collect()
 
         verify(exactly = 1) {
-            repository.observeUserLocation(TEST_INTERVAL_MS, TEST_MIN_DISTANCE)
+            repository.observeUserLocation(TEST_INTERVAL_MS, TEST_MIN_DISTANCE, 0L)
         }
     }
 
     @Test
     fun `observe emits location from repository`() = runTest {
         val expectedLocation = Location(latitude = DEFAULT_LAT, longitude = DEFAULT_LONG)
-        every { repository.observeUserLocation(any(), any()) } returns flowOf(expectedLocation)
+        every { repository.observeUserLocation(any(), any(), any()) } returns flowOf(expectedLocation)
 
         useCase.observe(TEST_INTERVAL_MS, TEST_MIN_DISTANCE).test {
             assertEquals(expectedLocation, awaitItem())
@@ -60,7 +60,7 @@ class ObserveUserLocationUseCaseTest {
         val location1 = Location(latitude = DEFAULT_LAT, longitude = DEFAULT_LONG)
         val location2 = Location(latitude = DEFAULT_LAT + 0.01, longitude = DEFAULT_LONG + 0.01)
         val location3 = Location(latitude = DEFAULT_LAT + 0.02, longitude = DEFAULT_LONG + 0.02)
-        every { repository.observeUserLocation(any(), any()) } returns flowOf(location1, location2, location3)
+        every { repository.observeUserLocation(any(), any(), any()) } returns flowOf(location1, location2, location3)
 
         useCase.observe(TEST_INTERVAL_MS, TEST_MIN_DISTANCE).test {
             assertEquals(location1, awaitItem())
@@ -75,7 +75,7 @@ class ObserveUserLocationUseCaseTest {
         val lat = -33.8688
         val long = 151.2093
         val expectedLocation = Location(latitude = lat, longitude = long)
-        every { repository.observeUserLocation(any(), any()) } returns flowOf(expectedLocation)
+        every { repository.observeUserLocation(any(), any(), any()) } returns flowOf(expectedLocation)
 
         useCase.observe(TEST_INTERVAL_MS, TEST_MIN_DISTANCE).test {
             val location = awaitItem()
