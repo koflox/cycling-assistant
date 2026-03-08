@@ -1,8 +1,6 @@
 package com.koflox.destinations.di
 
 import com.koflox.concurrent.DispatchersQualifier
-import com.koflox.destinations.domain.usecase.CheckLocationEnabledUseCase
-import com.koflox.destinations.domain.usecase.CheckLocationEnabledUseCaseImpl
 import com.koflox.destinations.domain.usecase.GetDestinationInfoUseCase
 import com.koflox.destinations.domain.usecase.GetDestinationInfoUseCaseImpl
 import com.koflox.destinations.domain.usecase.GetDistanceBoundsUseCase
@@ -20,11 +18,6 @@ import com.koflox.destinations.domain.usecase.UpdateRidingModeUseCaseImpl
 import org.koin.dsl.module
 
 internal val domainModule = module {
-    factory<CheckLocationEnabledUseCase> {
-        CheckLocationEnabledUseCaseImpl(
-            locationSettingsDataSource = get(),
-        )
-    }
     factory<GetNearbyDestinationsUseCase> {
         GetNearbyDestinationsUseCaseImpl(
             repository = get(),

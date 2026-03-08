@@ -7,7 +7,6 @@ import com.koflox.destinationnutrition.bridge.usecase.ObserveNutritionBreakUseCa
 import com.koflox.destinations.domain.model.DestinationLoadingEvent
 import com.koflox.destinations.domain.model.DistanceBounds
 import com.koflox.destinations.domain.model.RidingMode
-import com.koflox.destinations.domain.usecase.CheckLocationEnabledUseCase
 import com.koflox.destinations.domain.usecase.GetDestinationInfoUseCase
 import com.koflox.destinations.domain.usecase.GetDistanceBoundsUseCase
 import com.koflox.destinations.domain.usecase.InitializeDatabaseUseCase
@@ -18,6 +17,7 @@ import com.koflox.destinations.presentation.mapper.DestinationUiMapper
 import com.koflox.destinationsession.bridge.usecase.CyclingSessionUseCase
 import com.koflox.distance.DistanceCalculator
 import com.koflox.location.model.Location
+import com.koflox.location.usecase.CheckLocationEnabledUseCase
 import com.koflox.location.usecase.GetUserLocationUseCase
 import com.koflox.location.usecase.ObserveUserLocationUseCase
 import com.koflox.map.intent.GoogleMapsIntentHelper
