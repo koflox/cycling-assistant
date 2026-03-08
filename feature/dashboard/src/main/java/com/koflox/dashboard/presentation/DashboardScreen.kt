@@ -33,6 +33,7 @@ internal fun DashboardScreen(
         RideMapScreen(
             onNavigateToSessionCompletion = onNavigateToSessionCompletion,
             onNavigateToPoiSelection = onNavigateToPoiSelection,
+            onNavigateToConnections = onNavigateToConnections,
             modifier = Modifier.fillMaxSize(),
         )
         if (isMenuExpanded) {

@@ -4,6 +4,11 @@ import com.koflox.concurrent.DispatchersQualifier
 import com.koflox.session.service.PendingSessionAction
 import com.koflox.session.service.PendingSessionActionConsumer
 import com.koflox.session.service.PendingSessionActionImpl
+import com.koflox.session.service.PowerCollectionManager
+import com.koflox.session.service.PowerCollectionManagerImpl
+import com.koflox.session.service.PowerConnectionStateHolder
+import com.koflox.session.service.PowerConnectionStateHolderImpl
+import com.koflox.session.service.PowerConnectionStatePublisher
 import com.koflox.session.service.SessionNotificationManager
 import com.koflox.session.service.SessionNotificationManagerImpl
 import com.koflox.session.service.SessionServiceController
@@ -36,6 +41,19 @@ internal val serviceModule = module {
             context = androidContext(),
         )
     }
+    single {
+        PowerConnectionStateHolderImpl()
+    } binds arrayOf(
+        PowerConnectionStateHolder::class,
+        PowerConnectionStatePublisher::class,
+    )
+    factory<PowerCollectionManager> {
+        PowerCollectionManagerImpl(
+            sessionPowerMeterUseCase = get(),
+            updateSessionPowerUseCase = get(),
+            powerConnectionStatePublisher = get(),
+        )
+    }
     factory<SessionTracker> {
         SessionTrackerImpl(
             dispatcherIo = get<CoroutineDispatcher>(DispatchersQualifier.Io),
@@ -45,8 +63,7 @@ internal val serviceModule = module {
             locationDataSource = get(),
             locationSettingsDataSource = get(),
             nutritionReminderUseCase = get(),
-            sessionPowerMeterUseCase = get(),
-            updateSessionPowerUseCase = get(),
+            powerCollectionManager = get(),
             currentTimeProvider = get(),
         )
     }

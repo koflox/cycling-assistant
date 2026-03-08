@@ -25,6 +25,11 @@
     <string name="session_stat_value_kcal">%s ккал</string>
     <string name="session_stat_power_connecting">Подключение датчика мощности</string>
 
+    <!-- Device Connection Status -->
+    <string name="session_device_connecting">Подключение…</string>
+    <string name="session_device_retry_countdown">Повтор через %dс</string>
+    <string name="session_device_offline">Не в сети</string>
+
     <!-- Session Buttons -->
     <string name="session_button_pause">Пауза</string>
     <string name="session_button_continue">Продолжить</string>

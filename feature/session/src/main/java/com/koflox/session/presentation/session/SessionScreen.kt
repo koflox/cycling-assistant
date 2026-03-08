@@ -22,6 +22,7 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun SessionScreenRoute(
     onNavigateToCompletion: (sessionId: String) -> Unit,
+    onNavigateToConnections: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val viewModel: SessionViewModel = koinViewModel()
@@ -31,6 +32,7 @@ fun SessionScreenRoute(
         viewModel.navigation.collect { event ->
             when (event) {
                 is SessionNavigation.ToCompletion -> onNavigateToCompletion(event.sessionId)
+                SessionNavigation.ToConnections -> onNavigateToConnections()
             }
         }
     }
@@ -77,6 +79,7 @@ private fun SessionContent(
                     onResumeClick = { onEvent(SessionUiEvent.SessionManagementEvent.ResumeClicked) },
                     onStopClick = { onEvent(SessionUiEvent.SessionManagementEvent.StopClicked) },
                     onEnableLocationClick = { onEvent(SessionUiEvent.LocationSettingsEvent.EnableLocationClicked) },
+                    onDeviceStripClick = { onEvent(SessionUiEvent.DeviceEvent.StripClicked) },
                     modifier = Modifier.fillMaxWidth(),
                 )
                 when (uiState.overlay) {

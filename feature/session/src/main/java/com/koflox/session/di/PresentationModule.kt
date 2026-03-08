@@ -54,7 +54,7 @@ internal val presentationModule = module {
             pendingSessionActionConsumer = get(),
             sessionUiMapper = get(),
             errorMessageMapper = get(PresentationModuleQualifier.SessionErrorMessageMapper),
-            sessionPowerMeterUseCase = get(),
+            powerConnectionStateHolder = get(),
             sessionTimerFactory = get(),
             dispatcherDefault = get(DispatchersQualifier.Default),
         )
