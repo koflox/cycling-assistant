@@ -7,7 +7,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-interface SessionsListUiMapper {
+internal interface SessionsListUiMapper {
     fun toUiModel(session: Session): SessionListItemUiModel
 }
 

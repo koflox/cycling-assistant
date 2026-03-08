@@ -23,7 +23,7 @@ internal sealed interface SessionsListOverlay {
     data class LoadError(val message: UiText) : SessionsListOverlay
 }
 
-data class SessionListItemUiModel(
+internal data class SessionListItemUiModel(
     val id: String,
     val destinationName: String?,
     val dateFormatted: String,
@@ -32,7 +32,7 @@ data class SessionListItemUiModel(
     val isShareButtonVisible: Boolean,
 )
 
-enum class SessionListItemStatus {
+internal enum class SessionListItemStatus {
     RUNNING,
     PAUSED,
     COMPLETED,

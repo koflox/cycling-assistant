@@ -20,7 +20,7 @@ import kotlin.time.Duration.Companion.seconds
  * Callback interface for [SessionTrackingService] to respond to tracking events
  * such as foreground promotion, notification updates, service teardown, and vibration.
  */
-interface SessionTrackingDelegate {
+internal interface SessionTrackingDelegate {
     fun onStartForeground(): Boolean
     fun onNotificationUpdate(session: Session, elapsedMs: Long)
     fun onStopService()
@@ -37,7 +37,7 @@ interface SessionTrackingDelegate {
  * The tracker itself owns the notification timer and session lifecycle commands
  * (pause / resume / stop).
  */
-interface SessionTracker {
+internal interface SessionTracker {
     fun startTracking(delegate: SessionTrackingDelegate)
     fun handleRestart(delegate: SessionTrackingDelegate)
     fun stopTracking()

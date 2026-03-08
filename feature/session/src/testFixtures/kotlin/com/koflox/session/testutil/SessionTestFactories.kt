@@ -7,9 +7,6 @@ import com.koflox.session.domain.model.Session
 import com.koflox.session.domain.model.SessionStatus
 import com.koflox.session.domain.model.TrackPoint
 import com.koflox.session.domain.usecase.CreateSessionParams
-import com.koflox.session.presentation.mapper.SessionUiModel
-import com.koflox.session.presentation.sessionslist.SessionListItemStatus
-import com.koflox.session.presentation.sessionslist.SessionListItemUiModel
 
 fun createSession(
     id: String = "",
@@ -167,34 +164,4 @@ fun createDestinationSessionParams(
     destinationName = destinationName,
     destinationLatitude = destinationLatitude,
     destinationLongitude = destinationLongitude,
-)
-
-fun createSessionUiModel(
-    elapsedTimeFormatted: String = "",
-    traveledDistanceFormatted: String = "",
-    averageSpeedFormatted: String = "",
-    topSpeedFormatted: String = "",
-    altitudeGainFormatted: String = "",
-) = SessionUiModel(
-    elapsedTimeFormatted = elapsedTimeFormatted,
-    traveledDistanceFormatted = traveledDistanceFormatted,
-    averageSpeedFormatted = averageSpeedFormatted,
-    topSpeedFormatted = topSpeedFormatted,
-    altitudeGainFormatted = altitudeGainFormatted,
-)
-
-fun createSessionListItemUiModel(
-    id: String = "",
-    destinationName: String = "",
-    dateFormatted: String = "",
-    distanceFormatted: String = "",
-    status: SessionListItemStatus = SessionListItemStatus.COMPLETED,
-    isShareButtonVisible: Boolean = false,
-) = SessionListItemUiModel(
-    id = id,
-    destinationName = destinationName,
-    dateFormatted = dateFormatted,
-    distanceFormatted = distanceFormatted,
-    status = status,
-    isShareButtonVisible = isShareButtonVisible,
 )
