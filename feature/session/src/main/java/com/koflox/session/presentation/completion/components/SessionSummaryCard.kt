@@ -128,9 +128,9 @@ private fun DynamicStatsGrid(
 private fun StatItem(
     label: String,
     value: String,
+    modifier: Modifier = Modifier,
     valueStyle: TextStyle = MaterialTheme.typography.labelLarge,
     labelStyle: TextStyle = MaterialTheme.typography.labelSmall,
-    modifier: Modifier = Modifier,
 ) {
     Column(
         modifier = modifier,

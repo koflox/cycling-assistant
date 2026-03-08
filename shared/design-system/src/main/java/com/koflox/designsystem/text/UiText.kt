@@ -17,7 +17,7 @@ sealed interface UiText {
      * @param args format arguments for the string resource
      */
     data class Resource(
-        @StringRes val resId: Int,
+        @get:StringRes val resId: Int,
         val args: List<Any> = emptyList(),
     ) : UiText
 }
