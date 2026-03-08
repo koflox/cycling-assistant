@@ -1,4 +1,4 @@
-package com.koflox.session.domain.usecase
+package com.koflox.location.usecase
 
 import com.koflox.location.settings.LocationSettingsDataSource
 import kotlinx.coroutines.flow.Flow

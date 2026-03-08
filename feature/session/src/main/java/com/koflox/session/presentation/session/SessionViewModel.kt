@@ -4,12 +4,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.koflox.error.mapper.ErrorMessageMapper
 import com.koflox.location.model.Location
+import com.koflox.location.usecase.CheckLocationEnabledUseCase
 import com.koflox.session.domain.model.Session
 import com.koflox.session.domain.model.SessionStatType
 import com.koflox.session.domain.model.SessionStatus
 import com.koflox.session.domain.model.StatsDisplayConfig
 import com.koflox.session.domain.usecase.ActiveSessionUseCase
-import com.koflox.session.domain.usecase.CheckLocationEnabledUseCase
 import com.koflox.session.domain.usecase.CreateSessionParams
 import com.koflox.session.domain.usecase.CreateSessionUseCase
 import com.koflox.session.domain.usecase.ObserveStatsDisplayConfigUseCase

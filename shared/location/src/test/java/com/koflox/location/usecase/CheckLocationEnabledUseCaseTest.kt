@@ -1,4 +1,4 @@
-package com.koflox.session.domain.usecase
+package com.koflox.location.usecase
 
 import com.koflox.location.settings.LocationSettingsDataSource
 import io.mockk.every
@@ -25,7 +25,7 @@ class CheckLocationEnabledUseCaseTest {
     }
 
     @Test
-    fun `isLocationEnabled delegates to repository`() {
+    fun `isLocationEnabled delegates to data source`() {
         every { locationSettingsDataSource.isLocationEnabled() } returns true
 
         assertTrue(useCase.isLocationEnabled())
@@ -33,14 +33,14 @@ class CheckLocationEnabledUseCaseTest {
     }
 
     @Test
-    fun `isLocationEnabled returns false when repository returns false`() {
+    fun `isLocationEnabled returns false when data source returns false`() {
         every { locationSettingsDataSource.isLocationEnabled() } returns false
 
         assertFalse(useCase.isLocationEnabled())
     }
 
     @Test
-    fun `observeLocationEnabled delegates to repository`() = runTest {
+    fun `observeLocationEnabled delegates to data source`() = runTest {
         val flow = MutableStateFlow(true)
         every { locationSettingsDataSource.observeLocationEnabled() } returns flow
 
@@ -51,7 +51,7 @@ class CheckLocationEnabledUseCaseTest {
     }
 
     @Test
-    fun `observeLocationEnabled emits false when repository emits false`() = runTest {
+    fun `observeLocationEnabled emits false when data source emits false`() = runTest {
         val flow = MutableStateFlow(false)
         every { locationSettingsDataSource.observeLocationEnabled() } returns flow
 

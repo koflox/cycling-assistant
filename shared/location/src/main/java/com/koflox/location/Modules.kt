@@ -10,6 +10,8 @@ import com.koflox.location.settings.LocationSettingsDataSource
 import com.koflox.location.settings.LocationSettingsDataSourceImpl
 import com.koflox.location.smoother.KalmanLocationSmoother
 import com.koflox.location.smoother.LocationSmoother
+import com.koflox.location.usecase.CheckLocationEnabledUseCase
+import com.koflox.location.usecase.CheckLocationEnabledUseCaseImpl
 import com.koflox.location.usecase.GetUserLocationUseCase
 import com.koflox.location.usecase.GetUserLocationUseCaseImpl
 import com.koflox.location.usecase.ObserveUserLocationUseCase
@@ -48,6 +50,11 @@ val locationModule = module {
     factory<GetUserLocationUseCase> {
         GetUserLocationUseCaseImpl(
             repository = get(),
+        )
+    }
+    factory<CheckLocationEnabledUseCase> {
+        CheckLocationEnabledUseCaseImpl(
+            locationSettingsDataSource = get(),
         )
     }
     factory<ObserveUserLocationUseCase> {

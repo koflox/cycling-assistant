@@ -1,12 +1,12 @@
 package com.koflox.session.service
 
 import com.koflox.location.model.Location
+import com.koflox.location.usecase.CheckLocationEnabledUseCase
 import com.koflox.location.usecase.ObserveUserLocationUseCase
 import com.koflox.nutritionsession.bridge.usecase.NutritionReminderUseCase
 import com.koflox.session.domain.model.Session
 import com.koflox.session.domain.model.SessionStatus
 import com.koflox.session.domain.usecase.ActiveSessionUseCase
-import com.koflox.session.domain.usecase.CheckLocationEnabledUseCase
 import com.koflox.session.domain.usecase.UpdateSessionLocationUseCase
 import com.koflox.session.domain.usecase.UpdateSessionStatusUseCase
 import com.koflox.session.testutil.createSession
