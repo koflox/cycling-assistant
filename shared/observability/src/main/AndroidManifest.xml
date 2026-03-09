@@ -15,6 +15,9 @@
             <meta-data
                 android:name="com.koflox.observability.initializer.FirebaseInitializer"
                 android:value="androidx.startup" />
+            <meta-data
+                android:name="com.koflox.observability.initializer.TimberInitializer"
+                android:value="androidx.startup" />
         </provider>
     </application>
 
