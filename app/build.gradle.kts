@@ -5,6 +5,9 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.google.services)
+    alias(libs.plugins.firebase.crashlytics)
+    alias(libs.plugins.firebase.perf.plugin)
 }
 
 val versionProperties = Properties().apply {
@@ -57,6 +60,14 @@ android {
         debug {
             applicationIdSuffix = ".debug"
             versionNameSuffix = ".debug"
+            manifestPlaceholders["observabilityCollectionEnabled"] = "false"
+        }
+        create("staging") {
+            initWith(getByName("debug"))
+            applicationIdSuffix = ".staging"
+            versionNameSuffix = ".staging"
+            matchingFallbacks += "debug"
+            manifestPlaceholders["observabilityCollectionEnabled"] = "true"
         }
         release {
             isMinifyEnabled = true
@@ -66,6 +77,7 @@ android {
                 "proguard-rules.pro",
             )
             signingConfig = signingConfigs.getByName("release")
+            manifestPlaceholders["observabilityCollectionEnabled"] = "true"
         }
     }
 
@@ -160,6 +172,7 @@ dependencies {
     implementation(project(":shared:location"))
     implementation(project(":shared:error"))
     implementation(project(":shared:map"))
+    implementation(project(":shared:observability"))
     implementation(project(":shared:sensor-protocol"))
 
     // Testing
