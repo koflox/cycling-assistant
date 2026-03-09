@@ -31,6 +31,7 @@ import com.koflox.map.di.mapModule
 import com.koflox.nutrition.di.nutritionModule
 import com.koflox.nutritionsession.bridge.impl.di.nutritionSessionBridgeImplModule
 import com.koflox.nutritionsettings.bridge.impl.di.nutritionSettingsBridgeImplModule
+import com.koflox.observability.di.observabilityModule
 import com.koflox.poi.di.poiModule
 import com.koflox.poisettings.bridge.impl.di.poiSettingsBridgeImplModule
 import com.koflox.profile.di.ProfileQualifier
@@ -109,6 +110,7 @@ internal val appModule = module {
         nutritionModule,
         nutritionSessionBridgeImplModule,
         nutritionSettingsBridgeImplModule,
+        observabilityModule,
         poiModule,
         poiSettingsBridgeImplModule,
         powerSensorModule,
