@@ -15,7 +15,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import com.koflox.dashboard.presentation.components.ExpandableMenuButton
+import com.koflox.designsystem.testtag.TestTags
 import com.koflox.designsystem.theme.Spacing
 import com.koflox.destinations.presentation.destinations.RideMapScreen
 
@@ -29,10 +31,15 @@ internal fun DashboardScreen(
     modifier: Modifier = Modifier,
 ) {
     var isMenuExpanded by remember { mutableStateOf(false) }
-    Box(modifier = modifier.fillMaxSize()) {
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .testTag(TestTags.DASHBOARD_SCREEN),
+    ) {
         RideMapScreen(
             onNavigateToSessionCompletion = onNavigateToSessionCompletion,
             onNavigateToPoiSelection = onNavigateToPoiSelection,
+            onNavigateToConnections = onNavigateToConnections,
             modifier = Modifier.fillMaxSize(),
         )
         if (isMenuExpanded) {

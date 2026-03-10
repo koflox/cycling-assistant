@@ -2,10 +2,12 @@ package com.koflox.poi.presentation.selection
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.koflox.di.DefaultDispatcher
 import com.koflox.poi.domain.model.MAX_SELECTED_POIS
 import com.koflox.poi.domain.model.PoiType
 import com.koflox.poi.domain.usecase.ObserveSelectedPoisUseCase
 import com.koflox.poi.domain.usecase.UpdateSelectedPoisUseCase
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,11 +16,13 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-internal class PoiSelectionViewModel(
+@HiltViewModel
+internal class PoiSelectionViewModel @Inject internal constructor(
     private val observeSelectedPoisUseCase: ObserveSelectedPoisUseCase,
     private val updateSelectedPoisUseCase: UpdateSelectedPoisUseCase,
-    private val dispatcherDefault: CoroutineDispatcher,
+    @param:DefaultDispatcher private val dispatcherDefault: CoroutineDispatcher,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<PoiSelectionUiState>(PoiSelectionUiState.Loading)

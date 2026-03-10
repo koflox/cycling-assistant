@@ -32,19 +32,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.koflox.designsystem.component.DebouncedButton
 import com.koflox.designsystem.theme.ComponentSize
 import com.koflox.designsystem.theme.Spacing
 import com.koflox.poi.R
 import com.koflox.poi.presentation.mapper.label
-import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun PoiSelectionRoute(
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val viewModel: PoiSelectionViewModel = koinViewModel()
+    val viewModel: PoiSelectionViewModel = hiltViewModel()
     val uiState by viewModel.uiState.collectAsState()
     LaunchedEffect(Unit) {
         viewModel.navigation.collect { event ->

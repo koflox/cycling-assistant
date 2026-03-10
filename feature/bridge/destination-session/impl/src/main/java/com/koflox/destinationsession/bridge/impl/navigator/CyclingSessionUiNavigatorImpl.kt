@@ -15,9 +15,11 @@ internal class CyclingSessionUiNavigatorImpl : CyclingSessionUiNavigator {
         destinationLocation: Location?,
         modifier: Modifier,
         onNavigateToCompletion: (sessionId: String) -> Unit,
+        onNavigateToConnections: () -> Unit,
     ) {
         SessionScreenRoute(
             onNavigateToCompletion = onNavigateToCompletion,
+            onNavigateToConnections = onNavigateToConnections,
             modifier = modifier,
         )
     }

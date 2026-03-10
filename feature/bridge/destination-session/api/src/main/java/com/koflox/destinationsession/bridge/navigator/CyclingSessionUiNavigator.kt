@@ -23,6 +23,7 @@ interface CyclingSessionUiNavigator {
         destinationLocation: Location?,
         modifier: Modifier,
         onNavigateToCompletion: (sessionId: String) -> Unit,
+        onNavigateToConnections: () -> Unit,
     )
 
     /**

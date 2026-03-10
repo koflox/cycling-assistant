@@ -18,5 +18,6 @@ internal class UserLocationRepositoryImpl(
     override fun observeUserLocation(
         intervalMs: Long,
         minUpdateDistanceMeters: Float,
-    ): Flow<Location> = locationDataSource.observeLocationUpdates(intervalMs, minUpdateDistanceMeters)
+        maxUpdateDelayMs: Long,
+    ): Flow<Location> = locationDataSource.observeLocationUpdates(intervalMs, minUpdateDistanceMeters, maxUpdateDelayMs)
 }

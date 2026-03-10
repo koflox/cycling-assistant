@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="settings_title">Settings</string>
     <string name="settings_back">Back</string>
     <string name="settings_section_app">App</string>
@@ -14,5 +14,5 @@
     <string name="settings_language_restart_hint">Restart the app to apply the language change</string>
     <string name="settings_rider_weight">Rider weight (kg)</string>
     <string name="settings_rider_weight_hint">Used for calories calculation</string>
-    <string name="settings_rider_weight_error">Weight must be between %1$d and %2$d kg</string>
+    <string name="settings_rider_weight_error" tools:ignore="PluralsCandidate">Weight must be between %1$d and %2$d kg</string>
 </resources>

@@ -3,8 +3,8 @@ package com.koflox.session.domain.usecase
 import com.koflox.concurrent.CurrentTimeProvider
 import com.koflox.id.IdGenerator
 import com.koflox.location.error.LocationUnavailableException
-import com.koflox.location.geolocation.LocationDataSource
 import com.koflox.location.model.Location
+import com.koflox.location.usecase.GetUserLocationUseCase
 import com.koflox.location.validator.LocationValidator
 import com.koflox.session.domain.model.Session
 import com.koflox.session.domain.model.SessionStatus
@@ -30,7 +30,7 @@ sealed class CreateSessionParams {
 internal class CreateSessionUseCaseImpl(
     private val sessionRepository: SessionRepository,
     private val idGenerator: IdGenerator,
-    private val locationDataSource: LocationDataSource,
+    private val getUserLocationUseCase: GetUserLocationUseCase,
     private val locationValidator: LocationValidator,
     private val currentTimeProvider: CurrentTimeProvider,
 ) : CreateSessionUseCase {
@@ -81,7 +81,7 @@ internal class CreateSessionUseCaseImpl(
     private suspend fun getValidLocation(): Location? {
         var bestLocation: Location? = null
         repeat(LOCATION_MAX_RETRIES) { attempt ->
-            locationDataSource.getCurrentLocation()
+            getUserLocationUseCase.getLocation()
                 .onSuccess { location ->
                     bestLocation = location
                     if (locationValidator.isAccuracyValid(location)) return location

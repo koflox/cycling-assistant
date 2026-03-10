@@ -9,6 +9,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
@@ -17,15 +18,26 @@ import com.koflox.connections.R
 import com.koflox.designsystem.component.DebouncedButton
 import com.koflox.designsystem.component.DebouncedOutlinedButton
 import com.koflox.designsystem.theme.Spacing
-import org.koin.compose.koinInject
+import dagger.hilt.EntryPoint
+import dagger.hilt.InstallIn
+import dagger.hilt.android.EntryPointAccessors
+import dagger.hilt.components.SingletonComponent
+
+@EntryPoint
+@InstallIn(SingletonComponent::class)
+internal interface BlePermissionEntryPoint {
+    fun blePermissionChecker(): BlePermissionChecker
+}
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 internal fun BlePermissionHandler(
     onPermissionGranted: () -> Unit,
     onPermissionDenied: () -> Unit,
-    blePermissionChecker: BlePermissionChecker = koinInject(),
 ) {
+    val context = LocalContext.current
+    val entryPoint = EntryPointAccessors.fromApplication(context, BlePermissionEntryPoint::class.java)
+    val blePermissionChecker = entryPoint.blePermissionChecker()
     val permissionsState = rememberMultiplePermissionsState(
         permissions = blePermissionChecker.requiredPermissions(),
         onPermissionsResult = { results ->

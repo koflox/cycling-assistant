@@ -1,14 +1,13 @@
 package com.koflox.session.presentation.session
 
 import app.cash.turbine.test
-import com.koflox.connectionsession.bridge.usecase.SessionPowerMeterUseCase
 import com.koflox.designsystem.text.UiText
 import com.koflox.error.mapper.ErrorMessageMapper
+import com.koflox.location.usecase.CheckLocationEnabledUseCase
 import com.koflox.session.domain.model.Session
 import com.koflox.session.domain.model.SessionStatus
 import com.koflox.session.domain.model.StatsDisplayConfig
 import com.koflox.session.domain.usecase.ActiveSessionUseCase
-import com.koflox.session.domain.usecase.CheckLocationEnabledUseCase
 import com.koflox.session.domain.usecase.CreateSessionParams
 import com.koflox.session.domain.usecase.CreateSessionUseCase
 import com.koflox.session.domain.usecase.ObserveStatsDisplayConfigUseCase
@@ -17,6 +16,7 @@ import com.koflox.session.presentation.mapper.SessionUiMapper
 import com.koflox.session.presentation.session.timer.SessionTimer
 import com.koflox.session.presentation.session.timer.SessionTimerFactory
 import com.koflox.session.service.PendingSessionActionImpl
+import com.koflox.session.service.PowerConnectionStateHolderImpl
 import com.koflox.session.service.SessionServiceController
 import com.koflox.session.testutil.createSession
 import com.koflox.session.testutil.createSessionUiModel
@@ -65,7 +65,7 @@ class SessionViewModelTest {
     private val errorMessageMapper: ErrorMessageMapper = mockk()
     private val sessionTimer: SessionTimer = mockk(relaxed = true)
     private val sessionTimerFactory: SessionTimerFactory = mockk()
-    private val sessionPowerMeterUseCase: SessionPowerMeterUseCase = mockk()
+    private val powerConnectionStateHolder = PowerConnectionStateHolderImpl()
     private val observeStatsDisplayConfigUseCase: ObserveStatsDisplayConfigUseCase = mockk()
 
     private val pendingSessionAction = PendingSessionActionImpl()
@@ -92,7 +92,6 @@ class SessionViewModelTest {
         every { sessionTimerFactory.create(any()) } returns sessionTimer
         every { checkLocationEnabledUseCase.observeLocationEnabled() } returns locationEnabledFlow
         every { checkLocationEnabledUseCase.isLocationEnabled() } returns true
-        coEvery { sessionPowerMeterUseCase.getSessionPowerDevice() } returns null
         every {
             observeStatsDisplayConfigUseCase.observeActiveSessionStats()
         } returns flowOf(StatsDisplayConfig.DEFAULT_ACTIVE_SESSION_STATS)
@@ -111,7 +110,7 @@ class SessionViewModelTest {
             pendingSessionActionConsumer = pendingSessionAction,
             sessionUiMapper = sessionUiMapper,
             errorMessageMapper = errorMessageMapper,
-            sessionPowerMeterUseCase = sessionPowerMeterUseCase,
+            powerConnectionStateHolder = powerConnectionStateHolder,
             sessionTimerFactory = sessionTimerFactory,
             dispatcherDefault = mainDispatcherRule.testDispatcher,
         )
@@ -621,7 +620,7 @@ class SessionViewModelTest {
             awaitItem() // Idle
             val active = awaitItem() as SessionUiState.Active
             assertEquals(DESTINATION_LATITUDE, active.destinationLocation!!.latitude, 0.0)
-            assertEquals(DESTINATION_LONGITUDE, active.destinationLocation!!.longitude, 0.0)
+            assertEquals(DESTINATION_LONGITUDE, active.destinationLocation.longitude, 0.0)
         }
     }
 

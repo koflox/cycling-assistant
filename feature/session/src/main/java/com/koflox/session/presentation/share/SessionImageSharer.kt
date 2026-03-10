@@ -10,11 +10,11 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.IOException
 
-interface SessionImageSharer {
+internal interface SessionImageSharer {
     suspend fun shareImage(bitmap: Bitmap, shareText: String, chooserTitle: String): ShareResult
 }
 
-sealed interface ShareResult {
+internal sealed interface ShareResult {
     data class Success(val intent: Intent) : ShareResult
     data object NoAppAvailable : ShareResult
     data object CannotProcessTheImage : ShareResult

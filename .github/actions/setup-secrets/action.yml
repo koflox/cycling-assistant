@@ -1,0 +1,49 @@
+name: Setup Project Secrets
+description: Creates project secret files and sets release signing environment variables
+
+inputs:
+  google-services-json:
+    description: "Base64-encoded google-services.json"
+    required: true
+  maps-api-key:
+    description: "Google Maps API key for secrets.properties"
+    required: false
+    default: ''
+  release-keystore:
+    description: "Base64-encoded release keystore (.jks)"
+    required: false
+    default: ''
+  release-keystore-password:
+    description: "Release keystore password"
+    required: false
+    default: ''
+  release-key-alias:
+    description: "Release key alias"
+    required: false
+    default: ''
+  release-key-password:
+    description: "Release key password"
+    required: false
+    default: ''
+
+runs:
+  using: composite
+  steps:
+    - name: Create google-services.json
+      shell: bash
+      run: echo "${{ inputs.google-services-json }}" | base64 -d > app/google-services.json
+
+    - name: Create secrets.properties
+      if: inputs.maps-api-key != ''
+      shell: bash
+      run: echo "MAPS_API_KEY=${{ inputs.maps-api-key }}" > secrets.properties
+
+    - name: Setup release signing
+      if: inputs.release-keystore != ''
+      shell: bash
+      run: |
+        echo "${{ inputs.release-keystore }}" | base64 -d > app/release.jks
+        echo "RELEASE_KEYSTORE_PATH=release.jks" >> "$GITHUB_ENV"
+        echo "RELEASE_KEYSTORE_PASSWORD=${{ inputs.release-keystore-password }}" >> "$GITHUB_ENV"
+        echo "RELEASE_KEY_ALIAS=${{ inputs.release-key-alias }}" >> "$GITHUB_ENV"
+        echo "RELEASE_KEY_PASSWORD=${{ inputs.release-key-password }}" >> "$GITHUB_ENV"

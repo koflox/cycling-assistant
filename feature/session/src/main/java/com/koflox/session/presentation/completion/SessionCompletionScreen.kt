@@ -28,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.koflox.designsystem.text.resolve
 import com.koflox.designsystem.theme.Spacing
 import com.koflox.session.R
@@ -39,7 +40,6 @@ import com.koflox.session.presentation.completion.components.MapLegendButton
 import com.koflox.session.presentation.completion.components.RouteMapView
 import com.koflox.session.presentation.completion.components.SessionSummaryCard
 import com.koflox.session.presentation.share.SharePreviewDialog
-import org.koin.androidx.compose.koinViewModel
 
 @Composable
 internal fun SessionCompletionRoute(
@@ -47,7 +47,7 @@ internal fun SessionCompletionRoute(
     onNavigateToDashboard: () -> Unit,
     onNavigateToStatsConfig: (section: String) -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: SessionCompletionViewModel = koinViewModel(),
+    viewModel: SessionCompletionViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current

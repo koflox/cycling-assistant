@@ -5,11 +5,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.koflox.ble.state.BluetoothStateMonitor
 import com.koflox.designsystem.text.UiText
+import com.koflox.di.DefaultDispatcher
 import com.koflox.sensor.power.R
 import com.koflox.sensor.power.domain.model.PowerReading
 import com.koflox.sensor.power.domain.usecase.ObservePowerDataUseCase
 import com.koflox.sensor.power.domain.usecase.PowerMeterConnectionException
 import com.koflox.sensor.power.navigation.MAC_ADDRESS_ARG
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Job
@@ -20,11 +22,13 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-internal class PowerTestModeViewModel(
+@HiltViewModel
+internal class PowerTestModeViewModel @Inject internal constructor(
     private val observePowerDataUseCase: ObservePowerDataUseCase,
     private val bluetoothStateMonitor: BluetoothStateMonitor,
-    private val dispatcherDefault: CoroutineDispatcher,
+    @param:DefaultDispatcher private val dispatcherDefault: CoroutineDispatcher,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 

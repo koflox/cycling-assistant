@@ -5,7 +5,7 @@
 | **Language**             | Kotlin                       |
 | **UI Framework**         | Jetpack Compose (Material 3) |
 | **Architecture**         | MVVM + Clean Architecture    |
-| **Dependency Injection** | Koin                         |
+| **Dependency Injection** | Hilt                         |
 | **Async**                | Kotlin Coroutines & Flow     |
 | **Database**             | Room                         |
 | **Preferences**          | DataStore                    |
@@ -14,9 +14,11 @@
 | **Location**             | Play Services Location       |
 | **Bluetooth**            | Android BLE (BluetoothGatt, BluetoothLeScanner) |
 | **Testing**              | JUnit 4, MockK, Turbine      |
+| **Observability**        | Firebase Crashlytics, Firebase Performance, Timber |
+| **Performance**          | Baseline Profiles, Macrobenchmarks |
 | **Code Quality**         | Detekt                       |
 | **Coverage**             | Kover                        |
-| **Build**                | Gradle, AGP                  |
+| **Build**                | Gradle, AGP, R8              |
 | **Min SDK**              | 24 (Android 7.0)             |
 | **Target SDK**           | 36                           |
 | **CI**                   | GitHub Actions               |

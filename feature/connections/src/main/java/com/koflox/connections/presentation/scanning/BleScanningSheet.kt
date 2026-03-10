@@ -21,18 +21,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.koflox.connections.R
 import com.koflox.connections.presentation.permission.BlePermissionHandler
 import com.koflox.connections.presentation.scanning.components.ScannedDeviceItem
 import com.koflox.designsystem.text.resolve
 import com.koflox.designsystem.theme.Spacing
-import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun BleScanningSheetRoute(
     onDismiss: () -> Unit,
-    viewModel: BleScanningViewModel = koinViewModel(),
+    viewModel: BleScanningViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val isDismissed by viewModel.isDismissed.collectAsState()

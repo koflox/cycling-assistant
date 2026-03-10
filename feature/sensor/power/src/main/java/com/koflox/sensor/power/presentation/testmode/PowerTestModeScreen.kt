@@ -30,6 +30,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.koflox.designsystem.component.DebouncedButton
 import com.koflox.designsystem.component.LocalizedAlertDialog
 import com.koflox.designsystem.text.resolve
@@ -39,12 +40,11 @@ import com.koflox.sensor.power.R
 import com.koflox.sensor.power.presentation.testmode.components.CadenceDisplay
 import com.koflox.sensor.power.presentation.testmode.components.PowerChart
 import com.koflox.sensor.power.presentation.testmode.components.PowerGauge
-import org.koin.androidx.compose.koinViewModel
 
 @Composable
 internal fun PowerTestModeRoute(
     onBackClick: () -> Unit,
-    viewModel: PowerTestModeViewModel = koinViewModel(),
+    viewModel: PowerTestModeViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
     LaunchedEffect(Unit) {

@@ -3,8 +3,8 @@ package com.koflox.session.domain.usecase
 import com.koflox.concurrent.CurrentTimeProvider
 import com.koflox.id.IdGenerator
 import com.koflox.location.error.LocationUnavailableException
-import com.koflox.location.geolocation.LocationDataSource
 import com.koflox.location.model.Location
+import com.koflox.location.usecase.GetUserLocationUseCase
 import com.koflox.location.validator.LocationValidator
 import com.koflox.session.domain.model.Session
 import com.koflox.session.domain.model.SessionStatus
@@ -42,7 +42,7 @@ class CreateSessionUseCaseImplTest {
 
     private val sessionRepository: SessionRepository = mockk()
     private val idGenerator: IdGenerator = mockk()
-    private val locationDataSource: LocationDataSource = mockk()
+    private val getUserLocationUseCase: GetUserLocationUseCase = mockk()
     private val locationValidator: LocationValidator = mockk()
     private val currentTimeProvider: CurrentTimeProvider = mockk()
     private lateinit var useCase: CreateSessionUseCaseImpl
@@ -50,12 +50,12 @@ class CreateSessionUseCaseImplTest {
     @Before
     fun setup() {
         every { idGenerator.generate() } returns GENERATED_ID
-        coEvery { locationDataSource.getCurrentLocation() } returns Result.success(
+        coEvery { getUserLocationUseCase.getLocation() } returns Result.success(
             Location(latitude = START_LAT, longitude = START_LONG),
         )
         every { locationValidator.isAccuracyValid(any()) } returns true
         every { currentTimeProvider.currentTimeMs() } returns System.currentTimeMillis()
-        useCase = CreateSessionUseCaseImpl(sessionRepository, idGenerator, locationDataSource, locationValidator, currentTimeProvider)
+        useCase = CreateSessionUseCaseImpl(sessionRepository, idGenerator, getUserLocationUseCase, locationValidator, currentTimeProvider)
     }
 
     @Test
@@ -105,7 +105,7 @@ class CreateSessionUseCaseImplTest {
     fun `create retries location when accuracy is invalid`() = runTest {
         val inaccurateLocation = Location(latitude = 0.0, longitude = 0.0, accuracyMeters = 50f)
         val accurateLocation = Location(latitude = START_LAT, longitude = START_LONG, accuracyMeters = 5f)
-        coEvery { locationDataSource.getCurrentLocation() } returnsMany listOf(
+        coEvery { getUserLocationUseCase.getLocation() } returnsMany listOf(
             Result.success(inaccurateLocation),
             Result.success(accurateLocation),
         )
@@ -123,7 +123,7 @@ class CreateSessionUseCaseImplTest {
     @Test
     fun `create uses best available location when all retries have invalid accuracy`() = runTest {
         val inaccurateLocation = Location(latitude = START_LAT, longitude = START_LONG, accuracyMeters = 50f)
-        coEvery { locationDataSource.getCurrentLocation() } returns Result.success(inaccurateLocation)
+        coEvery { getUserLocationUseCase.getLocation() } returns Result.success(inaccurateLocation)
         every { locationValidator.isAccuracyValid(any()) } returns false
         val sessionSlot = slot<Session>()
         coEvery { sessionRepository.saveSession(capture(sessionSlot)) } returns Result.success(Unit)
@@ -236,7 +236,7 @@ class CreateSessionUseCaseImplTest {
 
     @Test
     fun `create returns failure with LocationUnavailableException when location cannot be obtained`() = runTest {
-        coEvery { locationDataSource.getCurrentLocation() } returns Result.failure(RuntimeException("GPS error"))
+        coEvery { getUserLocationUseCase.getLocation() } returns Result.failure(RuntimeException("GPS error"))
 
         val result = useCase.create(createTestParams())
 

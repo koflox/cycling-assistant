@@ -5,7 +5,6 @@ plugins {
 
 android {
     namespace = "com.koflox.database"
-
 }
 
 dependencies {
@@ -16,10 +15,6 @@ dependencies {
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
-
-    // Koin
-    implementation(libs.koin.android)
-    implementation(libs.koin.core)
 
     // Feature modules for entities/DAOs
     api(project(":feature:destinations"))

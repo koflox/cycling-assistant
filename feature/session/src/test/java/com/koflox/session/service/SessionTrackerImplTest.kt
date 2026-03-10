@@ -1,15 +1,8 @@
 package com.koflox.session.service
 
-import com.koflox.connectionsession.bridge.usecase.SessionPowerMeterUseCase
-import com.koflox.location.geolocation.LocationDataSource
-import com.koflox.location.model.Location
-import com.koflox.location.settings.LocationSettingsDataSource
-import com.koflox.nutritionsession.bridge.usecase.NutritionReminderUseCase
 import com.koflox.session.domain.model.Session
 import com.koflox.session.domain.model.SessionStatus
 import com.koflox.session.domain.usecase.ActiveSessionUseCase
-import com.koflox.session.domain.usecase.UpdateSessionLocationUseCase
-import com.koflox.session.domain.usecase.UpdateSessionPowerUseCase
 import com.koflox.session.domain.usecase.UpdateSessionStatusUseCase
 import com.koflox.session.testutil.createSession
 import io.mockk.coEvery
@@ -18,7 +11,6 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -36,41 +28,28 @@ class SessionTrackerImplTest {
         private const val SESSION_ID = "session-123"
         private const val LAST_RESUMED_TIME_MS = 1000000L
         private const val ELAPSED_TIME_MS = 60000L
-        private const val TEST_LATITUDE = 50.0
-        private const val TEST_LONGITUDE = 14.0
     }
 
     private val testDispatcher = StandardTestDispatcher()
     private val activeSessionUseCase: ActiveSessionUseCase = mockk()
-    private val updateSessionLocationUseCase: UpdateSessionLocationUseCase = mockk()
     private val updateSessionStatusUseCase: UpdateSessionStatusUseCase = mockk()
-    private val locationDataSource: LocationDataSource = mockk()
-    private val locationSettingsDataSource: LocationSettingsDataSource = mockk()
-    private val nutritionReminderUseCase: NutritionReminderUseCase = mockk()
-    private val sessionPowerMeterUseCase: SessionPowerMeterUseCase = mockk(relaxed = true)
-    private val updateSessionPowerUseCase: UpdateSessionPowerUseCase = mockk(relaxed = true)
+    private val locationCollectionManager: LocationCollectionManager = mockk(relaxed = true)
+    private val powerCollectionManager: PowerCollectionManager = mockk(relaxed = true)
+    private val nutritionReminderManager: NutritionReminderManager = mockk(relaxed = true)
     private val delegate: SessionTrackingDelegate = mockk(relaxed = true)
     private var currentTimeMs = LAST_RESUMED_TIME_MS
 
     private val sessionFlow = MutableStateFlow<Session?>(null)
-    private val locationFlow = MutableSharedFlow<Location>()
-    private val locationEnabledFlow = MutableStateFlow(true)
-    private val nutritionFlow = MutableSharedFlow<Unit>()
 
     private lateinit var tracker: SessionTrackerImpl
 
     @Before
     fun setup() {
         every { activeSessionUseCase.observeActiveSession() } returns sessionFlow
-        every { locationSettingsDataSource.observeLocationEnabled() } returns locationEnabledFlow
-        every { nutritionReminderUseCase.observeNutritionReminders() } returns nutritionFlow
-        coEvery { updateSessionLocationUseCase.update(any(), any()) } returns Unit
         coEvery { updateSessionStatusUseCase.pause() } returns Result.success(Unit)
         coEvery { updateSessionStatusUseCase.resume() } returns Result.success(Unit)
         coEvery { updateSessionStatusUseCase.stop() } returns Result.success(Unit)
         coEvery { updateSessionStatusUseCase.onServiceRestart() } returns Result.success(Unit)
-        every { locationDataSource.observeLocationUpdates(any(), any(), any()) } returns locationFlow
-        coEvery { sessionPowerMeterUseCase.getSessionPowerDevice() } returns null
         tracker = createTracker()
     }
 
@@ -83,6 +62,14 @@ class SessionTrackerImplTest {
     }
 
     @Test
+    fun `startTracking starts nutrition reminder manager`() = runTrackerTest {
+        tracker.startTracking(delegate)
+        advanceUntilIdle()
+
+        verify { nutritionReminderManager.start(any(), any()) }
+    }
+
+    @Test
     fun `null session calls delegate onStopService`() = runTrackerTest {
         sessionFlow.value = null
         tracker.startTracking(delegate)
@@ -92,13 +79,36 @@ class SessionTrackerImplTest {
     }
 
     @Test
-    fun `running session starts location collection`() = runTrackerTest {
+    fun `null session stops location collection manager`() = runTrackerTest {
         val session = createTestSession(status = SessionStatus.RUNNING)
         sessionFlow.value = session
         tracker.startTracking(delegate)
         advanceTimeBy(1)
 
-        verify { locationDataSource.observeLocationUpdates(any(), any(), any()) }
+        sessionFlow.value = null
+        advanceTimeBy(1)
+
+        verify { locationCollectionManager.stop() }
+    }
+
+    @Test
+    fun `running session starts location collection manager`() = runTrackerTest {
+        val session = createTestSession(status = SessionStatus.RUNNING)
+        sessionFlow.value = session
+        tracker.startTracking(delegate)
+        advanceTimeBy(1)
+
+        verify { locationCollectionManager.start(any()) }
+    }
+
+    @Test
+    fun `running session starts power collection manager`() = runTrackerTest {
+        val session = createTestSession(status = SessionStatus.RUNNING)
+        sessionFlow.value = session
+        tracker.startTracking(delegate)
+        advanceTimeBy(1)
+
+        verify { powerCollectionManager.start(any()) }
     }
 
     @Test
@@ -112,17 +122,7 @@ class SessionTrackerImplTest {
     }
 
     @Test
-    fun `running session starts location monitoring`() = runTrackerTest {
-        val session = createTestSession(status = SessionStatus.RUNNING)
-        sessionFlow.value = session
-        tracker.startTracking(delegate)
-        advanceTimeBy(1)
-
-        verify { locationSettingsDataSource.observeLocationEnabled() }
-    }
-
-    @Test
-    fun `paused session stops location collection and timer`() = runTrackerTest {
+    fun `paused session stops managers and updates notification`() = runTrackerTest {
         val runningSession = createTestSession(status = SessionStatus.RUNNING)
         sessionFlow.value = runningSession
         tracker.startTracking(delegate)
@@ -132,11 +132,13 @@ class SessionTrackerImplTest {
         sessionFlow.value = pausedSession
         advanceTimeBy(1)
 
+        verify { locationCollectionManager.stop() }
+        verify { powerCollectionManager.stop() }
         verify { delegate.onNotificationUpdate(pausedSession, ELAPSED_TIME_MS) }
     }
 
     @Test
-    fun `completed session calls delegate onStopService`() = runTrackerTest {
+    fun `completed session stops managers and calls delegate onStopService`() = runTrackerTest {
         val runningSession = createTestSession(status = SessionStatus.RUNNING)
         sessionFlow.value = runningSession
         tracker.startTracking(delegate)
@@ -146,37 +148,9 @@ class SessionTrackerImplTest {
         sessionFlow.value = completedSession
         advanceUntilIdle()
 
+        verify { locationCollectionManager.stop() }
+        verify { powerCollectionManager.stop() }
         verify { delegate.onStopService() }
-    }
-
-    @Test
-    fun `location collection processes each emitted location`() = runTrackerTest {
-        val session = createTestSession(status = SessionStatus.RUNNING)
-        sessionFlow.value = session
-        tracker.startTracking(delegate)
-        advanceTimeBy(1)
-
-        locationFlow.emit(Location(latitude = TEST_LATITUDE, longitude = TEST_LONGITUDE))
-        advanceTimeBy(1)
-        locationFlow.emit(Location(latitude = TEST_LATITUDE, longitude = TEST_LONGITUDE))
-        advanceTimeBy(1)
-        locationFlow.emit(Location(latitude = TEST_LATITUDE, longitude = TEST_LONGITUDE))
-        advanceTimeBy(1)
-
-        coVerify(exactly = 3) { updateSessionLocationUseCase.update(any(), any()) }
-    }
-
-    @Test
-    fun `location update calls updateSessionLocationUseCase`() = runTrackerTest {
-        val session = createTestSession(status = SessionStatus.RUNNING)
-        sessionFlow.value = session
-        tracker.startTracking(delegate)
-        advanceTimeBy(1)
-
-        locationFlow.emit(Location(latitude = TEST_LATITUDE, longitude = TEST_LONGITUDE))
-        advanceTimeBy(1)
-
-        coVerify { updateSessionLocationUseCase.update(any(), any()) }
     }
 
     @Test
@@ -187,19 +161,6 @@ class SessionTrackerImplTest {
         advanceTimeBy(SessionTrackerImpl.TIMER_UPDATE_INTERVAL.inWholeMilliseconds * 3 + 1)
 
         verify(atLeast = 3) { delegate.onNotificationUpdate(session, any()) }
-    }
-
-    @Test
-    fun `location disabled triggers session pause`() = runTrackerTest {
-        val session = createTestSession(status = SessionStatus.RUNNING)
-        sessionFlow.value = session
-        tracker.startTracking(delegate)
-        advanceTimeBy(1)
-
-        locationEnabledFlow.value = false
-        advanceTimeBy(1)
-
-        coVerify { updateSessionStatusUseCase.pause() }
     }
 
     @Test
@@ -236,18 +197,17 @@ class SessionTrackerImplTest {
     }
 
     @Test
-    fun `stopTracking cancels all jobs`() = runTrackerTest {
+    fun `stopTracking stops all managers`() = runTrackerTest {
         val session = createTestSession(status = SessionStatus.RUNNING)
         sessionFlow.value = session
         tracker.startTracking(delegate)
         advanceTimeBy(1)
 
-        locationFlow.emit(Location(latitude = TEST_LATITUDE, longitude = TEST_LONGITUDE))
-        advanceTimeBy(1)
-
         tracker.stopTracking()
 
-        coVerify(exactly = 1) { updateSessionLocationUseCase.update(any(), any()) }
+        verify { locationCollectionManager.stop() }
+        verify { powerCollectionManager.stop() }
+        verify { nutritionReminderManager.stop() }
     }
 
     @Test
@@ -270,6 +230,17 @@ class SessionTrackerImplTest {
         advanceTimeBy(1)
 
         coVerify { updateSessionStatusUseCase.onServiceRestart() }
+    }
+
+    @Test
+    fun `handleRestart starts nutrition reminder manager`() = runTrackerTest {
+        every { delegate.onStartForeground() } returns true
+        val session = createTestSession(status = SessionStatus.RUNNING)
+        sessionFlow.value = session
+        tracker.handleRestart(delegate)
+        advanceTimeBy(1)
+
+        verify { nutritionReminderManager.start(any(), any()) }
     }
 
     @Test
@@ -303,19 +274,6 @@ class SessionTrackerImplTest {
         verify(exactly = 0) { delegate.onNotificationUpdate(any(), any()) }
     }
 
-    @Test
-    fun `nutrition reminder triggers delegate onVibrate`() = runTrackerTest {
-        val session = createTestSession(status = SessionStatus.RUNNING)
-        sessionFlow.value = session
-        tracker.startTracking(delegate)
-        advanceTimeBy(1)
-
-        nutritionFlow.emit(Unit)
-        advanceTimeBy(1)
-
-        verify { delegate.onVibrate() }
-    }
-
     private fun runTrackerTest(block: suspend TestScope.() -> Unit) = runTest(testDispatcher) {
         try {
             block()
@@ -327,13 +285,10 @@ class SessionTrackerImplTest {
     private fun createTracker() = SessionTrackerImpl(
         dispatcherIo = testDispatcher,
         activeSessionUseCase = activeSessionUseCase,
-        updateSessionLocationUseCase = updateSessionLocationUseCase,
         updateSessionStatusUseCase = updateSessionStatusUseCase,
-        locationDataSource = locationDataSource,
-        locationSettingsDataSource = locationSettingsDataSource,
-        nutritionReminderUseCase = nutritionReminderUseCase,
-        sessionPowerMeterUseCase = sessionPowerMeterUseCase,
-        updateSessionPowerUseCase = updateSessionPowerUseCase,
+        locationCollectionManager = locationCollectionManager,
+        powerCollectionManager = powerCollectionManager,
+        nutritionReminderManager = nutritionReminderManager,
         currentTimeProvider = { currentTimeMs },
     )
 

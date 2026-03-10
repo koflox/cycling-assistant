@@ -16,4 +16,8 @@ internal sealed interface SessionUiEvent {
         data object LocationEnableDenied : LocationSettingsEvent
         data object LocationDisabledDismissed : LocationSettingsEvent
     }
+
+    sealed interface DeviceEvent : SessionUiEvent {
+        data object StripClicked : DeviceEvent
+    }
 }

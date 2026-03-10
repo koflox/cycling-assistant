@@ -1,6 +1,8 @@
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.hilt)
 }
 
 android {
@@ -35,10 +37,10 @@ dependencies {
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.android)
 
-    // Koin
-    implementation(libs.koin.android)
-    implementation(libs.koin.androidx.compose)
-    implementation(libs.koin.core)
+    // Hilt
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.compiler)
+    implementation(libs.hilt.navigation.compose)
 
     // DataStore
     implementation(libs.androidx.datastore.preferences)
@@ -46,6 +48,7 @@ dependencies {
     // Shared modules
     implementation(project(":shared:concurrent"))
     implementation(project(":shared:design-system"))
+    implementation(project(":shared:di"))
 
     // Testing
     testImplementation(libs.junit)

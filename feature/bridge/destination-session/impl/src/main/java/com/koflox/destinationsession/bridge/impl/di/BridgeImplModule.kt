@@ -4,16 +4,26 @@ import com.koflox.destinationsession.bridge.impl.navigator.CyclingSessionUiNavig
 import com.koflox.destinationsession.bridge.impl.usecase.CyclingSessionUseCaseImpl
 import com.koflox.destinationsession.bridge.navigator.CyclingSessionUiNavigator
 import com.koflox.destinationsession.bridge.usecase.CyclingSessionUseCase
-import org.koin.dsl.module
+import com.koflox.session.domain.usecase.ActiveSessionUseCase
+import com.koflox.session.domain.usecase.ObserveActiveSessionRouteUseCase
+import dagger.Module
+import dagger.Provides
+import dagger.hilt.InstallIn
+import dagger.hilt.components.SingletonComponent
 
-val destinationSessionBridgeImplModule = module {
-    factory<CyclingSessionUiNavigator> {
-        CyclingSessionUiNavigatorImpl()
-    }
-    factory<CyclingSessionUseCase> {
-        CyclingSessionUseCaseImpl(
-            activeSessionUseCase = get(),
-            observeActiveSessionRouteUseCase = get(),
-        )
-    }
+@Module
+@InstallIn(SingletonComponent::class)
+internal object BridgeImplModule {
+
+    @Provides
+    fun provideCyclingSessionUiNavigator(): CyclingSessionUiNavigator = CyclingSessionUiNavigatorImpl()
+
+    @Provides
+    fun provideCyclingSessionUseCase(
+        activeSessionUseCase: ActiveSessionUseCase,
+        observeActiveSessionRouteUseCase: ObserveActiveSessionRouteUseCase,
+    ): CyclingSessionUseCase = CyclingSessionUseCaseImpl(
+        activeSessionUseCase = activeSessionUseCase,
+        observeActiveSessionRouteUseCase = observeActiveSessionRouteUseCase,
+    )
 }

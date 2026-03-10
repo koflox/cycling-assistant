@@ -9,8 +9,11 @@ import com.koflox.connections.domain.model.DeviceType
 import com.koflox.connections.domain.usecase.ObservePairedDevicesUseCase
 import com.koflox.connections.domain.usecase.SavePairedDeviceUseCase
 import com.koflox.designsystem.text.UiText
+import com.koflox.di.ConnectionsErrorMapper
+import com.koflox.di.DefaultDispatcher
 import com.koflox.error.mapper.ErrorMessageMapper
 import com.koflox.sensorprotocol.power.CyclingPowerConstants
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Job
@@ -19,15 +22,17 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 import kotlin.time.Duration.Companion.seconds
 
-internal class BleScanningViewModel(
+@HiltViewModel
+internal class BleScanningViewModel @Inject internal constructor(
     private val bleScanner: BleScanner,
     private val blePermissionChecker: BlePermissionChecker,
     private val observePairedDevicesUseCase: ObservePairedDevicesUseCase,
     private val savePairedDeviceUseCase: SavePairedDeviceUseCase,
-    private val errorMessageMapper: ErrorMessageMapper,
-    private val dispatcherDefault: CoroutineDispatcher,
+    @param:ConnectionsErrorMapper private val errorMessageMapper: ErrorMessageMapper,
+    @param:DefaultDispatcher private val dispatcherDefault: CoroutineDispatcher,
 ) : ViewModel() {
 
     companion object {

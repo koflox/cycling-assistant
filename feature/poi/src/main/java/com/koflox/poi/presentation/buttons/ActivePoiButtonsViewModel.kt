@@ -2,17 +2,21 @@ package com.koflox.poi.presentation.buttons
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.koflox.di.DefaultDispatcher
 import com.koflox.poi.domain.model.PoiType
 import com.koflox.poi.domain.usecase.ObserveSelectedPoisUseCase
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-internal class ActivePoiButtonsViewModel(
+@HiltViewModel
+internal class ActivePoiButtonsViewModel @Inject internal constructor(
     private val observeSelectedPoisUseCase: ObserveSelectedPoisUseCase,
-    private val dispatcherDefault: CoroutineDispatcher,
+    @param:DefaultDispatcher private val dispatcherDefault: CoroutineDispatcher,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<ActivePoiButtonsUiState>(ActivePoiButtonsUiState.Loading)
