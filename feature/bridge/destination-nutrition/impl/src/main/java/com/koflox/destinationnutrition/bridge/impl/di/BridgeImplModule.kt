@@ -4,15 +4,23 @@ import com.koflox.destinationnutrition.bridge.impl.navigator.NutritionUiNavigato
 import com.koflox.destinationnutrition.bridge.impl.usecase.ObserveNutritionBreakUseCaseImpl
 import com.koflox.destinationnutrition.bridge.navigator.NutritionUiNavigator
 import com.koflox.destinationnutrition.bridge.usecase.ObserveNutritionBreakUseCase
-import org.koin.dsl.module
+import com.koflox.nutrition.domain.usecase.ObserveNutritionEventsUseCase
+import dagger.Module
+import dagger.Provides
+import dagger.hilt.InstallIn
+import dagger.hilt.components.SingletonComponent
 
-val destinationNutritionBridgeImplModule = module {
-    factory<NutritionUiNavigator> {
-        NutritionUiNavigatorImpl()
-    }
-    factory<ObserveNutritionBreakUseCase> {
-        ObserveNutritionBreakUseCaseImpl(
-            observeNutritionEventsUseCase = get(),
-        )
-    }
+@Module
+@InstallIn(SingletonComponent::class)
+internal object BridgeImplModule {
+
+    @Provides
+    fun provideNutritionUiNavigator(): NutritionUiNavigator = NutritionUiNavigatorImpl()
+
+    @Provides
+    fun provideObserveNutritionBreakUseCase(
+        observeNutritionEventsUseCase: ObserveNutritionEventsUseCase,
+    ): ObserveNutritionBreakUseCase = ObserveNutritionBreakUseCaseImpl(
+        observeNutritionEventsUseCase = observeNutritionEventsUseCase,
+    )
 }

@@ -1,6 +1,8 @@
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.hilt)
 }
 
 android {
@@ -14,13 +16,14 @@ android {
 dependencies {
     implementation(libs.play.services.location)
     implementation(libs.kotlinx.coroutines.core)
-    implementation(libs.koin.core)
-    implementation(libs.koin.android)
-    implementation(libs.koin.androidx.compose)
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.compiler)
+    implementation(libs.hilt.navigation.compose)
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.ui)
     implementation(project(":shared:concurrent"))
+    implementation(project(":shared:di"))
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)

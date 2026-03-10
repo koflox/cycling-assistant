@@ -16,19 +16,19 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.koflox.poi.R
 import com.koflox.poi.domain.model.PoiType
 import com.koflox.poi.presentation.buttons.ActivePoiButtonsUiState
 import com.koflox.poi.presentation.buttons.ActivePoiButtonsViewModel
 import com.koflox.poi.presentation.mapper.label
-import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun PoiSettingsSectionRoute(
     onNavigateToPoiSelection: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val viewModel: ActivePoiButtonsViewModel = koinViewModel()
+    val viewModel: ActivePoiButtonsViewModel = hiltViewModel()
     val uiState by viewModel.uiState.collectAsState()
     when (val state = uiState) {
         is ActivePoiButtonsUiState.Loading -> Unit

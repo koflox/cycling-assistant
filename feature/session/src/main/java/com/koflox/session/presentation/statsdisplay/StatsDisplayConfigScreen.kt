@@ -39,6 +39,7 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.koflox.designsystem.component.DebouncedButton
 import com.koflox.designsystem.component.DebouncedOutlinedButton
 import com.koflox.designsystem.theme.ComponentSize
@@ -47,7 +48,6 @@ import com.koflox.session.R
 import com.koflox.session.domain.model.SessionStatType
 import com.koflox.session.presentation.statsdisplay.components.StatsPreviewCard
 import kotlinx.coroutines.launch
-import org.koin.androidx.compose.koinViewModel
 
 private const val CHIPS_PER_ROW = 2
 
@@ -57,7 +57,7 @@ fun StatsDisplayConfigRoute(
     modifier: Modifier = Modifier,
     initialSection: StatsDisplaySection? = null,
 ) {
-    val viewModel: StatsDisplayConfigViewModel = koinViewModel()
+    val viewModel: StatsDisplayConfigViewModel = hiltViewModel()
     val uiState by viewModel.uiState.collectAsState()
     LaunchedEffect(Unit) {
         viewModel.navigation.collect { event ->

@@ -14,6 +14,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.koflox.designsystem.component.DebouncedButton
 import com.koflox.designsystem.component.DebouncedOutlinedButton
 import com.koflox.designsystem.component.LocalizedAlertDialog
@@ -24,7 +25,6 @@ import com.koflox.session.R
 import com.koflox.session.domain.usecase.CreateSessionParams
 import com.koflox.session.presentation.permission.NotificationPermissionHandler
 import com.koflox.session.presentation.session.SessionViewModel
-import org.koin.androidx.compose.koinViewModel
 
 private enum class SessionStartStep {
     IDLE,
@@ -43,7 +43,7 @@ fun DestinationOptionsRoute(
     onNavigateClick: () -> Unit,
     onDismiss: () -> Unit,
 ) {
-    val viewModel: SessionViewModel = koinViewModel()
+    val viewModel: SessionViewModel = hiltViewModel()
     var startStep by remember { mutableStateOf(SessionStartStep.IDLE) }
     when (startStep) {
         SessionStartStep.IDLE -> Unit

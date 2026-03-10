@@ -31,11 +31,6 @@ dependencies {
     // Navigation
     implementation(libs.androidx.navigation.compose)
 
-    // Koin
-    implementation(libs.koin.android)
-    implementation(libs.koin.androidx.compose)
-    implementation(libs.koin.core)
-
     // Feature modules
     implementation(project(":feature:destinations"))
     implementation(project(":feature:bridge:destination-session:api"))

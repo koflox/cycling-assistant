@@ -19,11 +19,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.koflox.designsystem.component.DebouncedOutlinedButton
 import com.koflox.designsystem.theme.Spacing
 import com.koflox.poi.R
 import com.koflox.poi.presentation.mapper.label
-import org.koin.androidx.compose.koinViewModel
 
 private val MoreButtonWidth = 40.dp
 
@@ -33,7 +33,7 @@ fun ActivePoiButtonsRoute(
     onNavigateToPoiSelection: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val viewModel: ActivePoiButtonsViewModel = koinViewModel()
+    val viewModel: ActivePoiButtonsViewModel = hiltViewModel()
     val uiState by viewModel.uiState.collectAsState()
     when (val state = uiState) {
         is ActivePoiButtonsUiState.Loading -> Unit

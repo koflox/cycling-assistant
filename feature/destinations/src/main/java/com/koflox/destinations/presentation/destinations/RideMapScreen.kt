@@ -26,6 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -51,8 +52,19 @@ import com.koflox.destinations.presentation.permission.LocationPermissionHandler
 import com.koflox.destinationsession.bridge.navigator.CyclingSessionUiNavigator
 import com.koflox.location.settings.LocationSettingsHandler
 import com.koflox.map.intent.GoogleMapsIntentHelper
-import org.koin.androidx.compose.koinViewModel
-import org.koin.compose.koinInject
+import dagger.hilt.EntryPoint
+import dagger.hilt.InstallIn
+import dagger.hilt.android.EntryPointAccessors
+import dagger.hilt.components.SingletonComponent
+
+@EntryPoint
+@InstallIn(SingletonComponent::class)
+internal interface RideMapEntryPoint {
+    fun sessionUiNavigator(): CyclingSessionUiNavigator
+    fun nutritionUiNavigator(): NutritionUiNavigator
+    fun poiUiNavigator(): PoiUiNavigator
+    fun googleMapsIntentHelper(): GoogleMapsIntentHelper
+}
 
 @Composable
 fun RideMapScreen(
@@ -61,11 +73,18 @@ fun RideMapScreen(
     onNavigateToConnections: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val context = LocalContext.current
+    val entryPoint = remember {
+        EntryPointAccessors.fromApplication(context, RideMapEntryPoint::class.java)
+    }
     RideMapRoute(
         onNavigateToSessionCompletion = onNavigateToSessionCompletion,
         onNavigateToPoiSelection = onNavigateToPoiSelection,
         onNavigateToConnections = onNavigateToConnections,
         modifier = modifier,
+        sessionUiNavigator = entryPoint.sessionUiNavigator(),
+        nutritionUiNavigator = entryPoint.nutritionUiNavigator(),
+        poiUiNavigator = entryPoint.poiUiNavigator(),
     )
 }
 
@@ -75,10 +94,10 @@ internal fun RideMapRoute(
     onNavigateToPoiSelection: () -> Unit,
     onNavigateToConnections: () -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: RideMapViewModel = koinViewModel(),
-    sessionUiNavigator: CyclingSessionUiNavigator = koinInject(),
-    nutritionUiNavigator: NutritionUiNavigator = koinInject(),
-    poiUiNavigator: PoiUiNavigator = koinInject(),
+    viewModel: RideMapViewModel = hiltViewModel(),
+    sessionUiNavigator: CyclingSessionUiNavigator,
+    nutritionUiNavigator: NutritionUiNavigator,
+    poiUiNavigator: PoiUiNavigator,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
@@ -151,7 +170,9 @@ private fun NavigationEffect(
     action: NavigationAction?,
     context: Context,
     onNavigationActionHandled: () -> Unit,
-    googleMapsIntentHelper: GoogleMapsIntentHelper = koinInject(),
+    googleMapsIntentHelper: GoogleMapsIntentHelper = remember {
+        EntryPointAccessors.fromApplication(context, RideMapEntryPoint::class.java).googleMapsIntentHelper()
+    },
 ) {
     LaunchedEffect(action) {
         when (action) {

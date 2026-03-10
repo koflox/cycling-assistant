@@ -14,16 +14,16 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.koflox.designsystem.theme.Spacing
 import com.koflox.nutrition.R
-import org.koin.androidx.compose.koinViewModel
 import kotlin.math.roundToInt
 
 @Composable
 fun NutritionSettingsSectionRoute(
     modifier: Modifier = Modifier,
 ) {
-    val viewModel: NutritionSettingsViewModel = koinViewModel()
+    val viewModel: NutritionSettingsViewModel = hiltViewModel()
     val uiState by viewModel.uiState.collectAsState()
     NutritionSettingsSectionContent(
         uiState = uiState,
