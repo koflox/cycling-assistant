@@ -11,6 +11,8 @@ plugins {
     alias(libs.plugins.detekt)
     alias(libs.plugins.kover)
     alias(libs.plugins.module.graph)
+    alias(libs.plugins.android.test) apply false
+    alias(libs.plugins.baselineprofile) apply false
 }
 
 // ===========================================
@@ -67,6 +69,17 @@ subprojects {
                 }
             }
 
+            compileOptions {
+                sourceCompatibility = javaVersion
+                targetCompatibility = javaVersion
+            }
+        }
+    }
+
+    // Baseline profile / macrobenchmark module (:baselineprofile)
+    plugins.withId("com.android.test") {
+        configure<com.android.build.api.dsl.TestExtension> {
+            compileSdk = compileSdkVersion
             compileOptions {
                 sourceCompatibility = javaVersion
                 targetCompatibility = javaVersion

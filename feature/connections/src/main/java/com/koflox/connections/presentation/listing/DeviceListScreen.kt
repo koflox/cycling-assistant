@@ -30,12 +30,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.koflox.connections.R
 import com.koflox.connections.presentation.listing.components.DeleteConfirmationDialog
 import com.koflox.connections.presentation.listing.components.DeviceCard
 import com.koflox.designsystem.component.LocalizedAlertDialog
+import com.koflox.designsystem.testtag.TestTags
 import com.koflox.designsystem.text.resolve
 import com.koflox.designsystem.theme.Spacing
 
@@ -70,6 +72,7 @@ private fun DeviceListContent(
     onBackClick: () -> Unit,
 ) {
     Scaffold(
+        modifier = Modifier.testTag(TestTags.CONNECTIONS_SCREEN),
         topBar = {
             TopAppBar(
                 title = { Text(text = stringResource(R.string.connections_title)) },

@@ -25,6 +25,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
@@ -33,6 +34,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.koflox.designsystem.component.ActionCard
 import com.koflox.designsystem.component.HintCard
 import com.koflox.designsystem.component.StatusCard
+import com.koflox.designsystem.testtag.TestTags
 import com.koflox.designsystem.text.UiText
 import com.koflox.designsystem.text.resolve
 import com.koflox.designsystem.theme.Spacing
@@ -199,7 +201,7 @@ private fun RideMapContent(
     onRetryPermission: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Box(modifier = modifier.fillMaxSize()) {
+    Box(modifier = modifier.fillMaxSize().testTag(TestTags.RIDE_MAP_SCREEN)) {
         GoogleMapView(
             modifier = Modifier.fillMaxSize(),
             selectedDestination = uiState.selectedDestination,

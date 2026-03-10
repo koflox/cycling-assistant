@@ -32,10 +32,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.koflox.designsystem.component.LocalizedExposedDropdownMenu
+import com.koflox.designsystem.testtag.TestTags
 import com.koflox.designsystem.theme.Spacing
 import com.koflox.nutritionsettings.bridge.navigator.NutritionSettingsUiNavigator
 import com.koflox.poisettings.bridge.navigator.PoiSettingsUiNavigator
@@ -95,7 +97,7 @@ internal fun SettingsContent(
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
-        modifier = modifier,
+        modifier = modifier.testTag(TestTags.SETTINGS_SCREEN),
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.settings_title)) },
@@ -138,7 +140,9 @@ private fun SettingsBody(
     modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier = modifier.verticalScroll(rememberScrollState()),
+        modifier = modifier
+            .verticalScroll(rememberScrollState())
+            .testTag(TestTags.SETTINGS_SCROLL),
         verticalArrangement = Arrangement.spacedBy(Spacing.ExtraLarge),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -152,6 +156,7 @@ private fun SettingsBody(
                 items = uiState.availableThemes,
                 itemLabel = { it.displayName() },
                 onItemSelected = { onEvent(SettingsUiEvent.ThemeSelected(it)) },
+                modifier = Modifier.testTag(TestTags.SETTINGS_THEME_DROPDOWN),
             )
             SettingDropdown(
                 label = stringResource(R.string.settings_language),
@@ -162,6 +167,7 @@ private fun SettingsBody(
                 items = uiState.availableLanguages,
                 itemLabel = { it.displayName },
                 onItemSelected = { onEvent(SettingsUiEvent.LanguageSelected(it)) },
+                modifier = Modifier.testTag(TestTags.SETTINGS_LANGUAGE_DROPDOWN),
             )
         }
         SettingsSection(title = stringResource(R.string.settings_section_profile)) {
