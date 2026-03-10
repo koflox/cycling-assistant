@@ -21,6 +21,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.rememberNavController
 import com.koflox.cyclingassistant.navigation.AppNavHost
@@ -41,12 +43,14 @@ class MainActivity : ComponentActivity() {
         setContent {
             val uiState by viewModel.uiState.collectAsStateWithLifecycle()
             val navController = rememberNavController()
-            when (val state = uiState) {
-                MainUiState.Loading -> LoadingScreen()
-                is MainUiState.Ready -> {
-                    LocalizedContent(language = state.language) {
-                        CyclingAssistantTheme(themePreference = state.theme) {
-                            AppNavHost(navController = navController)
+            Box(modifier = Modifier.semantics { testTagsAsResourceId = true }) {
+                when (val state = uiState) {
+                    MainUiState.Loading -> LoadingScreen()
+                    is MainUiState.Ready -> {
+                        LocalizedContent(language = state.language) {
+                            CyclingAssistantTheme(themePreference = state.theme) {
+                                AppNavHost(navController = navController)
+                            }
                         }
                     }
                 }

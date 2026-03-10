@@ -2,6 +2,7 @@ import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
+    alias(libs.plugins.baselineprofile)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
     alias(libs.plugins.kotlin.serialization)
@@ -76,6 +77,19 @@ android {
             signingConfig = signingConfigs.getByName("release")
             manifestPlaceholders["observabilityCollectionEnabled"] = "true"
         }
+        create("nonMinifiedRelease") {
+            initWith(getByName("release"))
+            signingConfig = signingConfigs.getByName("debug")
+            matchingFallbacks += "release"
+            isMinifyEnabled = false
+            isShrinkResources = false
+        }
+        create("benchmark") {
+            initWith(getByName("release"))
+            signingConfig = signingConfigs.getByName("debug")
+            matchingFallbacks += "release"
+            isDebuggable = false
+        }
     }
 
     bundle {
@@ -93,6 +107,11 @@ android {
 
 ksp {
     arg("room.schemaLocation", "${rootProject.projectDir}/schemas/app")
+}
+
+baselineProfile {
+    automaticGenerationDuringBuild = false
+    dexLayoutOptimization = true
 }
 
 dependencies {
@@ -117,6 +136,10 @@ dependencies {
     // Concurrency
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.android)
+
+    // Baseline Profile
+    implementation(libs.androidx.profileinstaller)
+    "baselineProfile"(project(":baselineprofile"))
 
     // Hilt
     implementation(libs.hilt.android)

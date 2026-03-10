@@ -15,9 +15,11 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import com.koflox.dashboard.R
 import com.koflox.designsystem.component.FloatingMenuButton
+import com.koflox.designsystem.testtag.TestTags
 import com.koflox.designsystem.theme.Spacing
 
 @Composable
@@ -38,6 +40,7 @@ internal fun ExpandableMenuButton(
             icon = Icons.Default.Menu,
             contentDescription = stringResource(R.string.menu_button),
             onClick = onToggleExpand,
+            modifier = Modifier.testTag(TestTags.MENU_BUTTON),
         )
         AnimatedVisibility(
             visible = isExpanded,
@@ -52,16 +55,19 @@ internal fun ExpandableMenuButton(
                     icon = Icons.Default.Route,
                     contentDescription = stringResource(R.string.menu_sessions),
                     onClick = onSessionsClick,
+                    modifier = Modifier.testTag(TestTags.MENU_SESSIONS),
                 )
                 FloatingMenuButton(
                     icon = Icons.Default.Bluetooth,
                     contentDescription = stringResource(R.string.menu_connections),
                     onClick = onConnectionsClick,
+                    modifier = Modifier.testTag(TestTags.MENU_CONNECTIONS),
                 )
                 FloatingMenuButton(
                     icon = Icons.Default.Settings,
                     contentDescription = stringResource(R.string.menu_settings),
                     onClick = onSettingsClick,
+                    modifier = Modifier.testTag(TestTags.MENU_SETTINGS),
                 )
             }
         }

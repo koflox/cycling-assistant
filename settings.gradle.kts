@@ -22,6 +22,7 @@ dependencyResolutionManagement {
 rootProject.name = "CyclingAssistant"
 // alphabetically sorted
 include(":app")
+include(":baselineprofile")
 include(":feature:bridge:connection-session:api")
 include(":feature:bridge:connection-session:impl")
 include(":feature:bridge:destination-nutrition:api")

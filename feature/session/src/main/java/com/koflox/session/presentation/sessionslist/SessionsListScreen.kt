@@ -33,9 +33,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import com.koflox.designsystem.testtag.TestTags
 import com.koflox.designsystem.text.resolve
 import com.koflox.designsystem.theme.Elevation
 import com.koflox.designsystem.theme.Spacing
@@ -115,7 +117,7 @@ private fun SessionsListContent(
         }
     }
     Scaffold(
-        modifier = modifier,
+        modifier = modifier.testTag(TestTags.SESSIONS_LIST_SCREEN),
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.sessions_list_title)) },
