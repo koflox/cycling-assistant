@@ -59,6 +59,31 @@ Generates the module dependency graph and commits the updated `docs/MODULE_GRAPH
 
 Builds and deploys this documentation site to GitHub Pages using MkDocs Material.
 
+## Future: Affected Module Detection
+
+Currently, the Unit Tests workflow runs **all module tests** on every PR. As the project grows, running only tests for changed modules and their dependents would reduce CI time.
+
+### Why not implemented yet
+
+The most mature solution — [Dropbox AffectedModuleDetector](https://github.com/dropbox/AffectedModuleDetector) — is incompatible with **Gradle 9.x**. It uses the removed `ProjectDependency.getDependencyProject()` API and is in maintenance mode (no new features planned).
+
+### Options to revisit
+
+| Option | Pros | Cons |
+|---|---|---|
+| **Dropbox AffectedModuleDetector** | Battle-tested, transitive dependency support, `runAffectedUnitTests` task out of the box | Incompatible with Gradle 9+, maintenance mode only |
+| **Custom shell script** | No plugin dependency, full control, parses `build.gradle.kts` for `project("...")` + BFS for dependents | Must be maintained manually, fragile if dependency declaration patterns change |
+| **Gradle Develocity Predictive Test Selection** | ML-based, test-level granularity | Requires commercial license + infrastructure |
+| **Gradle build cache only** | Already in use (`--build-cache`), skips unchanged task outputs | Still configures all modules, no real test skipping on cache miss |
+
+### Recommended trigger
+
+When one of these becomes viable:
+
+- AffectedModuleDetector releases a Gradle 9-compatible version
+- A community alternative emerges (e.g., fork with Gradle 9 support)
+- CI times grow enough to justify a custom script
+
 ## Dependabot
 
 Dependabot creates weekly grouped PRs for:
