@@ -229,3 +229,17 @@ Box(modifier = Modifier.semantics { testTagsAsResourceId = true }) { ... }
 ### Permissions
 
 Benchmarks grant runtime permissions programmatically via `grantPermissions()` before each test iteration using `pm grant` shell commands. This prevents permission dialogs from blocking UI automation.
+
+### CI Verification
+
+The `baseline-profiles.yml` workflow runs on every PR and validates:
+
+| Check | What it verifies |
+|-------|-----------------|
+| **Source profiles exist** | `baseline-prof.txt` and `startup-prof.txt` are committed and non-empty |
+| **Profiles bundled in AAB** | `baseline.prof` and `baseline.profm` present in release AAB |
+| **Startup DEX layout** | `r8.json` metadata has `"startup": true` for `classes.dex` — confirms `dexLayoutOptimization` placed startup classes in the first DEX file |
+| **SHA-256 validation** | DEX checksums in AAB match checksums in `r8.json` — confirms no tool interfered with R8 output after profile compilation |
+| **Binary profile size** | Warning if compiled `baseline.prof` exceeds 1.5 MB (large profiles increase install time) |
+
+The startup DEX layout check and SHA-256 validation use [bundle metadata](https://developer.android.com/topic/performance/baselineprofiles/confirm-startup-profiles#confirm-bundle-metadata) introduced in AGP 8.8.
