@@ -1,0 +1,243 @@
+name: Baseline Profile Verification
+
+on:
+  pull_request:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.caching=true"
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  verify:
+    name: Verify Baseline Profiles
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Verify source profile files
+        id: source-profiles
+        run: |
+          BASELINE="app/src/release/generated/baselineProfiles/baseline-prof.txt"
+          STARTUP="app/src/release/generated/baselineProfiles/startup-prof.txt"
+
+          STATUS="pass"
+          DETAILS=""
+
+          if [ ! -f "$BASELINE" ] || [ ! -s "$BASELINE" ]; then
+            STATUS="fail"
+            DETAILS="baseline-prof.txt missing or empty"
+          else
+            BASELINE_LINES=$(wc -l < "$BASELINE")
+            BASELINE_SIZE=$(du -h "$BASELINE" | cut -f1)
+            DETAILS="baseline-prof.txt (${BASELINE_LINES} lines, ${BASELINE_SIZE})"
+          fi
+
+          if [ ! -f "$STARTUP" ] || [ ! -s "$STARTUP" ]; then
+            STATUS="fail"
+            DETAILS="${DETAILS:+$DETAILS, }startup-prof.txt missing or empty"
+          else
+            STARTUP_LINES=$(wc -l < "$STARTUP")
+            STARTUP_SIZE=$(du -h "$STARTUP" | cut -f1)
+            DETAILS="${DETAILS:+$DETAILS, }startup-prof.txt (${STARTUP_LINES} lines, ${STARTUP_SIZE})"
+          fi
+
+          echo "status=$STATUS" >> "$GITHUB_OUTPUT"
+          echo "details=$DETAILS" >> "$GITHUB_OUTPUT"
+
+      - name: Setup Android build environment
+        uses: ./.github/actions/setup-android
+
+      - name: Setup project secrets
+        uses: ./.github/actions/setup-secrets
+        with:
+          google-services-json: ${{ secrets.GOOGLE_SERVICES_JSON }}
+          maps-api-key: ${{ secrets.MAPS_API_KEY }}
+          release-keystore: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
+          release-keystore-password: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
+          release-key-alias: ${{ secrets.RELEASE_KEY_ALIAS }}
+          release-key-password: ${{ secrets.RELEASE_KEY_PASSWORD }}
+
+      - name: Build release AAB
+        run: gradle bundleRelease --build-cache
+
+      - name: Verify profiles in AAB
+        id: profiles-in-aab
+        run: |
+          AAB="app/build/outputs/bundle/release/app-release.aab"
+          STATUS="pass"
+          FOUND=""
+          MISSING=""
+
+          for FILE in baseline.prof baseline.profm; do
+            if unzip -l "$AAB" | grep -q "$FILE"; then
+              FOUND="${FOUND:+$FOUND, }$FILE"
+            else
+              MISSING="${MISSING:+$MISSING, }$FILE"
+              STATUS="fail"
+            fi
+          done
+
+          if [ "$STATUS" = "pass" ]; then
+            echo "details=$FOUND" >> "$GITHUB_OUTPUT"
+          else
+            echo "details=Missing: $MISSING" >> "$GITHUB_OUTPUT"
+          fi
+          echo "status=$STATUS" >> "$GITHUB_OUTPUT"
+
+      - name: Verify DEX layout optimization
+        id: dex-layout
+        run: |
+          AAB="app/build/outputs/bundle/release/app-release.aab"
+          WORK_DIR=$(mktemp -d)
+
+          unzip -j -o "$AAB" "BUNDLE-METADATA/com.android.tools/r8.json" -d "$WORK_DIR" 2>/dev/null
+
+          if [ ! -f "$WORK_DIR/r8.json" ]; then
+            echo "status=skip" >> "$GITHUB_OUTPUT"
+            echo "details=r8.json not found (requires AGP 8.8+)" >> "$GITHUB_OUTPUT"
+            rm -rf "$WORK_DIR"
+            exit 0
+          fi
+
+          DEX_COUNT=$(jq '.dexFiles | length' "$WORK_DIR/r8.json")
+          STARTUP_COUNT=$(jq '[.dexFiles[] | select(.startup == true)] | length' "$WORK_DIR/r8.json")
+          FIRST_STARTUP=$(jq '.dexFiles[0].startup' "$WORK_DIR/r8.json")
+
+          if [ "$FIRST_STARTUP" = "true" ] && [ "$STARTUP_COUNT" -eq 1 ]; then
+            echo "status=pass" >> "$GITHUB_OUTPUT"
+            echo "details=classes.dex startup=true, ${DEX_COUNT} DEX files" >> "$GITHUB_OUTPUT"
+          elif [ "$FIRST_STARTUP" != "true" ]; then
+            echo "status=fail" >> "$GITHUB_OUTPUT"
+            echo "details=classes.dex startup=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "status=fail" >> "$GITHUB_OUTPUT"
+            echo "details=${STARTUP_COUNT}/${DEX_COUNT} DEX files marked as startup (expected 1)" >> "$GITHUB_OUTPUT"
+          fi
+
+          rm -rf "$WORK_DIR"
+
+      - name: Validate SHA-256 checksums
+        id: sha256
+        run: |
+          AAB="app/build/outputs/bundle/release/app-release.aab"
+          WORK_DIR=$(mktemp -d)
+
+          unzip -j -o "$AAB" "BUNDLE-METADATA/com.android.tools/r8.json" -d "$WORK_DIR" 2>/dev/null
+          if [ ! -f "$WORK_DIR/r8.json" ]; then
+            echo "status=skip" >> "$GITHUB_OUTPUT"
+            echo "details=r8.json not found" >> "$GITHUB_OUTPUT"
+            rm -rf "$WORK_DIR"
+            exit 0
+          fi
+
+          unzip -o "$AAB" "base/dex/*.dex" -d "$WORK_DIR" > /dev/null
+          DEX_COUNT=$(jq '.dexFiles | length' "$WORK_DIR/r8.json")
+          DEX_FILES=$(find "$WORK_DIR/base/dex" -name "*.dex" | sort)
+
+          MATCHED=0
+          MISMATCHED=0
+          INDEX=0
+          for DEX_FILE in $DEX_FILES; do
+            ACTUAL=$(sha256sum "$DEX_FILE" | cut -d' ' -f1)
+            EXPECTED=$(jq -r ".dexFiles[$INDEX].checksum" "$WORK_DIR/r8.json")
+            if [ "$ACTUAL" = "$EXPECTED" ]; then
+              MATCHED=$((MATCHED + 1))
+            else
+              MISMATCHED=$((MISMATCHED + 1))
+            fi
+            INDEX=$((INDEX + 1))
+          done
+
+          rm -rf "$WORK_DIR"
+
+          if [ "$MISMATCHED" -eq 0 ]; then
+            echo "status=pass" >> "$GITHUB_OUTPUT"
+            echo "details=${MATCHED}/${DEX_COUNT} checksums match" >> "$GITHUB_OUTPUT"
+          else
+            echo "status=fail" >> "$GITHUB_OUTPUT"
+            echo "details=${MISMATCHED}/${DEX_COUNT} checksums mismatched" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Check binary profile size
+        id: profile-size
+        run: |
+          AAB="app/build/outputs/bundle/release/app-release.aab"
+          WORK_DIR=$(mktemp -d)
+
+          unzip -j -o "$AAB" "BUNDLE-METADATA/com.android.tools.build.profiles/baseline.prof" -d "$WORK_DIR" 2>/dev/null \
+            || unzip -j -o "$AAB" "*/baseline.prof" -d "$WORK_DIR" 2>/dev/null
+
+          if [ ! -f "$WORK_DIR/baseline.prof" ]; then
+            echo "status=skip" >> "$GITHUB_OUTPUT"
+            echo "details=Could not extract baseline.prof" >> "$GITHUB_OUTPUT"
+            rm -rf "$WORK_DIR"
+            exit 0
+          fi
+
+          SIZE_BYTES=$(stat --format=%s "$WORK_DIR/baseline.prof")
+          SIZE_KB=$((SIZE_BYTES / 1024))
+          MAX_BYTES=1572864
+
+          if [ "$SIZE_BYTES" -gt "$MAX_BYTES" ]; then
+            SIZE_MB=$(echo "scale=2; $SIZE_BYTES / 1048576" | bc)
+            echo "status=warn" >> "$GITHUB_OUTPUT"
+            echo "details=${SIZE_KB} KB (${SIZE_MB} MB) — exceeds 1.5 MB" >> "$GITHUB_OUTPUT"
+          else
+            echo "status=pass" >> "$GITHUB_OUTPUT"
+            echo "details=${SIZE_KB} KB" >> "$GITHUB_OUTPUT"
+          fi
+
+          rm -rf "$WORK_DIR"
+
+      - name: Post PR comment
+        if: always() && github.event_name == 'pull_request'
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: baseline-profile-verification
+          message: |
+            ## Baseline Profile Verification
+
+            | Check | Status | Details |
+            |-------|--------|---------|
+            | Source profiles committed | ${{ steps.source-profiles.outputs.status == 'pass' && '✅' || '❌' }} | ${{ steps.source-profiles.outputs.details }} |
+            | Profiles bundled in AAB | ${{ steps.profiles-in-aab.outputs.status == 'pass' && '✅' || steps.profiles-in-aab.outputs.status == 'skip' && '⏭️' || '❌' }} | ${{ steps.profiles-in-aab.outputs.details }} |
+            | DEX layout optimization | ${{ steps.dex-layout.outputs.status == 'pass' && '✅' || steps.dex-layout.outputs.status == 'skip' && '⏭️' || '❌' }} | ${{ steps.dex-layout.outputs.details }} |
+            | SHA-256 validation | ${{ steps.sha256.outputs.status == 'pass' && '✅' || steps.sha256.outputs.status == 'skip' && '⏭️' || '❌' }} | ${{ steps.sha256.outputs.details }} |
+            | Binary profile size | ${{ steps.profile-size.outputs.status == 'pass' && '✅' || steps.profile-size.outputs.status == 'warn' && '⚠️' || steps.profile-size.outputs.status == 'skip' && '⏭️' || '❌' }} | ${{ steps.profile-size.outputs.details }} |
+
+      - name: Fail if checks failed
+        if: always()
+        run: |
+          FAILED=false
+          if [ "${{ steps.source-profiles.outputs.status }}" = "fail" ]; then
+            echo "::error::Source profile check failed"
+            FAILED=true
+          fi
+          if [ "${{ steps.profiles-in-aab.outputs.status }}" = "fail" ]; then
+            echo "::error::Profiles in AAB check failed"
+            FAILED=true
+          fi
+          if [ "${{ steps.dex-layout.outputs.status }}" = "fail" ]; then
+            echo "::error::DEX layout optimization check failed"
+            FAILED=true
+          fi
+          if [ "${{ steps.sha256.outputs.status }}" = "fail" ]; then
+            echo "::error::SHA-256 validation failed"
+            FAILED=true
+          fi
+          if [ "$FAILED" = true ]; then
+            echo ""
+            echo "Regenerate profiles: ./gradlew :app:generateReleaseBaselineProfile"
+            exit 1
+          fi
