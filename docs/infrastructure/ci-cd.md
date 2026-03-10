@@ -53,11 +53,48 @@ Verifies PR version bumps:
 
 Generates the module dependency graph and commits the updated `docs/MODULE_GRAPH.md` if changes are detected.
 
+### Baseline Profile Verification
+
+**Trigger:** Pull requests targeting `main`
+
+Builds a release AAB and verifies baseline profile integrity. Results are posted as a PR comment.
+
+| Check | What it verifies |
+|-------|-----------------|
+| Source profiles committed | `baseline-prof.txt` and `startup-prof.txt` exist and are non-empty |
+| Profiles bundled in AAB | `baseline.prof` and `baseline.profm` present in release AAB |
+| DEX layout optimization | `r8.json` has `startup=true` only for `classes.dex` |
+| SHA-256 validation | DEX checksums match `r8.json` metadata |
+| Binary profile size | Warning if compiled profile exceeds 1.5 MB |
+
+See [Performance — CI Verification](performance.md#ci-verification) for technical details.
+
 ### Deploy Docs
 
 **Trigger:** Push to `main` (when `docs/` or `mkdocs.yml` change), manual dispatch
 
 Builds and deploys this documentation site to GitHub Pages using MkDocs Material.
+
+## Reusable Actions
+
+### Setup Android (`setup-android`)
+
+Sets up JDK 17, Gradle, and Android build caching. Optional inputs control whether caches are saved or only restored.
+
+### Setup Secrets (`setup-secrets`)
+
+Creates project secret files and sets release signing environment variables. Inputs:
+
+| Input | Required | Creates |
+|-------|----------|---------|
+| `google-services-json` | yes | `app/google-services.json` (base64-decoded) |
+| `maps-api-key` | no | `secrets.properties` |
+| `release-keystore` | no | `app/release.jks` (base64-decoded) |
+| `release-keystore-password` | no | `RELEASE_KEYSTORE_PASSWORD` env var |
+| `release-key-alias` | no | `RELEASE_KEY_ALIAS` env var |
+| `release-key-password` | no | `RELEASE_KEY_PASSWORD` env var |
+
+All workflows that build the project use this action. Workflows that only need a debug build pass `google-services-json` alone; release builds pass all inputs.
 
 ## Future: Affected Module Detection
 
