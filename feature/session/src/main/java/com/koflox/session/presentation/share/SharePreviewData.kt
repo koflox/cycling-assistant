@@ -3,7 +3,7 @@ package com.koflox.session.presentation.share
 import com.koflox.session.presentation.model.DisplayStat
 import com.koflox.session.presentation.route.RouteDisplayData
 
-data class SharePreviewData(
+internal data class SharePreviewData(
     val sessionId: String,
     val destinationName: String?,
     val startDateFormatted: String,

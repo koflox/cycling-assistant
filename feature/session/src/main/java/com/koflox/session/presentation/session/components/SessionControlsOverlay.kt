@@ -31,6 +31,7 @@ internal fun SessionControlsOverlay(
     onResumeClick: () -> Unit,
     onStopClick: () -> Unit,
     onEnableLocationClick: () -> Unit,
+    onDeviceStripClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Card(
@@ -52,11 +53,15 @@ internal fun SessionControlsOverlay(
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface,
             )
+            if (state.deviceStripItems.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(Spacing.Small))
+                ConnectionStatusStrip(
+                    items = state.deviceStripItems,
+                    onClick = onDeviceStripClick,
+                )
+            }
             Spacer(modifier = Modifier.height(Spacing.Medium))
-            SessionStatsDisplay(
-                stats = state.stats,
-                powerDisplayState = state.powerDisplayState,
-            )
+            SessionStatsDisplay(stats = state.stats)
             Spacer(modifier = Modifier.height(Spacing.Large))
             SessionControlButtons(
                 isPaused = state.isPaused,

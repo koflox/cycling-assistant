@@ -6,7 +6,10 @@ import com.koflox.ble.state.BluetoothStateMonitor
 import com.koflox.connections.domain.usecase.DeletePairedDeviceUseCase
 import com.koflox.connections.domain.usecase.ObservePairedDevicesUseCase
 import com.koflox.connections.domain.usecase.UpdateDeviceSessionUsageUseCase
+import com.koflox.di.ConnectionsErrorMapper
+import com.koflox.di.DefaultDispatcher
 import com.koflox.error.mapper.ErrorMessageMapper
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,14 +17,16 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-internal class DeviceListViewModel(
+@HiltViewModel
+internal class DeviceListViewModel @Inject internal constructor(
     private val observePairedDevicesUseCase: ObservePairedDevicesUseCase,
     private val deletePairedDeviceUseCase: DeletePairedDeviceUseCase,
     private val updateDeviceSessionUsageUseCase: UpdateDeviceSessionUsageUseCase,
     private val bluetoothStateMonitor: BluetoothStateMonitor,
-    private val errorMessageMapper: ErrorMessageMapper,
-    private val dispatcherDefault: CoroutineDispatcher,
+    @param:ConnectionsErrorMapper private val errorMessageMapper: ErrorMessageMapper,
+    @param:DefaultDispatcher private val dispatcherDefault: CoroutineDispatcher,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<DeviceListUiState>(DeviceListUiState.Loading)

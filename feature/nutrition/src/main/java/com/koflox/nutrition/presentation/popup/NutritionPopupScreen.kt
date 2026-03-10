@@ -19,14 +19,24 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import com.koflox.concurrent.CurrentTimeProvider
-import com.koflox.concurrent.DispatchersQualifier
 import com.koflox.designsystem.theme.Elevation
 import com.koflox.designsystem.theme.Spacing
 import com.koflox.nutrition.R
+import dagger.hilt.EntryPoint
+import dagger.hilt.InstallIn
+import dagger.hilt.android.EntryPointAccessors
+import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineDispatcher
-import org.koin.compose.koinInject
+
+@EntryPoint
+@InstallIn(SingletonComponent::class)
+internal interface NutritionPopupEntryPoint {
+    fun currentTimeProvider(): CurrentTimeProvider
+    @com.koflox.di.DefaultDispatcher fun defaultDispatcher(): CoroutineDispatcher
+}
 
 @Composable
 fun NutritionPopupRoute(
@@ -34,8 +44,10 @@ fun NutritionPopupRoute(
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val currentTimeProvider: CurrentTimeProvider = koinInject()
-    val dispatcherDefault: CoroutineDispatcher = koinInject(qualifier = DispatchersQualifier.Default)
+    val context = LocalContext.current
+    val entryPoint = EntryPointAccessors.fromApplication(context, NutritionPopupEntryPoint::class.java)
+    val currentTimeProvider = entryPoint.currentTimeProvider()
+    val dispatcherDefault = entryPoint.defaultDispatcher()
     val stateHolder = remember(suggestionTimeMs) {
         NutritionPopupStateHolder(
             suggestionTimeMs = suggestionTimeMs,

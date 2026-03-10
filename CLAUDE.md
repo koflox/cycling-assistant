@@ -32,7 +32,7 @@ See also: [Module Dependency Graph](docs/MODULE_GRAPH.md) | [Module Structure do
 
 ```
 CyclingAssistant/
-├── app/                              # Shell - navigation, theme, Koin bootstrap, Room DB
+├── app/                              # Shell - navigation, theme, Hilt bootstrap, Room DB
 ├── feature/
 │   ├── bridge/                       # Cross-feature communication (alphabetical pair names)
 │   │   ├── connection-session/       # connections ↔ session
@@ -63,7 +63,7 @@ CyclingAssistant/
     ├── ble/                          # BLE primitives (GATT, scanning, permissions)
     ├── concurrent/                   # Coroutine dispatchers, suspendRunCatching, ConcurrentFactory
     ├── design-system/                # UI theme, colors, spacing, components
-    ├── di/                           # Koin qualifiers
+    ├── di/                           # Hilt qualifier annotations
     ├── distance/                     # Distance calculator
     ├── error/                        # Error mapping utilities
     ├── graphics/                     # Bitmap utilities
@@ -147,7 +147,7 @@ SQLCipher encrypts the Room database in release builds. See
 ViewModels expose `StateFlow<UiState>` + `Flow<Navigation>` via Channel. Key rules:
 
 - Use `Overlay` sealed interface for dialogs/toasts within `Content` state
-- Inject `dispatcherDefault` via DI (`DispatchersQualifier.Default`)
+- Inject `dispatcherDefault` via DI (`@DefaultDispatcher`)
 - `init` calls `initialize()` which uses `launch(dispatcherDefault)`
 - `onEvent` always wraps handling in `launch(dispatcherDefault)`
 - Use `updateContent` helper for partial updates within Content state
@@ -163,7 +163,7 @@ ViewModels expose `StateFlow<UiState>` + `Flow<Navigation>` via Channel. Key rul
 - **Max Line Length**: 150 characters
 - **Companion Object**: Place at the top of the class body
 - **Boolean Props**: Prefix with `is`, `has`, `are`
-- **Dispatchers**: Inject via `DispatchersQualifier`, never hardcode
+- **Dispatchers**: Inject via `@IoDispatcher`/`@DefaultDispatcher`/`@MainDispatcher` qualifiers, never hardcode
 
 ### Interface + Impl Pattern
 
@@ -220,35 +220,38 @@ private const val SCAN_TIMEOUT_MS = 30_000L
 | Domain repository interfaces   | `public`   |
 | Data layer interfaces (DataSource, Mapper) | `internal` |
 | All `*Impl` classes            | `internal` |
-| All ViewModels                 | `internal` |
-| Top-level feature Koin modules | `public`   |
-| Sub-module Koin modules (`domainModule`, `presentationModule`) | `internal` |
-| Private DI sub-modules (`dataModule`, `dataSourceModule`, `repoModule`) | `private` |
+| All ViewModels                 | `internal` (`@HiltViewModel internal class ... @Inject internal constructor`) |
+| Hilt `@Module` objects         | `internal` |
+| Service interfaces injected into `@AndroidEntryPoint` | `public` (e.g., `SessionTracker`, `SessionNotificationManager`) |
 
-### DI (Koin)
+### DI (Hilt)
 
-**Registration conventions:**
+**Scope mapping:**
 
-| Type       | Scope     |
-|------------|-----------|
-| UseCase    | `factory` (`single` if stateful — e.g. internal buffer/smoother) |
-| DataSource | `single`  |
-| Mapper     | `single`  |
-| Repository | `single`  |
-| ViewModel  | `viewModel { }` |
+| Type       | Hilt Pattern |
+|------------|-------------|
+| UseCase    | `@Provides` (no scope) for stateless; `@Provides @Singleton` for stateful |
+| DataSource | `@Provides @Singleton` |
+| Mapper     | `@Provides @Singleton` |
+| Repository | `@Provides @Singleton` |
+| ViewModel  | `@HiltViewModel internal class ... @Inject internal constructor(...)` |
 
-**Feature-local qualifiers:** When a feature needs to disambiguate DI bindings internally, define a
-`sealed class` extending `ClassNameQualifier()` in the feature's `di/` package (e.g.,
-`SessionQualifier.SessionMutex` for a shared `Mutex`). Use `shared/di` `ClassNameQualifier` as
-the base.
+**Qualifiers:** Defined in `shared/di` as `@Qualifier @Retention(AnnotationRetention.BINARY)`
+annotations (e.g., `@IoDispatcher`, `@DefaultDispatcher`, `@SessionDaoFactory`, `@SessionMutex`).
+
+**Composable injection:** Use `hiltViewModel()` for ViewModels. For non-VM dependencies in
+Composables, use `@EntryPoint @InstallIn(SingletonComponent::class)` interfaces with
+`EntryPointAccessors.fromApplication()`.
+
+**Android components:** Services use `@AndroidEntryPoint` + `@Inject lateinit var`. Activities use
+`@AndroidEntryPoint` + `by viewModels()`. Application uses `@HiltAndroidApp`.
 
 **Feature DI file organization:**
 
-- `DataModule.kt` — `private val dataModule`, `private val dataSourceModule`,
-  `private val repoModule`, exported as `internal val dataModules: List<Module>`
-- `DomainModule.kt` — `internal val domainModule`
-- `PresentationModule.kt` — `internal val presentationModule`
-- `<Feature>Module.kt` — public aggregator: `val featureModule = module { includes(...) }`
+- `<Feature>DataHiltModule.kt` — `@Module @InstallIn(SingletonComponent::class) internal object`
+- `<Feature>DomainHiltModule.kt` — `@Module @InstallIn(SingletonComponent::class) internal object`
+- `<Feature>PresentationHiltModule.kt` — only if non-VM bindings exist (error mappers, factories)
+- No aggregator needed — Hilt auto-discovers `@Module` classes
 
 ### Design System
 
@@ -343,15 +346,16 @@ Supported languages: English (default), Russian (`values-ru`), Japanese (`values
 
 1. Create module under `feature/<name>/` with di/, domain/, data/, presentation/
 2. Add to `settings.gradle.kts` (alphabetically sorted)
-3. Export DI module and include in `app/Modules.kt`
-4. Add navigation in `AppNavHost.kt`
+3. Add `ksp` and `hilt` plugins to `build.gradle.kts`, add `hilt-android` + `hilt-compiler` deps
+4. Create `@Module @InstallIn(SingletonComponent::class)` objects in `di/`
+5. Add navigation in `AppNavHost.kt`
 
 **For cross-feature communication:**
 
 1. Create bridge under `feature/bridge/<A-B>/` (A and B in alphabetical order) with `api/` and
    `impl/` submodules
 2. Consumer depends on API, impl depends on provider
-3. DI module name follows `<aB>BridgeImplModule` pattern (e.g., `destinationSessionBridgeImplModule`)
+3. Bridge impl module: `@Module @InstallIn(SingletonComponent::class) internal object`
 
 ## Contribution
 
@@ -378,7 +382,7 @@ Examples: `feature: active POI for sessions`, `fix: prevent app crash on locatio
 | Path                                                                            | Purpose                        |
 |---------------------------------------------------------------------------------|--------------------------------|
 | `app/navigation/AppNavHost.kt`                                                  | Central navigation wiring      |
-| `app/Modules.kt`                                                                | Root DI configuration          |
+| `app/Modules.kt`                                                                | Database & app Hilt modules    |
 | `app/data/AppDatabase.kt`                                                       | Room database                  |
 | `feature/session/service/SessionTrackingService.kt`                             | Foreground service             |
 | `feature/session/service/SessionTracker.kt`                                     | Session tracking orchestrator  |
@@ -397,3 +401,5 @@ Configure Google Maps in `secrets.properties`:
 ```
 MAPS_API_KEY=your_key_here
 ```
+
+Firebase requires `google-services.json` in `app/` (git-ignored). Download from Firebase Console.

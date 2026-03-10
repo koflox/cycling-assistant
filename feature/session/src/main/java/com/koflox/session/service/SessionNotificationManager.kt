@@ -24,7 +24,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 
-internal interface SessionNotificationManager {
+interface SessionNotificationManager {
     fun createNotificationChannel()
     fun createInitialNotification(): Notification
     fun buildNotification(session: Session, currentElapsedMs: Long): Notification

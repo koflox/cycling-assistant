@@ -2,10 +2,12 @@ package com.koflox.session.presentation.statsdisplay
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.koflox.di.DefaultDispatcher
 import com.koflox.session.domain.model.SessionStatType
 import com.koflox.session.domain.model.StatsDisplayConfig
 import com.koflox.session.domain.usecase.ObserveStatsDisplayConfigUseCase
 import com.koflox.session.domain.usecase.UpdateStatsDisplayConfigUseCase
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,11 +16,13 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-internal class StatsDisplayConfigViewModel(
+@HiltViewModel
+internal class StatsDisplayConfigViewModel @Inject internal constructor(
     private val observeStatsDisplayConfigUseCase: ObserveStatsDisplayConfigUseCase,
     private val updateStatsDisplayConfigUseCase: UpdateStatsDisplayConfigUseCase,
-    private val dispatcherDefault: CoroutineDispatcher,
+    @param:DefaultDispatcher private val dispatcherDefault: CoroutineDispatcher,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<StatsDisplayConfigUiState>(StatsDisplayConfigUiState.Loading)

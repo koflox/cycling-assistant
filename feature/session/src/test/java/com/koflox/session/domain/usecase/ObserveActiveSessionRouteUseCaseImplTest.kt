@@ -161,9 +161,9 @@ class ObserveActiveSessionRouteUseCaseImplTest {
         useCase.observe().test {
             val snapshot = awaitItem()!!
             assertEquals(LAT_1, snapshot.firstTrackPointPosition!!.latitude, 0.0)
-            assertEquals(LON_1, snapshot.firstTrackPointPosition!!.longitude, 0.0)
+            assertEquals(LON_1, snapshot.firstTrackPointPosition.longitude, 0.0)
             assertEquals(LAT_3, snapshot.lastTrackPointPosition!!.latitude, 0.0)
-            assertEquals(LON_3, snapshot.lastTrackPointPosition!!.longitude, 0.0)
+            assertEquals(LON_3, snapshot.lastTrackPointPosition.longitude, 0.0)
             awaitComplete()
         }
     }

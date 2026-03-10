@@ -3,9 +3,16 @@ plugins {
     alias(libs.plugins.android.application) apply false
     alias(libs.plugins.android.library) apply false
     alias(libs.plugins.kotlin.compose) apply false
+    alias(libs.plugins.firebase.crashlytics) apply false
+    alias(libs.plugins.firebase.perf.plugin) apply false
+    alias(libs.plugins.google.services) apply false
+    alias(libs.plugins.ksp) apply false
+    alias(libs.plugins.hilt) apply false
     alias(libs.plugins.detekt)
     alias(libs.plugins.kover)
     alias(libs.plugins.module.graph)
+    alias(libs.plugins.android.test) apply false
+    alias(libs.plugins.baselineprofile) apply false
 }
 
 // ===========================================
@@ -62,6 +69,17 @@ subprojects {
                 }
             }
 
+            compileOptions {
+                sourceCompatibility = javaVersion
+                targetCompatibility = javaVersion
+            }
+        }
+    }
+
+    // Baseline profile / macrobenchmark module (:baselineprofile)
+    plugins.withId("com.android.test") {
+        configure<com.android.build.api.dsl.TestExtension> {
+            compileSdk = compileSdkVersion
             compileOptions {
                 sourceCompatibility = javaVersion
                 targetCompatibility = javaVersion
@@ -126,6 +144,9 @@ kover {
                     "*RoomDataSource\$*",
                     "*DatabasePassphraseManager",
                     "*LocalizedContextProviderImpl",
+                    "Hilt_*",
+                    "*_HiltModules*",
+                    "*_MembersInjector",
                 )
                 packages(
                     "*.di",

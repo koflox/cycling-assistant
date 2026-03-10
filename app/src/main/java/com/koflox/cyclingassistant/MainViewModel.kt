@@ -7,13 +7,16 @@ import com.koflox.locale.domain.usecase.ObserveLocaleUseCase
 import com.koflox.session.service.PendingSessionAction
 import com.koflox.theme.domain.model.AppTheme
 import com.koflox.theme.domain.usecase.ObserveThemeUseCase
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-internal class MainViewModel(
+@HiltViewModel
+internal class MainViewModel @Inject internal constructor(
     observeThemeUseCase: ObserveThemeUseCase,
     observeLocaleUseCase: ObserveLocaleUseCase,
     private val pendingSessionAction: PendingSessionAction,

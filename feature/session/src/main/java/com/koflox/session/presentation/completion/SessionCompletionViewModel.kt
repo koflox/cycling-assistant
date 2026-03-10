@@ -4,6 +4,8 @@ import android.graphics.Bitmap
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.koflox.di.DefaultDispatcher
+import com.koflox.di.SessionErrorMapper
 import com.koflox.error.mapper.ErrorMessageMapper
 import com.koflox.location.bearing.calculateBearingDegrees
 import com.koflox.location.model.Location
@@ -23,6 +25,7 @@ import com.koflox.session.presentation.share.SessionImageSharer
 import com.koflox.session.presentation.share.ShareErrorMapper
 import com.koflox.session.presentation.share.SharePreviewData
 import com.koflox.session.presentation.share.ShareResult
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -32,16 +35,18 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-internal class SessionCompletionViewModel(
+@HiltViewModel
+internal class SessionCompletionViewModel @Inject internal constructor(
     private val getSessionByIdUseCase: GetSessionByIdUseCase,
     private val calculateSessionStatsUseCase: CalculateSessionStatsUseCase,
     private val observeStatsDisplayConfigUseCase: ObserveStatsDisplayConfigUseCase,
     private val sessionUiMapper: SessionUiMapper,
-    private val errorMessageMapper: ErrorMessageMapper,
+    @param:SessionErrorMapper private val errorMessageMapper: ErrorMessageMapper,
     private val imageSharer: SessionImageSharer,
     private val shareErrorMapper: ShareErrorMapper,
-    private val dispatcherDefault: CoroutineDispatcher,
+    @param:DefaultDispatcher private val dispatcherDefault: CoroutineDispatcher,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 

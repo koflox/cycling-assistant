@@ -27,6 +27,11 @@ jobs:
           gradle-cache-save: 'true'
           build-cache-save: 'true'
 
+      - name: Setup project secrets
+        uses: ./.github/actions/setup-secrets
+        with:
+          google-services-json: ${{ secrets.GOOGLE_SERVICES_JSON }}
+
       - name: Build project
         run: gradle buildDebug --build-cache -x test
 
@@ -44,6 +49,16 @@ jobs:
       - name: Setup Android build environment
         uses: ./.github/actions/setup-android
 
+      - name: Setup project secrets
+        uses: ./.github/actions/setup-secrets
+        with:
+          google-services-json: ${{ secrets.GOOGLE_SERVICES_JSON }}
+          maps-api-key: ${{ secrets.MAPS_API_KEY }}
+          release-keystore: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
+          release-keystore-password: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
+          release-key-alias: ${{ secrets.RELEASE_KEY_ALIAS }}
+          release-key-password: ${{ secrets.RELEASE_KEY_PASSWORD }}
+
       - name: Read version
         id: version
         run: |
@@ -53,19 +68,7 @@ jobs:
           echo "name=$VERSION_NAME" >> "$GITHUB_OUTPUT"
           echo "Version: $VERSION_NAME ($VERSION_CODE)"
 
-      - name: Create secrets.properties
-        run: echo "MAPS_API_KEY=${{ secrets.MAPS_API_KEY }}" > secrets.properties
-
-      - name: Decode release keystore
-        run: |
-          echo "${{ secrets.RELEASE_KEYSTORE_BASE64 }}" | base64 -d > app/release.jks
-
       - name: Build release APK
-        env:
-          RELEASE_KEYSTORE_PATH: release.jks
-          RELEASE_KEYSTORE_PASSWORD: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
-          RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
-          RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
         run: gradle assembleRelease --build-cache
 
       - name: Create GitHub Release

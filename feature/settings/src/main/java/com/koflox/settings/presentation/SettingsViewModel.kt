@@ -5,6 +5,7 @@ import android.content.pm.ApplicationInfo
 import android.os.Build
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.koflox.di.DefaultDispatcher
 import com.koflox.locale.domain.model.AppLanguage
 import com.koflox.locale.domain.usecase.ObserveLocaleUseCase
 import com.koflox.locale.domain.usecase.UpdateLocaleUseCase
@@ -14,6 +15,7 @@ import com.koflox.profile.domain.usecase.UpdateRiderWeightUseCase
 import com.koflox.theme.domain.model.AppTheme
 import com.koflox.theme.domain.usecase.ObserveThemeUseCase
 import com.koflox.theme.domain.usecase.UpdateThemeUseCase
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -23,9 +25,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
 
-internal class SettingsViewModel(
+@HiltViewModel
+internal class SettingsViewModel @Inject internal constructor(
     private val application: Application,
     private val observeThemeUseCase: ObserveThemeUseCase,
     private val updateThemeUseCase: UpdateThemeUseCase,
@@ -33,7 +37,7 @@ internal class SettingsViewModel(
     private val updateLocaleUseCase: UpdateLocaleUseCase,
     private val getRiderWeightUseCase: GetRiderWeightUseCase,
     private val updateRiderWeightUseCase: UpdateRiderWeightUseCase,
-    private val dispatcherDefault: CoroutineDispatcher,
+    @param:DefaultDispatcher private val dispatcherDefault: CoroutineDispatcher,
 ) : ViewModel() {
 
     companion object {

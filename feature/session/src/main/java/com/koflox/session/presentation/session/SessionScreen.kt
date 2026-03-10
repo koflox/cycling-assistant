@@ -12,25 +12,27 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.koflox.designsystem.text.resolve
 import com.koflox.location.settings.LocationSettingsHandler
 import com.koflox.session.presentation.dialog.LocationDisabledDialog
 import com.koflox.session.presentation.dialog.StopConfirmationDialog
 import com.koflox.session.presentation.session.components.SessionControlsOverlay
-import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun SessionScreenRoute(
     onNavigateToCompletion: (sessionId: String) -> Unit,
+    onNavigateToConnections: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val viewModel: SessionViewModel = koinViewModel()
+    val viewModel: SessionViewModel = hiltViewModel()
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
     LaunchedEffect(Unit) {
         viewModel.navigation.collect { event ->
             when (event) {
                 is SessionNavigation.ToCompletion -> onNavigateToCompletion(event.sessionId)
+                SessionNavigation.ToConnections -> onNavigateToConnections()
             }
         }
     }
@@ -77,6 +79,7 @@ private fun SessionContent(
                     onResumeClick = { onEvent(SessionUiEvent.SessionManagementEvent.ResumeClicked) },
                     onStopClick = { onEvent(SessionUiEvent.SessionManagementEvent.StopClicked) },
                     onEnableLocationClick = { onEvent(SessionUiEvent.LocationSettingsEvent.EnableLocationClicked) },
+                    onDeviceStripClick = { onEvent(SessionUiEvent.DeviceEvent.StripClicked) },
                     modifier = Modifier.fillMaxWidth(),
                 )
                 when (uiState.overlay) {

@@ -25,6 +25,11 @@
     <string name="session_stat_value_kcal">%s kcal</string>
     <string name="session_stat_power_connecting">パワーメーター接続中</string>
 
+    <!-- Device Connection Status -->
+    <string name="session_device_connecting">接続中…</string>
+    <string name="session_device_retry_countdown">%d秒後にリトライ</string>
+    <string name="session_device_offline">オフライン</string>
+
     <!-- Session Buttons -->
     <string name="session_button_pause">一時停止</string>
     <string name="session_button_continue">再開</string>

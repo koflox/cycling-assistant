@@ -6,14 +6,26 @@ import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import org.koin.compose.koinInject
+import androidx.compose.ui.platform.LocalContext
+import dagger.hilt.EntryPoint
+import dagger.hilt.InstallIn
+import dagger.hilt.android.EntryPointAccessors
+import dagger.hilt.components.SingletonComponent
+
+@EntryPoint
+@InstallIn(SingletonComponent::class)
+internal interface LocationSettingsEntryPoint {
+    fun locationSettingsDataSource(): LocationSettingsDataSource
+}
 
 @Composable
 fun LocationSettingsHandler(
     onLocationEnabled: () -> Unit,
     onLocationDenied: () -> Unit,
 ) {
-    val locationSettingsDataSource: LocationSettingsDataSource = koinInject()
+    val context = LocalContext.current
+    val entryPoint = EntryPointAccessors.fromApplication(context, LocationSettingsEntryPoint::class.java)
+    val locationSettingsDataSource = entryPoint.locationSettingsDataSource()
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartIntentSenderForResult(),
     ) { result ->

@@ -37,17 +37,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInParent
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.koflox.designsystem.component.DebouncedButton
 import com.koflox.designsystem.component.DebouncedOutlinedButton
+import com.koflox.designsystem.testtag.TestTags
 import com.koflox.designsystem.theme.ComponentSize
 import com.koflox.designsystem.theme.Spacing
 import com.koflox.session.R
 import com.koflox.session.domain.model.SessionStatType
 import com.koflox.session.presentation.statsdisplay.components.StatsPreviewCard
 import kotlinx.coroutines.launch
-import org.koin.androidx.compose.koinViewModel
 
 private const val CHIPS_PER_ROW = 2
 
@@ -57,7 +59,7 @@ fun StatsDisplayConfigRoute(
     modifier: Modifier = Modifier,
     initialSection: StatsDisplaySection? = null,
 ) {
-    val viewModel: StatsDisplayConfigViewModel = koinViewModel()
+    val viewModel: StatsDisplayConfigViewModel = hiltViewModel()
     val uiState by viewModel.uiState.collectAsState()
     LaunchedEffect(Unit) {
         viewModel.navigation.collect { event ->
@@ -85,7 +87,7 @@ private fun StatsDisplayConfigContent(
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
-        modifier = modifier,
+        modifier = modifier.testTag(TestTags.STATS_CONFIG_SCREEN),
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.stats_config_title)) },
@@ -150,7 +152,8 @@ private fun SectionsColumn(
     Column(
         modifier = modifier
             .verticalScroll(scrollState)
-            .padding(horizontal = Spacing.Large),
+            .padding(horizontal = Spacing.Large)
+            .testTag(TestTags.STATS_CONFIG_SCROLL),
     ) {
         content.sections.forEach { section ->
             SectionBlock(

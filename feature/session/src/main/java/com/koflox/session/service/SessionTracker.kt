@@ -1,36 +1,43 @@
 package com.koflox.session.service
 
 import com.koflox.concurrent.CurrentTimeProvider
-import com.koflox.connectionsession.bridge.usecase.PowerConnectionException
-import com.koflox.connectionsession.bridge.usecase.SessionPowerMeterUseCase
-import com.koflox.location.geolocation.LocationDataSource
-import com.koflox.location.settings.LocationSettingsDataSource
-import com.koflox.nutritionsession.bridge.usecase.NutritionReminderUseCase
 import com.koflox.session.domain.model.Session
 import com.koflox.session.domain.model.SessionStatus
 import com.koflox.session.domain.usecase.ActiveSessionUseCase
-import com.koflox.session.domain.usecase.UpdateSessionLocationUseCase
-import com.koflox.session.domain.usecase.UpdateSessionPowerUseCase
 import com.koflox.session.domain.usecase.UpdateSessionStatusUseCase
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
-interface SessionTrackingDelegate {
+/**
+ * Callback interface for [SessionTrackingService] to respond to tracking events
+ * such as foreground promotion, notification updates, service teardown, and vibration.
+ */
+internal interface SessionTrackingDelegate {
     fun onStartForeground(): Boolean
     fun onNotificationUpdate(session: Session, elapsedMs: Long)
     fun onStopService()
     fun onVibrate()
 }
 
-interface SessionTracker {
+/**
+ * Orchestrates an active cycling session by observing session state changes
+ * and delegating work to specialized managers:
+ * - [LocationCollectionManager] — GPS tracking and location-enabled monitoring
+ * - [PowerCollectionManager] — BLE power meter data collection with reconnection
+ * - [NutritionReminderManager] — periodic nutrition reminder events
+ *
+ * The tracker itself owns the notification timer and session lifecycle commands
+ * (pause / resume / stop).
+ */
+internal interface SessionTracker {
     fun startTracking(delegate: SessionTrackingDelegate)
     fun handleRestart(delegate: SessionTrackingDelegate)
     fun stopTracking()
@@ -42,40 +49,27 @@ interface SessionTracker {
 internal class SessionTrackerImpl(
     private val dispatcherIo: CoroutineDispatcher,
     private val activeSessionUseCase: ActiveSessionUseCase,
-    private val updateSessionLocationUseCase: UpdateSessionLocationUseCase,
     private val updateSessionStatusUseCase: UpdateSessionStatusUseCase,
-    private val locationDataSource: LocationDataSource,
-    private val locationSettingsDataSource: LocationSettingsDataSource,
-    private val nutritionReminderUseCase: NutritionReminderUseCase,
-    private val sessionPowerMeterUseCase: SessionPowerMeterUseCase,
-    private val updateSessionPowerUseCase: UpdateSessionPowerUseCase,
+    private val locationCollectionManager: LocationCollectionManager,
+    private val powerCollectionManager: PowerCollectionManager,
+    private val nutritionReminderManager: NutritionReminderManager,
     private val currentTimeProvider: CurrentTimeProvider,
 ) : SessionTracker {
 
     companion object {
-        internal val LOCATION_INTERVAL = 5.seconds
-        internal val LOCATION_MAX_UPDATE_DELAY = 15.seconds
-        internal const val MIN_UPDATE_DISTANCE_METERS = 5F
         internal val TIMER_UPDATE_INTERVAL = 1.seconds
-        internal val POWER_RETRY_INITIAL_DELAY = 2.seconds
-        internal val POWER_RETRY_MAX_DELAY = 5.minutes
-        internal const val POWER_RETRY_FACTOR = 2
     }
 
     private var scope: CoroutineScope? = null
     private var delegate: SessionTrackingDelegate? = null
     private var sessionObserverJob: Job? = null
-    private var locationCollectionJob: Job? = null
-    private var locationMonitorJob: Job? = null
     private var timerJob: Job? = null
-    private var nutritionJob: Job? = null
-    private var powerCollectionJob: Job? = null
 
     override fun startTracking(delegate: SessionTrackingDelegate) {
         this.delegate = delegate
         scope = CoroutineScope(SupervisorJob() + dispatcherIo)
         observeSession()
-        observeNutritionReminders()
+        scope?.let { nutritionReminderManager.start(it) { this.delegate?.onVibrate() } }
     }
 
     override fun handleRestart(delegate: SessionTrackingDelegate) {
@@ -86,7 +80,7 @@ internal class SessionTrackerImpl(
                 if (activeSession != null && delegate.onStartForeground()) {
                     updateSessionStatusUseCase.onServiceRestart()
                     observeSession()
-                    observeNutritionReminders()
+                    nutritionReminderManager.start(it) { this@SessionTrackerImpl.delegate?.onVibrate() }
                 } else {
                     delegate.onStopService()
                 }
@@ -95,16 +89,10 @@ internal class SessionTrackerImpl(
     }
 
     override fun stopTracking() {
-        sessionObserverJob?.cancel()
-        locationCollectionJob?.cancel()
-        locationMonitorJob?.cancel()
-        timerJob?.cancel()
-        nutritionJob?.cancel()
-        stopPowerCollection()
-        scope?.let {
-            val job = it.coroutineContext[Job]
-            job?.cancel()
-        }
+        locationCollectionManager.stop()
+        powerCollectionManager.stop()
+        nutritionReminderManager.stop()
+        scope?.cancel()
         scope = null
         delegate = null
     }
@@ -128,8 +116,7 @@ internal class SessionTrackerImpl(
                 if (session != null) {
                     handleSessionUpdate(session)
                 } else {
-                    stopLocationCollection()
-                    stopLocationMonitoring()
+                    locationCollectionManager.stop()
                     stopTimer()
                     delegate?.onStopService()
                 }
@@ -140,65 +127,25 @@ internal class SessionTrackerImpl(
     private fun handleSessionUpdate(session: Session) {
         when (session.status) {
             SessionStatus.RUNNING -> {
-                startLocationCollection()
-                startLocationMonitoring()
+                scope?.let(locationCollectionManager::start)
+                scope?.let(powerCollectionManager::start)
                 startTimer(session)
-                startPowerCollection()
             }
 
             SessionStatus.PAUSED -> {
-                stopLocationCollection()
-                stopLocationMonitoring()
+                locationCollectionManager.stop()
+                powerCollectionManager.stop()
                 stopTimer()
-                stopPowerCollection()
                 delegate?.onNotificationUpdate(session, session.elapsedTimeMs)
             }
 
             SessionStatus.COMPLETED -> {
-                stopLocationCollection()
-                stopLocationMonitoring()
+                locationCollectionManager.stop()
+                powerCollectionManager.stop()
                 stopTimer()
-                stopPowerCollection()
                 delegate?.onStopService()
             }
         }
-    }
-
-    private fun startLocationCollection() {
-        if (locationCollectionJob?.isActive == true) return
-        locationCollectionJob = scope?.launch {
-            locationDataSource.observeLocationUpdates(
-                intervalMs = LOCATION_INTERVAL.inWholeMilliseconds,
-                inUpdateDistanceMeters = MIN_UPDATE_DISTANCE_METERS,
-                maxUpdateDelayMs = LOCATION_MAX_UPDATE_DELAY.inWholeMilliseconds,
-            ).collect { location ->
-                updateSessionLocationUseCase.update(
-                    location = location,
-                    timestampMs = currentTimeProvider.currentTimeMs(),
-                )
-            }
-        }
-    }
-
-    private fun stopLocationCollection() {
-        locationCollectionJob?.cancel()
-        locationCollectionJob = null
-    }
-
-    private fun startLocationMonitoring() {
-        if (locationMonitorJob?.isActive == true) return
-        locationMonitorJob = scope?.launch {
-            locationSettingsDataSource.observeLocationEnabled().collect { isEnabled ->
-                if (!isEnabled) {
-                    updateSessionStatusUseCase.pause()
-                }
-            }
-        }
-    }
-
-    private fun stopLocationMonitoring() {
-        locationMonitorJob?.cancel()
-        locationMonitorJob = null
     }
 
     private fun startTimer(session: Session) {
@@ -216,47 +163,5 @@ internal class SessionTrackerImpl(
     private fun stopTimer() {
         timerJob?.cancel()
         timerJob = null
-    }
-
-    private fun observeNutritionReminders() {
-        nutritionJob?.cancel()
-        nutritionJob = scope?.launch {
-            nutritionReminderUseCase.observeNutritionReminders().collect {
-                delegate?.onVibrate()
-            }
-        }
-    }
-
-    private fun startPowerCollection() {
-        if (powerCollectionJob?.isActive == true) return
-        powerCollectionJob = scope?.launch {
-            val device = sessionPowerMeterUseCase.getSessionPowerDevice() ?: return@launch
-            collectPowerWithRetry(device.macAddress)
-        }
-    }
-
-    private suspend fun collectPowerWithRetry(macAddress: String) {
-        var retryDelay = POWER_RETRY_INITIAL_DELAY
-        while (true) {
-            try {
-                sessionPowerMeterUseCase.observePowerReadings(macAddress).collect { reading ->
-                    retryDelay = POWER_RETRY_INITIAL_DELAY
-                    updateSessionPowerUseCase.update(
-                        powerWatts = reading.powerWatts,
-                        timestampMs = reading.timestampMs,
-                    )
-                }
-            } catch (_: PowerConnectionException) {
-                // Connection error — retry with backoff
-            }
-            delay(retryDelay)
-            retryDelay = (retryDelay.times(POWER_RETRY_FACTOR)).coerceAtMost(POWER_RETRY_MAX_DELAY)
-        }
-    }
-
-    private fun stopPowerCollection() {
-        powerCollectionJob?.cancel()
-        powerCollectionJob = null
-        sessionPowerMeterUseCase.disconnect()
     }
 }

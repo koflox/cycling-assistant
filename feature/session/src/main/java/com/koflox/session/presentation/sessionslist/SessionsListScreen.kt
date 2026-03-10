@@ -33,15 +33,17 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import com.koflox.designsystem.testtag.TestTags
 import com.koflox.designsystem.text.resolve
 import com.koflox.designsystem.theme.Elevation
 import com.koflox.designsystem.theme.Spacing
 import com.koflox.session.R
 import com.koflox.session.navigation.STATS_SECTION_SHARE
 import com.koflox.session.presentation.share.SharePreviewDialog
-import org.koin.androidx.compose.koinViewModel
 
 @Composable
 internal fun SessionsListRoute(
@@ -50,7 +52,7 @@ internal fun SessionsListRoute(
     onNavigateToStatsConfig: (section: String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val viewModel: SessionsListViewModel = koinViewModel()
+    val viewModel: SessionsListViewModel = hiltViewModel()
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
     LaunchedEffect(uiState) {
@@ -115,7 +117,7 @@ private fun SessionsListContent(
         }
     }
     Scaffold(
-        modifier = modifier,
+        modifier = modifier.testTag(TestTags.SESSIONS_LIST_SCREEN),
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.sessions_list_title)) },

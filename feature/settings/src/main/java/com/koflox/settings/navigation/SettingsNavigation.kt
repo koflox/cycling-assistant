@@ -1,17 +1,18 @@
 package com.koflox.settings.navigation
 
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import androidx.navigation.navigation
-import com.koflox.poisettings.bridge.navigator.PoiSettingsUiNavigator
-import com.koflox.sessionsettings.bridge.navigator.StatsDisplaySettingsUiNavigator
+import com.koflox.settings.presentation.SettingsEntryPoint
 import com.koflox.settings.presentation.SettingsRoute
-import org.koin.compose.koinInject
+import dagger.hilt.android.EntryPointAccessors
 
 const val SETTINGS_GRAPH_ROUTE = "settings_graph"
 
@@ -41,8 +42,11 @@ fun NavGraphBuilder.settingsGraph(
             )
         }
         composable(route = SETTINGS_POI_SELECTION_ROUTE) {
-            val poiSettingsUiNavigator: PoiSettingsUiNavigator = koinInject()
-            poiSettingsUiNavigator.PoiSelectionScreen(
+            val context = LocalContext.current
+            val entryPoint = remember {
+                EntryPointAccessors.fromApplication(context, SettingsEntryPoint::class.java)
+            }
+            entryPoint.poiSettingsUiNavigator().PoiSelectionScreen(
                 onBackClick = { navController.popBackStack() },
                 modifier = Modifier.fillMaxSize(),
             )
@@ -57,9 +61,12 @@ fun NavGraphBuilder.settingsGraph(
                 },
             ),
         ) { backStackEntry ->
-            val statsDisplaySettingsUiNavigator: StatsDisplaySettingsUiNavigator = koinInject()
+            val context = LocalContext.current
+            val entryPoint = remember {
+                EntryPointAccessors.fromApplication(context, SettingsEntryPoint::class.java)
+            }
             val sectionArg = backStackEntry.arguments?.getString(SECTION_ARG)
-            statsDisplaySettingsUiNavigator.StatsDisplayConfigScreen(
+            entryPoint.statsDisplaySettingsUiNavigator().StatsDisplayConfigScreen(
                 onBackClick = { navController.popBackStack() },
                 initialSection = sectionArg,
                 modifier = Modifier.fillMaxSize(),

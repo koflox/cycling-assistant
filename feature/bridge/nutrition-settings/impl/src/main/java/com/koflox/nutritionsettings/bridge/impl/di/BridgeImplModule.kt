@@ -2,10 +2,15 @@ package com.koflox.nutritionsettings.bridge.impl.di
 
 import com.koflox.nutritionsettings.bridge.impl.navigator.NutritionSettingsUiNavigatorImpl
 import com.koflox.nutritionsettings.bridge.navigator.NutritionSettingsUiNavigator
-import org.koin.dsl.module
+import dagger.Module
+import dagger.Provides
+import dagger.hilt.InstallIn
+import dagger.hilt.components.SingletonComponent
 
-val nutritionSettingsBridgeImplModule = module {
-    factory<NutritionSettingsUiNavigator> {
-        NutritionSettingsUiNavigatorImpl()
-    }
+@Module
+@InstallIn(SingletonComponent::class)
+internal object BridgeImplModule {
+
+    @Provides
+    fun provideNutritionSettingsUiNavigator(): NutritionSettingsUiNavigator = NutritionSettingsUiNavigatorImpl()
 }
