@@ -38,7 +38,7 @@ jobs:
             STATUS="fail"
             DETAILS="baseline-prof.txt missing or empty"
           else
-            BASELINE_LINES=$(wc -l < "$BASELINE")
+            BASELINE_LINES=$(grep -c '' "$BASELINE")
             BASELINE_SIZE=$(du -h "$BASELINE" | cut -f1)
             DETAILS="baseline-prof.txt (${BASELINE_LINES} lines, ${BASELINE_SIZE})"
           fi
@@ -47,7 +47,7 @@ jobs:
             STATUS="fail"
             DETAILS="${DETAILS:+$DETAILS, }startup-prof.txt missing or empty"
           else
-            STARTUP_LINES=$(wc -l < "$STARTUP")
+            STARTUP_LINES=$(grep -c '' "$STARTUP")
             STARTUP_SIZE=$(du -h "$STARTUP" | cut -f1)
             DETAILS="${DETAILS:+$DETAILS, }startup-prof.txt (${STARTUP_LINES} lines, ${STARTUP_SIZE})"
           fi
