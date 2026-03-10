@@ -8,6 +8,7 @@ plugins {
     alias(libs.plugins.google.services)
     alias(libs.plugins.firebase.crashlytics)
     alias(libs.plugins.firebase.perf.plugin)
+    alias(libs.plugins.hilt)
 }
 
 val versionProperties = Properties().apply {
@@ -24,21 +25,17 @@ android {
         versionName = versionProperties.getProperty("versionName")
 
         val secretsProperties = Properties()
-        val secretsPropertiesFile = rootProject.file("secrets.properties")
+        val secretsPropertiesFile = project.rootProject.file("secrets.properties")
         if (secretsPropertiesFile.exists()) {
             secretsProperties.load(secretsPropertiesFile.inputStream())
         }
 
         manifestPlaceholders["MAPS_API_KEY"] = secretsProperties.getProperty("MAPS_API_KEY", "")
-
-        ksp {
-            arg("room.schemaLocation", "${rootProject.projectDir}/schemas/app")
-        }
     }
 
     signingConfigs {
         create("release") {
-            val keystorePropertiesFile = rootProject.file("keystore.properties")
+            val keystorePropertiesFile = project.rootProject.file("keystore.properties")
             if (keystorePropertiesFile.exists()) {
                 val keystoreProperties = Properties().apply {
                     load(keystorePropertiesFile.inputStream())
@@ -94,6 +91,10 @@ android {
     }
 }
 
+ksp {
+    arg("room.schemaLocation", "${rootProject.projectDir}/schemas/app")
+}
+
 dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
@@ -117,10 +118,10 @@ dependencies {
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.android)
 
-    // Koin
-    implementation(libs.koin.android)
-    implementation(libs.koin.androidx.compose)
-    implementation(libs.koin.core)
+    // Hilt
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.compiler)
+    implementation(libs.hilt.navigation.compose)
 
     // Room - database defined in app module for KSP visibility
     implementation(libs.androidx.room.runtime)
@@ -167,6 +168,7 @@ dependencies {
     implementation(project(":shared:ble"))
     implementation(project(":shared:concurrent"))
     implementation(project(":shared:design-system"))
+    implementation(project(":shared:di"))
     implementation(project(":shared:distance"))
     implementation(project(":shared:id"))
     implementation(project(":shared:location"))
@@ -181,7 +183,7 @@ dependencies {
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.mockk)
     testImplementation(libs.turbine)
-    testImplementation(libs.koin.test)
+    testImplementation(libs.hilt.android.testing)
 
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

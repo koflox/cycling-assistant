@@ -2,19 +2,23 @@ package com.koflox.nutrition.presentation.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.koflox.di.DefaultDispatcher
 import com.koflox.nutrition.domain.usecase.ObserveNutritionSettingsUseCase
 import com.koflox.nutrition.domain.usecase.UpdateNutritionSettingsUseCase
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-internal class NutritionSettingsViewModel(
+@HiltViewModel
+internal class NutritionSettingsViewModel @Inject internal constructor(
     private val observeNutritionSettingsUseCase: ObserveNutritionSettingsUseCase,
     private val updateNutritionSettingsUseCase: UpdateNutritionSettingsUseCase,
-    private val dispatcherDefault: CoroutineDispatcher,
+    @param:DefaultDispatcher private val dispatcherDefault: CoroutineDispatcher,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(NutritionSettingsUiState())

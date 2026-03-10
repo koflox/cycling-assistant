@@ -1,6 +1,7 @@
 package com.koflox.destinations.di
 
-import com.koflox.concurrent.DispatchersQualifier
+import com.koflox.destinations.domain.repository.DestinationsRepository
+import com.koflox.destinations.domain.repository.RidePreferencesRepository
 import com.koflox.destinations.domain.usecase.GetDestinationInfoUseCase
 import com.koflox.destinations.domain.usecase.GetDestinationInfoUseCaseImpl
 import com.koflox.destinations.domain.usecase.GetDistanceBoundsUseCase
@@ -15,45 +16,76 @@ import com.koflox.destinations.domain.usecase.ToleranceCalculator
 import com.koflox.destinations.domain.usecase.ToleranceCalculatorImpl
 import com.koflox.destinations.domain.usecase.UpdateRidingModeUseCase
 import com.koflox.destinations.domain.usecase.UpdateRidingModeUseCaseImpl
-import org.koin.dsl.module
+import com.koflox.di.DefaultDispatcher
+import com.koflox.distance.DistanceCalculator
+import dagger.Module
+import dagger.Provides
+import dagger.hilt.InstallIn
+import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.CoroutineDispatcher
+import javax.inject.Singleton
 
-internal val domainModule = module {
-    factory<GetNearbyDestinationsUseCase> {
-        GetNearbyDestinationsUseCaseImpl(
-            repository = get(),
-            distanceCalculator = get(),
-        )
-    }
-    single<ToleranceCalculator> { ToleranceCalculatorImpl() }
-    factory<GetDestinationInfoUseCase> {
-        GetDestinationInfoUseCaseImpl(
-            dispatcherDefault = get(DispatchersQualifier.Default),
-            repository = get(),
-            getNearbyDestinationsUseCase = get(),
-            distanceCalculator = get(),
-            toleranceCalculator = get(),
-        )
-    }
-    factory<InitializeDatabaseUseCase> {
-        InitializeDatabaseUseCaseImpl(
-            repository = get(),
-        )
-    }
-    factory<GetDistanceBoundsUseCase> {
-        GetDistanceBoundsUseCaseImpl(
-            dispatcherDefault = get(DispatchersQualifier.Default),
-            getNearbyDestinationsUseCase = get(),
-            distanceCalculator = get(),
-        )
-    }
-    factory<ObserveRidingModeUseCase> {
-        ObserveRidingModeUseCaseImpl(
-            repository = get(),
-        )
-    }
-    factory<UpdateRidingModeUseCase> {
-        UpdateRidingModeUseCaseImpl(
-            repository = get(),
-        )
-    }
+@Module
+@InstallIn(SingletonComponent::class)
+internal object DomainModule {
+
+    @Provides
+    fun provideGetNearbyDestinationsUseCase(
+        repository: DestinationsRepository,
+        distanceCalculator: DistanceCalculator,
+    ): GetNearbyDestinationsUseCase = GetNearbyDestinationsUseCaseImpl(
+        repository = repository,
+        distanceCalculator = distanceCalculator,
+    )
+
+    @Provides
+    @Singleton
+    fun provideToleranceCalculator(): ToleranceCalculator = ToleranceCalculatorImpl()
+
+    @Provides
+    fun provideGetDestinationInfoUseCase(
+        @DefaultDispatcher dispatcherDefault: CoroutineDispatcher,
+        repository: DestinationsRepository,
+        getNearbyDestinationsUseCase: GetNearbyDestinationsUseCase,
+        distanceCalculator: DistanceCalculator,
+        toleranceCalculator: ToleranceCalculator,
+    ): GetDestinationInfoUseCase = GetDestinationInfoUseCaseImpl(
+        dispatcherDefault = dispatcherDefault,
+        repository = repository,
+        getNearbyDestinationsUseCase = getNearbyDestinationsUseCase,
+        distanceCalculator = distanceCalculator,
+        toleranceCalculator = toleranceCalculator,
+    )
+
+    @Provides
+    fun provideInitializeDatabaseUseCase(
+        repository: DestinationsRepository,
+    ): InitializeDatabaseUseCase = InitializeDatabaseUseCaseImpl(
+        repository = repository,
+    )
+
+    @Provides
+    fun provideGetDistanceBoundsUseCase(
+        @DefaultDispatcher dispatcherDefault: CoroutineDispatcher,
+        getNearbyDestinationsUseCase: GetNearbyDestinationsUseCase,
+        distanceCalculator: DistanceCalculator,
+    ): GetDistanceBoundsUseCase = GetDistanceBoundsUseCaseImpl(
+        dispatcherDefault = dispatcherDefault,
+        getNearbyDestinationsUseCase = getNearbyDestinationsUseCase,
+        distanceCalculator = distanceCalculator,
+    )
+
+    @Provides
+    fun provideObserveRidingModeUseCase(
+        repository: RidePreferencesRepository,
+    ): ObserveRidingModeUseCase = ObserveRidingModeUseCaseImpl(
+        repository = repository,
+    )
+
+    @Provides
+    fun provideUpdateRidingModeUseCase(
+        repository: RidePreferencesRepository,
+    ): UpdateRidingModeUseCase = UpdateRidingModeUseCaseImpl(
+        repository = repository,
+    )
 }

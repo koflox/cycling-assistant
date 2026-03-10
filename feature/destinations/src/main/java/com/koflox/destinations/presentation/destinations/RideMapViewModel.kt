@@ -16,11 +16,13 @@ import com.koflox.destinations.presentation.destinations.delegate.DestinationDel
 import com.koflox.destinations.presentation.destinations.delegate.LocationDelegate
 import com.koflox.destinations.presentation.mapper.DestinationUiMapper
 import com.koflox.destinationsession.bridge.usecase.CyclingSessionUseCase
+import com.koflox.di.DefaultDispatcher
 import com.koflox.distance.DistanceCalculator
 import com.koflox.location.usecase.CheckLocationEnabledUseCase
 import com.koflox.location.usecase.GetUserLocationUseCase
 import com.koflox.location.usecase.ObserveUserLocationUseCase
 import com.koflox.map.intent.GoogleMapsIntentHelper
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -30,8 +32,10 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-internal class RideMapViewModel(
+@HiltViewModel
+internal class RideMapViewModel @Inject internal constructor(
     private val checkLocationEnabledUseCase: CheckLocationEnabledUseCase,
     private val getUserLocationUseCase: GetUserLocationUseCase,
     private val observeUserLocationUseCase: ObserveUserLocationUseCase,
@@ -47,7 +51,7 @@ internal class RideMapViewModel(
     private val observeNutritionBreakUseCase: ObserveNutritionBreakUseCase,
     private val observeRidingModeUseCase: ObserveRidingModeUseCase,
     private val updateRidingModeUseCase: UpdateRidingModeUseCase,
-    private val dispatcherDefault: CoroutineDispatcher,
+    @param:DefaultDispatcher private val dispatcherDefault: CoroutineDispatcher,
 ) : AndroidViewModel(application) {
 
     private val _internalState = MutableStateFlow(RideMapInternalState())

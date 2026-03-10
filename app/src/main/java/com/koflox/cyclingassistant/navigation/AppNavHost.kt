@@ -5,6 +5,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
@@ -22,7 +23,16 @@ import com.koflox.session.service.PendingSessionAction
 import com.koflox.settings.navigation.SETTINGS_GRAPH_ROUTE
 import com.koflox.settings.navigation.settingsGraph
 import com.koflox.settings.navigation.settingsStatsDisplayRoute
-import org.koin.compose.koinInject
+import dagger.hilt.EntryPoint
+import dagger.hilt.InstallIn
+import dagger.hilt.android.EntryPointAccessors
+import dagger.hilt.components.SingletonComponent
+
+@EntryPoint
+@InstallIn(SingletonComponent::class)
+interface AppNavHostEntryPoint {
+    fun pendingSessionAction(): PendingSessionAction
+}
 
 @Composable
 fun AppNavHost(
@@ -30,7 +40,9 @@ fun AppNavHost(
     navController: NavHostController = rememberNavController(),
     startDestination: String = DASHBOARD_ROUTE,
 ) {
-    val pendingSessionAction: PendingSessionAction = koinInject()
+    val context = LocalContext.current
+    val entryPoint = EntryPointAccessors.fromApplication(context, AppNavHostEntryPoint::class.java)
+    val pendingSessionAction = entryPoint.pendingSessionAction()
     val isStopRequested by pendingSessionAction.isStopRequested.collectAsState()
     LaunchedEffect(isStopRequested) {
         if (isStopRequested) {

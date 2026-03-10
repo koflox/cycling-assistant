@@ -1,38 +1,27 @@
 package com.koflox.destinations.di
 
-import com.koflox.concurrent.DispatchersQualifier
-import com.koflox.destinations.presentation.destinations.RideMapViewModel
 import com.koflox.destinations.presentation.mapper.DestinationUiMapper
 import com.koflox.destinations.presentation.mapper.DestinationUiMapperImpl
-import org.koin.android.ext.koin.androidApplication
-import org.koin.core.module.dsl.viewModel
-import org.koin.dsl.module
+import com.koflox.di.DefaultDispatcher
+import com.koflox.distance.DistanceCalculator
+import dagger.Module
+import dagger.Provides
+import dagger.hilt.InstallIn
+import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.CoroutineDispatcher
+import javax.inject.Singleton
 
-internal val presentationModule = module {
-    viewModel {
-        RideMapViewModel(
-            checkLocationEnabledUseCase = get(),
-            getUserLocationUseCase = get(),
-            observeUserLocationUseCase = get(),
-            initializeDatabaseUseCase = get(),
-            getDestinationInfoUseCase = get(),
-            getDistanceBoundsUseCase = get(),
-            distanceCalculator = get(),
-            uiMapper = get(),
-            toleranceCalculator = get(),
-            application = androidApplication(),
-            cyclingSessionUseCase = get(),
-            googleMapsIntentHelper = get(),
-            observeNutritionBreakUseCase = get(),
-            observeRidingModeUseCase = get(),
-            updateRidingModeUseCase = get(),
-            dispatcherDefault = get(DispatchersQualifier.Default),
-        )
-    }
-    single<DestinationUiMapper> {
-        DestinationUiMapperImpl(
-            dispatcherDefault = get(DispatchersQualifier.Default),
-            distanceCalculator = get(),
-        )
-    }
+@Module
+@InstallIn(SingletonComponent::class)
+internal object PresentationModule {
+
+    @Provides
+    @Singleton
+    fun provideDestinationUiMapper(
+        @DefaultDispatcher dispatcherDefault: CoroutineDispatcher,
+        distanceCalculator: DistanceCalculator,
+    ): DestinationUiMapper = DestinationUiMapperImpl(
+        dispatcherDefault = dispatcherDefault,
+        distanceCalculator = distanceCalculator,
+    )
 }

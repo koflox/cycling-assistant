@@ -1,6 +1,7 @@
 package com.koflox.destinations.di
 
-import com.koflox.concurrent.DispatchersQualifier
+import android.content.Context
+import com.koflox.concurrent.ConcurrentFactory
 import com.koflox.destinations.data.mapper.DestinationMapper
 import com.koflox.destinations.data.mapper.DestinationMapperImpl
 import com.koflox.destinations.data.repository.DestinationsRepositoryImpl
@@ -15,81 +16,118 @@ import com.koflox.destinations.data.source.local.PoiLocalDataSource
 import com.koflox.destinations.data.source.local.PoiLocalDataSourceImpl
 import com.koflox.destinations.data.source.local.RidingModeLocalDataSource
 import com.koflox.destinations.data.source.local.RidingModeLocalDataSourceImpl
+import com.koflox.destinations.data.source.local.database.dao.DestinationDao
 import com.koflox.destinations.domain.repository.DestinationsRepository
 import com.koflox.destinations.domain.repository.RidePreferencesRepository
+import com.koflox.di.DefaultDispatcher
+import com.koflox.di.DestinationFilesMutex
+import com.koflox.di.DestinationsDaoFactory
+import com.koflox.di.IoDispatcher
+import com.koflox.distance.DistanceCalculator
+import dagger.Module
+import dagger.Provides
+import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
+import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.sync.Mutex
-import org.koin.android.ext.koin.androidContext
-import org.koin.core.module.Module
-import org.koin.dsl.module
+import javax.inject.Singleton
 
-private val dataModule = module {
-    single<DestinationMapper> {
-        DestinationMapperImpl(
-            dispatcherDefault = get(DispatchersQualifier.Default),
-        )
-    }
+@Module
+@InstallIn(SingletonComponent::class)
+internal object DataModule {
+
+    @Provides
+    @Singleton
+    fun provideDestinationMapper(
+        @DefaultDispatcher dispatcherDefault: CoroutineDispatcher,
+    ): DestinationMapper = DestinationMapperImpl(
+        dispatcherDefault = dispatcherDefault,
+    )
+
+    @Provides
+    @Singleton
+    @DestinationFilesMutex
+    fun provideDestinationFilesMutex(): Mutex = Mutex()
+
+    @Provides
+    @Singleton
+    fun providePoiLocalDataSource(
+        @IoDispatcher dispatcherIo: CoroutineDispatcher,
+        @DestinationsDaoFactory daoFactory: ConcurrentFactory<DestinationDao>,
+    ): PoiLocalDataSource = PoiLocalDataSourceImpl(
+        dispatcherIo = dispatcherIo,
+        daoFactory = daoFactory,
+    )
+
+    @Provides
+    @Singleton
+    fun providePoiAssetDataSource(
+        @IoDispatcher dispatcherIo: CoroutineDispatcher,
+        @ApplicationContext context: Context,
+    ): PoiAssetDataSource = PoiAssetDataSourceImpl(
+        dispatcherIo = dispatcherIo,
+        context = context,
+    )
+
+    @Provides
+    @Singleton
+    fun provideDestinationFilesLocalDataSource(
+        @IoDispatcher dispatcherIo: CoroutineDispatcher,
+        @ApplicationContext context: Context,
+        @DestinationFilesMutex mutex: Mutex,
+    ): DestinationFilesLocalDataSource = DestinationFilesLocalDataSourceImpl(
+        dispatcherIo = dispatcherIo,
+        context = context,
+        mutex = mutex,
+    )
+
+    @Provides
+    @Singleton
+    fun provideDestinationFileResolver(
+        @IoDispatcher dispatcherIo: CoroutineDispatcher,
+        @ApplicationContext context: Context,
+        distanceCalculator: DistanceCalculator,
+    ): DestinationFileResolver = DestinationFileResolverImpl(
+        dispatcherIo = dispatcherIo,
+        context = context,
+        distanceCalculator = distanceCalculator,
+    )
+
+    @Provides
+    @Singleton
+    fun provideRidingModeLocalDataSource(
+        @ApplicationContext context: Context,
+        @IoDispatcher dispatcherIo: CoroutineDispatcher,
+    ): RidingModeLocalDataSource = RidingModeLocalDataSourceImpl(
+        context = context,
+        dispatcherIo = dispatcherIo,
+    )
+
+    @Provides
+    @Singleton
+    fun provideDestinationsRepository(
+        @DefaultDispatcher dispatcherDefault: CoroutineDispatcher,
+        poiLocalDataSource: PoiLocalDataSource,
+        poiAssetDataSource: PoiAssetDataSource,
+        destinationFilesLocalDataSource: DestinationFilesLocalDataSource,
+        destinationFileResolver: DestinationFileResolver,
+        mapper: DestinationMapper,
+    ): DestinationsRepository = DestinationsRepositoryImpl(
+        dispatcherDefault = dispatcherDefault,
+        poiLocalDataSource = poiLocalDataSource,
+        poiAssetDataSource = poiAssetDataSource,
+        destinationFilesLocalDataSource = destinationFilesLocalDataSource,
+        destinationFileResolver = destinationFileResolver,
+        mapper = mapper,
+        mutex = Mutex(),
+    )
+
+    @Provides
+    @Singleton
+    fun provideRidePreferencesRepository(
+        localDataSource: RidingModeLocalDataSource,
+    ): RidePreferencesRepository = RidePreferencesRepositoryImpl(
+        localDataSource = localDataSource,
+    )
 }
-
-private val dataSourceModule = module {
-    single(DestinationsDataQualifierInternal.DestinationFilesMutex) {
-        Mutex()
-    }
-    single<PoiLocalDataSource> {
-        PoiLocalDataSourceImpl(
-            dispatcherIo = get<CoroutineDispatcher>(DispatchersQualifier.Io),
-            daoFactory = get(DestinationsQualifier.DaoFactory),
-        )
-    }
-    single<PoiAssetDataSource> {
-        PoiAssetDataSourceImpl(
-            dispatcherIo = get<CoroutineDispatcher>(DispatchersQualifier.Io),
-            context = androidContext(),
-        )
-    }
-    single<DestinationFilesLocalDataSource> {
-        DestinationFilesLocalDataSourceImpl(
-            dispatcherIo = get(DispatchersQualifier.Io),
-            context = androidContext(),
-            mutex = get(DestinationsDataQualifierInternal.DestinationFilesMutex),
-        )
-    }
-    single<DestinationFileResolver> {
-        DestinationFileResolverImpl(
-            dispatcherIo = get<CoroutineDispatcher>(DispatchersQualifier.Io),
-            context = androidContext(),
-            distanceCalculator = get(),
-        )
-    }
-    single<RidingModeLocalDataSource> {
-        RidingModeLocalDataSourceImpl(
-            context = androidContext(),
-            dispatcherIo = get(DispatchersQualifier.Io),
-        )
-    }
-}
-
-private val repoModule = module {
-    single<DestinationsRepository> {
-        DestinationsRepositoryImpl(
-            dispatcherDefault = get<CoroutineDispatcher>(DispatchersQualifier.Default),
-            poiLocalDataSource = get(),
-            poiAssetDataSource = get(),
-            destinationFilesLocalDataSource = get(),
-            destinationFileResolver = get(),
-            mapper = get(),
-            mutex = Mutex(),
-        )
-    }
-    single<RidePreferencesRepository> {
-        RidePreferencesRepositoryImpl(
-            localDataSource = get(),
-        )
-    }
-}
-
-internal val dataModules: List<Module> = listOf(
-    dataModule,
-    dataSourceModule,
-    repoModule,
-)

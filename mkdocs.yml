@@ -73,6 +73,8 @@ nav:
       - Tech Stack: product/tech-stack.md
       - Setup: product/setup.md
       - Known Issues: product/known-issues.md
+  - Migrations:
+      - Koin → Hilt: migrations/koin-to-hilt.md
   - Contributing:
       - Commit Messages: contributing/commit-messages.md
       - Documentation: contributing/documentation.md

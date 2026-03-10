@@ -12,10 +12,12 @@ import android.os.Vibrator
 import android.os.VibratorManager
 import androidx.core.app.ServiceCompat
 import com.koflox.session.domain.model.Session
-import org.koin.android.ext.android.inject
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
 
-class SessionTrackingService : Service(), SessionTrackingDelegate {
+@AndroidEntryPoint
+internal class SessionTrackingService : Service(), SessionTrackingDelegate {
 
     companion object {
         const val ACTION_START = "com.koflox.session.START"
@@ -25,8 +27,10 @@ class SessionTrackingService : Service(), SessionTrackingDelegate {
         private val VIBRATION_DURATION = 200.milliseconds
     }
 
-    private val sessionTracker: SessionTracker by inject()
-    private val notificationManager: SessionNotificationManager by inject()
+    @Suppress("LateinitUsage") @Inject
+    internal lateinit var sessionTracker: SessionTracker
+    @Suppress("LateinitUsage") @Inject
+    internal lateinit var notificationManager: SessionNotificationManager
 
     private val androidNotificationManager by lazy {
         getSystemService(NOTIFICATION_SERVICE) as NotificationManager

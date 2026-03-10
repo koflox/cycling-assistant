@@ -28,10 +28,13 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.koflox.designsystem.component.LocalizedExposedDropdownMenu
 import com.koflox.designsystem.theme.Spacing
 import com.koflox.nutritionsettings.bridge.navigator.NutritionSettingsUiNavigator
@@ -39,8 +42,18 @@ import com.koflox.poisettings.bridge.navigator.PoiSettingsUiNavigator
 import com.koflox.sessionsettings.bridge.navigator.StatsDisplaySettingsUiNavigator
 import com.koflox.settings.R
 import com.koflox.theme.domain.model.AppTheme
-import org.koin.androidx.compose.koinViewModel
-import org.koin.compose.koinInject
+import dagger.hilt.EntryPoint
+import dagger.hilt.InstallIn
+import dagger.hilt.android.EntryPointAccessors
+import dagger.hilt.components.SingletonComponent
+
+@EntryPoint
+@InstallIn(SingletonComponent::class)
+internal interface SettingsEntryPoint {
+    fun nutritionSettingsUiNavigator(): NutritionSettingsUiNavigator
+    fun poiSettingsUiNavigator(): PoiSettingsUiNavigator
+    fun statsDisplaySettingsUiNavigator(): StatsDisplaySettingsUiNavigator
+}
 
 @Composable
 internal fun SettingsRoute(
@@ -48,11 +61,12 @@ internal fun SettingsRoute(
     onNavigateToPoiSelection: () -> Unit,
     onNavigateToStatsConfig: () -> Unit,
     modifier: Modifier = Modifier,
-    nutritionSettingsUiNavigator: NutritionSettingsUiNavigator = koinInject(),
-    poiSettingsUiNavigator: PoiSettingsUiNavigator = koinInject(),
-    statsDisplaySettingsUiNavigator: StatsDisplaySettingsUiNavigator = koinInject(),
 ) {
-    val viewModel: SettingsViewModel = koinViewModel()
+    val context = LocalContext.current
+    val entryPoint = remember {
+        EntryPointAccessors.fromApplication(context, SettingsEntryPoint::class.java)
+    }
+    val viewModel: SettingsViewModel = hiltViewModel()
     val uiState by viewModel.uiState.collectAsState()
     SettingsContent(
         uiState = uiState,
@@ -60,9 +74,9 @@ internal fun SettingsRoute(
         onNavigateToPoiSelection = onNavigateToPoiSelection,
         onNavigateToStatsConfig = onNavigateToStatsConfig,
         onEvent = viewModel::onEvent,
-        nutritionSettingsUiNavigator = nutritionSettingsUiNavigator,
-        poiSettingsUiNavigator = poiSettingsUiNavigator,
-        statsDisplaySettingsUiNavigator = statsDisplaySettingsUiNavigator,
+        nutritionSettingsUiNavigator = entryPoint.nutritionSettingsUiNavigator(),
+        poiSettingsUiNavigator = entryPoint.poiSettingsUiNavigator(),
+        statsDisplaySettingsUiNavigator = entryPoint.statsDisplaySettingsUiNavigator(),
         modifier = modifier,
     )
 }

@@ -2,6 +2,8 @@ package com.koflox.session.presentation.session
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.koflox.di.DefaultDispatcher
+import com.koflox.di.SessionErrorMapper
 import com.koflox.error.mapper.ErrorMessageMapper
 import com.koflox.location.model.Location
 import com.koflox.location.usecase.CheckLocationEnabledUseCase
@@ -24,6 +26,7 @@ import com.koflox.session.service.PendingSessionActionConsumer
 import com.koflox.session.service.PowerConnectionState
 import com.koflox.session.service.PowerConnectionStateHolder
 import com.koflox.session.service.SessionServiceController
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -33,8 +36,10 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-internal class SessionViewModel(
+@HiltViewModel
+internal class SessionViewModel @Inject internal constructor(
     private val createSessionUseCase: CreateSessionUseCase,
     private val updateSessionStatusUseCase: UpdateSessionStatusUseCase,
     private val activeSessionUseCase: ActiveSessionUseCase,
@@ -44,10 +49,10 @@ internal class SessionViewModel(
     private val pendingSessionAction: PendingSessionAction,
     private val pendingSessionActionConsumer: PendingSessionActionConsumer,
     private val sessionUiMapper: SessionUiMapper,
-    private val errorMessageMapper: ErrorMessageMapper,
+    @param:SessionErrorMapper private val errorMessageMapper: ErrorMessageMapper,
     private val powerConnectionStateHolder: PowerConnectionStateHolder,
     sessionTimerFactory: SessionTimerFactory,
-    private val dispatcherDefault: CoroutineDispatcher,
+    @param:DefaultDispatcher private val dispatcherDefault: CoroutineDispatcher,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<SessionUiState>(SessionUiState.Idle)
