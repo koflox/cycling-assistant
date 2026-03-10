@@ -29,12 +29,7 @@ An Android app that helps cyclists discover cycling destinations, track sessions
 
 ## Quick Start
 
-1. Clone the repository
-2. Add your Google Maps API key to `secrets.properties`:
-   ```
-   MAPS_API_KEY=your_key_here
-   ```
-3. Run `./gradlew installDebug`
+See the [Setup Guide](https://koflox.github.io/cycling-assistant/product/setup/) to get up and running.
 
 ## Documentation
 

@@ -401,3 +401,5 @@ Configure Google Maps in `secrets.properties`:
 ```
 MAPS_API_KEY=your_key_here
 ```
+
+Firebase requires `google-services.json` in `app/` (git-ignored). Download from Firebase Console.

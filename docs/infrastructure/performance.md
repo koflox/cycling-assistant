@@ -128,7 +128,7 @@ Generated profiles are stored in `app/src/release/generated/baselineProfiles/` a
 
 ### Generating Profiles
 
-Requires a physical device (API 28+, ideally API 33+):
+Requires a device or emulator (API 28+, ideally API 33+):
 
 ```bash
 ./gradlew :app:generateReleaseBaselineProfile
@@ -232,7 +232,7 @@ Benchmarks grant runtime permissions programmatically via `grantPermissions()` b
 
 ### CI Verification
 
-The `baseline-profiles.yml` workflow runs on every PR and validates:
+The `baseline-profiles.yml` workflow runs on PRs targeting `main` and validates:
 
 | Check | What it verifies |
 |-------|-----------------|
