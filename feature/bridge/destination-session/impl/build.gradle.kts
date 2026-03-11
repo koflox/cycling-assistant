@@ -1,47 +1,21 @@
 plugins {
-    alias(libs.plugins.android.library)
-    alias(libs.plugins.kotlin.compose)
-    alias(libs.plugins.ksp)
-    alias(libs.plugins.hilt)
+    id("cycling.bridge.impl")
+    id("cycling.compose")
 }
 
 android {
     namespace = "com.koflox.destinationsession.bridge.impl"
-    buildFeatures {
-        compose = true
-    }
 }
 
 dependencies {
     implementation(libs.androidx.core.ktx)
-    implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.androidx.ui)
-    implementation(libs.androidx.material3)
-
-    // Lifecycle
     implementation(libs.androidx.lifecycle.runtime.compose)
-
-    // Coroutines
-    implementation(libs.kotlinx.coroutines.core)
-
-    // Hilt
-    implementation(libs.hilt.android)
-    ksp(libs.hilt.compiler)
-
-    // Google Maps (for LatLng access in route mapping)
     implementation(libs.play.services.maps)
 
-    // Bridge API
     implementation(project(":feature:bridge:destination-session:api"))
     implementation(project(":feature:session"))
     implementation(project(":shared:concurrent"))
     implementation(project(":shared:location"))
 
-    // Testing
-    testImplementation(libs.junit)
-    testImplementation(libs.kotlinx.coroutines.test)
-    testImplementation(libs.mockk)
-    testImplementation(libs.turbine)
-    testImplementation(project(":shared:testing"))
     testImplementation(testFixtures(project(":feature:session")))
 }

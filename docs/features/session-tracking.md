@@ -42,13 +42,13 @@ The service runs as a **foreground service** with `START_STICKY` and `foreground
 
 ### Concurrency
 
-`UpdateSessionStatusUseCase`, `UpdateSessionLocationUseCase`, and `UpdateSessionPowerUseCase` share a `Mutex` singleton (via `SessionQualifier.SessionMutex`) to serialize concurrent state mutations, preventing races between status changes, location updates, and power readings.
+`UpdateSessionStatusUseCase`, `UpdateSessionLocationUseCase`, and `UpdateSessionPowerUseCase` share a `Mutex` singleton (via `@SessionMutex` Hilt qualifier) to serialize concurrent state mutations, preventing races between status changes, location updates, and power readings.
 
 ## Location Processing
 
 ### Location Smoothing
 
-GPS data passes through a Kalman-filter-based smoother to reduce noise and improve route accuracy. The `LocationSmoother` is registered as a `factory` in Koin (stateful per session), not a `single`.
+GPS data passes through a Kalman-filter-based smoother to reduce noise and improve route accuracy. The `LocationSmoother` is registered as `@Provides` with no scope in Hilt (stateful per session), not `@Singleton`.
 
 ### Location Validation
 

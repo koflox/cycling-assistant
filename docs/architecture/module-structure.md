@@ -6,7 +6,8 @@ The project is organized into three module categories: **app**, **feature**, and
 
 ```
 CyclingAssistant/
-├── app/                              # Shell — navigation, theme, Koin bootstrap, Room DB
+├── app/                              # Shell — navigation, theme, Hilt bootstrap, Room DB
+├── build-logic/                      # Convention plugins (cycling.feature, cycling.library, etc.)
 ├── feature/
 │   ├── bridge/                       # Cross-feature communication (alphabetical pair names)
 │   │   ├── connection-session/       # connections ↔ session
@@ -37,7 +38,7 @@ CyclingAssistant/
     ├── ble/                          # BLE primitives (GATT, scanning, permissions)
     ├── concurrent/                   # Coroutine dispatchers, suspendRunCatching, ConcurrentFactory
     ├── design-system/                # UI theme, colors, spacing, components
-    ├── di/                           # Koin qualifiers
+    ├── di/                           # Hilt qualifier annotations
     ├── distance/                     # Distance calculator
     ├── error/                        # Error mapping utilities
     ├── graphics/                     # Bitmap utilities
@@ -50,7 +51,7 @@ CyclingAssistant/
 
 ### app
 
-The shell module — owns the `AppDatabase` (Room), `AppNavHost` navigation wiring, theme setup, and the root Koin module (`Modules.kt`). Every feature and shared module is included here.
+The shell module — owns the `AppDatabase` (Room), `AppNavHost` navigation wiring, theme setup, and Hilt bootstrap (`@HiltAndroidApp`). Every feature and shared module is included here.
 
 ### feature
 
@@ -68,7 +69,7 @@ Utility modules consumed by features:
 | `ble`             | BLE primitives (GATT, scanning, state, permissions)|
 | `concurrent`      | Coroutine dispatchers, `suspendRunCatching`, `ConcurrentFactory` |
 | `design-system`   | Material 3 theme, colors, spacing, components      |
-| `di`              | Koin qualifier definitions                         |
+| `di`              | Hilt qualifier annotations                         |
 | `distance`        | Distance calculator                                |
 | `error`           | Error mapping utilities                            |
 | `graphics`        | Bitmap utilities                                   |
