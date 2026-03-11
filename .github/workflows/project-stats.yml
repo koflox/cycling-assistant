@@ -33,7 +33,7 @@ jobs:
           google-services-json: ${{ secrets.GOOGLE_SERVICES_JSON }}
 
       - name: Run tests with coverage
-        run: gradle koverXmlReport --build-cache
+        run: ./gradlew koverXmlReport --build-cache
 
       - name: Extract coverage percentage
         id: coverage

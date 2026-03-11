@@ -1,5 +1,5 @@
-import com.koflox.build.library
-import com.koflox.build.libs
+import com.koflox.convention.library
+import com.koflox.convention.libs
 
 plugins {
     id("cycling.library")
