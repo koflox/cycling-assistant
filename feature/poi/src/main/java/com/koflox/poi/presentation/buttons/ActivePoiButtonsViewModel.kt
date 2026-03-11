@@ -14,7 +14,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-internal class ActivePoiButtonsViewModel @Inject internal constructor(
+internal class ActivePoiButtonsViewModel @Inject constructor(
     private val observeSelectedPoisUseCase: ObserveSelectedPoisUseCase,
     @param:DefaultDispatcher private val dispatcherDefault: CoroutineDispatcher,
 ) : ViewModel() {

@@ -19,7 +19,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-internal class StatsDisplayConfigViewModel @Inject internal constructor(
+internal class StatsDisplayConfigViewModel @Inject constructor(
     private val observeStatsDisplayConfigUseCase: ObserveStatsDisplayConfigUseCase,
     private val updateStatsDisplayConfigUseCase: UpdateStatsDisplayConfigUseCase,
     @param:DefaultDispatcher private val dispatcherDefault: CoroutineDispatcher,
@@ -58,7 +58,11 @@ internal class StatsDisplayConfigViewModel @Inject internal constructor(
 
     fun onEvent(event: StatsDisplayConfigUiEvent) {
         when (event) {
-            is StatsDisplayConfigUiEvent.StatToggled -> onStatToggled(event.section, event.type)
+            is StatsDisplayConfigUiEvent.StatAdded -> onStatAdded(event.section, event.type)
+            is StatsDisplayConfigUiEvent.StatRemoved -> onStatRemoved(event.section, event.type)
+            is StatsDisplayConfigUiEvent.StatReordered -> {
+                onStatReordered(event.section, event.fromIndex, event.toIndex)
+            }
             is StatsDisplayConfigUiEvent.ResetSectionClicked -> onResetSection(event.section)
             is StatsDisplayConfigUiEvent.SaveSectionClicked -> viewModelScope.launch(dispatcherDefault) {
                 onSaveSection(event.section)
@@ -76,14 +80,24 @@ internal class StatsDisplayConfigViewModel @Inject internal constructor(
         emitContentState()
     }
 
-    private fun onStatToggled(section: StatsDisplaySection, type: SessionStatType) {
+    private fun onStatAdded(section: StatsDisplaySection, type: SessionStatType) {
         val pending = getPendingList(section)
         val maxCount = getMaxCount(section)
-        if (type in pending) {
-            pending.remove(type)
-        } else if (maxCount == null || pending.size < maxCount) {
+        if (maxCount == null || pending.size < maxCount) {
             pending.add(type)
         }
+        emitContentState()
+    }
+
+    private fun onStatRemoved(section: StatsDisplaySection, type: SessionStatType) {
+        getPendingList(section).remove(type)
+        emitContentState()
+    }
+
+    private fun onStatReordered(section: StatsDisplaySection, fromIndex: Int, toIndex: Int) {
+        val pending = getPendingList(section)
+        val item = pending.removeAt(fromIndex)
+        pending.add(toIndex, item)
         emitContentState()
     }
 
@@ -139,9 +153,15 @@ internal class StatsDisplayConfigViewModel @Inject internal constructor(
 
     private fun emitContentState() {
         val sections = listOf(
-            buildSectionModel(StatsDisplaySection.ACTIVE_SESSION, StatsDisplayConfig.ACTIVE_SESSION_POOL, pendingActive, savedActive),
-            buildSectionModel(StatsDisplaySection.COMPLETED_SESSION, StatsDisplayConfig.COMPLETED_SHARE_POOL, pendingCompleted, savedCompleted),
-            buildSectionModel(StatsDisplaySection.SHARE, StatsDisplayConfig.COMPLETED_SHARE_POOL, pendingShare, savedShare),
+            buildSectionModel(
+                StatsDisplaySection.ACTIVE_SESSION, StatsDisplayConfig.ACTIVE_SESSION_POOL, pendingActive, savedActive,
+            ),
+            buildSectionModel(
+                StatsDisplaySection.COMPLETED_SESSION, StatsDisplayConfig.COMPLETED_SHARE_POOL, pendingCompleted, savedCompleted,
+            ),
+            buildSectionModel(
+                StatsDisplaySection.SHARE, StatsDisplayConfig.COMPLETED_SHARE_POOL, pendingShare, savedShare,
+            ),
         )
         val isSaveAllEnabled = sections.all { it.isSelectionValid } && sections.any { it.isSaveEnabled }
         _uiState.value = StatsDisplayConfigUiState.Content(
@@ -158,16 +178,13 @@ internal class StatsDisplayConfigViewModel @Inject internal constructor(
     ): SectionUiModel {
         val isValid = isSectionValid(section, pending)
         val isDirty = pending != saved
+        val maxCount = getMaxCount(section)
         return SectionUiModel(
             section = section,
-            stats = pool.map { type ->
-                val index = pending.indexOf(type)
-                StatItemUiModel(
-                    type = type,
-                    isSelected = index >= 0,
-                    selectionIndex = if (index >= 0) index + 1 else null,
-                )
-            },
+            selectedStats = pending.map { StatItemUiModel(type = it) },
+            availableStats = pool.filter { it !in pending }.map { StatItemUiModel(type = it) },
+            maxSelectionCount = maxCount,
+            isAddEnabled = maxCount == null || pending.size < maxCount,
             isSaveEnabled = isValid && isDirty,
             isSelectionValid = isValid,
         )

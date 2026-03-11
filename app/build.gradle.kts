@@ -2,14 +2,14 @@ import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.baselineprofile)
     alias(libs.plugins.kotlin.compose)
-    alias(libs.plugins.ksp)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.baselineprofile)
     alias(libs.plugins.google.services)
     alias(libs.plugins.firebase.crashlytics)
     alias(libs.plugins.firebase.perf.plugin)
-    alias(libs.plugins.hilt)
+    alias(libs.plugins.kover)
+    id("cycling.hilt")
 }
 
 val versionProperties = Properties().apply {
@@ -18,12 +18,15 @@ val versionProperties = Properties().apply {
 
 android {
     namespace = "com.koflox.cyclingassistant"
+    compileSdk = libs.versions.compileSdk.get().toInt()
 
     defaultConfig {
         applicationId = "com.koflox.cyclingassistant"
+        minSdk = libs.versions.minSdk.get().toInt()
         targetSdk = libs.versions.targetSdk.get().toInt()
         versionCode = versionProperties.getProperty("versionCode").toInt()
         versionName = versionProperties.getProperty("versionName")
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         val secretsProperties = Properties()
         val secretsPropertiesFile = project.rootProject.file("secrets.properties")
@@ -92,6 +95,12 @@ android {
         }
     }
 
+    compileOptions {
+        val javaVersion = JavaVersion.toVersion(libs.versions.javaVersion.get())
+        sourceCompatibility = javaVersion
+        targetCompatibility = javaVersion
+    }
+
     bundle {
         language {
             @Suppress("UnstableApiUsage")
@@ -141,9 +150,7 @@ dependencies {
     implementation(libs.androidx.profileinstaller)
     "baselineProfile"(project(":baselineprofile"))
 
-    // Hilt
-    implementation(libs.hilt.android)
-    ksp(libs.hilt.compiler)
+    // Hilt Navigation Compose
     implementation(libs.hilt.navigation.compose)
 
     // Room - database defined in app module for KSP visibility

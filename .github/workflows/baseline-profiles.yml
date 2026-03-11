@@ -69,7 +69,7 @@ jobs:
           release-key-password: ${{ secrets.RELEASE_KEY_PASSWORD }}
 
       - name: Build release AAB
-        run: gradle bundleRelease --build-cache
+        run: ./gradlew bundleRelease --build-cache
 
       - name: Verify profiles in AAB
         id: profiles-in-aab

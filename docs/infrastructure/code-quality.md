@@ -46,10 +46,8 @@ Coverage thresholds for badge coloring:
 | Domain repository interfaces                     | `public`     |
 | Data layer interfaces (DataSource, Mapper)       | `internal`   |
 | All `*Impl` classes                              | `internal`   |
-| All ViewModels                                   | `internal`   |
-| Top-level feature Koin modules                   | `public`     |
-| Sub-module Koin modules (`domainModule`, etc.)   | `internal`   |
-| Private DI sub-modules (`dataModule`, etc.)      | `private`    |
+| All ViewModels                                   | `internal` (`@HiltViewModel internal class ... @Inject constructor`) |
+| Hilt `@Module` objects                           | `internal`   |
 
 ### Composable Conventions
 
@@ -62,9 +60,12 @@ Coverage thresholds for badge coloring:
 - Content-level composables should have previews for all their states
 - No blank lines between composable body elements
 
-### Build Conventions
+### Build Conventions (Convention Plugins)
 
-- All plugins use version catalog aliases: `alias(libs.plugins.*)`
-- Root `build.gradle.kts` sets shared Android config via `subprojects {}` (compileSdk, minSdk, Java 11, JVM target) — feature modules only set `namespace`
+- Shared build configuration lives in `build-logic/` as precompiled script plugins
+- Feature modules apply `id("cycling.feature")` — provides Compose, Hilt, testing, lifecycle,
+  navigation, coroutines, and common shared modules
+- Bridge modules apply `id("cycling.bridge.api")` or `id("cycling.bridge.impl")`
+- Shared modules combine base plugins as needed: `cycling.library`, `cycling.compose`, `cycling.hilt`
 - Modules in `settings.gradle.kts` are alphabetically sorted
 

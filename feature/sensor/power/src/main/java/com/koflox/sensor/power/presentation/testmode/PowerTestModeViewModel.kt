@@ -25,7 +25,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-internal class PowerTestModeViewModel @Inject internal constructor(
+internal class PowerTestModeViewModel @Inject constructor(
     private val observePowerDataUseCase: ObservePowerDataUseCase,
     private val bluetoothStateMonitor: BluetoothStateMonitor,
     @param:DefaultDispatcher private val dispatcherDefault: CoroutineDispatcher,

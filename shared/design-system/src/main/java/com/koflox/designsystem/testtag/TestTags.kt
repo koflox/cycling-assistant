@@ -29,4 +29,6 @@ object TestTags {
     const val STATS_CONFIG_NAVIGATE = "stats_config_navigate"
     const val STATS_CONFIG_SCREEN = "stats_config_screen"
     const val STATS_CONFIG_SCROLL = "stats_config_scroll"
+    const val STATS_CONFIG_SELECTED_LIST = "stats_config_selected_list"
+    const val DRAG_HANDLE = "drag_handle"
 }

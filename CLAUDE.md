@@ -33,6 +33,7 @@ See also: [Module Dependency Graph](docs/MODULE_GRAPH.md) | [Module Structure do
 ```
 CyclingAssistant/
 ├── app/                              # Shell - navigation, theme, Hilt bootstrap, Room DB
+├── build-logic/                      # Convention plugins (cycling.feature, cycling.library, etc.)
 ├── feature/
 │   ├── bridge/                       # Cross-feature communication (alphabetical pair names)
 │   │   ├── connection-session/       # connections ↔ session
@@ -220,9 +221,8 @@ private const val SCAN_TIMEOUT_MS = 30_000L
 | Domain repository interfaces   | `public`   |
 | Data layer interfaces (DataSource, Mapper) | `internal` |
 | All `*Impl` classes            | `internal` |
-| All ViewModels                 | `internal` (`@HiltViewModel internal class ... @Inject internal constructor`) |
+| All ViewModels                 | `internal` (`@HiltViewModel internal class ... @Inject constructor`) |
 | Hilt `@Module` objects         | `internal` |
-| Service interfaces injected into `@AndroidEntryPoint` | `public` (e.g., `SessionTracker`, `SessionNotificationManager`) |
 
 ### DI (Hilt)
 
@@ -234,7 +234,7 @@ private const val SCAN_TIMEOUT_MS = 30_000L
 | DataSource | `@Provides @Singleton` |
 | Mapper     | `@Provides @Singleton` |
 | Repository | `@Provides @Singleton` |
-| ViewModel  | `@HiltViewModel internal class ... @Inject internal constructor(...)` |
+| ViewModel  | `@HiltViewModel internal class ... @Inject constructor(...)` |
 
 **Qualifiers:** Defined in `shared/di` as `@Qualifier @Retention(AnnotationRetention.BINARY)`
 annotations (e.g., `@IoDispatcher`, `@DefaultDispatcher`, `@SessionDaoFactory`, `@SessionMutex`).
@@ -303,11 +303,41 @@ fun NavGraphBuilder.sessionsListScreen(
 Follow `feature_component_description` pattern: `session_stat_*`, `session_button_*`,
 `notification_*`, `dialog_*`, `permission_*`, `error_*`, `share_*`.
 
-### Build Conventions
+### Build Conventions (Convention Plugins)
 
-- All plugins use version catalog aliases: `alias(libs.plugins.*)`
-- Root `build.gradle.kts` sets shared Android config via `subprojects {}` (compileSdk, minSdk,
-  Java 11, JVM target) — feature modules do NOT repeat these, only set `namespace`
+See also: [Convention Plugins docs](docs/infrastructure/convention-plugins.md)
+
+Shared build configuration lives in `build-logic/` as precompiled script plugins, replacing the
+old `subprojects {}` approach. Each module applies one or more convention plugins instead of
+repeating boilerplate.
+
+**Plugin hierarchy:**
+
+| Plugin | What it provides |
+|---|---|
+| `cycling.library` | Base: `com.android.library` + compileSdk, minSdk, Java 11, kover |
+| `cycling.compose` | `kotlin.compose` plugin + Compose BOM + material3 + icons |
+| `cycling.hilt` | `ksp` + `hilt` plugins + hilt-android + hilt-compiler |
+| `cycling.testing.unit` | junit + mockk + coroutines-test + turbine + shared:testing |
+| `cycling.feature` | library + compose + hilt + testing.unit + lifecycle + navigation + coroutines + shared:{concurrent, design-system, di} |
+| `cycling.bridge.api` | library (minimal) |
+| `cycling.bridge.impl` | library + hilt + testing.unit + coroutines-core |
+
+**Usage in modules:**
+
+```kotlin
+// feature/nutrition/build.gradle.kts
+plugins {
+    id("cycling.feature")
+}
+android {
+    namespace = "com.koflox.nutrition"
+}
+dependencies {
+    // Only module-specific dependencies
+}
+```
+
 - Modules in `settings.gradle.kts` are alphabetically sorted
 
 ## Unit Testing
@@ -346,7 +376,9 @@ Supported languages: English (default), Russian (`values-ru`), Japanese (`values
 
 1. Create module under `feature/<name>/` with di/, domain/, data/, presentation/
 2. Add to `settings.gradle.kts` (alphabetically sorted)
-3. Add `ksp` and `hilt` plugins to `build.gradle.kts`, add `hilt-android` + `hilt-compiler` deps
+3. In `build.gradle.kts`: apply `id("cycling.feature")` and set `android.namespace`
+   (e.g., `com.koflox.<feature>`). The convention plugin provides Hilt, Compose, testing, and
+   common dependencies — only add module-specific ones
 4. Create `@Module @InstallIn(SingletonComponent::class)` objects in `di/`
 5. Add navigation in `AppNavHost.kt`
 
@@ -354,8 +386,11 @@ Supported languages: English (default), Russian (`values-ru`), Japanese (`values
 
 1. Create bridge under `feature/bridge/<A-B>/` (A and B in alphabetical order) with `api/` and
    `impl/` submodules
-2. Consumer depends on API, impl depends on provider
-3. Bridge impl module: `@Module @InstallIn(SingletonComponent::class) internal object`
+2. API module: apply `id("cycling.bridge.api")` (add `id("cycling.compose")` if exposing
+   Composable interfaces)
+3. Impl module: apply `id("cycling.bridge.impl")` (add `id("cycling.compose")` if rendering UI)
+4. Consumer depends on API, impl depends on provider
+5. Bridge impl module: `@Module @InstallIn(SingletonComponent::class) internal object`
 
 ## Contribution
 
@@ -381,8 +416,9 @@ Examples: `feature: active POI for sessions`, `fix: prevent app crash on locatio
 
 | Path                                                                            | Purpose                        |
 |---------------------------------------------------------------------------------|--------------------------------|
+| `build-logic/src/main/kotlin/cycling.*.gradle.kts`                              | Convention plugins             |
 | `app/navigation/AppNavHost.kt`                                                  | Central navigation wiring      |
-| `app/Modules.kt`                                                                | Database & app Hilt modules    |
+| `app/di/DatabaseHiltModule.kt`                                                  | Database & app Hilt modules    |
 | `app/data/AppDatabase.kt`                                                       | Room database                  |
 | `feature/session/service/SessionTrackingService.kt`                             | Foreground service             |
 | `feature/session/service/SessionTracker.kt`                                     | Session tracking orchestrator  |

@@ -60,6 +60,7 @@ class BaselineProfileGenerator {
             navigateToSessionsAndBack()
             settingsThemeAndLanguageSelection()
             settingsStatsConfigScrolling()
+            statsConfigDragReorder()
         }
     }
 }

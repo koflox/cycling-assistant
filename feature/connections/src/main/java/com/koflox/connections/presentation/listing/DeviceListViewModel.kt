@@ -20,7 +20,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-internal class DeviceListViewModel @Inject internal constructor(
+internal class DeviceListViewModel @Inject constructor(
     private val observePairedDevicesUseCase: ObservePairedDevicesUseCase,
     private val deletePairedDeviceUseCase: DeletePairedDeviceUseCase,
     private val updateDeviceSessionUsageUseCase: UpdateDeviceSessionUsageUseCase,

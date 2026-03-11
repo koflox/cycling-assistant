@@ -21,7 +21,6 @@ runs:
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v5
       with:
-        gradle-version: "9.3.1"
         cache-read-only: ${{ inputs.gradle-cache-save == 'false' }}
 
     - name: Restore Android build cache
