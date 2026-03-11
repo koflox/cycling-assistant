@@ -19,7 +19,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-internal class PoiSelectionViewModel @Inject internal constructor(
+internal class PoiSelectionViewModel @Inject constructor(
     private val observeSelectedPoisUseCase: ObserveSelectedPoisUseCase,
     private val updateSelectedPoisUseCase: UpdateSelectedPoisUseCase,
     @param:DefaultDispatcher private val dispatcherDefault: CoroutineDispatcher,

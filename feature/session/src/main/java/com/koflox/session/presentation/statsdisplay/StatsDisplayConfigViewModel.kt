@@ -19,7 +19,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-internal class StatsDisplayConfigViewModel @Inject internal constructor(
+internal class StatsDisplayConfigViewModel @Inject constructor(
     private val observeStatsDisplayConfigUseCase: ObserveStatsDisplayConfigUseCase,
     private val updateStatsDisplayConfigUseCase: UpdateStatsDisplayConfigUseCase,
     @param:DefaultDispatcher private val dispatcherDefault: CoroutineDispatcher,

@@ -29,7 +29,7 @@ import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
 
 @HiltViewModel
-internal class SettingsViewModel @Inject internal constructor(
+internal class SettingsViewModel @Inject constructor(
     private val application: Application,
     private val observeThemeUseCase: ObserveThemeUseCase,
     private val updateThemeUseCase: UpdateThemeUseCase,

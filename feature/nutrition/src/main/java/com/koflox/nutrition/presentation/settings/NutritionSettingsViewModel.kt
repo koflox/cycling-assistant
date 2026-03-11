@@ -15,7 +15,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-internal class NutritionSettingsViewModel @Inject internal constructor(
+internal class NutritionSettingsViewModel @Inject constructor(
     private val observeNutritionSettingsUseCase: ObserveNutritionSettingsUseCase,
     private val updateNutritionSettingsUseCase: UpdateNutritionSettingsUseCase,
     @param:DefaultDispatcher private val dispatcherDefault: CoroutineDispatcher,
