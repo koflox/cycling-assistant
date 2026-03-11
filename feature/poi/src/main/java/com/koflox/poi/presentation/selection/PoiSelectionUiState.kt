@@ -5,13 +5,13 @@ import com.koflox.poi.domain.model.PoiType
 internal sealed interface PoiSelectionUiState {
     data object Loading : PoiSelectionUiState
     data class Content(
-        val pois: List<PoiItemUiModel>,
+        val selectedPois: List<PoiItemUiModel>,
+        val availablePois: List<PoiItemUiModel>,
+        val isAddEnabled: Boolean,
         val isSaveEnabled: Boolean,
     ) : PoiSelectionUiState
 }
 
 internal data class PoiItemUiModel(
     val type: PoiType,
-    val isSelected: Boolean,
-    val selectionIndex: Int? = null,
 )

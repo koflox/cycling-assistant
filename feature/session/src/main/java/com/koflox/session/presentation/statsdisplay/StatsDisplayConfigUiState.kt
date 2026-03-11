@@ -12,13 +12,14 @@ internal sealed interface StatsDisplayConfigUiState {
 
 internal data class SectionUiModel(
     val section: StatsDisplaySection,
-    val stats: List<StatItemUiModel>,
+    val selectedStats: List<StatItemUiModel>,
+    val availableStats: List<StatItemUiModel>,
+    val maxSelectionCount: Int?,
+    val isAddEnabled: Boolean,
     val isSaveEnabled: Boolean,
     val isSelectionValid: Boolean,
 )
 
 internal data class StatItemUiModel(
     val type: SessionStatType,
-    val isSelected: Boolean,
-    val selectionIndex: Int? = null,
 )

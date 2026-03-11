@@ -3,15 +3,14 @@ package com.koflox.poi.presentation.selection
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.CircularProgressIndicator
@@ -34,10 +33,15 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.koflox.designsystem.component.DebouncedButton
-import com.koflox.designsystem.theme.ComponentSize
+import com.koflox.designsystem.component.ReorderableColumn
+import com.koflox.designsystem.component.SelectedItemRow
 import com.koflox.designsystem.theme.Spacing
 import com.koflox.poi.R
+import com.koflox.poi.domain.model.MAX_SELECTED_POIS
+import com.koflox.poi.domain.model.PoiType
 import com.koflox.poi.presentation.mapper.label
+
+private const val CHIPS_PER_ROW = 2
 
 @Composable
 fun PoiSelectionRoute(
@@ -110,9 +114,9 @@ private fun PoiSelectionContent(
                 }
             }
             is PoiSelectionUiState.Content -> {
-                PoiSelectionGrid(
-                    pois = uiState.pois,
-                    onPoiToggled = { onEvent(PoiSelectionUiEvent.PoiToggled(it)) },
+                PoiSelectionBody(
+                    content = uiState,
+                    onEvent = onEvent,
                     modifier = Modifier.fillMaxSize().padding(paddingValues),
                 )
             }
@@ -121,73 +125,103 @@ private fun PoiSelectionContent(
 }
 
 @Composable
-private fun PoiSelectionGrid(
-    pois: List<PoiItemUiModel>,
-    onPoiToggled: (com.koflox.poi.domain.model.PoiType) -> Unit,
+private fun PoiSelectionBody(
+    content: PoiSelectionUiState.Content,
+    onEvent: (PoiSelectionUiEvent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(modifier = modifier) {
-        Text(
-            text = stringResource(R.string.poi_selection_hint),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(horizontal = Spacing.Large),
-        )
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(2),
-            contentPadding = PaddingValues(Spacing.Large),
-            horizontalArrangement = Arrangement.spacedBy(Spacing.Medium),
-            verticalArrangement = Arrangement.spacedBy(Spacing.Medium),
+    Column(
+        modifier = modifier.verticalScroll(rememberScrollState()),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = Spacing.Large),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            items(pois, key = { it.type.name }) { poi ->
-                PoiFilterChip(
-                    label = poi.type.label(),
-                    isSelected = poi.isSelected,
-                    selectionIndex = poi.selectionIndex,
-                    onClick = { onPoiToggled(poi.type) },
+            Text(
+                text = stringResource(R.string.poi_selection_hint),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.weight(1f),
+            )
+            val isValid = content.selectedPois.size == MAX_SELECTED_POIS
+            Text(
+                text = "${content.selectedPois.size}/$MAX_SELECTED_POIS",
+                style = MaterialTheme.typography.labelLarge,
+                color = if (isValid) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
+                fontWeight = FontWeight.Bold,
+            )
+        }
+        if (content.selectedPois.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(Spacing.Medium))
+            ReorderableColumn(
+                items = content.selectedPois,
+                key = { it.type.name },
+                onReorder = { from, to -> onEvent(PoiSelectionUiEvent.PoiReordered(from, to)) },
+                modifier = Modifier.padding(horizontal = Spacing.Large),
+            ) { item, index, dragModifier ->
+                SelectedItemRow(
+                    index = index + 1,
+                    label = item.type.label(),
+                    onClick = { onEvent(PoiSelectionUiEvent.PoiRemoved(item.type)) },
+                    dragHandleContentDescription = stringResource(R.string.poi_selection_drag_handle),
+                    dragModifier = dragModifier,
+                    modifier = Modifier.padding(vertical = Spacing.Tiny),
                 )
             }
         }
+        Spacer(modifier = Modifier.height(Spacing.Large))
+        Text(
+            text = stringResource(R.string.poi_selection_available),
+            style = MaterialTheme.typography.titleSmall,
+            modifier = Modifier.padding(horizontal = Spacing.Large),
+        )
+        Spacer(modifier = Modifier.height(Spacing.Small))
+        AvailablePoiChipsGrid(
+            pois = content.availablePois,
+            isAddEnabled = content.isAddEnabled,
+            onPoiAdded = { onEvent(PoiSelectionUiEvent.PoiAdded(it)) },
+            modifier = Modifier.padding(horizontal = Spacing.Large),
+        )
+        Spacer(modifier = Modifier.height(Spacing.Large))
     }
 }
 
 @Composable
-private fun PoiFilterChip(
-    label: String,
-    isSelected: Boolean,
-    selectionIndex: Int?,
-    onClick: () -> Unit,
+private fun AvailablePoiChipsGrid(
+    pois: List<PoiItemUiModel>,
+    isAddEnabled: Boolean,
+    onPoiAdded: (PoiType) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    FilterChip(
-        selected = isSelected,
-        onClick = onClick,
-        label = {
-            Text(
-                text = label,
-                modifier = Modifier.padding(vertical = Spacing.Small),
-            )
-        },
-        trailingIcon = if (selectionIndex != null) {
-            {
-                Surface(
-                    shape = CircleShape,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(ComponentSize.Badge),
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Text(
-                            text = selectionIndex.toString(),
-                            color = MaterialTheme.colorScheme.onPrimary,
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
-                        )
-                    }
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(Spacing.Medium),
+    ) {
+        pois.chunked(CHIPS_PER_ROW).forEach { row ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(Spacing.Medium),
+            ) {
+                row.forEach { poi ->
+                    FilterChip(
+                        selected = false,
+                        onClick = { onPoiAdded(poi.type) },
+                        enabled = isAddEnabled,
+                        label = {
+                            Text(
+                                text = poi.type.label(),
+                                modifier = Modifier.padding(vertical = Spacing.Small),
+                            )
+                        },
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+                repeat(CHIPS_PER_ROW - row.size) {
+                    Spacer(modifier = Modifier.weight(1f))
                 }
             }
-        } else {
-            null
-        },
-        modifier = modifier.fillMaxWidth(),
-    )
+        }
+    }
 }

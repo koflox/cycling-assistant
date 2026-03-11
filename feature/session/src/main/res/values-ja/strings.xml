@@ -137,5 +137,7 @@
     <string name="stats_config_settings_label">統計表示</string>
     <string name="stats_config_settings_hint">表示する統計を設定</string>
     <string name="stats_config_edit_content_description">統計を編集</string>
+    <string name="stats_config_available">利用可能</string>
+    <string name="stats_config_drag_handle">並べ替え</string>
     <string name="stats_config_collected_data_title">収集データ</string>
 </resources>

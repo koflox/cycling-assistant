@@ -137,5 +137,7 @@
     <string name="stats_config_settings_label">Stats Display</string>
     <string name="stats_config_settings_hint">Configure which stats are shown</string>
     <string name="stats_config_edit_content_description">Edit stats</string>
+    <string name="stats_config_available">Available</string>
+    <string name="stats_config_drag_handle">Reorder</string>
     <string name="stats_config_collected_data_title">Collected Data</string>
 </resources>

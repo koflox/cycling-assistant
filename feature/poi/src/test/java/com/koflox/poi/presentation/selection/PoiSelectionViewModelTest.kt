@@ -15,7 +15,6 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -60,63 +59,59 @@ class PoiSelectionViewModelTest {
     }
 
     @Test
-    fun `loadData emits Content with all pois and saved selection`() = runTest {
+    fun `loadData emits Content with selected and available pois`() = runTest {
         viewModel = createViewModel()
         viewModel.uiState.test {
             awaitItem() // Loading
             val content = awaitItem() as PoiSelectionUiState.Content
-            assertEquals(PoiType.entries.size, content.pois.size)
-            val selectedTypes = content.pois.filter { it.isSelected }.map { it.type }
-            assertEquals(DEFAULT_SELECTION, selectedTypes)
+            assertEquals(DEFAULT_SELECTION.size, content.selectedPois.size)
+            assertEquals(DEFAULT_SELECTION, content.selectedPois.map { it.type })
+            assertEquals(PoiType.entries.size - DEFAULT_SELECTION.size, content.availablePois.size)
             cancelAndIgnoreRemainingEvents()
         }
     }
 
     @Test
-    fun `toggle selected poi deselects it`() = runTest {
+    fun `removing selected poi moves it to available`() = runTest {
         viewModel = createViewModel()
         viewModel.uiState.test {
             awaitItem() // Loading
             awaitItem() // Initial Content
-            viewModel.onEvent(PoiSelectionUiEvent.PoiToggled(PoiType.COFFEE_SHOP))
+            viewModel.onEvent(PoiSelectionUiEvent.PoiRemoved(PoiType.COFFEE_SHOP))
             val content = awaitItem() as PoiSelectionUiState.Content
-            val coffeeShop = content.pois.first { it.type == PoiType.COFFEE_SHOP }
-            assertFalse(coffeeShop.isSelected)
+            assertFalse(content.selectedPois.any { it.type == PoiType.COFFEE_SHOP })
+            assertTrue(content.availablePois.any { it.type == PoiType.COFFEE_SHOP })
             cancelAndIgnoreRemainingEvents()
         }
     }
 
     @Test
-    fun `toggle unselected poi selects it`() = runTest {
+    fun `adding available poi moves it to selected`() = runTest {
         viewModel = createViewModel()
         viewModel.uiState.test {
             awaitItem() // Loading
             awaitItem() // Initial Content
-            viewModel.onEvent(PoiSelectionUiEvent.PoiToggled(PoiType.COFFEE_SHOP))
-            awaitItem() // Deselected COFFEE_SHOP
-            viewModel.onEvent(PoiSelectionUiEvent.PoiToggled(PoiType.PARK))
+            viewModel.onEvent(PoiSelectionUiEvent.PoiRemoved(PoiType.COFFEE_SHOP))
+            awaitItem() // Removed COFFEE_SHOP
+            viewModel.onEvent(PoiSelectionUiEvent.PoiAdded(PoiType.PARK))
             val content = awaitItem() as PoiSelectionUiState.Content
-            val park = content.pois.first { it.type == PoiType.PARK }
-            assertTrue(park.isSelected)
+            assertTrue(content.selectedPois.any { it.type == PoiType.PARK })
+            assertFalse(content.availablePois.any { it.type == PoiType.PARK })
             cancelAndIgnoreRemainingEvents()
         }
     }
 
     @Test
-    fun `cannot select more than MAX_SELECTED_POIS`() = runTest(mainDispatcherRule.testDispatcher) {
+    fun `cannot add more than MAX_SELECTED_POIS`() = runTest(mainDispatcherRule.testDispatcher) {
         viewModel = createViewModel()
         viewModel.uiState.test {
             awaitItem() // Loading
-            val initialContent = awaitItem() as PoiSelectionUiState.Content
-            viewModel.onEvent(PoiSelectionUiEvent.PoiToggled(PoiType.PARK))
+            awaitItem() // Initial Content (2 selected = MAX)
+            viewModel.onEvent(PoiSelectionUiEvent.PoiAdded(PoiType.PARK))
             testScheduler.advanceUntilIdle()
-            // StateFlow won't re-emit identical value, so verify current state
             val content = viewModel.uiState.value as PoiSelectionUiState.Content
-            val selectedCount = content.pois.count { it.isSelected }
-            assertEquals(MAX_SELECTED_POIS, selectedCount)
-            val park = content.pois.first { it.type == PoiType.PARK }
-            assertFalse(park.isSelected)
-            assertEquals(initialContent, content)
+            assertEquals(MAX_SELECTED_POIS, content.selectedPois.size)
+            assertFalse(content.selectedPois.any { it.type == PoiType.PARK })
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -127,9 +122,9 @@ class PoiSelectionViewModelTest {
         viewModel.uiState.test {
             awaitItem() // Loading
             awaitItem() // Initial Content
-            viewModel.onEvent(PoiSelectionUiEvent.PoiToggled(PoiType.COFFEE_SHOP))
-            awaitItem() // Deselected COFFEE_SHOP (1 selected)
-            viewModel.onEvent(PoiSelectionUiEvent.PoiToggled(PoiType.PARK))
+            viewModel.onEvent(PoiSelectionUiEvent.PoiRemoved(PoiType.COFFEE_SHOP))
+            awaitItem() // Removed COFFEE_SHOP (1 selected)
+            viewModel.onEvent(PoiSelectionUiEvent.PoiAdded(PoiType.PARK))
             val content = awaitItem() as PoiSelectionUiState.Content
             assertTrue(content.isSaveEnabled)
             cancelAndIgnoreRemainingEvents()
@@ -153,9 +148,9 @@ class PoiSelectionViewModelTest {
         viewModel.uiState.test {
             awaitItem() // Loading
             awaitItem() // Initial Content
-            viewModel.onEvent(PoiSelectionUiEvent.PoiToggled(PoiType.COFFEE_SHOP))
-            awaitItem() // Deselected
-            viewModel.onEvent(PoiSelectionUiEvent.PoiToggled(PoiType.PARK))
+            viewModel.onEvent(PoiSelectionUiEvent.PoiRemoved(PoiType.COFFEE_SHOP))
+            awaitItem() // Removed
+            viewModel.onEvent(PoiSelectionUiEvent.PoiAdded(PoiType.PARK))
             awaitItem() // New selection
             cancelAndIgnoreRemainingEvents()
         }
@@ -168,31 +163,27 @@ class PoiSelectionViewModelTest {
     }
 
     @Test
-    fun `selected pois have correct selection indices`() = runTest {
+    fun `selected pois maintain correct order`() = runTest {
         viewModel = createViewModel()
         viewModel.uiState.test {
             awaitItem() // Loading
             val content = awaitItem() as PoiSelectionUiState.Content
-            val coffeeShop = content.pois.first { it.type == PoiType.COFFEE_SHOP }
-            val toilet = content.pois.first { it.type == PoiType.TOILET }
-            val park = content.pois.first { it.type == PoiType.PARK }
-            assertEquals(1, coffeeShop.selectionIndex)
-            assertEquals(2, toilet.selectionIndex)
-            assertNull(park.selectionIndex)
+            assertEquals(PoiType.COFFEE_SHOP, content.selectedPois[0].type)
+            assertEquals(PoiType.TOILET, content.selectedPois[1].type)
             cancelAndIgnoreRemainingEvents()
         }
     }
 
     @Test
-    fun `deselecting first poi shifts second index`() = runTest {
+    fun `removing first poi keeps remaining poi as first`() = runTest {
         viewModel = createViewModel()
         viewModel.uiState.test {
             awaitItem() // Loading
             awaitItem() // Initial Content
-            viewModel.onEvent(PoiSelectionUiEvent.PoiToggled(PoiType.COFFEE_SHOP))
+            viewModel.onEvent(PoiSelectionUiEvent.PoiRemoved(PoiType.COFFEE_SHOP))
             val content = awaitItem() as PoiSelectionUiState.Content
-            val toilet = content.pois.first { it.type == PoiType.TOILET }
-            assertEquals(1, toilet.selectionIndex)
+            assertEquals(1, content.selectedPois.size)
+            assertEquals(PoiType.TOILET, content.selectedPois[0].type)
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -203,10 +194,10 @@ class PoiSelectionViewModelTest {
         viewModel.uiState.test {
             awaitItem() // Loading
             awaitItem() // Initial Content
-            viewModel.onEvent(PoiSelectionUiEvent.PoiToggled(PoiType.COFFEE_SHOP))
-            awaitItem() // Deselected COFFEE_SHOP
-            viewModel.onEvent(PoiSelectionUiEvent.PoiToggled(PoiType.PARK))
-            awaitItem() // Selected PARK
+            viewModel.onEvent(PoiSelectionUiEvent.PoiRemoved(PoiType.COFFEE_SHOP))
+            awaitItem() // Removed COFFEE_SHOP
+            viewModel.onEvent(PoiSelectionUiEvent.PoiAdded(PoiType.PARK))
+            awaitItem() // Added PARK
             cancelAndIgnoreRemainingEvents()
         }
         val savedPois = slot<List<PoiType>>()
@@ -217,5 +208,59 @@ class PoiSelectionViewModelTest {
             cancelAndIgnoreRemainingEvents()
         }
         assertEquals(listOf(PoiType.TOILET, PoiType.PARK), savedPois.captured)
+    }
+
+    @Test
+    fun `reordering swaps items in selected list`() = runTest {
+        viewModel = createViewModel()
+        viewModel.uiState.test {
+            awaitItem() // Loading
+            val initial = awaitItem() as PoiSelectionUiState.Content
+            assertEquals(PoiType.COFFEE_SHOP, initial.selectedPois[0].type)
+            assertEquals(PoiType.TOILET, initial.selectedPois[1].type)
+            viewModel.onEvent(PoiSelectionUiEvent.PoiReordered(fromIndex = 0, toIndex = 1))
+            val content = awaitItem() as PoiSelectionUiState.Content
+            assertEquals(PoiType.TOILET, content.selectedPois[0].type)
+            assertEquals(PoiType.COFFEE_SHOP, content.selectedPois[1].type)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `reordering enables save when order differs from saved`() = runTest {
+        viewModel = createViewModel()
+        viewModel.uiState.test {
+            awaitItem() // Loading
+            val initial = awaitItem() as PoiSelectionUiState.Content
+            assertFalse(initial.isSaveEnabled)
+            viewModel.onEvent(PoiSelectionUiEvent.PoiReordered(fromIndex = 0, toIndex = 1))
+            val content = awaitItem() as PoiSelectionUiState.Content
+            assertTrue(content.isSaveEnabled)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `add disabled when max pois selected`() = runTest {
+        viewModel = createViewModel()
+        viewModel.uiState.test {
+            awaitItem() // Loading
+            val content = awaitItem() as PoiSelectionUiState.Content
+            assertFalse(content.isAddEnabled)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `add enabled when below max pois`() = runTest {
+        viewModel = createViewModel()
+        viewModel.uiState.test {
+            awaitItem() // Loading
+            awaitItem() // Initial Content
+            viewModel.onEvent(PoiSelectionUiEvent.PoiRemoved(PoiType.COFFEE_SHOP))
+            val content = awaitItem() as PoiSelectionUiState.Content
+            assertTrue(content.isAddEnabled)
+            cancelAndIgnoreRemainingEvents()
+        }
     }
 }
