@@ -42,9 +42,9 @@ tasks.register("detektRun", io.gitlab.arturbosch.detekt.Detekt::class) {
 // Kover (Code Coverage)
 // ===========================================
 
-dependencies {
-    subprojects.forEach { subproject ->
-        kover(subproject)
+subprojects {
+    plugins.withId("org.jetbrains.kotlinx.kover") {
+        rootProject.dependencies.kover(this@subprojects)
     }
 }
 
