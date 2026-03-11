@@ -1,6 +1,6 @@
 import com.android.build.api.dsl.LibraryExtension
-import com.koflox.build.libs
-import com.koflox.build.version
+import com.koflox.convention.libs
+import com.koflox.convention.version
 
 plugins {
     id("com.android.library")

@@ -33,7 +33,7 @@ jobs:
           google-services-json: ${{ secrets.GOOGLE_SERVICES_JSON }}
 
       - name: Build project
-        run: gradle buildDebug --build-cache -x test
+        run: ./gradlew buildDebug --build-cache -x test
 
   release:
     name: Release APK
@@ -69,7 +69,7 @@ jobs:
           echo "Version: $VERSION_NAME ($VERSION_CODE)"
 
       - name: Build release APK
-        run: gradle assembleRelease --build-cache
+        run: ./gradlew assembleRelease --build-cache
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2

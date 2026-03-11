@@ -35,7 +35,7 @@ jobs:
           google-services-json: ${{ secrets.GOOGLE_SERVICES_JSON }}
 
       - name: Generate module graph
-        run: gradle createModuleGraph --build-cache
+        run: ./gradlew createModuleGraph --build-cache
 
       - name: Commit if changed
         run: |
