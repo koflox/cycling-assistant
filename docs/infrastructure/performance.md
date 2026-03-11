@@ -6,7 +6,7 @@ Catalog of performance techniques used across the codebase.
 
 ### Kalman Filter Smoothing
 
-GPS data passes through a Kalman-filter-based `LocationSmoother` to reduce noise and improve route accuracy. The smoother is registered as a Koin `factory` (stateful per session) — each new session gets a fresh instance with reset filter state.
+GPS data passes through a Kalman-filter-based `LocationSmoother` to reduce noise and improve route accuracy. The smoother is registered as `@Provides` with no scope in Hilt (stateful per session) — each new injection gets a fresh instance with reset filter state.
 
 ### Location Accuracy Validation
 

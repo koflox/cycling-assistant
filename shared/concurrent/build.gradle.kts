@@ -1,7 +1,6 @@
 plugins {
-    alias(libs.plugins.android.library)
-    alias(libs.plugins.ksp)
-    alias(libs.plugins.hilt)
+    id("cycling.library")
+    id("cycling.hilt")
 }
 
 android {
@@ -11,8 +10,6 @@ android {
 dependencies {
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.android)
-    implementation(libs.hilt.android)
-    ksp(libs.hilt.compiler)
     implementation(project(":shared:di"))
 
     testImplementation(libs.junit)
