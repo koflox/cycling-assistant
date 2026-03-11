@@ -59,7 +59,7 @@ All dependencies are managed via [Hilt](https://dagger.dev/hilt/). Registration 
 | DataSource | `@Provides @Singleton`                                          |
 | Mapper     | `@Provides @Singleton`                                          |
 | Repository | `@Provides @Singleton`                                          |
-| ViewModel  | `@HiltViewModel internal class ... @Inject internal constructor(...)` |
+| ViewModel  | `@HiltViewModel internal class ... @Inject constructor(...)` |
 
 ### Qualifiers
 

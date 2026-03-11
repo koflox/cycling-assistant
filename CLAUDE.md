@@ -221,9 +221,8 @@ private const val SCAN_TIMEOUT_MS = 30_000L
 | Domain repository interfaces   | `public`   |
 | Data layer interfaces (DataSource, Mapper) | `internal` |
 | All `*Impl` classes            | `internal` |
-| All ViewModels                 | `internal` (`@HiltViewModel internal class ... @Inject internal constructor`) |
+| All ViewModels                 | `internal` (`@HiltViewModel internal class ... @Inject constructor`) |
 | Hilt `@Module` objects         | `internal` |
-| Service interfaces injected into `@AndroidEntryPoint` | `public` (e.g., `SessionTracker`, `SessionNotificationManager`) |
 
 ### DI (Hilt)
 
@@ -235,7 +234,7 @@ private const val SCAN_TIMEOUT_MS = 30_000L
 | DataSource | `@Provides @Singleton` |
 | Mapper     | `@Provides @Singleton` |
 | Repository | `@Provides @Singleton` |
-| ViewModel  | `@HiltViewModel internal class ... @Inject internal constructor(...)` |
+| ViewModel  | `@HiltViewModel internal class ... @Inject constructor(...)` |
 
 **Qualifiers:** Defined in `shared/di` as `@Qualifier @Retention(AnnotationRetention.BINARY)`
 annotations (e.g., `@IoDispatcher`, `@DefaultDispatcher`, `@SessionDaoFactory`, `@SessionMutex`).

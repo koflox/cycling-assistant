@@ -46,9 +46,8 @@ Coverage thresholds for badge coloring:
 | Domain repository interfaces                     | `public`     |
 | Data layer interfaces (DataSource, Mapper)       | `internal`   |
 | All `*Impl` classes                              | `internal`   |
-| All ViewModels                                   | `internal` (`@HiltViewModel internal class ... @Inject internal constructor`) |
+| All ViewModels                                   | `internal` (`@HiltViewModel internal class ... @Inject constructor`) |
 | Hilt `@Module` objects                           | `internal`   |
-| Service interfaces injected into `@AndroidEntryPoint` | `public` (e.g., `SessionTracker`) |
 
 ### Composable Conventions
 
