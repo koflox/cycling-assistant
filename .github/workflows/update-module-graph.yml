@@ -1,7 +1,10 @@
-name: Update Module Graph
+name: Module Graph
 
 on:
   pull_request:
+    branches:
+      - main
+  push:
     branches:
       - main
 
@@ -16,15 +19,13 @@ env:
   GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.caching=true"
 
 jobs:
-  update-graph:
+  module-graph:
     name: Generate Module Graph
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout PR branch
+      - name: Checkout code
         uses: actions/checkout@v6
-        with:
-          ref: ${{ github.head_ref }}
 
       - name: Setup Android build environment
         uses: ./.github/actions/setup-android
@@ -38,6 +39,7 @@ jobs:
         run: ./gradlew createModuleGraph --build-cache
 
       - name: Commit if changed
+        if: github.event_name == 'push'
         run: |
           git diff --quiet docs/MODULE_GRAPH.md && exit 0
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
