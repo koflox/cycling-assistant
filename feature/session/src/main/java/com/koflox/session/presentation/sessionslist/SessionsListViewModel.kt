@@ -30,7 +30,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-internal class SessionsListViewModel @Inject internal constructor(
+internal class SessionsListViewModel @Inject constructor(
     private val getAllSessionsUseCase: GetAllSessionsUseCase,
     private val getSessionByIdUseCase: GetSessionByIdUseCase,
     private val calculateSessionStatsUseCase: CalculateSessionStatsUseCase,

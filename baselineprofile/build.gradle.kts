@@ -5,11 +5,17 @@ plugins {
 
 android {
     namespace = "com.koflox.baselineprofile"
+    compileSdk = libs.versions.compileSdk.get().toInt()
 
     defaultConfig {
         minSdk = 28
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
 
+    compileOptions {
+        val javaVersion = JavaVersion.toVersion(libs.versions.javaVersion.get())
+        sourceCompatibility = javaVersion
+        targetCompatibility = javaVersion
     }
 
     targetProjectPath = ":app"

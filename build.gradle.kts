@@ -30,7 +30,7 @@ tasks.register("detektRun", io.gitlab.arturbosch.detekt.Detekt::class) {
     config.setFrom(files("$rootDir/.lint/detekt/detekt-config.yml"))
     setSource(files(projectDir))
     include("**/*.kt", "**/*.kts")
-    exclude("**/build/**", "**/resources/**")
+    exclude("**/build/**", "**/resources/**", "**/build-logic/**")
     reports {
         xml.required.set(true)
         html.required.set(false)
@@ -39,88 +39,12 @@ tasks.register("detektRun", io.gitlab.arturbosch.detekt.Detekt::class) {
 }
 
 // ===========================================
-// Subprojects Common Configuration
-// ===========================================
-
-subprojects {
-    apply(plugin = "org.jetbrains.kotlinx.kover")
-
-    val compileSdkVersion = rootProject.libs.versions.compileSdk.get().toInt()
-    val minSdkVersion = rootProject.libs.versions.minSdk.get().toInt()
-    val javaVersion = JavaVersion.toVersion(rootProject.libs.versions.javaVersion.get())
-
-    plugins.withId("com.android.library") {
-        configure<com.android.build.api.dsl.LibraryExtension> {
-            compileSdk = compileSdkVersion
-
-            defaultConfig {
-                minSdk = minSdkVersion
-                testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-                consumerProguardFiles("consumer-rules.pro")
-            }
-
-            buildTypes {
-                release {
-                    isMinifyEnabled = false
-                    proguardFiles(
-                        getDefaultProguardFile("proguard-android-optimize.txt"),
-                        "proguard-rules.pro",
-                    )
-                }
-            }
-
-            compileOptions {
-                sourceCompatibility = javaVersion
-                targetCompatibility = javaVersion
-            }
-        }
-    }
-
-    // Baseline profile / macrobenchmark module (:baselineprofile)
-    plugins.withId("com.android.test") {
-        configure<com.android.build.api.dsl.TestExtension> {
-            compileSdk = compileSdkVersion
-            compileOptions {
-                sourceCompatibility = javaVersion
-                targetCompatibility = javaVersion
-            }
-        }
-    }
-
-    plugins.withId("com.android.application") {
-        configure<com.android.build.api.dsl.ApplicationExtension> {
-            compileSdk = compileSdkVersion
-
-            defaultConfig {
-                minSdk = minSdkVersion
-                testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-            }
-
-            buildTypes {
-                release {
-                    isMinifyEnabled = false
-                    proguardFiles(
-                        getDefaultProguardFile("proguard-android-optimize.txt"),
-                        "proguard-rules.pro",
-                    )
-                }
-            }
-
-            compileOptions {
-                sourceCompatibility = javaVersion
-                targetCompatibility = javaVersion
-            }
-        }
-    }
-}
-
-// ===========================================
 // Kover (Code Coverage)
 // ===========================================
 
-dependencies {
-    subprojects.forEach { subproject ->
-        kover(subproject)
+subprojects {
+    plugins.withId("org.jetbrains.kotlinx.kover") {
+        rootProject.dependencies.kover(this@subprojects)
     }
 }
 

@@ -49,34 +49,40 @@ The project uses `suspendRunCatching` (from `shared/concurrent`) instead of Kotl
 - Repository **suspend functions** return `Result<T>`
 - Repository **observable functions** return `Flow<T>` (no `Result` wrapping)
 
-## Dependency Injection (Koin)
+## Dependency Injection (Hilt)
 
-All dependencies are managed via [Koin](https://insert-koin.io/). Registration conventions:
+All dependencies are managed via [Hilt](https://dagger.dev/hilt/). Registration conventions:
 
-| Type       | Scope                                                           |
+| Type       | Hilt Pattern                                                    |
 |------------|-----------------------------------------------------------------|
-| UseCase    | `factory` (`single` if stateful — e.g. internal buffer/smoother) |
-| DataSource | `single`                                                        |
-| Mapper     | `single`                                                        |
-| Repository | `single`                                                        |
-| ViewModel  | `viewModel { }`                                                 |
+| UseCase    | `@Provides` (no scope) for stateless; `@Provides @Singleton` for stateful |
+| DataSource | `@Provides @Singleton`                                          |
+| Mapper     | `@Provides @Singleton`                                          |
+| Repository | `@Provides @Singleton`                                          |
+| ViewModel  | `@HiltViewModel internal class ... @Inject constructor(...)` |
 
-### Feature-Local Qualifiers
+### Qualifiers
 
-When a feature needs to disambiguate DI bindings internally, define a `sealed class` extending `ClassNameQualifier()` in the feature's `di/` package (e.g., `SessionQualifier.SessionMutex` for a shared `Mutex`).
+Defined in `shared/di` as `@Qualifier @Retention(AnnotationRetention.BINARY)` annotations
+(e.g., `@IoDispatcher`, `@DefaultDispatcher`, `@SessionMutex`, `@SessionDaoFactory`).
 
 ### DI File Organization
 
 Each feature module organizes DI into separate files:
 
-- `DataModule.kt` — `private val dataModule`, `private val dataSourceModule`, `private val repoModule`, exported as `internal val dataModules: List<Module>`
-- `DomainModule.kt` — `internal val domainModule`
-- `PresentationModule.kt` — `internal val presentationModule`
-- `<Feature>Module.kt` — public aggregator: `val featureModule = module { includes(...) }`
+- `<Feature>DataHiltModule.kt` — `@Module @InstallIn(SingletonComponent::class) internal object`
+- `<Feature>DomainHiltModule.kt` — `@Module @InstallIn(SingletonComponent::class) internal object`
+- `<Feature>PresentationHiltModule.kt` — only if non-VM bindings exist (error mappers, factories)
+- No aggregator needed — Hilt auto-discovers `@Module` classes
+
+### Composable Injection
+
+- Use `hiltViewModel()` for ViewModels
+- For non-VM dependencies in Composables, use `@EntryPoint @InstallIn(SingletonComponent::class)` interfaces with `EntryPointAccessors.fromApplication()`
 
 ## Dispatcher Usage
 
-Dispatchers are injected via `DispatchersQualifier`, never hardcoded:
+Dispatchers are injected via `@IoDispatcher`/`@DefaultDispatcher`/`@MainDispatcher` qualifiers, never hardcoded:
 
 | Layer      | Dispatcher                          |
 |------------|-------------------------------------|

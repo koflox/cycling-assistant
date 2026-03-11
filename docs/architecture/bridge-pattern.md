@@ -66,22 +66,16 @@ interface CyclingSessionUiNavigator {
 
 ## DI Registration
 
-Bridge `impl` modules register their implementations in Koin. The DI module name follows the pattern `<aB>BridgeImplModule`:
-
-- `connectionSessionBridgeImplModule`
-- `destinationNutritionBridgeImplModule`
-- `destinationPoiBridgeImplModule`
-- `destinationSessionBridgeImplModule`
-- `nutritionSessionBridgeImplModule`
-- `nutritionSettingsBridgeImplModule`
-- `poiSettingsBridgeImplModule`
-- `profileSessionBridgeImplModule`
-- `sessionSettingsBridgeImplModule`
+Bridge `impl` modules register their implementations via Hilt. Each `impl` module contains a
+`@Module @InstallIn(SingletonComponent::class) internal object` that `@Provides` the bridge
+interface bindings. Hilt auto-discovers these modules — no manual aggregation needed.
 
 ## Adding a New Bridge
 
 1. Create the bridge under `feature/bridge/<A-B>/` (A and B in alphabetical order) with `api/` and `impl/` submodules
-2. Define interfaces in `api/`
-3. Implement in `impl/`, depending on the provider feature
-4. Consumer feature depends on the `api` submodule
-5. Register DI in the `impl` module and include in `app/Modules.kt`
+2. API module: apply `id("cycling.bridge.api")` (add `id("cycling.compose")` if exposing Composable interfaces)
+3. Impl module: apply `id("cycling.bridge.impl")` (add `id("cycling.compose")` if rendering UI)
+4. Define interfaces in `api/`
+5. Implement in `impl/`, depending on the provider feature
+6. Consumer feature depends on the `api` submodule
+7. Register DI in the `impl` module: `@Module @InstallIn(SingletonComponent::class) internal object`

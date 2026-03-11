@@ -137,5 +137,7 @@
     <string name="stats_config_settings_label">Отображение данных</string>
     <string name="stats_config_settings_hint">Настройте отображаемые показатели</string>
     <string name="stats_config_edit_content_description">Редактировать</string>
+    <string name="stats_config_available">Доступные</string>
+    <string name="stats_config_drag_handle">Изменить порядок</string>
     <string name="stats_config_collected_data_title">Собранные данные</string>
 </resources>

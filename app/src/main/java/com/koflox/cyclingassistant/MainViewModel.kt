@@ -16,7 +16,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-internal class MainViewModel @Inject internal constructor(
+internal class MainViewModel @Inject constructor(
     observeThemeUseCase: ObserveThemeUseCase,
     observeLocaleUseCase: ObserveLocaleUseCase,
     private val pendingSessionAction: PendingSessionAction,

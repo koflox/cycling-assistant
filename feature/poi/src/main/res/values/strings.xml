@@ -17,6 +17,8 @@
     <string name="poi_selection_back">Back</string>
     <string name="poi_selection_hint">Select exactly 2 POI types to show during your ride</string>
     <string name="poi_selection_save">Save</string>
+    <string name="poi_selection_available">Available</string>
+    <string name="poi_selection_drag_handle">Reorder</string>
 
     <!-- More POIs Dialog -->
     <string name="poi_more_button_description">More points of interest</string>

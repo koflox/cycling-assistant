@@ -4,16 +4,18 @@ All concurrency primitives live in `shared/concurrent`.
 
 ## Dispatcher Injection
 
-Dispatchers are never hardcoded. They are registered as Koin singletons via `DispatchersQualifier`
-and injected into constructors:
+Dispatchers are never hardcoded. They are provided via Hilt qualifier annotations defined in
+`shared/di` (`@IoDispatcher`, `@DefaultDispatcher`, `@MainDispatcher`) and injected into
+constructors:
 
 ```kotlin
-sealed class DispatchersQualifier : ClassNameQualifier(), Qualifier {
-    object Io : DispatchersQualifier()
-    object Main : DispatchersQualifier()
-    object Default : DispatchersQualifier()
-    object Unconfined : DispatchersQualifier()
-}
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class IoDispatcher
+
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class DefaultDispatcher
 ```
 
 Each layer uses a specific dispatcher:
@@ -81,8 +83,8 @@ I/O, schema setup, and (in release builds) loading the SQLCipher native library 
 cryptographic operations. The `create()` method runs within `withContext(dispatcherIo)`,
 guaranteeing background execution regardless of the caller's context.
 
-Feature modules access DAOs through `ConcurrentFactory<*Dao>` instances injected via Koin
-qualifiers. The first `daoFactory.get()` call triggers lazy database creation; subsequent calls
+Feature modules access DAOs through `ConcurrentFactory<*Dao>` instances injected via Hilt
+qualifiers (e.g., `@SessionDaoFactory`, `@LocaleDaoFactory`). The first `daoFactory.get()` call triggers lazy database creation; subsequent calls
 return the cached instance via a volatile read (no lock contention).
 
 ```kotlin

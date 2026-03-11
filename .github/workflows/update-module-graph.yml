@@ -1,11 +1,12 @@
-name: Update Module Graph
+name: Module Graph
 
 on:
-  workflow_dispatch:
-  workflow_run:
-    workflows: ["Build & Release"]
-    types: [completed]
-    branches: [main]
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
 
 permissions:
   contents: write
@@ -18,9 +19,8 @@ env:
   GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.caching=true"
 
 jobs:
-  update-graph:
+  module-graph:
     name: Generate Module Graph
-    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
 
     steps:
@@ -30,15 +30,20 @@ jobs:
       - name: Setup Android build environment
         uses: ./.github/actions/setup-android
 
-      - name: Create docs directory
-        run: mkdir -p docs
+      - name: Setup project secrets
+        uses: ./.github/actions/setup-secrets
+        with:
+          google-services-json: ${{ secrets.GOOGLE_SERVICES_JSON }}
 
       - name: Generate module graph
-        run: gradle createModuleGraph --build-cache
+        run: ./gradlew createModuleGraph --build-cache
 
-      - name: Commit and push if changed
+      - name: Commit if changed
+        if: github.event_name == 'push'
         run: |
+          git diff --quiet docs/MODULE_GRAPH.md && exit 0
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           git add docs/MODULE_GRAPH.md
-          git diff --cached --quiet || (git commit -m "docs: update module dependency graph" && git push)
+          git commit -m "docs: update module dependency graph"
+          git push

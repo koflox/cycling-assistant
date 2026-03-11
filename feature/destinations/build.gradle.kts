@@ -1,49 +1,13 @@
 plugins {
-    alias(libs.plugins.android.library)
-    alias(libs.plugins.kotlin.compose)
-    alias(libs.plugins.ksp)
+    id("cycling.feature")
     alias(libs.plugins.kotlin.serialization)
-    alias(libs.plugins.hilt)
 }
 
 android {
     namespace = "com.koflox.destinations"
-
-    buildFeatures {
-        compose = true
-    }
-
 }
 
 dependencies {
-    // Core Android
-    implementation(libs.androidx.core.ktx)
-
-    // Compose
-    implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.androidx.ui)
-    implementation(libs.androidx.ui.graphics)
-    implementation(libs.androidx.ui.tooling.preview)
-    implementation(libs.androidx.material3)
-    implementation(libs.androidx.material.icons.extended)
-
-    // ViewModels & Lifecycle
-    implementation(libs.androidx.lifecycle.viewmodel.ktx)
-    implementation(libs.androidx.lifecycle.viewmodel.compose)
-    implementation(libs.androidx.lifecycle.runtime.compose)
-
-    // Navigation
-    implementation(libs.androidx.navigation.compose)
-
-    // Coroutines
-    implementation(libs.kotlinx.coroutines.core)
-    implementation(libs.kotlinx.coroutines.android)
-
-    // Hilt
-    implementation(libs.hilt.android)
-    ksp(libs.hilt.compiler)
-    implementation(libs.hilt.navigation.compose)
-
     // Room
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
@@ -62,28 +26,14 @@ dependencies {
     // Permissions
     implementation(libs.accompanist.permissions)
 
-    // Project modules
+    // Bridge modules
     implementation(project(":feature:bridge:destination-nutrition:api"))
     implementation(project(":feature:bridge:destination-poi:api"))
     implementation(project(":feature:bridge:destination-session:api"))
-    implementation(project(":shared:concurrent"))
-    implementation(project(":shared:design-system"))
-    implementation(project(":shared:di"))
+
+    // Shared modules
     implementation(project(":shared:distance"))
     implementation(project(":shared:graphics"))
     implementation(project(":shared:location"))
     implementation(project(":shared:map"))
-
-    // Testing
-    testImplementation(libs.junit)
-    testImplementation(libs.kotlinx.coroutines.test)
-    testImplementation(libs.mockk)
-    testImplementation(libs.turbine)
-    testImplementation(project(":shared:testing"))
-
-    // UI Testing
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.ui.test.junit4)
-    debugImplementation(libs.androidx.ui.tooling)
-    debugImplementation(libs.androidx.ui.test.manifest)
 }

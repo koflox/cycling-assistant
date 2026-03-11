@@ -19,7 +19,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-internal class PoiSelectionViewModel @Inject internal constructor(
+internal class PoiSelectionViewModel @Inject constructor(
     private val observeSelectedPoisUseCase: ObserveSelectedPoisUseCase,
     private val updateSelectedPoisUseCase: UpdateSelectedPoisUseCase,
     @param:DefaultDispatcher private val dispatcherDefault: CoroutineDispatcher,
@@ -50,18 +50,29 @@ internal class PoiSelectionViewModel @Inject internal constructor(
     fun onEvent(event: PoiSelectionUiEvent) {
         viewModelScope.launch(dispatcherDefault) {
             when (event) {
-                is PoiSelectionUiEvent.PoiToggled -> onPoiToggled(event.type)
+                is PoiSelectionUiEvent.PoiAdded -> onPoiAdded(event.type)
+                is PoiSelectionUiEvent.PoiRemoved -> onPoiRemoved(event.type)
+                is PoiSelectionUiEvent.PoiReordered -> onPoiReordered(event.fromIndex, event.toIndex)
                 PoiSelectionUiEvent.SaveClicked -> onSaveClicked()
             }
         }
     }
 
-    private fun onPoiToggled(type: PoiType) {
-        if (type in pendingSelection) {
-            pendingSelection.remove(type)
-        } else if (pendingSelection.size < MAX_SELECTED_POIS) {
+    private fun onPoiAdded(type: PoiType) {
+        if (pendingSelection.size < MAX_SELECTED_POIS) {
             pendingSelection.add(type)
         }
+        emitContentState()
+    }
+
+    private fun onPoiRemoved(type: PoiType) {
+        pendingSelection.remove(type)
+        emitContentState()
+    }
+
+    private fun onPoiReordered(fromIndex: Int, toIndex: Int) {
+        val item = pendingSelection.removeAt(fromIndex)
+        pendingSelection.add(toIndex, item)
         emitContentState()
     }
 
@@ -71,15 +82,14 @@ internal class PoiSelectionViewModel @Inject internal constructor(
     }
 
     private fun emitContentState() {
+        val selected = pendingSelection.map { PoiItemUiModel(type = it) }
+        val available = PoiType.entries
+            .filter { it !in pendingSelection }
+            .map { PoiItemUiModel(type = it) }
         _uiState.value = PoiSelectionUiState.Content(
-            pois = PoiType.entries.map { type ->
-                val index = pendingSelection.indexOf(type)
-                PoiItemUiModel(
-                    type = type,
-                    isSelected = index >= 0,
-                    selectionIndex = if (index >= 0) index + 1 else null,
-                )
-            },
+            selectedPois = selected,
+            availablePois = available,
+            isAddEnabled = pendingSelection.size < MAX_SELECTED_POIS,
             isSaveEnabled = pendingSelection.size == MAX_SELECTED_POIS && pendingSelection != savedSelection,
         )
     }

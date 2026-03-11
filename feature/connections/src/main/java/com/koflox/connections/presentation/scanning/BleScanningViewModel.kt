@@ -26,7 +26,7 @@ import javax.inject.Inject
 import kotlin.time.Duration.Companion.seconds
 
 @HiltViewModel
-internal class BleScanningViewModel @Inject internal constructor(
+internal class BleScanningViewModel @Inject constructor(
     private val bleScanner: BleScanner,
     private val blePermissionChecker: BlePermissionChecker,
     private val observePairedDevicesUseCase: ObservePairedDevicesUseCase,

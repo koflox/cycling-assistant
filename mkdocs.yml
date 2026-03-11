@@ -67,6 +67,7 @@ nav:
       - Performance: infrastructure/performance.md
       - Security: infrastructure/security.md
       - Testing: infrastructure/testing.md
+      - Convention Plugins: infrastructure/convention-plugins.md
       - Code Quality: infrastructure/code-quality.md
       - Design System: infrastructure/design-system.md
   - Product:

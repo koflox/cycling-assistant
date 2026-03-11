@@ -9,9 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -22,7 +20,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -43,8 +40,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.koflox.designsystem.component.DebouncedButton
 import com.koflox.designsystem.component.DebouncedOutlinedButton
+import com.koflox.designsystem.component.ReorderableColumn
+import com.koflox.designsystem.component.SelectedItemRow
 import com.koflox.designsystem.testtag.TestTags
-import com.koflox.designsystem.theme.ComponentSize
 import com.koflox.designsystem.theme.Spacing
 import com.koflox.session.R
 import com.koflox.session.domain.model.SessionStatType
@@ -183,54 +181,130 @@ private fun SectionBlock(
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier) {
-        Text(
-            text = stringResource(sectionToTitleRes(section.section)),
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
+        SectionHeader(section = section)
+        if (section.selectedStats.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(Spacing.Medium))
+            ReorderableColumn(
+                items = section.selectedStats,
+                key = { it.type.name },
+                onReorder = { from, to ->
+                    onEvent(StatsDisplayConfigUiEvent.StatReordered(section.section, from, to))
+                },
+                modifier = if (section.section == StatsDisplaySection.ACTIVE_SESSION) {
+                    Modifier.testTag(TestTags.STATS_CONFIG_SELECTED_LIST)
+                } else {
+                    Modifier
+                },
+            ) { item, index, dragModifier ->
+                SelectedItemRow(
+                    index = index + 1,
+                    label = stringResource(statTypeToLabelRes(item.type)),
+                    onClick = {
+                        onEvent(StatsDisplayConfigUiEvent.StatRemoved(section.section, item.type))
+                    },
+                    dragHandleContentDescription = stringResource(R.string.stats_config_drag_handle),
+                    dragModifier = dragModifier,
+                    modifier = Modifier.padding(vertical = Spacing.Tiny),
+                )
+            }
+        }
+        if (section.availableStats.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(Spacing.Large))
+            Text(
+                text = stringResource(R.string.stats_config_available),
+                style = MaterialTheme.typography.titleSmall,
+            )
+            Spacer(modifier = Modifier.height(Spacing.Small))
+            AvailableStatChipsGrid(
+                stats = section.availableStats,
+                isAddEnabled = section.isAddEnabled,
+                onStatAdded = { type ->
+                    onEvent(StatsDisplayConfigUiEvent.StatAdded(section.section, type))
+                },
+            )
+        }
+        Spacer(modifier = Modifier.height(Spacing.Medium))
+        StatsPreviewCard(
+            section = section.section,
+            selectedStats = section.selectedStats.map { it.type },
         )
+        Spacer(modifier = Modifier.height(Spacing.Medium))
+        SectionActionButtons(section = section, onEvent = onEvent)
+    }
+}
+
+@Composable
+private fun SectionHeader(
+    section: SectionUiModel,
+    modifier: Modifier = Modifier,
+) {
+    Column(modifier = modifier) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = stringResource(sectionToTitleRes(section.section)),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.weight(1f),
+            )
+            val counterText = if (section.maxSelectionCount != null) {
+                "${section.selectedStats.size}/${section.maxSelectionCount}"
+            } else {
+                "${section.selectedStats.size}"
+            }
+            Text(
+                text = counterText,
+                style = MaterialTheme.typography.labelLarge,
+                color = if (section.isSelectionValid) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    MaterialTheme.colorScheme.error
+                },
+                fontWeight = FontWeight.Bold,
+            )
+        }
         Spacer(modifier = Modifier.height(Spacing.Tiny))
         Text(
             text = stringResource(sectionToConstraintRes(section.section)),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        Spacer(modifier = Modifier.height(Spacing.Medium))
-        StatChipsGrid(
-            stats = section.stats,
-            onStatToggled = { type -> onEvent(StatsDisplayConfigUiEvent.StatToggled(section.section, type)) },
-        )
-        Spacer(modifier = Modifier.height(Spacing.Medium))
-        val selectedTypes = section.stats.filter { it.isSelected }.sortedBy { it.selectionIndex }.map { it.type }
-        StatsPreviewCard(
-            section = section.section,
-            selectedStats = selectedTypes,
-        )
-        Spacer(modifier = Modifier.height(Spacing.Medium))
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(Spacing.Medium),
+    }
+}
+
+@Composable
+private fun SectionActionButtons(
+    section: SectionUiModel,
+    onEvent: (StatsDisplayConfigUiEvent) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(Spacing.Medium),
+    ) {
+        DebouncedOutlinedButton(
+            onClick = { onEvent(StatsDisplayConfigUiEvent.ResetSectionClicked(section.section)) },
+            modifier = Modifier.weight(1f),
         ) {
-            DebouncedOutlinedButton(
-                onClick = { onEvent(StatsDisplayConfigUiEvent.ResetSectionClicked(section.section)) },
-                modifier = Modifier.weight(1f),
-            ) {
-                Text(stringResource(R.string.stats_config_reset_section))
-            }
-            DebouncedOutlinedButton(
-                onClick = { onEvent(StatsDisplayConfigUiEvent.SaveSectionClicked(section.section)) },
-                enabled = section.isSaveEnabled,
-                modifier = Modifier.weight(1f),
-            ) {
-                Text(stringResource(R.string.stats_config_save_section))
-            }
+            Text(stringResource(R.string.stats_config_reset_section))
+        }
+        DebouncedOutlinedButton(
+            onClick = { onEvent(StatsDisplayConfigUiEvent.SaveSectionClicked(section.section)) },
+            enabled = section.isSaveEnabled,
+            modifier = Modifier.weight(1f),
+        ) {
+            Text(stringResource(R.string.stats_config_save_section))
         }
     }
 }
 
 @Composable
-private fun StatChipsGrid(
+private fun AvailableStatChipsGrid(
     stats: List<StatItemUiModel>,
-    onStatToggled: (SessionStatType) -> Unit,
+    isAddEnabled: Boolean,
+    onStatAdded: (SessionStatType) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -243,11 +317,16 @@ private fun StatChipsGrid(
                 horizontalArrangement = Arrangement.spacedBy(Spacing.Medium),
             ) {
                 row.forEach { stat ->
-                    StatFilterChip(
-                        label = stringResource(statTypeToLabelRes(stat.type)),
-                        isSelected = stat.isSelected,
-                        selectionIndex = stat.selectionIndex,
-                        onClick = { onStatToggled(stat.type) },
+                    FilterChip(
+                        selected = false,
+                        onClick = { onStatAdded(stat.type) },
+                        enabled = isAddEnabled,
+                        label = {
+                            Text(
+                                text = stringResource(statTypeToLabelRes(stat.type)),
+                                modifier = Modifier.padding(vertical = Spacing.Small),
+                            )
+                        },
                         modifier = Modifier.weight(1f),
                     )
                 }
@@ -257,45 +336,4 @@ private fun StatChipsGrid(
             }
         }
     }
-}
-
-@Composable
-private fun StatFilterChip(
-    label: String,
-    isSelected: Boolean,
-    selectionIndex: Int?,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    FilterChip(
-        selected = isSelected,
-        onClick = onClick,
-        label = {
-            Text(
-                text = label,
-                modifier = Modifier.padding(vertical = Spacing.Small),
-            )
-        },
-        trailingIcon = if (selectionIndex != null) {
-            {
-                Surface(
-                    shape = CircleShape,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(ComponentSize.Badge),
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Text(
-                            text = selectionIndex.toString(),
-                            color = MaterialTheme.colorScheme.onPrimary,
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
-                        )
-                    }
-                }
-            }
-        } else {
-            null
-        },
-        modifier = modifier.fillMaxWidth(),
-    )
 }

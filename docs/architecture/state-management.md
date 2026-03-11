@@ -117,7 +117,7 @@ Composables follow a two-layer pattern:
 @Composable
 internal fun FeatureRoute(
     onNavigateToDashboard: () -> Unit,
-    viewModel: FeatureViewModel = koinViewModel(),
+    viewModel: FeatureViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
     LaunchedEffect(Unit) {
