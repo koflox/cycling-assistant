@@ -1,6 +1,5 @@
 package com.koflox.session.presentation.completion
 
-import android.graphics.Bitmap
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -21,17 +20,12 @@ import com.koflox.session.presentation.mapper.SessionUiMapper
 import com.koflox.session.presentation.route.MapLayer
 import com.koflox.session.presentation.route.RouteDisplayData
 import com.koflox.session.presentation.route.buildRouteDisplayData
-import com.koflox.session.presentation.share.SessionImageSharer
-import com.koflox.session.presentation.share.ShareErrorMapper
-import com.koflox.session.presentation.share.SharePreviewData
-import com.koflox.session.presentation.share.ShareResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
@@ -44,8 +38,6 @@ internal class SessionCompletionViewModel @Inject constructor(
     private val observeStatsDisplayConfigUseCase: ObserveStatsDisplayConfigUseCase,
     private val sessionUiMapper: SessionUiMapper,
     @param:SessionErrorMapper private val errorMessageMapper: ErrorMessageMapper,
-    private val imageSharer: SessionImageSharer,
-    private val shareErrorMapper: ShareErrorMapper,
     @param:DefaultDispatcher private val dispatcherDefault: CoroutineDispatcher,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
@@ -80,17 +72,11 @@ internal class SessionCompletionViewModel @Inject constructor(
 
     private fun observeStatsConfig() {
         viewModelScope.launch(dispatcherDefault) {
-            combine(
-                observeStatsDisplayConfigUseCase.observeCompletedSessionStats(),
-                observeStatsDisplayConfigUseCase.observeShareStats(),
-            ) { completedConfig, shareConfig ->
-                completedConfig to shareConfig
-            }.collect { (completedConfig, shareConfig) ->
+            observeStatsDisplayConfigUseCase.observeCompletedSessionStats().collect { completedConfig ->
                 val session = cachedSession ?: return@collect
                 val derivedStats = cachedDerivedStats ?: return@collect
                 val completedStats = sessionUiMapper.buildCompletedSessionStats(session, derivedStats, completedConfig)
-                val shareStats = sessionUiMapper.buildCompletedSessionStats(session, derivedStats, shareConfig)
-                updateContent { it.copy(completedStats = completedStats, shareStats = shareStats) }
+                updateContent { it.copy(completedStats = completedStats) }
             }
         }
     }
@@ -98,58 +84,8 @@ internal class SessionCompletionViewModel @Inject constructor(
     fun onEvent(event: SessionCompletionUiEvent) {
         viewModelScope.launch(dispatcherDefault) {
             when (event) {
-                SessionCompletionUiEvent.ShareClicked -> showShareDialog()
-                is SessionCompletionUiEvent.ShareConfirmed -> shareImage(event.bitmap, event.shareText, event.chooserTitle)
-                SessionCompletionUiEvent.ShareDialogDismissed -> dismissShareDialog()
-                SessionCompletionUiEvent.ShareIntentLaunched -> clearShareIntent()
-                SessionCompletionUiEvent.ErrorDismissed -> clearOverlayError()
                 is SessionCompletionUiEvent.LayerSelected -> selectLayer(event.layer)
             }
-        }
-    }
-
-    private fun showShareDialog() {
-        updateContent { content ->
-            content.copy(overlay = Overlay.ShareDialog(buildSharePreviewData(content)))
-        }
-    }
-
-    private fun dismissShareDialog() {
-        updateContent { it.copy(overlay = null) }
-    }
-
-    private suspend fun shareImage(bitmap: Bitmap, shareText: String, chooserTitle: String) {
-        updateContent { it.copy(overlay = Overlay.Sharing(buildSharePreviewData(it))) }
-        val result = imageSharer.shareImage(bitmap, shareText, chooserTitle)
-        updateContent { content ->
-            when (result) {
-                is ShareResult.Success -> content.copy(overlay = Overlay.ShareReady(result.intent))
-                else -> {
-                    val errorMessage = shareErrorMapper.map(result)
-                    content.copy(
-                        overlay = if (errorMessage != null) {
-                            Overlay.ShareError(errorMessage)
-                        } else {
-                            Overlay.ShareDialog(buildSharePreviewData(content))
-                        },
-                    )
-                }
-            }
-        }
-    }
-
-    private fun clearShareIntent() {
-        updateContent { it.copy(overlay = null) }
-    }
-
-    private fun clearOverlayError() {
-        updateContent { content ->
-            val newOverlay = if (content.overlay is Overlay.ShareError) {
-                Overlay.ShareDialog(buildSharePreviewData(content))
-            } else {
-                content.overlay
-            }
-            content.copy(overlay = newOverlay)
         }
     }
 
@@ -182,9 +118,7 @@ internal class SessionCompletionViewModel @Inject constructor(
                 cachedSession = session
                 cachedDerivedStats = derivedStats
                 val completedConfig = observeStatsDisplayConfigUseCase.observeCompletedSessionStats().first()
-                val shareConfig = observeStatsDisplayConfigUseCase.observeShareStats().first()
                 val completedStats = sessionUiMapper.buildCompletedSessionStats(session, derivedStats, completedConfig)
-                val shareStats = sessionUiMapper.buildCompletedSessionStats(session, derivedStats, shareConfig)
                 _uiState.value = SessionCompletionUiState.Content(
                     sessionId = sessionId,
                     destinationName = session.destinationName,
@@ -201,7 +135,6 @@ internal class SessionCompletionViewModel @Inject constructor(
                     averagePowerFormatted = session.averagePowerWatts?.let(sessionUiMapper::formatPower),
                     maxPowerFormatted = session.maxPowerWatts?.let(sessionUiMapper::formatPower),
                     completedStats = completedStats,
-                    shareStats = shareStats,
                     availableLayers = buildAvailableLayers(session.hasPowerData),
                     routeDisplayData = routeDisplayData,
                     endMarkerRotation = endRotation,
@@ -239,24 +172,4 @@ internal class SessionCompletionViewModel @Inject constructor(
         routeCache.getOrPut(layer) {
             buildRouteDisplayData(cachedTrackPoints, layer.toColorStrategy())
         }
-
-    private fun buildSharePreviewData(content: SessionCompletionUiState.Content) = SharePreviewData(
-        sessionId = content.sessionId,
-        destinationName = content.destinationName,
-        startDateFormatted = content.startDateFormatted,
-        elapsedTimeFormatted = content.elapsedTimeFormatted,
-        movingTimeFormatted = content.movingTimeFormatted,
-        idleTimeFormatted = content.idleTimeFormatted,
-        traveledDistanceFormatted = content.traveledDistanceFormatted,
-        averageSpeedFormatted = content.averageSpeedFormatted,
-        topSpeedFormatted = content.topSpeedFormatted,
-        altitudeGainFormatted = content.altitudeGainFormatted,
-        altitudeLossFormatted = content.altitudeLossFormatted,
-        caloriesFormatted = content.caloriesFormatted,
-        averagePowerFormatted = content.averagePowerFormatted,
-        maxPowerFormatted = content.maxPowerFormatted,
-        shareStats = content.shareStats,
-        routeDisplayData = getOrBuildRouteData(MapLayer.DEFAULT),
-        endMarkerRotation = content.endMarkerRotation,
-    )
 }

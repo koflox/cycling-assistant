@@ -53,6 +53,18 @@ Verifies PR version bumps:
 
 Generates the module dependency graph and commits the updated `docs/MODULE_GRAPH.md` if changes are detected.
 
+### Screenshot Tests
+
+**Trigger:** Pull requests targeting `main`
+
+Verifies that UI components haven't changed visually by comparing screenshots against committed
+golden images using Roborazzi:
+
+- Runs `verifyRoborazziDebug` across all modules with screenshot tests
+- On failure: uploads `screenshot-diff` artifact with comparison images and posts a PR comment
+- If changes are intentional, developers run `recordRoborazziDebug` locally and commit updated
+  golden images
+
 ### Baseline Profile Verification
 
 **Trigger:** Pull requests targeting `main`

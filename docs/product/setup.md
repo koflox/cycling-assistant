@@ -13,11 +13,13 @@
 ## Build Commands
 
 ```bash
-./gradlew build           # Build the project
-./gradlew test            # Run unit tests
-./gradlew detektRun       # Run lint checks
-./gradlew koverXmlReport  # Generate coverage report
-./gradlew installDebug    # Install on device
+./gradlew build                              # Build the project
+./gradlew test                               # Run unit tests
+./gradlew detektRun                          # Run lint checks
+./gradlew koverXmlReport                     # Generate coverage report
+./gradlew installDebug                       # Install on device
+./gradlew :module:recordRoborazziDebug       # Record screenshot golden images
+./gradlew :module:verifyRoborazziDebug       # Verify screenshots against golden images
 ```
 
 ## API Keys

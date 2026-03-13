@@ -12,16 +12,18 @@ CyclingAssistant is an Android app built with Jetpack Compose that helps cyclist
 destinations, track sessions with a foreground service, connect BLE power meters for real-time
 wattage and cadence, and customize session statistics display. Features include destination
 selection, session tracking with real-time location updates, power meter integration, configurable
-stat items, nutrition tracking, and POI management.
+stat items, nutrition tracking, POI management, and GPX export.
 
 ## Build Commands
 
 ```bash
-./gradlew detektRun                  # Lint & auto-format (run max 2 times)
-./gradlew build                      # Build
-./gradlew test                       # Unit tests
-./gradlew connectedDebugAndroidTest  # UI tests (requires device/emulator)
-./gradlew installDebug               # Install on device
+./gradlew detektRun                          # Lint & auto-format (run max 2 times)
+./gradlew build                              # Build
+./gradlew test                               # Unit tests
+./gradlew connectedDebugAndroidTest          # UI tests (requires device/emulator)
+./gradlew installDebug                       # Install on device
+./gradlew :module:recordRoborazziDebug       # Record screenshot golden images
+./gradlew :module:verifyRoborazziDebug       # Verify screenshots against golden images (CI)
 ```
 
 ## Architecture
@@ -56,7 +58,7 @@ CyclingAssistant/
 │   ├── profile/                      # Rider profile management
 │   ├── sensor/
 │   │   └── power/                    # Power meter test mode and observation
-│   ├── session/                      # Session tracking, stats display config
+│   ├── session/                      # Session tracking, stats display, GPX export
 │   ├── settings/                     # App settings (theme, language, stats, POI)
 │   └── theme/                        # App theme persistence and observation
 └── shared/
@@ -283,7 +285,8 @@ Callback-based pattern — composables are navigation-agnostic. Only `AppNavHost
 
 Feature modules expose `NavGraphBuilder` extension functions with callback parameters. Route
 constants are defined in feature navigation files. Features with multiple screens use nested
-navigation graphs (e.g., `settingsGraph` wraps settings + POI selection sub-screens).
+navigation graphs (e.g., `settingsGraph` wraps settings + POI selection sub-screens,
+`sessionGraph` wraps session list, completion, share dialog, and stats config).
 
 ```kotlin
 const val SESSIONS_LIST_ROUTE = "sessions_list"
@@ -320,6 +323,7 @@ repeating boilerplate.
 | `cycling.hilt` | `ksp` + `hilt` plugins + hilt-android + hilt-compiler |
 | `cycling.testing.unit` | junit + mockk + coroutines-test + turbine + shared:testing |
 | `cycling.feature` | library + compose + hilt + testing.unit + lifecycle + navigation + coroutines + shared:{concurrent, design-system, di} |
+| `cycling.testing.screenshot` | roborazzi + robolectric + compose ui test (additive) |
 | `cycling.bridge.api` | library (minimal) |
 | `cycling.bridge.impl` | library + hilt + testing.unit + coroutines-core |
 
@@ -355,8 +359,27 @@ Turbine, kotlinx-coroutines-test, `shared:testing`.
 - Cross-module factories in `src/testFixtures/kotlin/.../testutil/`, module-local in
   `src/test/java/.../testutil/`
 
-**Reference:** `SessionCompletionViewModelTest`, `SessionTestFactories.kt`,
-`DestinationTestFactories.kt`. Full patterns in [Testing docs](docs/infrastructure/testing.md).
+**Reference:** `SessionCompletionViewModelTest`, `ShareViewModelTest`,
+`SessionTestFactories.kt`, `DestinationTestFactories.kt`. Full patterns in
+[Testing docs](docs/infrastructure/testing.md).
+
+## Screenshot Testing
+
+Visual regression tests using Roborazzi (JVM, no emulator). Apply `id("cycling.testing.screenshot")`
+to the module. Tests in `src/test/java/.../screenshot/`, golden images in `src/test/snapshots/`.
+
+**Key rules:**
+
+- `@RunWith(RobolectricTestRunner::class)` + `@GraphicsMode(GraphicsMode.Mode.NATIVE)`
+- `createComposeRule()` + `setContent { theme + component }` + `onRoot().captureRoboImage()`
+- Test `Content` composables with fixed `UiState` — same factory pattern as unit tests
+- Cover light and dark themes for key states
+- `src/test/resources/robolectric.properties` with `sdk=35`
+
+**Commands:** `recordRoborazziDebug` (create goldens), `verifyRoborazziDebug` (CI verify)
+
+**Reference:** `SessionControlsOverlayScreenshotTest`, `GpxShareScreenshotTest`,
+`ScreenshotTestFactories.kt`
 
 ## Localization
 
@@ -427,6 +450,8 @@ Examples: `feature: active POI for sessions`, `fix: prevent app crash on locatio
 | `feature/bridge/destination-session/api/.../CyclingSessionUseCase.kt`           | Bridge data interface          |
 | `feature/bridge/destination-session/api/.../CyclingSessionUiNavigator.kt`       | Bridge UI interface            |
 | `feature/bridge/connection-session/api/.../SessionPowerMeterUseCase.kt`         | Power meter bridge interface   |
+| `feature/session/presentation/share/GpxMapper.kt`                               | Session → GPX 1.1 XML mapper   |
+| `feature/session/presentation/share/SessionGpxSharer.kt`                        | GPX file I/O and share intent  |
 | `shared/ble/.../BleGattManager.kt`                                              | BLE GATT connection manager    |
 | `shared/concurrent/.../SuspendRunCatching.kt`                                   | Coroutine-safe runCatching     |
 

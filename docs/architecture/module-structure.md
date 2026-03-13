@@ -30,7 +30,7 @@ CyclingAssistant/
 │   ├── profile/                      # Rider profile management
 │   ├── sensor/
 │   │   └── power/                    # Power meter test mode and observation
-│   ├── session/                      # Session tracking with foreground service
+│   ├── session/                      # Session tracking, stats display, GPX export
 │   ├── settings/                     # App settings (theme, language, stats display)
 │   └── theme/                        # App theme persistence and observation
 └── shared/

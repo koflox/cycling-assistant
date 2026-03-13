@@ -102,3 +102,80 @@ android {
 ```
 
 **Modules with UI tests:** `feature/session`, `feature/destinations`, `feature/settings`
+
+## Screenshot Tests
+
+**Framework:** [Roborazzi](https://github.com/takahirom/roborazzi) (JVM-based, no emulator required)
+
+**Purpose:** Visual regression testing for Compose components. Captures golden images of UI in
+known states and compares against them on subsequent runs.
+
+**Location:** `src/test/java/.../screenshot/` within each module. Golden images stored in
+`src/test/snapshots/`.
+
+### Setup
+
+Apply the convention plugin to enable screenshot testing in a module:
+
+```kotlin
+// build.gradle.kts
+plugins {
+    id("cycling.feature")
+    id("cycling.testing.screenshot")
+}
+```
+
+Add Robolectric SDK config:
+
+```properties
+# src/test/resources/robolectric.properties
+sdk=35
+```
+
+### Test Pattern
+
+```kotlin
+@RunWith(RobolectricTestRunner::class)
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
+internal class FeatureScreenshotTest {
+
+    @get:Rule
+    val composeTestRule = createComposeRule()
+
+    @Test
+    fun `state description`() {
+        composeTestRule.setContent {
+            TestTheme {
+                FeatureContent(state = createState())
+            }
+        }
+        composeTestRule.onRoot().captureRoboImage()
+    }
+}
+```
+
+Key rules:
+
+- Use `@RunWith(RobolectricTestRunner::class)` + `@GraphicsMode(GraphicsMode.Mode.NATIVE)`
+- Wrap content in a `TestTheme` using `CyclingLightColorScheme` / `CyclingDarkColorScheme`
+- Test `Content`-level composables with fixed `UiState` — no ViewModel, no live data
+- Use test factory functions for state creation (same pattern as unit test factories)
+- Cover both light and dark themes for key states
+
+### Commands
+
+```bash
+./gradlew :module:recordRoborazziDebug   # Record/update golden images
+./gradlew :module:verifyRoborazziDebug   # Verify against golden images (CI)
+```
+
+### Workflow
+
+1. Write test → run `record` → golden PNG saved to `src/test/snapshots/`
+2. Commit golden images to git
+3. CI runs `verify` on PRs — fails if UI changed
+4. If change is intentional → run `record` → commit updated goldens
+
+**Reference:** `SessionControlsOverlayScreenshotTest`, `GpxShareScreenshotTest`, `ScreenshotTestFactories.kt`
+
+**Modules with screenshot tests:** `feature/session`

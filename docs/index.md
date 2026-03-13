@@ -24,7 +24,7 @@ An Android app that helps cyclists discover cycling destinations, track sessions
 - **Configurable Stats** — customize which statistics are displayed during sessions and sharing
 - **Route Visualization** — view the traveled route on an interactive map
 - **Session History** — review past cycling sessions and their details
-- **Share Results** — share session summaries as images
+- **Share Results** — share session summaries as images or export as GPX files
 - **Nutrition Tracking** — track nutrition data linked to cycling sessions
 - **Theme Support** — light and dark theme with Material 3
 - **Language Support** — English, Russian, and Japanese

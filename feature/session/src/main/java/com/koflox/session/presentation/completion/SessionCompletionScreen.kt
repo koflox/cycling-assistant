@@ -1,6 +1,5 @@
 package com.koflox.session.presentation.completion
 
-import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -33,24 +32,22 @@ import com.koflox.designsystem.text.resolve
 import com.koflox.designsystem.theme.Spacing
 import com.koflox.session.R
 import com.koflox.session.navigation.STATS_SECTION_COMPLETED
-import com.koflox.session.navigation.STATS_SECTION_SHARE
 import com.koflox.session.presentation.completion.components.MapHeaderOverlay
 import com.koflox.session.presentation.completion.components.MapLayerSelector
 import com.koflox.session.presentation.completion.components.MapLegendButton
 import com.koflox.session.presentation.completion.components.RouteMapView
 import com.koflox.session.presentation.completion.components.SessionSummaryCard
-import com.koflox.session.presentation.share.SharePreviewDialog
 
 @Composable
 internal fun SessionCompletionRoute(
     onBackClick: () -> Unit,
     onNavigateToDashboard: () -> Unit,
-    onNavigateToStatsConfig: (section: String) -> Unit,
+    onShareClick: () -> Unit,
+    onNavigateToStatsConfig: (section: String) -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: SessionCompletionViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val context = LocalContext.current
     LaunchedEffect(Unit) {
         viewModel.navigation.collect { event ->
             when (event) {
@@ -58,23 +55,10 @@ internal fun SessionCompletionRoute(
             }
         }
     }
-    LaunchedEffect(uiState) {
-        val content = uiState as? SessionCompletionUiState.Content ?: return@LaunchedEffect
-        when (val overlay = content.overlay) {
-            is Overlay.ShareReady -> {
-                context.startActivity(overlay.intent)
-                viewModel.onEvent(SessionCompletionUiEvent.ShareIntentLaunched)
-            }
-            is Overlay.ShareError -> {
-                Toast.makeText(context, overlay.message.resolve(context), Toast.LENGTH_SHORT).show()
-                viewModel.onEvent(SessionCompletionUiEvent.ErrorDismissed)
-            }
-            else -> Unit
-        }
-    }
     SessionCompletionContent(
         uiState = uiState,
         onBackClick = onBackClick,
+        onShareClick = onShareClick,
         onNavigateToStatsConfig = onNavigateToStatsConfig,
         onEvent = viewModel::onEvent,
         modifier = modifier,
@@ -85,37 +69,18 @@ internal fun SessionCompletionRoute(
 internal fun SessionCompletionContent(
     uiState: SessionCompletionUiState,
     onBackClick: () -> Unit,
+    onShareClick: () -> Unit,
     onNavigateToStatsConfig: (section: String) -> Unit,
     onEvent: (SessionCompletionUiEvent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val content = uiState as? SessionCompletionUiState.Content
-    val sharePreviewData = when (val overlay = content?.overlay) {
-        is Overlay.ShareDialog -> overlay.sharePreviewData
-        is Overlay.Sharing -> overlay.sharePreviewData
-        else -> null
-    }
-    if (sharePreviewData != null) {
-        SharePreviewDialog(
-            data = sharePreviewData,
-            isSharing = content?.overlay is Overlay.Sharing,
-            onShareClick = { bitmap, shareText, chooserTitle ->
-                onEvent(SessionCompletionUiEvent.ShareConfirmed(bitmap, shareText, chooserTitle))
-            },
-            onDismiss = { onEvent(SessionCompletionUiEvent.ShareDialogDismissed) },
-            onEditStatsClick = {
-                onEvent(SessionCompletionUiEvent.ShareDialogDismissed)
-                onNavigateToStatsConfig(STATS_SECTION_SHARE)
-            },
-        )
-    }
     Scaffold(
         modifier = modifier,
         topBar = {
             SessionCompletionTopBar(
                 uiState = uiState,
                 onBackClick = onBackClick,
-                onShareClick = { onEvent(SessionCompletionUiEvent.ShareClicked) },
+                onShareClick = onShareClick,
             )
         },
     ) { paddingValues ->
