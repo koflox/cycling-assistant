@@ -176,6 +176,6 @@ Key rules:
 3. CI runs `verify` on PRs — fails if UI changed
 4. If change is intentional → run `record` → commit updated goldens
 
-**Reference:** `SessionControlsOverlayScreenshotTest`, `ScreenshotTestFactories.kt`
+**Reference:** `SessionControlsOverlayScreenshotTest`, `GpxShareScreenshotTest`, `ScreenshotTestFactories.kt`
 
 **Modules with screenshot tests:** `feature/session`
