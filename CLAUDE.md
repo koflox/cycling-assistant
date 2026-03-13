@@ -17,11 +17,13 @@ stat items, nutrition tracking, and POI management.
 ## Build Commands
 
 ```bash
-./gradlew detektRun                  # Lint & auto-format (run max 2 times)
-./gradlew build                      # Build
-./gradlew test                       # Unit tests
-./gradlew connectedDebugAndroidTest  # UI tests (requires device/emulator)
-./gradlew installDebug               # Install on device
+./gradlew detektRun                          # Lint & auto-format (run max 2 times)
+./gradlew build                              # Build
+./gradlew test                               # Unit tests
+./gradlew connectedDebugAndroidTest          # UI tests (requires device/emulator)
+./gradlew installDebug                       # Install on device
+./gradlew :module:recordRoborazziDebug       # Record screenshot golden images
+./gradlew :module:verifyRoborazziDebug       # Verify screenshots against golden images (CI)
 ```
 
 ## Architecture
@@ -320,6 +322,7 @@ repeating boilerplate.
 | `cycling.hilt` | `ksp` + `hilt` plugins + hilt-android + hilt-compiler |
 | `cycling.testing.unit` | junit + mockk + coroutines-test + turbine + shared:testing |
 | `cycling.feature` | library + compose + hilt + testing.unit + lifecycle + navigation + coroutines + shared:{concurrent, design-system, di} |
+| `cycling.testing.screenshot` | roborazzi + robolectric + compose ui test (additive) |
 | `cycling.bridge.api` | library (minimal) |
 | `cycling.bridge.impl` | library + hilt + testing.unit + coroutines-core |
 
@@ -357,6 +360,23 @@ Turbine, kotlinx-coroutines-test, `shared:testing`.
 
 **Reference:** `SessionCompletionViewModelTest`, `SessionTestFactories.kt`,
 `DestinationTestFactories.kt`. Full patterns in [Testing docs](docs/infrastructure/testing.md).
+
+## Screenshot Testing
+
+Visual regression tests using Roborazzi (JVM, no emulator). Apply `id("cycling.testing.screenshot")`
+to the module. Tests in `src/test/java/.../screenshot/`, golden images in `src/test/snapshots/`.
+
+**Key rules:**
+
+- `@RunWith(RobolectricTestRunner::class)` + `@GraphicsMode(GraphicsMode.Mode.NATIVE)`
+- `createComposeRule()` + `setContent { theme + component }` + `onRoot().captureRoboImage()`
+- Test `Content` composables with fixed `UiState` — same factory pattern as unit tests
+- Cover light and dark themes for key states
+- `src/test/resources/robolectric.properties` with `sdk=35`
+
+**Commands:** `recordRoborazziDebug` (create goldens), `verifyRoborazziDebug` (CI verify)
+
+**Reference:** `SessionControlsOverlayScreenshotTest`, `ScreenshotTestFactories.kt`
 
 ## Localization
 

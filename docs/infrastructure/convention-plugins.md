@@ -28,6 +28,9 @@ cycling.feature              ← library + compose + hilt + testing.unit
 │                               + lifecycle + navigation + coroutines
 │                               + shared:{concurrent, design-system, di}
 │
+cycling.testing.screenshot   ← roborazzi + robolectric + compose ui test
+│                               (additive, applied alongside other plugins)
+│
 cycling.bridge.api           ← library (minimal)
 cycling.bridge.impl          ← library + hilt + testing.unit + coroutines
 ```
@@ -69,6 +72,15 @@ cycling.bridge.impl          ← library + hilt + testing.unit + coroutines
 
 - Includes: `cycling.library`
 
+**`cycling.testing.screenshot`** — additive, for modules with screenshot tests:
+
+- `io.github.takahirom.roborazzi` plugin (provides `record`/`verify` Gradle tasks)
+- `testOptions.unitTests.isIncludeAndroidResources = true` (required by Robolectric)
+- Roborazzi output directory set to `src/test/snapshots/` (for git-committed golden images)
+- Test dependencies: `roborazzi`, `roborazzi-compose`, `roborazzi-junit-rule`, `robolectric`,
+  `compose-ui-test-junit4`
+- Debug dependency: `compose-ui-test-manifest`
+
 **`cycling.bridge.impl`** — bridge with DI and tests:
 
 - Includes: `cycling.library` + `cycling.hilt` + `cycling.testing.unit`
@@ -85,6 +97,7 @@ cycling.bridge.impl          ← library + hilt + testing.unit + coroutines
 | `cycling.library` only | di, graphics, sensor-protocol, testing |
 | `cycling.bridge.api` | 9 bridge API modules |
 | `cycling.bridge.impl` | 9 bridge impl modules |
+| `cycling.testing.screenshot` | session (additive — alongside `cycling.feature`) |
 | Not managed (unique) | app, baselineprofile |
 
 ## How It Works
@@ -126,6 +139,10 @@ dependencies {
     compileOnly(libs.ksp.gradlePlugin)
     compileOnly(libs.hilt.gradlePlugin)
     compileOnly(libs.kover.gradlePlugin)
+    // Roborazzi: `implementation` required — its JAR lacks META-INF/gradle-plugins
+    // descriptors, so Gradle can't resolve the plugin ID via pluginManagement at runtime.
+    // The convention plugin applies it by class: apply<RoborazziPlugin>()
+    implementation(libs.roborazzi.gradlePlugin)
 }
 ```
 
@@ -209,3 +226,9 @@ plugins at runtime. A typo like `"implmentation"(dep)` compiles but fails at run
 2. The filename becomes the plugin ID (e.g., `cycling.foo.gradle.kts` → `id("cycling.foo")`)
 3. If it needs new Gradle plugin classes, add `compileOnly` dep in `build-logic/build.gradle.kts`
 4. Apply in modules via `plugins { id("cycling.foo") }`
+
+**`compileOnly` vs `implementation` for plugin JARs:** Most Gradle plugins (AGP, Kotlin, Hilt,
+KSP, Kover) include `META-INF/gradle-plugins/<id>.properties` in their JARs, so Gradle resolves
+them via `pluginManagement` at runtime — `compileOnly` is sufficient. Some plugins (e.g.,
+Roborazzi) lack these descriptors. For those, use `implementation` and apply by class
+(`apply<PluginClass>()`) instead of by ID (`plugins { id("...") }`).
