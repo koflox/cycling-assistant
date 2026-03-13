@@ -1,8 +1,6 @@
 package com.koflox.session.presentation.sessionslist
 
-import android.content.Intent
 import com.koflox.designsystem.text.UiText
-import com.koflox.session.presentation.share.SharePreviewData
 
 internal sealed interface SessionsListUiState {
     data object Loading : SessionsListUiState
@@ -16,10 +14,6 @@ internal sealed interface SessionsListUiState {
 }
 
 internal sealed interface SessionsListOverlay {
-    data class SharePreview(val data: SharePreviewData) : SessionsListOverlay
-    data class Sharing(val data: SharePreviewData) : SessionsListOverlay
-    data class ShareReady(val intent: Intent) : SessionsListOverlay
-    data class ShareError(val message: UiText, val data: SharePreviewData) : SessionsListOverlay
     data class LoadError(val message: UiText) : SessionsListOverlay
 }
 
