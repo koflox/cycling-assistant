@@ -12,7 +12,7 @@ CyclingAssistant is an Android app built with Jetpack Compose that helps cyclist
 destinations, track sessions with a foreground service, connect BLE power meters for real-time
 wattage and cadence, and customize session statistics display. Features include destination
 selection, session tracking with real-time location updates, power meter integration, configurable
-stat items, nutrition tracking, and POI management.
+stat items, nutrition tracking, POI management, and GPX export.
 
 ## Build Commands
 
@@ -58,7 +58,7 @@ CyclingAssistant/
 │   ├── profile/                      # Rider profile management
 │   ├── sensor/
 │   │   └── power/                    # Power meter test mode and observation
-│   ├── session/                      # Session tracking, stats display config
+│   ├── session/                      # Session tracking, stats display, GPX export
 │   ├── settings/                     # App settings (theme, language, stats, POI)
 │   └── theme/                        # App theme persistence and observation
 └── shared/
@@ -285,7 +285,8 @@ Callback-based pattern — composables are navigation-agnostic. Only `AppNavHost
 
 Feature modules expose `NavGraphBuilder` extension functions with callback parameters. Route
 constants are defined in feature navigation files. Features with multiple screens use nested
-navigation graphs (e.g., `settingsGraph` wraps settings + POI selection sub-screens).
+navigation graphs (e.g., `settingsGraph` wraps settings + POI selection sub-screens,
+`sessionGraph` wraps session list, completion, share dialog, and stats config).
 
 ```kotlin
 const val SESSIONS_LIST_ROUTE = "sessions_list"
@@ -358,8 +359,9 @@ Turbine, kotlinx-coroutines-test, `shared:testing`.
 - Cross-module factories in `src/testFixtures/kotlin/.../testutil/`, module-local in
   `src/test/java/.../testutil/`
 
-**Reference:** `SessionCompletionViewModelTest`, `SessionTestFactories.kt`,
-`DestinationTestFactories.kt`. Full patterns in [Testing docs](docs/infrastructure/testing.md).
+**Reference:** `SessionCompletionViewModelTest`, `ShareViewModelTest`,
+`SessionTestFactories.kt`, `DestinationTestFactories.kt`. Full patterns in
+[Testing docs](docs/infrastructure/testing.md).
 
 ## Screenshot Testing
 
@@ -376,7 +378,8 @@ to the module. Tests in `src/test/java/.../screenshot/`, golden images in `src/t
 
 **Commands:** `recordRoborazziDebug` (create goldens), `verifyRoborazziDebug` (CI verify)
 
-**Reference:** `SessionControlsOverlayScreenshotTest`, `ScreenshotTestFactories.kt`
+**Reference:** `SessionControlsOverlayScreenshotTest`, `GpxShareScreenshotTest`,
+`ScreenshotTestFactories.kt`
 
 ## Localization
 
@@ -447,6 +450,8 @@ Examples: `feature: active POI for sessions`, `fix: prevent app crash on locatio
 | `feature/bridge/destination-session/api/.../CyclingSessionUseCase.kt`           | Bridge data interface          |
 | `feature/bridge/destination-session/api/.../CyclingSessionUiNavigator.kt`       | Bridge UI interface            |
 | `feature/bridge/connection-session/api/.../SessionPowerMeterUseCase.kt`         | Power meter bridge interface   |
+| `feature/session/presentation/share/GpxMapper.kt`                               | Session → GPX 1.1 XML mapper   |
+| `feature/session/presentation/share/SessionGpxSharer.kt`                        | GPX file I/O and share intent  |
 | `shared/ble/.../BleGattManager.kt`                                              | BLE GATT connection manager    |
 | `shared/concurrent/.../SuspendRunCatching.kt`                                   | Coroutine-safe runCatching     |
 

@@ -1,6 +1,6 @@
 # Session Tracking
 
-The session feature manages the cycling session lifecycle with a foreground service for background tracking, real-time location updates, and notification controls.
+The session feature manages the cycling session lifecycle with a foreground service for background tracking, real-time location updates, notification controls, and post-session sharing (image and GPX export).
 
 ## Components
 
@@ -93,3 +93,51 @@ BLE connections can drop during a ride. Power collection uses exponential backof
 - Power collection starts on `RUNNING`, stops on `PAUSED`/`COMPLETED`
 
 See [Power Meter](power-meter.md) for the full power meter architecture.
+
+## Session Sharing
+
+Completed sessions can be shared via a dialog with two tabs: **Image** and **GPX**.
+
+### Image Share
+
+Captures a visual summary of the session (route map, stats) as a bitmap and shares it via `ACTION_SEND` with `image/png` MIME type. Uses `FileProvider` to write the image to app cache.
+
+### GPX Export
+
+Exports session track data as a GPX 1.1 XML file with support for:
+
+- Multiple `<trkseg>` elements representing session segments (pauses create segment boundaries)
+- Track point data: latitude, longitude, elevation, timestamp
+- Power meter extension (`gpxtpx:TrackPointExtension`) when power data is available
+- Garmin TrackPointExtension namespace for compatibility with third-party apps
+
+#### Components
+
+| Component              | Purpose                                        |
+|------------------------|------------------------------------------------|
+| `GpxMapper`            | Converts `Session` domain model to GPX XML string |
+| `SessionGpxSharer`     | Writes GPX to cache directory, creates share intent via `FileProvider` |
+| `GpxShareErrorMapper`  | Maps `GpxShareResult` errors to user-facing strings |
+
+#### GPX Share States
+
+```
+Idle → (user taps Export) → Generating → Ready
+                                       → Error
+Unavailable (no apps support GPX)
+```
+
+- **Idle** — export button enabled, ready to generate
+- **Generating** — GPX is being built and written to cache
+- **Ready** — share intent created, launches Android chooser
+- **Error** — file write or mapping failure, button disabled with error message
+- **Unavailable** — no installed apps can receive `application/gpx+xml` via `ACTION_SEND`
+
+#### File Output
+
+GPX files are written to `context.cacheDir/gpx/` and shared via `FileProvider` with `FLAG_GRANT_READ_URI_PERMISSION`. Files are overwritten on re-export (`File.writeText()` truncates).
+
+#### Limitations
+
+- Strava does not support GPX import via Android intents — only via web upload
+- Android 11+ (API 30) requires `<queries>` declaration in the manifest for `resolveActivity()` to detect apps that handle `application/gpx+xml`
