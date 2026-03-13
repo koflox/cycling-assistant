@@ -1,5 +1,6 @@
 plugins {
     id("cycling.feature")
+    id("cycling.testing.screenshot")
 }
 
 android {
