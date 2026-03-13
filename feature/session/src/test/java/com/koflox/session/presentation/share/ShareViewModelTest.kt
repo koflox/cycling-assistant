@@ -135,7 +135,7 @@ class ShareViewModelTest {
             assertEquals(SESSION_ID, content.sharePreviewData.sessionId)
             assertEquals(DESTINATION_NAME, content.sharePreviewData.destinationName)
             assertTrue(content.gpxShareState is GpxShareState.Idle)
-            assertEquals(0, content.selectedTabIndex)
+            assertEquals(ShareTab.IMAGE, content.selectedTab)
         }
     }
 
@@ -155,7 +155,7 @@ class ShareViewModelTest {
     }
 
     @Test
-    fun `TabSelected updates selectedTabIndex`() = runTest {
+    fun `TabSelected updates selectedTab`() = runTest {
         val session = createSession(id = SESSION_ID, destinationName = DESTINATION_NAME, status = SessionStatus.COMPLETED)
         coEvery { getSessionByIdUseCase.getSession(SESSION_ID) } returns Result.success(session)
 
@@ -165,10 +165,10 @@ class ShareViewModelTest {
             awaitItem() // Loading
             awaitItem() // Content tab 0
 
-            viewModel.onEvent(ShareUiEvent.TabSelected(1))
+            viewModel.onEvent(ShareUiEvent.TabSelected(ShareTab.GPX))
 
             val updated = awaitItem() as ShareUiState.Content
-            assertEquals(1, updated.selectedTabIndex)
+            assertEquals(ShareTab.GPX, updated.selectedTab)
         }
     }
 

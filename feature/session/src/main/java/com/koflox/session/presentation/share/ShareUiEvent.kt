@@ -3,7 +3,7 @@ package com.koflox.session.presentation.share
 import android.graphics.Bitmap
 
 internal sealed interface ShareUiEvent {
-    data class TabSelected(val tabIndex: Int) : ShareUiEvent
+    data class TabSelected(val tab: ShareTab) : ShareUiEvent
 
     sealed interface Image : ShareUiEvent {
         data class ShareConfirmed(val bitmap: Bitmap, val shareText: String, val chooserTitle: String) : Image

@@ -32,21 +32,24 @@ internal class SessionGpxSharerImpl(
     }
 
     override suspend fun shareGpx(gpxContent: String, fileName: String, chooserTitle: String): GpxShareResult {
-        val uri = try {
-            writeGpxToCache(gpxContent, fileName)
-        } catch (_: IOException) {
-            return GpxShareResult.CannotWriteFile
-        }
-        val shareIntent = Intent(Intent.ACTION_SEND).apply {
-            type = GPX_MIME_TYPE
-            putExtra(Intent.EXTRA_STREAM, uri)
-            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        }
-        return if (shareIntent.resolveActivity(context.packageManager) != null) {
+        if (!isGpxSharingAvailable()) return GpxShareResult.NoAppAvailable
+        val uri = writeGpxToCacheOrNull(gpxContent, fileName)
+        return if (uri != null) {
+            val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                type = GPX_MIME_TYPE
+                putExtra(Intent.EXTRA_STREAM, uri)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
             GpxShareResult.Success(Intent.createChooser(shareIntent, chooserTitle))
         } else {
-            GpxShareResult.NoAppAvailable
+            GpxShareResult.CannotWriteFile
         }
+    }
+
+    private suspend fun writeGpxToCacheOrNull(gpxContent: String, fileName: String) = try {
+        writeGpxToCache(gpxContent, fileName)
+    } catch (_: IOException) {
+        null
     }
 
     private suspend fun writeGpxToCache(gpxContent: String, fileName: String) = withContext(dispatcherIo) {

@@ -3,12 +3,17 @@ package com.koflox.session.presentation.share
 import android.content.Intent
 import com.koflox.designsystem.text.UiText
 
+internal enum class ShareTab {
+    IMAGE,
+    GPX,
+}
+
 internal sealed interface ShareUiState {
     data object Loading : ShareUiState
 
     data class Content(
         val sharePreviewData: SharePreviewData,
-        val selectedTabIndex: Int = 0,
+        val selectedTab: ShareTab = ShareTab.IMAGE,
         val imageShareState: ImageShareState = ImageShareState.Idle,
         val gpxShareState: GpxShareState,
     ) : ShareUiState
