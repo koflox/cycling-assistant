@@ -67,7 +67,7 @@ internal class ShareViewModel @Inject constructor(
     fun onEvent(event: ShareUiEvent) {
         viewModelScope.launch(dispatcherDefault) {
             when (event) {
-                is ShareUiEvent.TabSelected -> updateContent { it.copy(selectedTabIndex = event.tabIndex) }
+                is ShareUiEvent.TabSelected -> updateContent { it.copy(selectedTab = event.tab) }
                 is ShareUiEvent.Image.ShareConfirmed -> shareImage(event.bitmap, event.shareText, event.chooserTitle)
                 ShareUiEvent.Image.IntentLaunched -> updateContent { it.copy(imageShareState = ImageShareState.Idle) }
                 ShareUiEvent.Image.ErrorDismissed -> updateContent { it.copy(imageShareState = ImageShareState.Idle) }
