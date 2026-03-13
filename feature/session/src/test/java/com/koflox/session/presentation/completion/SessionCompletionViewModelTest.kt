@@ -1,7 +1,5 @@
 package com.koflox.session.presentation.completion
 
-import android.content.Intent
-import android.graphics.Bitmap
 import androidx.lifecycle.SavedStateHandle
 import app.cash.turbine.test
 import com.koflox.designsystem.text.UiText
@@ -15,9 +13,6 @@ import com.koflox.session.domain.usecase.ObserveStatsDisplayConfigUseCase
 import com.koflox.session.navigation.SESSION_ID_ARG
 import com.koflox.session.presentation.mapper.SessionUiMapper
 import com.koflox.session.presentation.route.MapLayer
-import com.koflox.session.presentation.share.SessionImageSharer
-import com.koflox.session.presentation.share.ShareErrorMapper
-import com.koflox.session.presentation.share.ShareResult
 import com.koflox.session.testutil.createSession
 import com.koflox.session.testutil.createSessionUiModel
 import com.koflox.session.testutil.createTrackPoint
@@ -29,7 +24,6 @@ import io.mockk.mockk
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -40,10 +34,7 @@ class SessionCompletionViewModelTest {
     companion object {
         private const val SESSION_ID = "session-123"
         private const val DESTINATION_NAME = "Test Destination"
-        private const val SHARE_TEXT = "Check out my ride!"
-        private const val CHOOSER_TITLE = "Share via"
         private val ERROR_UI_TEXT = UiText.Resource(com.koflox.error.R.string.error_not_handled)
-        private val SHARE_ERROR_UI_TEXT = UiText.Resource(com.koflox.session.R.string.share_image_processing_error)
         private const val FORMATTED_DATE = "Jan 1, 2024"
         private const val FORMATTED_TIME = "01:30:00"
         private const val FORMATTED_DISTANCE = "15.5 km"
@@ -59,8 +50,6 @@ class SessionCompletionViewModelTest {
     private val observeStatsDisplayConfigUseCase: ObserveStatsDisplayConfigUseCase = mockk()
     private val sessionUiMapper: SessionUiMapper = mockk()
     private val errorMessageMapper: ErrorMessageMapper = mockk()
-    private val imageSharer: SessionImageSharer = mockk()
-    private val shareErrorMapper: ShareErrorMapper = mockk()
     private val savedStateHandle = SavedStateHandle(mapOf(SESSION_ID_ARG to SESSION_ID))
 
     private lateinit var viewModel: SessionCompletionViewModel
@@ -94,9 +83,6 @@ class SessionCompletionViewModelTest {
         every {
             observeStatsDisplayConfigUseCase.observeCompletedSessionStats()
         } returns flowOf(StatsDisplayConfig.DEFAULT_COMPLETED_SESSION_STATS)
-        every {
-            observeStatsDisplayConfigUseCase.observeShareStats()
-        } returns flowOf(StatsDisplayConfig.DEFAULT_SHARE_STATS)
         every { sessionUiMapper.buildCompletedSessionStats(any(), any(), any()) } returns emptyList()
     }
 
@@ -107,8 +93,6 @@ class SessionCompletionViewModelTest {
             observeStatsDisplayConfigUseCase = observeStatsDisplayConfigUseCase,
             sessionUiMapper = sessionUiMapper,
             errorMessageMapper = errorMessageMapper,
-            imageSharer = imageSharer,
-            shareErrorMapper = shareErrorMapper,
             dispatcherDefault = mainDispatcherRule.testDispatcher,
             savedStateHandle = savedStateHandle,
         )
@@ -145,7 +129,6 @@ class SessionCompletionViewModelTest {
             assertEquals(FORMATTED_DISTANCE, content.traveledDistanceFormatted)
             assertEquals(FORMATTED_AVG_SPEED, content.averageSpeedFormatted)
             assertEquals(FORMATTED_TOP_SPEED, content.topSpeedFormatted)
-            assertNull(content.overlay)
         }
     }
 
@@ -288,218 +271,6 @@ class SessionCompletionViewModelTest {
     }
 
     @Test
-    fun `ShareClicked shows share dialog`() = runTest {
-        coEvery {
-            getSessionByIdUseCase.getSession(SESSION_ID)
-        } returns Result.success(createSession(id = SESSION_ID, destinationName = DESTINATION_NAME, status = SessionStatus.COMPLETED))
-
-        viewModel = createViewModel()
-
-        viewModel.uiState.test {
-            awaitItem() // Loading
-            awaitItem() // Content
-
-            viewModel.onEvent(SessionCompletionUiEvent.ShareClicked)
-
-            val updatedContent = awaitItem() as SessionCompletionUiState.Content
-            assertTrue(updatedContent.overlay is Overlay.ShareDialog)
-        }
-    }
-
-    @Test
-    fun `ShareDialogDismissed clears overlay`() = runTest {
-        coEvery {
-            getSessionByIdUseCase.getSession(SESSION_ID)
-        } returns Result.success(createSession(id = SESSION_ID, destinationName = DESTINATION_NAME, status = SessionStatus.COMPLETED))
-
-        viewModel = createViewModel()
-
-        viewModel.uiState.test {
-            awaitItem() // Loading
-            awaitItem() // Content
-
-            viewModel.onEvent(SessionCompletionUiEvent.ShareClicked)
-            awaitItem() // ShareDialog
-
-            viewModel.onEvent(SessionCompletionUiEvent.ShareDialogDismissed)
-
-            val content = awaitItem() as SessionCompletionUiState.Content
-            assertNull(content.overlay)
-        }
-    }
-
-    @Test
-    fun `ShareConfirmed shows Sharing state first`() = runTest {
-        val bitmap = mockk<Bitmap>()
-        val intent = mockk<Intent>()
-        coEvery {
-            getSessionByIdUseCase.getSession(SESSION_ID)
-        } returns Result.success(createSession(id = SESSION_ID, destinationName = DESTINATION_NAME, status = SessionStatus.COMPLETED))
-        coEvery { imageSharer.shareImage(bitmap, SHARE_TEXT, CHOOSER_TITLE) } returns ShareResult.Success(intent)
-
-        viewModel = createViewModel()
-
-        viewModel.uiState.test {
-            awaitItem() // Loading
-            awaitItem() // Content
-
-            viewModel.onEvent(SessionCompletionUiEvent.ShareConfirmed(bitmap, SHARE_TEXT, CHOOSER_TITLE))
-
-            val sharingState = awaitItem() as SessionCompletionUiState.Content
-            assertTrue(sharingState.overlay is Overlay.Sharing)
-            cancelAndIgnoreRemainingEvents()
-        }
-    }
-
-    @Test
-    fun `ShareConfirmed success shows ShareReady with intent`() = runTest {
-        val bitmap = mockk<Bitmap>()
-        val intent = mockk<Intent>()
-        coEvery {
-            getSessionByIdUseCase.getSession(SESSION_ID)
-        } returns Result.success(createSession(id = SESSION_ID, destinationName = DESTINATION_NAME, status = SessionStatus.COMPLETED))
-        coEvery { imageSharer.shareImage(bitmap, SHARE_TEXT, CHOOSER_TITLE) } returns ShareResult.Success(intent)
-
-        viewModel = createViewModel()
-
-        viewModel.uiState.test {
-            awaitItem() // Loading
-            awaitItem() // Content
-
-            viewModel.onEvent(SessionCompletionUiEvent.ShareConfirmed(bitmap, SHARE_TEXT, CHOOSER_TITLE))
-
-            awaitItem() // Sharing
-            val readyState = awaitItem() as SessionCompletionUiState.Content
-            assertTrue(readyState.overlay is Overlay.ShareReady)
-            assertEquals(intent, (readyState.overlay as Overlay.ShareReady).intent)
-        }
-    }
-
-    @Test
-    fun `ShareConfirmed failure shows ShareError`() = runTest {
-        val bitmap = mockk<Bitmap>()
-        coEvery {
-            getSessionByIdUseCase.getSession(SESSION_ID)
-        } returns Result.success(createSession(id = SESSION_ID, destinationName = DESTINATION_NAME, status = SessionStatus.COMPLETED))
-        coEvery { imageSharer.shareImage(bitmap, SHARE_TEXT, CHOOSER_TITLE) } returns ShareResult.CannotProcessTheImage
-        every { shareErrorMapper.map(ShareResult.CannotProcessTheImage) } returns SHARE_ERROR_UI_TEXT
-
-        viewModel = createViewModel()
-
-        viewModel.uiState.test {
-            awaitItem() // Loading
-            awaitItem() // Content
-
-            viewModel.onEvent(SessionCompletionUiEvent.ShareConfirmed(bitmap, SHARE_TEXT, CHOOSER_TITLE))
-
-            awaitItem() // Sharing
-            val errorState = awaitItem() as SessionCompletionUiState.Content
-            assertTrue(errorState.overlay is Overlay.ShareError)
-            assertEquals(SHARE_ERROR_UI_TEXT, (errorState.overlay as Overlay.ShareError).message)
-        }
-    }
-
-    @Test
-    fun `ShareConfirmed failure with null error returns to ShareDialog`() = runTest {
-        val bitmap = mockk<Bitmap>()
-        coEvery {
-            getSessionByIdUseCase.getSession(SESSION_ID)
-        } returns Result.success(createSession(id = SESSION_ID, destinationName = DESTINATION_NAME, status = SessionStatus.COMPLETED))
-        coEvery { imageSharer.shareImage(bitmap, SHARE_TEXT, CHOOSER_TITLE) } returns ShareResult.NoAppAvailable
-        every { shareErrorMapper.map(ShareResult.NoAppAvailable) } returns null
-
-        viewModel = createViewModel()
-
-        viewModel.uiState.test {
-            awaitItem() // Loading
-            awaitItem() // Content
-
-            viewModel.onEvent(SessionCompletionUiEvent.ShareConfirmed(bitmap, SHARE_TEXT, CHOOSER_TITLE))
-
-            awaitItem() // Sharing
-            val state = awaitItem() as SessionCompletionUiState.Content
-            assertTrue(state.overlay is Overlay.ShareDialog)
-        }
-    }
-
-    @Test
-    fun `ShareIntentLaunched clears overlay`() = runTest {
-        val bitmap = mockk<Bitmap>()
-        val intent = mockk<Intent>()
-        coEvery {
-            getSessionByIdUseCase.getSession(SESSION_ID)
-        } returns Result.success(createSession(id = SESSION_ID, destinationName = DESTINATION_NAME, status = SessionStatus.COMPLETED))
-        coEvery { imageSharer.shareImage(bitmap, SHARE_TEXT, CHOOSER_TITLE) } returns ShareResult.Success(intent)
-
-        viewModel = createViewModel()
-
-        viewModel.uiState.test {
-            awaitItem() // Loading
-            awaitItem() // Content
-
-            viewModel.onEvent(SessionCompletionUiEvent.ShareConfirmed(bitmap, SHARE_TEXT, CHOOSER_TITLE))
-            awaitItem() // Sharing
-            awaitItem() // ShareReady
-
-            viewModel.onEvent(SessionCompletionUiEvent.ShareIntentLaunched)
-
-            val content = awaitItem() as SessionCompletionUiState.Content
-            assertNull(content.overlay)
-        }
-    }
-
-    @Test
-    fun `ErrorDismissed returns to ShareDialog when in ShareError state`() = runTest {
-        val bitmap = mockk<Bitmap>()
-        coEvery {
-            getSessionByIdUseCase.getSession(SESSION_ID)
-        } returns Result.success(createSession(id = SESSION_ID, destinationName = DESTINATION_NAME, status = SessionStatus.COMPLETED))
-        coEvery { imageSharer.shareImage(bitmap, SHARE_TEXT, CHOOSER_TITLE) } returns ShareResult.CannotProcessTheImage
-        every { shareErrorMapper.map(ShareResult.CannotProcessTheImage) } returns SHARE_ERROR_UI_TEXT
-
-        viewModel = createViewModel()
-
-        viewModel.uiState.test {
-            awaitItem() // Loading
-            awaitItem() // Content
-
-            viewModel.onEvent(SessionCompletionUiEvent.ShareConfirmed(bitmap, SHARE_TEXT, CHOOSER_TITLE))
-            awaitItem() // Sharing
-            awaitItem() // ShareError
-
-            viewModel.onEvent(SessionCompletionUiEvent.ErrorDismissed)
-
-            val content = awaitItem() as SessionCompletionUiState.Content
-            assertTrue(content.overlay is Overlay.ShareDialog)
-        }
-    }
-
-    @Test
-    fun `ErrorDismissed keeps overlay when not in ShareError state`() = runTest {
-        coEvery {
-            getSessionByIdUseCase.getSession(SESSION_ID)
-        } returns Result.success(createSession(id = SESSION_ID, destinationName = DESTINATION_NAME, status = SessionStatus.COMPLETED))
-
-        viewModel = createViewModel()
-
-        viewModel.uiState.test {
-            awaitItem() // Loading
-            awaitItem() // Content
-
-            viewModel.onEvent(SessionCompletionUiEvent.ShareClicked)
-            val shareDialogState = awaitItem() as SessionCompletionUiState.Content
-            assertTrue(shareDialogState.overlay is Overlay.ShareDialog)
-
-            viewModel.onEvent(SessionCompletionUiEvent.ErrorDismissed)
-
-            // No new emission expected since overlay stays ShareDialog
-            expectNoEvents()
-            // Verify the state still has ShareDialog
-            assertTrue((viewModel.uiState.value as SessionCompletionUiState.Content).overlay is Overlay.ShareDialog)
-        }
-    }
-
-    @Test
     fun `loadSession initializes with DEFAULT layer`() = runTest {
         coEvery {
             getSessionByIdUseCase.getSession(SESSION_ID)
@@ -603,36 +374,6 @@ class SessionCompletionViewModelTest {
             viewModel.onEvent(SessionCompletionUiEvent.LayerSelected(MapLayer.SPEED))
             val cachedSpeedContent = awaitItem() as SessionCompletionUiState.Content
             assertTrue(speedRouteData === cachedSpeedContent.routeDisplayData)
-        }
-    }
-
-    @Test
-    fun `share preview always uses DEFAULT layer route data`() = runTest {
-        val session = createSession(
-            id = SESSION_ID,
-            destinationName = DESTINATION_NAME,
-            status = SessionStatus.COMPLETED,
-            trackPoints = listOf(
-                createTrackPoint(latitude = 52.51, longitude = 13.41, speedKmh = 15.0),
-                createTrackPoint(latitude = 52.52, longitude = 13.42, speedKmh = 35.0),
-            ),
-        )
-        coEvery { getSessionByIdUseCase.getSession(SESSION_ID) } returns Result.success(session)
-
-        viewModel = createViewModel()
-
-        viewModel.uiState.test {
-            awaitItem() // Loading
-            val defaultContent = awaitItem() as SessionCompletionUiState.Content
-            val defaultRouteData = defaultContent.routeDisplayData
-
-            viewModel.onEvent(SessionCompletionUiEvent.LayerSelected(MapLayer.SPEED))
-            awaitItem() // Content - SPEED
-
-            viewModel.onEvent(SessionCompletionUiEvent.ShareClicked)
-            val shareContent = awaitItem() as SessionCompletionUiState.Content
-            val shareDialog = shareContent.overlay as Overlay.ShareDialog
-            assertTrue(defaultRouteData === shareDialog.sharePreviewData.routeDisplayData)
         }
     }
 }

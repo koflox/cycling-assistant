@@ -6,6 +6,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
@@ -19,6 +20,8 @@ import com.koflox.session.navigation.SESSIONS_LIST_ROUTE
 import com.koflox.session.navigation.sessionCompletionRoute
 import com.koflox.session.navigation.sessionCompletionScreen
 import com.koflox.session.navigation.sessionsListScreen
+import com.koflox.session.navigation.shareSessionDialog
+import com.koflox.session.navigation.shareSessionRoute
 import com.koflox.session.service.PendingSessionAction
 import com.koflox.settings.navigation.SETTINGS_GRAPH_ROUTE
 import com.koflox.settings.navigation.settingsGraph
@@ -54,43 +57,58 @@ fun AppNavHost(
         startDestination = startDestination,
         modifier = modifier,
     ) {
-        dashboardScreen(
-            onNavigateToSessionsList = { navController.navigate(SESSIONS_LIST_ROUTE) },
-            onNavigateToConnections = { navController.navigate(CONNECTIONS_GRAPH_ROUTE) },
-            onNavigateToSettings = { navController.navigate(SETTINGS_GRAPH_ROUTE) },
-            onNavigateToSessionCompletion = { sessionId ->
-                navController.navigate(sessionCompletionRoute(sessionId))
-            },
-            onNavigateToPoiSelection = { navController.navigate(POI_SELECTION_ROUTE) },
-        )
-        connectionsGraph(
-            navController = navController,
-            onBackClick = { navController.popBackStack() },
-        )
-        sessionsListScreen(
-            onBackClick = { navController.popBackStack() },
-            onSessionClick = { sessionId ->
-                navController.navigate(sessionCompletionRoute(sessionId))
-            },
-            onNavigateToStatsConfig = { section ->
-                navController.navigate(settingsStatsDisplayRoute(section))
-            },
-        )
-        sessionCompletionScreen(
-            onBackClick = { navController.popBackStack() },
-            onNavigateToDashboard = {
-                navController.popBackStack(DASHBOARD_ROUTE, inclusive = false)
-            },
-            onNavigateToStatsConfig = { section ->
-                navController.navigate(settingsStatsDisplayRoute(section))
-            },
-        )
-        poiSelectionScreen(
-            onBackClick = { navController.popBackStack() },
-        )
-        settingsGraph(
-            navController = navController,
-            onBackClick = { navController.popBackStack() },
-        )
+        appDestinations(navController)
     }
+}
+
+private fun NavGraphBuilder.appDestinations(navController: NavHostController) {
+    dashboardScreen(
+        onNavigateToSessionsList = { navController.navigate(SESSIONS_LIST_ROUTE) },
+        onNavigateToConnections = { navController.navigate(CONNECTIONS_GRAPH_ROUTE) },
+        onNavigateToSettings = { navController.navigate(SETTINGS_GRAPH_ROUTE) },
+        onNavigateToSessionCompletion = { sessionId ->
+            navController.navigate(sessionCompletionRoute(sessionId))
+        },
+        onNavigateToPoiSelection = { navController.navigate(POI_SELECTION_ROUTE) },
+    )
+    connectionsGraph(
+        navController = navController,
+        onBackClick = { navController.popBackStack() },
+    )
+    sessionsListScreen(
+        onBackClick = { navController.popBackStack() },
+        onSessionClick = { sessionId ->
+            navController.navigate(sessionCompletionRoute(sessionId))
+        },
+        onShareClick = { sessionId ->
+            navController.navigate(shareSessionRoute(sessionId))
+        },
+    )
+    sessionCompletionScreen(
+        onBackClick = { navController.popBackStack() },
+        onNavigateToDashboard = {
+            navController.popBackStack(DASHBOARD_ROUTE, inclusive = false)
+        },
+        onShareClick = {
+            val sessionId = navController.currentBackStackEntry
+                ?.arguments?.getString("sessionId") ?: return@sessionCompletionScreen
+            navController.navigate(shareSessionRoute(sessionId))
+        },
+        onNavigateToStatsConfig = { section ->
+            navController.navigate(settingsStatsDisplayRoute(section))
+        },
+    )
+    shareSessionDialog(
+        onDismiss = { navController.popBackStack() },
+        onNavigateToStatsConfig = { section ->
+            navController.navigate(settingsStatsDisplayRoute(section))
+        },
+    )
+    poiSelectionScreen(
+        onBackClick = { navController.popBackStack() },
+    )
+    settingsGraph(
+        navController = navController,
+        onBackClick = { navController.popBackStack() },
+    )
 }

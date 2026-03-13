@@ -5,9 +5,11 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.dialog
 import androidx.navigation.navArgument
 import com.koflox.session.presentation.completion.SessionCompletionRoute
 import com.koflox.session.presentation.sessionslist.SessionsListRoute
+import com.koflox.session.presentation.share.ShareSessionRoute
 
 const val SESSIONS_LIST_ROUTE = "sessions_list"
 
@@ -17,18 +19,22 @@ internal const val SESSION_COMPLETION_ROUTE = "session_completion/{$SESSION_ID_A
 internal const val STATS_SECTION_COMPLETED = "COMPLETED_SESSION"
 internal const val STATS_SECTION_SHARE = "SHARE"
 
+private const val SHARE_SESSION_ROUTE = "share_session/{$SESSION_ID_ARG}"
+
 fun sessionCompletionRoute(sessionId: String): String = "session_completion/$sessionId"
+
+fun shareSessionRoute(sessionId: String): String = "share_session/$sessionId"
 
 fun NavGraphBuilder.sessionsListScreen(
     onBackClick: () -> Unit,
     onSessionClick: (sessionId: String) -> Unit,
-    onNavigateToStatsConfig: (section: String) -> Unit,
+    onShareClick: (sessionId: String) -> Unit,
 ) {
     composable(route = SESSIONS_LIST_ROUTE) {
         SessionsListRoute(
             onBackClick = onBackClick,
             onSessionClick = onSessionClick,
-            onNavigateToStatsConfig = onNavigateToStatsConfig,
+            onShareClick = onShareClick,
             modifier = Modifier.fillMaxSize(),
         )
     }
@@ -37,6 +43,7 @@ fun NavGraphBuilder.sessionsListScreen(
 fun NavGraphBuilder.sessionCompletionScreen(
     onBackClick: () -> Unit,
     onNavigateToDashboard: () -> Unit,
+    onShareClick: () -> Unit,
     onNavigateToStatsConfig: (section: String) -> Unit,
 ) {
     composable(
@@ -46,8 +53,24 @@ fun NavGraphBuilder.sessionCompletionScreen(
         SessionCompletionRoute(
             onBackClick = onBackClick,
             onNavigateToDashboard = onNavigateToDashboard,
+            onShareClick = onShareClick,
             onNavigateToStatsConfig = onNavigateToStatsConfig,
             modifier = Modifier.fillMaxSize(),
+        )
+    }
+}
+
+fun NavGraphBuilder.shareSessionDialog(
+    onDismiss: () -> Unit,
+    onNavigateToStatsConfig: (section: String) -> Unit,
+) {
+    dialog(
+        route = SHARE_SESSION_ROUTE,
+        arguments = listOf(navArgument(SESSION_ID_ARG) { type = NavType.StringType }),
+    ) {
+        ShareSessionRoute(
+            onDismiss = onDismiss,
+            onNavigateToStatsConfig = onNavigateToStatsConfig,
         )
     }
 }

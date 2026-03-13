@@ -13,6 +13,12 @@ import com.koflox.session.presentation.session.timer.SessionTimerFactory
 import com.koflox.session.presentation.session.timer.SessionTimerImpl
 import com.koflox.session.presentation.sessionslist.SessionsListUiMapper
 import com.koflox.session.presentation.sessionslist.SessionsListUiMapperImpl
+import com.koflox.session.presentation.share.GpxMapper
+import com.koflox.session.presentation.share.GpxMapperImpl
+import com.koflox.session.presentation.share.GpxShareErrorMapper
+import com.koflox.session.presentation.share.GpxShareErrorMapperImpl
+import com.koflox.session.presentation.share.SessionGpxSharer
+import com.koflox.session.presentation.share.SessionGpxSharerImpl
 import com.koflox.session.presentation.share.SessionImageSharer
 import com.koflox.session.presentation.share.SessionImageSharerImpl
 import com.koflox.session.presentation.share.ShareErrorMapper
@@ -77,4 +83,22 @@ internal object SessionPresentationHiltModule {
     @Provides
     @Singleton
     fun provideShareErrorMapper(): ShareErrorMapper = ShareErrorMapperImpl()
+
+    @Provides
+    @Singleton
+    fun provideGpxMapper(): GpxMapper = GpxMapperImpl()
+
+    @Provides
+    @Singleton
+    fun provideSessionGpxSharer(
+        @ApplicationContext context: Context,
+        @IoDispatcher dispatcherIo: CoroutineDispatcher,
+    ): SessionGpxSharer = SessionGpxSharerImpl(
+        context = context,
+        dispatcherIo = dispatcherIo,
+    )
+
+    @Provides
+    @Singleton
+    fun provideGpxShareErrorMapper(): GpxShareErrorMapper = GpxShareErrorMapperImpl()
 }
