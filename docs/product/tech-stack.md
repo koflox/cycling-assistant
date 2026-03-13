@@ -13,7 +13,7 @@
 | **Maps**                 | Google Maps Compose          |
 | **Location**             | Play Services Location       |
 | **Bluetooth**            | Android BLE (BluetoothGatt, BluetoothLeScanner) |
-| **Testing**              | JUnit 4, MockK, Turbine      |
+| **Testing**              | JUnit 4, MockK, Turbine, Roborazzi, Robolectric |
 | **Observability**        | Firebase Crashlytics, Firebase Performance, Timber |
 | **Performance**          | Baseline Profiles, Macrobenchmarks |
 | **Code Quality**         | Detekt                       |

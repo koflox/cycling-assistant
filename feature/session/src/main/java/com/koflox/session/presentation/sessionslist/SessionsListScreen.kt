@@ -42,14 +42,12 @@ import com.koflox.designsystem.text.resolve
 import com.koflox.designsystem.theme.Elevation
 import com.koflox.designsystem.theme.Spacing
 import com.koflox.session.R
-import com.koflox.session.navigation.STATS_SECTION_SHARE
-import com.koflox.session.presentation.share.SharePreviewDialog
 
 @Composable
 internal fun SessionsListRoute(
     onBackClick: () -> Unit,
     onSessionClick: (sessionId: String) -> Unit,
-    onNavigateToStatsConfig: (section: String) -> Unit,
+    onShareClick: (sessionId: String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val viewModel: SessionsListViewModel = hiltViewModel()
@@ -58,25 +56,16 @@ internal fun SessionsListRoute(
     LaunchedEffect(uiState) {
         val content = uiState as? SessionsListUiState.Content ?: return@LaunchedEffect
         val overlay = content.overlay
-        if (overlay is SessionsListOverlay.ShareReady) {
-            context.startActivity(overlay.intent)
-            viewModel.onEvent(SessionsListUiEvent.ShareIntentLaunched)
-            return@LaunchedEffect
+        if (overlay is SessionsListOverlay.LoadError) {
+            Toast.makeText(context, overlay.message.resolve(context), Toast.LENGTH_SHORT).show()
+            viewModel.onEvent(SessionsListUiEvent.LoadErrorDismissed)
         }
-        val (message, dismissEvent) = when (overlay) {
-            is SessionsListOverlay.ShareError -> overlay.message.resolve(context) to SessionsListUiEvent.ShareErrorDismissed
-            is SessionsListOverlay.LoadError -> overlay.message.resolve(context) to SessionsListUiEvent.LoadErrorDismissed
-            else -> return@LaunchedEffect
-        }
-        Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-        viewModel.onEvent(dismissEvent)
     }
     SessionsListContent(
         uiState = uiState,
         onBackClick = onBackClick,
         onSessionClick = onSessionClick,
-        onNavigateToStatsConfig = onNavigateToStatsConfig,
-        onEvent = viewModel::onEvent,
+        onShareClick = onShareClick,
         modifier = modifier,
     )
 }
@@ -87,35 +76,9 @@ private fun SessionsListContent(
     uiState: SessionsListUiState,
     onBackClick: () -> Unit,
     onSessionClick: (sessionId: String) -> Unit,
-    onNavigateToStatsConfig: (section: String) -> Unit,
-    onEvent: (SessionsListUiEvent) -> Unit,
+    onShareClick: (sessionId: String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val content = uiState as? SessionsListUiState.Content
-    val overlay = content?.overlay
-    if (overlay != null && overlay !is SessionsListOverlay.ShareReady) {
-        val previewData = when (overlay) {
-            is SessionsListOverlay.SharePreview -> overlay.data
-            is SessionsListOverlay.Sharing -> overlay.data
-            is SessionsListOverlay.ShareError -> overlay.data
-            is SessionsListOverlay.ShareReady -> null
-            is SessionsListOverlay.LoadError -> null
-        }
-        previewData?.let { data ->
-            SharePreviewDialog(
-                data = data,
-                isSharing = overlay is SessionsListOverlay.Sharing,
-                onShareClick = { bitmap, shareText, chooserTitle ->
-                    onEvent(SessionsListUiEvent.ShareConfirmed(bitmap, shareText, chooserTitle))
-                },
-                onDismiss = { onEvent(SessionsListUiEvent.ShareDialogDismissed) },
-                onEditStatsClick = {
-                    onEvent(SessionsListUiEvent.ShareDialogDismissed)
-                    onNavigateToStatsConfig(STATS_SECTION_SHARE)
-                },
-            )
-        }
-    }
     Scaffold(
         modifier = modifier.testTag(TestTags.SESSIONS_LIST_SCREEN),
         topBar = {
@@ -135,7 +98,7 @@ private fun SessionsListContent(
         SessionsListBody(
             uiState = uiState,
             onSessionClick = onSessionClick,
-            onShareClick = { onEvent(SessionsListUiEvent.ShareClicked(it)) },
+            onShareClick = onShareClick,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues),
@@ -156,7 +119,6 @@ private fun SessionsListBody(
                 CircularProgressIndicator()
             }
         }
-
         SessionsListUiState.Empty -> {
             Box(modifier = modifier, contentAlignment = Alignment.Center) {
                 Text(
@@ -168,7 +130,6 @@ private fun SessionsListBody(
                 )
             }
         }
-
         is SessionsListUiState.Content -> {
             LazyColumn(
                 modifier = modifier.padding(horizontal = Spacing.Large),

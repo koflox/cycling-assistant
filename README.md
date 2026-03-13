@@ -34,7 +34,8 @@ An Android app that helps cyclists discover cycling destinations, track sessions
 - **Baseline Profiles** — AOT-compiled startup and critical user journey paths
 - **Kalman filter** — GPS smoothing with acceleration clamping and median speed buffer
 - **SQLCipher** — encrypted Room database in release builds
-- **CI/CD** — automated testing, baseline profile verification, signed releases, coverage badges
+- **Screenshot testing** — Roborazzi-powered visual regression tests with golden image comparison
+- **CI/CD** — automated testing, screenshot verification, baseline profiles, signed releases, coverage badges
 
 ## Quick Start
 

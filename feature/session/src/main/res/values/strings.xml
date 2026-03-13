@@ -121,6 +121,14 @@
     <string name="share_chooser_title">Share session</string>
     <string name="share_content_description">Share</string>
     <string name="share_no_app_available">No app available to share</string>
+    <string name="share_tab_image">Image</string>
+    <string name="share_tab_gpx">GPX</string>
+    <string name="gpx_export_description">Export as GPX file compatible with Strava and other apps</string>
+    <string name="gpx_export_generating">Generating GPX file…</string>
+    <string name="gpx_export_button">Export GPX</string>
+    <string name="gpx_export_file_error">Could not create GPX file</string>
+    <string name="gpx_export_no_app">No app available to open GPX files</string>
+    <string name="gpx_chooser_title">Export GPX file</string>
 
     <!-- Stats Config -->
     <string name="stats_config_title">Stats Display</string>

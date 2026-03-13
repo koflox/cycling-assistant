@@ -1,0 +1,82 @@
+name: Screenshot Tests
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths-ignore:
+      - 'docs/**'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.caching=true"
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  verify-screenshots:
+    name: Verify Screenshots
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup Android build environment
+        uses: ./.github/actions/setup-android
+
+      - name: Setup project secrets
+        uses: ./.github/actions/setup-secrets
+        with:
+          google-services-json: ${{ secrets.GOOGLE_SERVICES_JSON }}
+
+      - name: Count screenshot changes
+        id: stats
+        run: |
+          BASE="${{ github.event.pull_request.base.sha }}"
+          TOTAL=$(find . -path "*/src/test/snapshots/*.png" | wc -l)
+          ADDED=$(git diff --name-only --diff-filter=A "$BASE" -- '*/src/test/snapshots/*.png' | wc -l)
+          MODIFIED=$(git diff --name-only --diff-filter=M "$BASE" -- '*/src/test/snapshots/*.png' | wc -l)
+          DELETED=$(git diff --name-only --diff-filter=D "$BASE" -- '*/src/test/snapshots/*.png' | wc -l)
+          echo "total=$TOTAL" >> "$GITHUB_OUTPUT"
+          echo "added=$ADDED" >> "$GITHUB_OUTPUT"
+          echo "modified=$MODIFIED" >> "$GITHUB_OUTPUT"
+          echo "deleted=$DELETED" >> "$GITHUB_OUTPUT"
+
+      - name: Verify screenshot tests
+        id: verify
+        run: ./gradlew verifyRoborazziDebug
+
+      - name: Upload screenshot diff
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: screenshot-diff
+          path: |
+            **/build/outputs/roborazzi/
+          retention-days: 7
+
+      - name: Post PR comment
+        if: always()
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: screenshot-verification
+          message: |
+            ## Screenshot Verification
+
+            | Check | Status |
+            |-------|--------|
+            | Visual regression | ${{ steps.verify.outcome == 'success' && '✅ No changes detected' || '❌ UI changes detected' }} |
+            | Total snapshots | ${{ steps.stats.outputs.total }} |
+            | Added in PR | ${{ steps.stats.outputs.added }} |
+            | Modified in PR | ${{ steps.stats.outputs.modified }} |
+            | Deleted in PR | ${{ steps.stats.outputs.deleted }} |
+
+            ${{ steps.verify.outcome != 'success' && '> Download the `screenshot-diff` artifact to review the differences.\n> If the changes are intentional, run `./gradlew recordRoborazziDebug` locally and commit the updated golden images.' || '' }}
