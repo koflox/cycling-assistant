@@ -1,16 +1,27 @@
 package com.koflox.session.di
 
 import android.content.Context
+import com.koflox.altitude.AltitudeCalculator
 import com.koflox.concurrent.CurrentTimeProvider
 import com.koflox.connectionsession.bridge.usecase.SessionPowerMeterUseCase
 import com.koflox.di.IoDispatcher
+import com.koflox.distance.DistanceCalculator
+import com.koflox.location.smoother.LocationSmoother
 import com.koflox.location.usecase.CheckLocationEnabledUseCase
 import com.koflox.location.usecase.ObserveUserLocationUseCase
+import com.koflox.location.validator.LocationValidator
 import com.koflox.nutritionsession.bridge.usecase.NutritionReminderUseCase
+import com.koflox.session.data.mapper.SessionMapper
+import com.koflox.session.data.source.local.SessionLocalDataSource
 import com.koflox.session.domain.usecase.ActiveSessionUseCase
 import com.koflox.session.domain.usecase.UpdateSessionLocationUseCase
 import com.koflox.session.domain.usecase.UpdateSessionPowerUseCase
 import com.koflox.session.domain.usecase.UpdateSessionStatusUseCase
+import com.koflox.session.domain.usecase.comparison.ComparisonSessionManager
+import com.koflox.session.domain.usecase.comparison.ComparisonSessionManagerImpl
+import com.koflox.session.domain.usecase.comparison.V1RawComparisonLocationProcessor
+import com.koflox.session.domain.usecase.comparison.V2FilteredComparisonLocationProcessor
+import com.koflox.session.domain.usecase.comparison.V3KalmanComparisonLocationProcessor
 import com.koflox.session.presentation.mapper.SessionUiMapper
 import com.koflox.session.service.LocationCollectionManager
 import com.koflox.session.service.LocationCollectionManagerImpl
@@ -101,18 +112,40 @@ internal object SessionServiceHiltModule {
     ): PowerConnectionStatePublisher = impl
 
     @Provides
+    @Singleton
+    fun provideComparisonSessionManager(
+        distanceCalculator: DistanceCalculator,
+        altitudeCalculator: AltitudeCalculator,
+        locationValidator: LocationValidator,
+        locationSmoother: LocationSmoother,
+        localDataSource: SessionLocalDataSource,
+        mapper: SessionMapper,
+    ): ComparisonSessionManager {
+        val processors = listOf(
+            V1RawComparisonLocationProcessor(distanceCalculator),
+            V2FilteredComparisonLocationProcessor(distanceCalculator, altitudeCalculator, locationValidator),
+            V3KalmanComparisonLocationProcessor(distanceCalculator, altitudeCalculator, locationValidator, locationSmoother),
+        )
+        return ComparisonSessionManagerImpl(processors, localDataSource, mapper)
+    }
+
+    @Provides
     fun provideLocationCollectionManager(
         observeUserLocationUseCase: ObserveUserLocationUseCase,
         updateSessionLocationUseCase: UpdateSessionLocationUseCase,
         checkLocationEnabledUseCase: CheckLocationEnabledUseCase,
         updateSessionStatusUseCase: UpdateSessionStatusUseCase,
         currentTimeProvider: CurrentTimeProvider,
+        comparisonSessionManager: ComparisonSessionManager,
+        activeSessionUseCase: ActiveSessionUseCase,
     ): LocationCollectionManager = LocationCollectionManagerImpl(
         observeUserLocationUseCase = observeUserLocationUseCase,
         updateSessionLocationUseCase = updateSessionLocationUseCase,
         checkLocationEnabledUseCase = checkLocationEnabledUseCase,
         updateSessionStatusUseCase = updateSessionStatusUseCase,
         currentTimeProvider = currentTimeProvider,
+        comparisonSessionManager = comparisonSessionManager,
+        activeSessionUseCase = activeSessionUseCase,
     )
 
     @Provides
@@ -142,6 +175,7 @@ internal object SessionServiceHiltModule {
         powerCollectionManager: PowerCollectionManager,
         nutritionReminderManager: NutritionReminderManager,
         currentTimeProvider: CurrentTimeProvider,
+        comparisonSessionManager: ComparisonSessionManager,
     ): SessionTracker = SessionTrackerImpl(
         dispatcherIo = dispatcherIo,
         activeSessionUseCase = activeSessionUseCase,
@@ -150,5 +184,6 @@ internal object SessionServiceHiltModule {
         powerCollectionManager = powerCollectionManager,
         nutritionReminderManager = nutritionReminderManager,
         currentTimeProvider = currentTimeProvider,
+        comparisonSessionManager = comparisonSessionManager,
     )
 }

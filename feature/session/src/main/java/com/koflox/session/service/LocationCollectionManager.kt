@@ -3,8 +3,10 @@ package com.koflox.session.service
 import com.koflox.concurrent.CurrentTimeProvider
 import com.koflox.location.usecase.CheckLocationEnabledUseCase
 import com.koflox.location.usecase.ObserveUserLocationUseCase
+import com.koflox.session.domain.usecase.ActiveSessionUseCase
 import com.koflox.session.domain.usecase.UpdateSessionLocationUseCase
 import com.koflox.session.domain.usecase.UpdateSessionStatusUseCase
+import com.koflox.session.domain.usecase.comparison.ComparisonSessionManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -21,6 +23,8 @@ internal class LocationCollectionManagerImpl(
     private val checkLocationEnabledUseCase: CheckLocationEnabledUseCase,
     private val updateSessionStatusUseCase: UpdateSessionStatusUseCase,
     private val currentTimeProvider: CurrentTimeProvider,
+    private val comparisonSessionManager: ComparisonSessionManager,
+    private val activeSessionUseCase: ActiveSessionUseCase,
 ) : LocationCollectionManager {
 
     companion object {
@@ -52,10 +56,17 @@ internal class LocationCollectionManagerImpl(
                 minUpdateDistanceMeters = MIN_UPDATE_DISTANCE_METERS,
                 maxUpdateDelayMs = LOCATION_MAX_UPDATE_DELAY.inWholeMilliseconds,
             ).collect { location ->
+                val timestampMs = currentTimeProvider.currentTimeMs()
                 updateSessionLocationUseCase.update(
                     location = location,
-                    timestampMs = currentTimeProvider.currentTimeMs(),
+                    timestampMs = timestampMs,
                 )
+                try {
+                    val session = activeSessionUseCase.getActiveSession()
+                    comparisonSessionManager.onLocationUpdate(location, timestampMs, session)
+                } catch (_: Exception) {
+                    // No active session — skip comparison
+                }
             }
         }
     }

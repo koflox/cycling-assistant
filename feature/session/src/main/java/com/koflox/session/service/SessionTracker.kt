@@ -5,6 +5,7 @@ import com.koflox.session.domain.model.Session
 import com.koflox.session.domain.model.SessionStatus
 import com.koflox.session.domain.usecase.ActiveSessionUseCase
 import com.koflox.session.domain.usecase.UpdateSessionStatusUseCase
+import com.koflox.session.domain.usecase.comparison.ComparisonSessionManager
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -54,6 +55,7 @@ internal class SessionTrackerImpl(
     private val powerCollectionManager: PowerCollectionManager,
     private val nutritionReminderManager: NutritionReminderManager,
     private val currentTimeProvider: CurrentTimeProvider,
+    private val comparisonSessionManager: ComparisonSessionManager,
 ) : SessionTracker {
 
     companion object {
@@ -124,7 +126,7 @@ internal class SessionTrackerImpl(
         }
     }
 
-    private fun handleSessionUpdate(session: Session) {
+    private suspend fun handleSessionUpdate(session: Session) {
         when (session.status) {
             SessionStatus.RUNNING -> {
                 scope?.let(locationCollectionManager::start)
@@ -143,6 +145,7 @@ internal class SessionTrackerImpl(
                 locationCollectionManager.stop()
                 powerCollectionManager.stop()
                 stopTimer()
+                comparisonSessionManager.onSessionCompleted(session)
                 delegate?.onStopService()
             }
         }
