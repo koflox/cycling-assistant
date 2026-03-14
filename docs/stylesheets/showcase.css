@@ -1,0 +1,20 @@
+.screenshot-grid,
+.video-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    justify-content: center;
+}
+
+.screenshot-grid figure,
+.video-grid figure {
+    margin: 0;
+    text-align: center;
+}
+
+.screenshot-grid figcaption,
+.video-grid figcaption {
+    margin-top: 8px;
+    font-size: 0.85em;
+    color: var(--md-default-fg-color--light);
+}
