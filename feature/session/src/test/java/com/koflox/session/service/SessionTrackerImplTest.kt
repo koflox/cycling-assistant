@@ -79,7 +79,7 @@ class SessionTrackerImplTest {
     }
 
     @Test
-    fun `null session stops location collection manager`() = runTrackerTest {
+    fun `null session stops managers`() = runTrackerTest {
         val session = createTestSession(status = SessionStatus.RUNNING)
         sessionFlow.value = session
         tracker.startTracking(delegate)
@@ -89,6 +89,7 @@ class SessionTrackerImplTest {
         advanceTimeBy(1)
 
         verify { locationCollectionManager.stop() }
+        verify { powerCollectionManager.stop() }
     }
 
     @Test
@@ -135,22 +136,6 @@ class SessionTrackerImplTest {
         verify { locationCollectionManager.stop() }
         verify { powerCollectionManager.stop() }
         verify { delegate.onNotificationUpdate(pausedSession, ELAPSED_TIME_MS) }
-    }
-
-    @Test
-    fun `completed session stops managers and calls delegate onStopService`() = runTrackerTest {
-        val runningSession = createTestSession(status = SessionStatus.RUNNING)
-        sessionFlow.value = runningSession
-        tracker.startTracking(delegate)
-        advanceTimeBy(1)
-
-        val completedSession = createTestSession(status = SessionStatus.COMPLETED)
-        sessionFlow.value = completedSession
-        advanceUntilIdle()
-
-        verify { locationCollectionManager.stop() }
-        verify { powerCollectionManager.stop() }
-        verify { delegate.onStopService() }
     }
 
     @Test

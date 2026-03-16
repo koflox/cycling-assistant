@@ -92,8 +92,7 @@ internal class SessionNotificationManagerImpl(
     override fun buildNotification(session: Session, currentElapsedMs: Long): Notification {
         val statusText = when (session.status) {
             SessionStatus.RUNNING -> localizedContext.getString(R.string.notification_status_running)
-            SessionStatus.PAUSED -> localizedContext.getString(R.string.notification_status_paused)
-            SessionStatus.COMPLETED -> localizedContext.getString(R.string.notification_status_paused)
+            else -> localizedContext.getString(R.string.notification_status_paused)
         }
         val elapsedTimeFormatted = sessionUiMapper.formatElapsedTime(currentElapsedMs)
         val distanceFormatted = sessionUiMapper.formatDistance(session.traveledDistanceKm)
