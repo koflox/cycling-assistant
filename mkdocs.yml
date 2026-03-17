@@ -48,6 +48,9 @@ markdown_extensions:
   - toc:
       permalink: true
 
+extra_css:
+  - stylesheets/showcase.css
+
 nav:
   - Home: index.md
   - Architecture:
@@ -71,6 +74,7 @@ nav:
       - Code Quality: infrastructure/code-quality.md
       - Design System: infrastructure/design-system.md
   - Product:
+      - Showcase: product/showcase.md
       - Tech Stack: product/tech-stack.md
       - Setup: product/setup.md
       - Known Issues: product/known-issues.md

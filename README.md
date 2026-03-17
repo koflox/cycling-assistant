@@ -9,13 +9,12 @@ An Android app that helps cyclists discover cycling destinations, track sessions
 ![CI Workflows](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/koflox/b2cb29f069e3c32f4b1ecf3c007eeba6/raw/workflows.json)
 
 <p align="center">
-  <img src="docs/showcase/preview_dest_selected.jpg" width="245" alt="Selected destination" />
   <img src="docs/showcase/preview_running_session.jpg" width="245" alt="Running session" />
-  <img src="docs/showcase/preview_session_completed.jpg" width="245" alt="Session completed" />
-  <img src="docs/showcase/preview_dest_search.gif" width="245" alt="Destination search" />
-  <img src="docs/showcase/preview_session.gif" width="245" alt="Session tracking" />
-  <img src="docs/showcase/preview_settings.gif" width="245" alt="Settings" />
+  <img src="docs/showcase/p_completed_session.jpg" width="245" alt="Running session" />
+  <img src="docs/showcase/p_connected_devices.jpg" width="245" alt="Running session" />
 </p>
+
+> More screenshots and videos in the [Showcase](https://koflox.github.io/cycling-assistant/product/showcase/).
 
 ## Features
 
