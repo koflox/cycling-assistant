@@ -117,6 +117,7 @@ internal class SessionTrackerImpl(
                     handleSessionUpdate(session)
                 } else {
                     locationCollectionManager.stop()
+                    powerCollectionManager.stop()
                     stopTimer()
                     delegate?.onStopService()
                 }
@@ -139,12 +140,7 @@ internal class SessionTrackerImpl(
                 delegate?.onNotificationUpdate(session, session.elapsedTimeMs)
             }
 
-            SessionStatus.COMPLETED -> {
-                locationCollectionManager.stop()
-                powerCollectionManager.stop()
-                stopTimer()
-                delegate?.onStopService()
-            }
+            SessionStatus.COMPLETED -> Unit
         }
     }
 
