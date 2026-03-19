@@ -11,8 +11,7 @@ import androidx.test.uiautomator.UiObject2
 import androidx.test.uiautomator.Until
 import com.koflox.designsystem.testtag.TestTags
 
-private const val DEFAULT_TIMEOUT_MS = 10_000L
-private const val MAP_IDLE_TIMEOUT_MS = 5_000L
+private const val DEFAULT_TIMEOUT_MS = 8_000L
 private const val DRAG_STEPS = 20
 
 fun targetPackageName(): String {
@@ -39,44 +38,50 @@ private fun MacrobenchmarkScope.waitAndClick(resourceId: String) {
     device.waitForIdle()
 }
 
-fun MacrobenchmarkScope.waitForDashboard() {
-    awaitObject(TestTags.MENU_BUTTON)
-    device.waitForIdle(MAP_IDLE_TIMEOUT_MS)
+private fun MacrobenchmarkScope.awaitAndPressBack() {
+    device.waitForIdle()
+    device.pressBack()
 }
 
-fun MacrobenchmarkScope.openMenu() {
-    if (!device.hasObject(By.res(TestTags.MENU_SETTINGS))) {
+fun MacrobenchmarkScope.waitForDashboard() {
+    awaitObject(TestTags.DASHBOARD_SCREEN)
+    device.waitForIdle(DEFAULT_TIMEOUT_MS)
+}
+
+fun MacrobenchmarkScope.openMenu(optionResId: String) {
+    awaitObject(TestTags.MENU_BUTTON)
+    if (!device.hasObject(By.res(optionResId))) {
         waitAndClick(TestTags.MENU_BUTTON)
     }
-    awaitObject(TestTags.MENU_SETTINGS)
+    awaitObject(optionResId)
 }
 
 fun MacrobenchmarkScope.navigateToSettingsAndBack() {
-    openMenu()
+    openMenu(TestTags.MENU_SETTINGS)
     waitAndClick(TestTags.MENU_SETTINGS)
     awaitObject(TestTags.SETTINGS_SCREEN)
-    device.pressBack()
+    awaitAndPressBack()
     waitForDashboard()
 }
 
 fun MacrobenchmarkScope.navigateToConnectionsAndBack() {
-    openMenu()
+    openMenu(TestTags.MENU_CONNECTIONS)
     waitAndClick(TestTags.MENU_CONNECTIONS)
     awaitObject(TestTags.CONNECTIONS_SCREEN)
-    device.pressBack()
+    awaitAndPressBack()
     waitForDashboard()
 }
 
 fun MacrobenchmarkScope.navigateToSessionsAndBack() {
-    openMenu()
+    openMenu(TestTags.MENU_SESSIONS)
     waitAndClick(TestTags.MENU_SESSIONS)
     awaitObject(TestTags.SESSIONS_LIST_SCREEN)
-    device.pressBack()
+    awaitAndPressBack()
     waitForDashboard()
 }
 
 fun MacrobenchmarkScope.settingsThemeAndLanguageSelection() {
-    openMenu()
+    openMenu(TestTags.MENU_SETTINGS)
     waitAndClick(TestTags.MENU_SETTINGS)
     awaitObject(TestTags.SETTINGS_SCREEN)
     device.waitForIdle()
@@ -87,16 +92,12 @@ fun MacrobenchmarkScope.settingsThemeAndLanguageSelection() {
     awaitObject(TestTags.SETTINGS_LANGUAGE_DROPDOWN).click()
     device.waitForIdle()
 
-    device.pressBack()
-    // if true, the menu button still didn't appear so the current screen is settings
-    if (device.wait(Until.hasObject(By.res(TestTags.MENU_BUTTON)), DEFAULT_TIMEOUT_MS) != true) {
-        device.pressBack()
-    }
+    awaitAndPressBack()
     waitForDashboard()
 }
 
 fun MacrobenchmarkScope.settingsStatsConfigScrolling() {
-    openMenu()
+    openMenu(TestTags.MENU_SETTINGS)
     waitAndClick(TestTags.MENU_SETTINGS)
     awaitObject(TestTags.SETTINGS_SCREEN)
     device.waitForIdle()
@@ -108,13 +109,13 @@ fun MacrobenchmarkScope.settingsStatsConfigScrolling() {
     awaitObject(TestTags.STATS_CONFIG_SCROLL).fling(Direction.DOWN)
     device.waitForIdle()
 
-    device.pressBack()
-    device.pressBack()
+    awaitAndPressBack()
+    awaitAndPressBack()
     waitForDashboard()
 }
 
 fun MacrobenchmarkScope.navigateToStatsConfig() {
-    openMenu()
+    openMenu(TestTags.MENU_SETTINGS)
     waitAndClick(TestTags.MENU_SETTINGS)
     awaitObject(TestTags.SETTINGS_SCREEN)
     device.waitForIdle()
@@ -148,7 +149,7 @@ fun MacrobenchmarkScope.statsConfigDragReorder() {
         }
     }
 
-    device.pressBack()
-    device.pressBack()
+    awaitAndPressBack()
+    awaitAndPressBack()
     waitForDashboard()
 }
