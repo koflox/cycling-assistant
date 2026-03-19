@@ -17,7 +17,7 @@ import org.junit.runner.RunWith
  * ./gradlew :app:generateReleaseBaselineProfile
  * ```
  *
- * Requires API 33+ or rooted API 28+.
+ * Requires API 33+ or rooted API 28+ with disabled animations.
  */
 @RunWith(AndroidJUnit4::class)
 @LargeTest
