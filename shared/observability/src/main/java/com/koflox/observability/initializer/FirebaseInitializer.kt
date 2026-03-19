@@ -16,7 +16,7 @@ internal class FirebaseInitializer : Initializer<Unit> {
         val metaData = context.packageManager
             .getApplicationInfo(context.packageName, PackageManager.GET_META_DATA)
             .metaData
-        val collectionEnabled = metaData?.getString(COLLECTION_ENABLED_KEY) == "true"
+        val collectionEnabled = metaData.getBoolean(COLLECTION_ENABLED_KEY, false)
         FirebaseProvider.initialize(
             application = context.applicationContext as Application,
             collectionEnabled = collectionEnabled,
