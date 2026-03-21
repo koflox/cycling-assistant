@@ -58,7 +58,7 @@ accompanistPermissions = "0.37.3"
 startup = "1.2.0"
 
 # Firebase
-firebaseBom = "34.10.0"
+firebaseBom = "34.11.0"
 firebaseCrashlyticsPlugin = "3.0.6"
 firebasePerfPlugin = "2.0.2"
 googleServices = "4.4.4"
