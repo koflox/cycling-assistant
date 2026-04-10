@@ -59,7 +59,7 @@ jobs:
           fi
 
       - name: Update Coverage badge
-        uses: schneegans/dynamic-badges-action@v1.7.0
+        uses: schneegans/dynamic-badges-action@v1.8.0
         with:
           auth: ${{ secrets.GIST_TOKEN }}
           gistID: ${{ vars.COVERAGE_GIST_ID }}
@@ -120,7 +120,7 @@ jobs:
           echo "workflows=$WORKFLOWS" >> $GITHUB_OUTPUT
 
       - name: Update Lines of Code badge
-        uses: schneegans/dynamic-badges-action@v1.7.0
+        uses: schneegans/dynamic-badges-action@v1.8.0
         with:
           auth: ${{ secrets.GIST_TOKEN }}
           gistID: ${{ vars.COVERAGE_GIST_ID }}
@@ -130,7 +130,7 @@ jobs:
           color: blue
 
       - name: Update Modules badge
-        uses: schneegans/dynamic-badges-action@v1.7.0
+        uses: schneegans/dynamic-badges-action@v1.8.0
         with:
           auth: ${{ secrets.GIST_TOKEN }}
           gistID: ${{ vars.COVERAGE_GIST_ID }}
@@ -140,7 +140,7 @@ jobs:
           color: blue
 
       - name: Update UI Components badge
-        uses: schneegans/dynamic-badges-action@v1.7.0
+        uses: schneegans/dynamic-badges-action@v1.8.0
         with:
           auth: ${{ secrets.GIST_TOKEN }}
           gistID: ${{ vars.COVERAGE_GIST_ID }}
@@ -150,7 +150,7 @@ jobs:
           color: blue
 
       - name: Update Workflows badge
-        uses: schneegans/dynamic-badges-action@v1.7.0
+        uses: schneegans/dynamic-badges-action@v1.8.0
         with:
           auth: ${{ secrets.GIST_TOKEN }}
           gistID: ${{ vars.COVERAGE_GIST_ID }}
