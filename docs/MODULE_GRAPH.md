@@ -60,10 +60,10 @@ graph LR
     :feature:sensor:power["power"]
   end
   subgraph :shared
-    :shared:ble["ble"]
     :shared:concurrent["concurrent"]
     :shared:design-system["design-system"]
     :shared:di["di"]
+    :shared:ble["ble"]
     :shared:error["error"]
     :shared:id["id"]
     :shared:sensor-protocol["sensor-protocol"]
@@ -78,25 +78,25 @@ graph LR
   :feature:bridge:destination-nutrition:impl --> :feature:nutrition
   :feature:bridge:profile-session:impl --> :feature:bridge:profile-session:api
   :feature:bridge:profile-session:impl --> :feature:profile
-  :feature:connections --> :feature:sensor:power
-  :feature:connections --> :shared:ble
   :feature:connections --> :shared:concurrent
   :feature:connections --> :shared:design-system
   :feature:connections --> :shared:di
+  :feature:connections --> :feature:sensor:power
+  :feature:connections --> :shared:ble
   :feature:connections --> :shared:error
   :feature:connections --> :shared:id
   :feature:connections --> :shared:sensor-protocol
   :feature:bridge:destination-poi:impl --> :feature:bridge:destination-poi:api
   :feature:bridge:destination-poi:impl --> :feature:poi
+  :feature:settings --> :shared:concurrent
+  :feature:settings --> :shared:design-system
+  :feature:settings --> :shared:di
   :feature:settings --> :feature:theme
   :feature:settings --> :feature:locale
   :feature:settings --> :feature:profile
   :feature:settings --> :feature:bridge:nutrition-settings:api
   :feature:settings --> :feature:bridge:poi-settings:api
   :feature:settings --> :feature:bridge:session-settings:api
-  :feature:settings --> :shared:concurrent
-  :feature:settings --> :shared:design-system
-  :feature:settings --> :shared:di
   :app --> :baselineprofile
   :app --> :feature:connections
   :app --> :feature:bridge:connection-session:api
@@ -140,10 +140,10 @@ graph LR
   :app --> :shared:observability
   :app --> :shared:sensor-protocol
   :feature:bridge:destination-session:api --> :shared:location
-  :feature:session --> :shared:altitude
   :feature:session --> :shared:concurrent
   :feature:session --> :shared:design-system
   :feature:session --> :shared:di
+  :feature:session --> :shared:altitude
   :feature:session --> :shared:distance
   :feature:session --> :shared:error
   :feature:session --> :shared:graphics
@@ -157,10 +157,10 @@ graph LR
   :feature:dashboard --> :feature:destinations
   :feature:dashboard --> :feature:bridge:destination-session:api
   :feature:dashboard --> :shared:design-system
-  :feature:nutrition --> :feature:bridge:nutrition-session:api
   :feature:nutrition --> :shared:concurrent
   :feature:nutrition --> :shared:design-system
   :feature:nutrition --> :shared:di
+  :feature:nutrition --> :feature:bridge:nutrition-session:api
   :shared:map --> :shared:graphics
   :feature:bridge:destination-session:impl --> :feature:bridge:destination-session:api
   :feature:bridge:destination-session:impl --> :feature:session
@@ -179,10 +179,10 @@ graph LR
   :shared:error --> :shared:concurrent
   :shared:error --> :shared:design-system
   :shared:error --> :shared:di
-  :feature:sensor:power --> :shared:ble
   :feature:sensor:power --> :shared:concurrent
   :feature:sensor:power --> :shared:design-system
   :feature:sensor:power --> :shared:di
+  :feature:sensor:power --> :shared:ble
   :feature:sensor:power --> :shared:error
   :feature:sensor:power --> :shared:sensor-protocol
   :feature:theme --> :shared:concurrent
@@ -198,12 +198,12 @@ graph LR
   :feature:bridge:poi-settings:impl --> :feature:poi
   :shared:location --> :shared:concurrent
   :shared:location --> :shared:di
-  :feature:destinations --> :feature:bridge:destination-nutrition:api
-  :feature:destinations --> :feature:bridge:destination-poi:api
-  :feature:destinations --> :feature:bridge:destination-session:api
   :feature:destinations --> :shared:concurrent
   :feature:destinations --> :shared:design-system
   :feature:destinations --> :shared:di
+  :feature:destinations --> :feature:bridge:destination-nutrition:api
+  :feature:destinations --> :feature:bridge:destination-poi:api
+  :feature:destinations --> :feature:bridge:destination-session:api
   :feature:destinations --> :shared:distance
   :feature:destinations --> :shared:graphics
   :feature:destinations --> :shared:location
