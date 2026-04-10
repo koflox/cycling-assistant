@@ -90,3 +90,7 @@ api_key.properties
 
 # MkDocs build output
 site/
+
+# Claude
+CLAUDE.md
+.claude/
