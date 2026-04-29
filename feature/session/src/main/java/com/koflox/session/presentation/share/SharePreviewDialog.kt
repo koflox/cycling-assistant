@@ -18,19 +18,35 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.koflox.designsystem.component.LocalizedDialog
 import com.koflox.designsystem.text.resolve
 import com.koflox.designsystem.theme.Spacing
 import com.koflox.session.R
+import com.koflox.strava.api.navigator.StravaShareTabNavigator
+import dagger.hilt.EntryPoint
+import dagger.hilt.InstallIn
+import dagger.hilt.android.EntryPointAccessors
+import dagger.hilt.components.SingletonComponent
+
+private val SHARE_TAB_CONTENT_HEIGHT = 560.dp
+
+@EntryPoint
+@InstallIn(SingletonComponent::class)
+internal interface ShareSessionEntryPoint {
+    fun stravaShareTabNavigator(): StravaShareTabNavigator
+}
 
 @Composable
 internal fun ShareSessionRoute(
+    sessionId: String,
     onDismiss: () -> Unit,
     onNavigateToStatsConfig: (section: String) -> Unit,
     modifier: Modifier = Modifier,
@@ -38,6 +54,10 @@ internal fun ShareSessionRoute(
     val viewModel: ShareViewModel = hiltViewModel()
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
+    val entryPoint = remember {
+        EntryPointAccessors.fromApplication(context, ShareSessionEntryPoint::class.java)
+    }
+    val stravaShareTabNavigator = entryPoint.stravaShareTabNavigator()
     LaunchedEffect(uiState) {
         val content = uiState as? ShareUiState.Content ?: return@LaunchedEffect
         when (val imageState = content.imageShareState) {
@@ -69,9 +89,11 @@ internal fun ShareSessionRoute(
     }
     ShareSessionContent(
         uiState = uiState,
+        sessionId = sessionId,
         onEvent = viewModel::onEvent,
         onDismiss = onDismiss,
         onNavigateToStatsConfig = onNavigateToStatsConfig,
+        stravaShareTabNavigator = stravaShareTabNavigator,
         modifier = modifier,
     )
 }
@@ -79,9 +101,11 @@ internal fun ShareSessionRoute(
 @Composable
 internal fun ShareSessionContent(
     uiState: ShareUiState,
+    sessionId: String,
     onEvent: (ShareUiEvent) -> Unit,
     onDismiss: () -> Unit,
     onNavigateToStatsConfig: (section: String) -> Unit,
+    stravaShareTabNavigator: StravaShareTabNavigator,
     modifier: Modifier = Modifier,
 ) {
     LocalizedDialog(
@@ -112,8 +136,10 @@ internal fun ShareSessionContent(
                 is ShareUiState.Content -> {
                     ShareSessionContentBody(
                         uiState = uiState,
+                        sessionId = sessionId,
                         onEvent = onEvent,
                         onNavigateToStatsConfig = onNavigateToStatsConfig,
+                        stravaShareTabNavigator = stravaShareTabNavigator,
                     )
                 }
             }
@@ -125,8 +151,10 @@ internal fun ShareSessionContent(
 @Composable
 private fun ShareSessionContentBody(
     uiState: ShareUiState.Content,
+    sessionId: String,
     onEvent: (ShareUiEvent) -> Unit,
     onNavigateToStatsConfig: (section: String) -> Unit,
+    stravaShareTabNavigator: StravaShareTabNavigator,
 ) {
     Column(
         modifier = Modifier.padding(Spacing.Large),
@@ -148,20 +176,36 @@ private fun ShareSessionContentBody(
                 onClick = { onEvent(ShareUiEvent.TabSelected(ShareTab.GPX)) },
                 text = { Text(stringResource(R.string.share_tab_gpx)) },
             )
+            Tab(
+                selected = uiState.selectedTab == ShareTab.STRAVA,
+                onClick = { onEvent(ShareUiEvent.TabSelected(ShareTab.STRAVA)) },
+                text = { Text(stringResource(R.string.share_tab_strava)) },
+            )
         }
         Spacer(modifier = Modifier.height(Spacing.Medium))
-        when (uiState.selectedTab) {
-            ShareTab.IMAGE -> ImageShareTab(
-                data = uiState.sharePreviewData,
-                imageShareState = uiState.imageShareState,
-                onEvent = onEvent,
-                onNavigateToStatsConfig = onNavigateToStatsConfig,
-            )
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(SHARE_TAB_CONTENT_HEIGHT),
+        ) {
+            when (uiState.selectedTab) {
+                ShareTab.IMAGE -> ImageShareTab(
+                    data = uiState.sharePreviewData,
+                    imageShareState = uiState.imageShareState,
+                    onEvent = onEvent,
+                    onNavigateToStatsConfig = onNavigateToStatsConfig,
+                )
 
-            ShareTab.GPX -> GpxShareTab(
-                gpxShareState = uiState.gpxShareState,
-                onEvent = onEvent,
-            )
+                ShareTab.GPX -> GpxShareTab(
+                    gpxShareState = uiState.gpxShareState,
+                    onEvent = onEvent,
+                )
+
+                ShareTab.STRAVA -> stravaShareTabNavigator.StravaTab(
+                    sessionId = sessionId,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
         }
     }
 }

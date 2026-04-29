@@ -142,6 +142,7 @@ internal object SessionServiceHiltModule {
         powerCollectionManager: PowerCollectionManager,
         nutritionReminderManager: NutritionReminderManager,
         currentTimeProvider: CurrentTimeProvider,
+        stravaSyncUseCase: com.koflox.strava.api.usecase.StravaSyncUseCase,
     ): SessionTracker = SessionTrackerImpl(
         dispatcherIo = dispatcherIo,
         activeSessionUseCase = activeSessionUseCase,
@@ -150,5 +151,6 @@ internal object SessionServiceHiltModule {
         powerCollectionManager = powerCollectionManager,
         nutritionReminderManager = nutritionReminderManager,
         currentTimeProvider = currentTimeProvider,
+        stravaSyncUseCase = stravaSyncUseCase,
     )
 }

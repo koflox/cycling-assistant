@@ -123,6 +123,7 @@
     <string name="share_no_app_available">Нет приложения для отправки</string>
     <string name="share_tab_image">Изображение</string>
     <string name="share_tab_gpx">GPX</string>
+    <string name="share_tab_strava">Strava</string>
     <string name="gpx_export_description">Экспортируйте в формате GPX, совместимом со Strava</string>
     <string name="gpx_export_generating">Создание GPX файла…</string>
     <string name="gpx_export_button">Экспорт GPX</string>

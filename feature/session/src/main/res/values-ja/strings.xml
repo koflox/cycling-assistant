@@ -123,6 +123,7 @@
     <string name="share_no_app_available">共有できるアプリがありません</string>
     <string name="share_tab_image">画像</string>
     <string name="share_tab_gpx">GPX</string>
+    <string name="share_tab_strava">Strava</string>
     <string name="gpx_export_description">Stravaなどと互換性のあるGPXファイルとしてエクスポート</string>
     <string name="gpx_export_generating">GPXファイルを生成中…</string>
     <string name="gpx_export_button">GPXエクスポート</string>

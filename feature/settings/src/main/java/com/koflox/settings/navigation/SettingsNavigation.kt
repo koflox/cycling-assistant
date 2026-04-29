@@ -28,6 +28,7 @@ fun settingsStatsDisplayRoute(section: String? = null): String =
 fun NavGraphBuilder.settingsGraph(
     navController: NavController,
     onBackClick: () -> Unit,
+    onNavigateToStravaConnect: () -> Unit,
 ) {
     navigation(
         startDestination = SETTINGS_ROUTE,
@@ -38,6 +39,7 @@ fun NavGraphBuilder.settingsGraph(
                 onBackClick = onBackClick,
                 onNavigateToPoiSelection = { navController.navigate(SETTINGS_POI_SELECTION_ROUTE) },
                 onNavigateToStatsConfig = { navController.navigate(settingsStatsDisplayRoute()) },
+                onNavigateToStravaConnect = onNavigateToStravaConnect,
                 modifier = Modifier.fillMaxSize(),
             )
         }

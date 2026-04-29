@@ -5,6 +5,7 @@ import com.koflox.session.domain.model.SessionStatus
 import com.koflox.session.domain.usecase.ActiveSessionUseCase
 import com.koflox.session.domain.usecase.UpdateSessionStatusUseCase
 import com.koflox.session.testutil.createSession
+import com.koflox.strava.api.usecase.StravaSyncUseCase
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -36,6 +37,7 @@ class SessionTrackerImplTest {
     private val locationCollectionManager: LocationCollectionManager = mockk(relaxed = true)
     private val powerCollectionManager: PowerCollectionManager = mockk(relaxed = true)
     private val nutritionReminderManager: NutritionReminderManager = mockk(relaxed = true)
+    private val stravaSyncUseCase: StravaSyncUseCase = mockk(relaxed = true)
     private val delegate: SessionTrackingDelegate = mockk(relaxed = true)
     private var currentTimeMs = LAST_RESUMED_TIME_MS
 
@@ -172,6 +174,7 @@ class SessionTrackerImplTest {
 
     @Test
     fun `stopSession delegates to updateSessionStatusUseCase`() = runTrackerTest {
+        coEvery { activeSessionUseCase.getActiveSession() } returns createTestSession()
         tracker.startTracking(delegate)
         advanceUntilIdle()
 
@@ -179,6 +182,45 @@ class SessionTrackerImplTest {
         advanceUntilIdle()
 
         coVerify { updateSessionStatusUseCase.stop() }
+    }
+
+    @Test
+    fun `stopSession enqueues Strava sync on success`() = runTrackerTest {
+        coEvery { activeSessionUseCase.getActiveSession() } returns createTestSession(id = SESSION_ID)
+        coEvery { updateSessionStatusUseCase.stop() } returns Result.success(Unit)
+        tracker.startTracking(delegate)
+        advanceUntilIdle()
+
+        tracker.stopSession()
+        advanceUntilIdle()
+
+        coVerify { stravaSyncUseCase.enqueue(SESSION_ID) }
+    }
+
+    @Test
+    fun `stopSession does not enqueue Strava sync when stop fails`() = runTrackerTest {
+        coEvery { activeSessionUseCase.getActiveSession() } returns createTestSession(id = SESSION_ID)
+        coEvery { updateSessionStatusUseCase.stop() } returns Result.failure(IllegalStateException("nope"))
+        tracker.startTracking(delegate)
+        advanceUntilIdle()
+
+        tracker.stopSession()
+        advanceUntilIdle()
+
+        coVerify(exactly = 0) { stravaSyncUseCase.enqueue(any()) }
+    }
+
+    @Test
+    fun `stopSession does not enqueue Strava sync when sessionId is unavailable`() = runTrackerTest {
+        coEvery { activeSessionUseCase.getActiveSession() } throws IllegalStateException("no active session")
+        coEvery { updateSessionStatusUseCase.stop() } returns Result.success(Unit)
+        tracker.startTracking(delegate)
+        advanceUntilIdle()
+
+        tracker.stopSession()
+        advanceUntilIdle()
+
+        coVerify(exactly = 0) { stravaSyncUseCase.enqueue(any()) }
     }
 
     @Test
@@ -275,6 +317,7 @@ class SessionTrackerImplTest {
         powerCollectionManager = powerCollectionManager,
         nutritionReminderManager = nutritionReminderManager,
         currentTimeProvider = { currentTimeMs },
+        stravaSyncUseCase = stravaSyncUseCase,
     )
 
     private fun createTestSession(

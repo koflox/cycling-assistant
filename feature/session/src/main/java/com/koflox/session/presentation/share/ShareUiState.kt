@@ -6,6 +6,7 @@ import com.koflox.designsystem.text.UiText
 internal enum class ShareTab {
     IMAGE,
     GPX,
+    STRAVA,
 }
 
 internal sealed interface ShareUiState {

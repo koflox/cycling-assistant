@@ -123,6 +123,7 @@
     <string name="share_no_app_available">No app available to share</string>
     <string name="share_tab_image">Image</string>
     <string name="share_tab_gpx">GPX</string>
+    <string name="share_tab_strava">Strava</string>
     <string name="gpx_export_description">Export as GPX file compatible with Strava and other apps</string>
     <string name="gpx_export_generating">Generating GPX file…</string>
     <string name="gpx_export_button">Export GPX</string>

@@ -5,6 +5,7 @@ import com.koflox.session.domain.model.Session
 import com.koflox.session.domain.model.SessionStatus
 import com.koflox.session.domain.usecase.ActiveSessionUseCase
 import com.koflox.session.domain.usecase.UpdateSessionStatusUseCase
+import com.koflox.strava.api.usecase.StravaSyncUseCase
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -54,6 +55,7 @@ internal class SessionTrackerImpl(
     private val powerCollectionManager: PowerCollectionManager,
     private val nutritionReminderManager: NutritionReminderManager,
     private val currentTimeProvider: CurrentTimeProvider,
+    private val stravaSyncUseCase: StravaSyncUseCase,
 ) : SessionTracker {
 
     companion object {
@@ -106,7 +108,12 @@ internal class SessionTrackerImpl(
     }
 
     override fun stopSession() {
-        scope?.launch { updateSessionStatusUseCase.stop() }
+        scope?.launch {
+            val sessionId = runCatching { activeSessionUseCase.getActiveSession().id }.getOrNull()
+            updateSessionStatusUseCase.stop().onSuccess {
+                sessionId?.let { stravaSyncUseCase.enqueue(it) }
+            }
+        }
     }
 
     private fun observeSession() {

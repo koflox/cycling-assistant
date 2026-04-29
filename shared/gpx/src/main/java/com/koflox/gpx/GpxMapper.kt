@@ -1,13 +1,11 @@
-package com.koflox.session.presentation.share
+package com.koflox.gpx
 
-import com.koflox.session.domain.model.Session
-import com.koflox.session.domain.model.TrackPoint
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.TimeZone
 
-internal interface GpxMapper {
-    fun map(session: Session): String
+interface GpxMapper {
+    fun map(input: GpxInput): String
 }
 
 internal class GpxMapperImpl : GpxMapper {
@@ -22,7 +20,6 @@ internal class GpxMapperImpl : GpxMapper {
             |  xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
         """.trimMargin()
         private const val GPX_FOOTER = "</gpx>"
-        private const val FREE_ROAM_NAME = "Free Roam"
         private const val TRKSEG_OPEN = "    <trkseg>"
         private const val TRKSEG_CLOSE = "    </trkseg>"
     }
@@ -31,35 +28,30 @@ internal class GpxMapperImpl : GpxMapper {
         timeZone = TimeZone.getTimeZone("UTC")
     }
 
-    override fun map(session: Session): String = buildString {
+    override fun map(input: GpxInput): String = buildString {
         appendLine(GPX_HEADER)
-        appendMetadata(session)
-        appendTrack(session)
+        appendMetadata(input)
+        appendTrack(input)
         appendLine(GPX_FOOTER)
     }
 
-    private fun StringBuilder.appendMetadata(session: Session) {
-        val nameTag = formatNameTag(session)
+    private fun StringBuilder.appendMetadata(input: GpxInput) {
         appendLine("  <metadata>")
-        appendLine(nameTag)
-        appendLine("    <time>${formatTimestamp(session.startTimeMs)}</time>")
+        appendLine(formatNameTag(input.name))
+        appendLine("    <time>${formatTimestamp(input.startTimeMs)}</time>")
         appendLine("  </metadata>")
     }
 
-    private fun StringBuilder.appendTrack(session: Session) {
-        val nameTag = formatNameTag(session)
+    private fun StringBuilder.appendTrack(input: GpxInput) {
         appendLine("  <trk>")
-        appendLine(nameTag)
-        appendTrackSegments(session.trackPoints)
+        appendLine(formatNameTag(input.name))
+        appendTrackSegments(input.trackPoints)
         appendLine("  </trk>")
     }
 
-    private fun formatNameTag(session: Session): String {
-        val name = escapeXml(session.destinationName ?: FREE_ROAM_NAME)
-        return "    <name>$name</name>"
-    }
+    private fun formatNameTag(name: String): String = "    <name>${escapeXml(name)}</name>"
 
-    private fun StringBuilder.appendTrackSegments(trackPoints: List<TrackPoint>) {
+    private fun StringBuilder.appendTrackSegments(trackPoints: List<GpxTrackPoint>) {
         if (trackPoints.isEmpty()) return
         var segmentOpen = false
         for (point in trackPoints) {
@@ -80,7 +72,7 @@ internal class GpxMapperImpl : GpxMapper {
         }
     }
 
-    private fun StringBuilder.appendTrackPoint(point: TrackPoint) {
+    private fun StringBuilder.appendTrackPoint(point: GpxTrackPoint) {
         appendLine("      <trkpt lat=\"${point.latitude}\" lon=\"${point.longitude}\">")
         point.altitudeMeters?.let { appendLine("        <ele>$it</ele>") }
         appendLine("        <time>${formatTimestamp(point.timestampMs)}</time>")

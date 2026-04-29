@@ -162,6 +162,11 @@ dependencies {
     implementation(libs.sqlcipher.android)
     implementation(libs.androidx.sqlite)
 
+    // WorkManager + Hilt-Work (for HiltWorkerFactory)
+    implementation(libs.androidx.work.runtime.ktx)
+    implementation(libs.androidx.hilt.work)
+    ksp(libs.androidx.hilt.compiler)
+
     // Feature modules
     implementation(project(":feature:connections"))
     implementation(project(":feature:bridge:connection-session:api"))
@@ -182,8 +187,12 @@ dependencies {
     implementation(project(":feature:bridge:profile-session:impl"))
     implementation(project(":feature:bridge:session-settings:api"))
     implementation(project(":feature:bridge:session-settings:impl"))
+    implementation(project(":feature:bridge:session-strava:api"))
+    implementation(project(":feature:bridge:session-strava:impl"))
     implementation(project(":feature:dashboard"))
     implementation(project(":feature:destinations"))
+    implementation(project(":feature:integrations:strava:api"))
+    implementation(project(":feature:integrations:strava:impl"))
     implementation(project(":feature:locale"))
     implementation(project(":feature:nutrition"))
     implementation(project(":feature:poi"))

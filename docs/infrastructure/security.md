@@ -163,6 +163,23 @@ native library matching their device architecture. The actual download size incr
 No ABI filtering is applied in the build configuration — all four architectures are included to
 maintain emulator support in release builds and full device compatibility.
 
+## Strava OAuth tokens
+
+Strava access and refresh tokens live in the same encrypted Room database (`strava_tokens`
+table, single-row keyed on `SINGLETON_ID = 0`), so they inherit the SQLCipher protection above.
+A few additional safeguards specific to OAuth:
+
+- **Logging** — Ktor's `Logging` plugin is set to `HEADERS` only in debug builds and `NONE` in
+  release. Bearer tokens never reach logcat in production.
+- **Refresh failure wipe** — `StravaTokenProvider.refreshTokens` deletes the local token row on
+  any refresh failure, forcing the user to re-authorize. Without this a leaked or revoked
+  refresh token would be replayed forever.
+- **Host-scoped Bearer attachment** — `sendWithoutRequest { url.host == STRAVA_HOST }` ensures
+  the Bearer header is only attached to `www.strava.com` requests, even if Strava 3xx-redirects
+  somewhere else. See [Network](network.md) for details.
+- **OAuth flow uses Custom Tabs**, not WebView — credentials are entered in the user's real
+  browser, isolated from the app process. See [Strava Sync](../features/strava-sync.md).
+
 ## Summary
 
 | Technique | Threat | Protection |
@@ -173,6 +190,8 @@ maintain emulator support in release builds and full device compatibility.
 | Backup exclusions | Cross-device restore, cloud leak | DB files, passphrase prefs, and destination_files DataStore excluded from backup |
 | Debug bypass | Developer tooling (App Inspector) | Encryption disabled in debug builds only |
 | R8 keep rules | Obfuscation breaking SQLCipher | Native classes preserved from minification |
+| OAuth token wipe-on-failure | Replayed/revoked refresh tokens | Local token deleted on refresh failure, user re-authorizes |
+| Custom Tabs (no WebView) | Credential interception by the app | Strava login happens in the user's real browser |
 
 Database initialization is handled off the main thread via `ConcurrentFactory` — see
 [Concurrency](concurrency.md#database-initialization).

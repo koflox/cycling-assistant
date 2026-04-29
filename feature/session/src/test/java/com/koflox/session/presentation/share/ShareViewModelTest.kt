@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import androidx.lifecycle.SavedStateHandle
 import app.cash.turbine.test
 import com.koflox.designsystem.text.UiText
+import com.koflox.gpx.GpxMapper
 import com.koflox.session.domain.model.SessionDerivedStats
 import com.koflox.session.domain.model.SessionStatus
 import com.koflox.session.domain.model.StatsDisplayConfig
@@ -249,7 +250,7 @@ class ShareViewModelTest {
         val intent = mockk<Intent>()
         val session = createSession(id = SESSION_ID, destinationName = DESTINATION_NAME, status = SessionStatus.COMPLETED)
         coEvery { getSessionByIdUseCase.getSession(SESSION_ID) } returns Result.success(session)
-        every { gpxMapper.map(session) } returns "<gpx/>"
+        every { gpxMapper.map(any()) } returns "<gpx/>"
         coEvery { gpxSharer.shareGpx("<gpx/>", "session_export", DESTINATION_NAME) } returns GpxShareResult.Success(intent)
 
         viewModel = createViewModel()
@@ -273,7 +274,7 @@ class ShareViewModelTest {
     fun `Gpx ShareClicked failure shows Error`() = runTest {
         val session = createSession(id = SESSION_ID, destinationName = DESTINATION_NAME, status = SessionStatus.COMPLETED)
         coEvery { getSessionByIdUseCase.getSession(SESSION_ID) } returns Result.success(session)
-        every { gpxMapper.map(session) } returns "<gpx/>"
+        every { gpxMapper.map(any()) } returns "<gpx/>"
         coEvery { gpxSharer.shareGpx("<gpx/>", "session_export", DESTINATION_NAME) } returns GpxShareResult.CannotWriteFile
         every { gpxShareErrorMapper.map(GpxShareResult.CannotWriteFile) } returns GPX_ERROR_UI_TEXT
 
@@ -297,7 +298,7 @@ class ShareViewModelTest {
         val intent = mockk<Intent>()
         val session = createSession(id = SESSION_ID, destinationName = DESTINATION_NAME, status = SessionStatus.COMPLETED)
         coEvery { getSessionByIdUseCase.getSession(SESSION_ID) } returns Result.success(session)
-        every { gpxMapper.map(session) } returns "<gpx/>"
+        every { gpxMapper.map(any()) } returns "<gpx/>"
         coEvery { gpxSharer.shareGpx("<gpx/>", "session_export", DESTINATION_NAME) } returns GpxShareResult.Success(intent)
 
         viewModel = createViewModel()

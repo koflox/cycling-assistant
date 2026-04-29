@@ -5,6 +5,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.koflox.di.DefaultDispatcher
+import com.koflox.gpx.GpxMapper
 import com.koflox.location.bearing.calculateBearingDegrees
 import com.koflox.location.model.Location
 import com.koflox.session.domain.model.Session
@@ -164,7 +165,7 @@ internal class ShareViewModel @Inject constructor(
         gpxGenerationJob?.cancel()
         gpxGenerationJob = viewModelScope.launch(dispatcherDefault) {
             updateContent { it.copy(gpxShareState = GpxShareState.Generating) }
-            val gpxContent = gpxMapper.map(session)
+            val gpxContent = gpxMapper.map(session.toGpxInput())
             val chooserTitle = session.destinationName ?: "Session GPX"
             val result = gpxSharer.shareGpx(gpxContent, GPX_FILE_NAME, chooserTitle)
             updateContent { content ->

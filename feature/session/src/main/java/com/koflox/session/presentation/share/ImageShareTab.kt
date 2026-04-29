@@ -5,7 +5,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
@@ -59,11 +59,14 @@ internal fun ImageShareTab(
     }
     val chooserTitle = stringResource(R.string.share_chooser_title)
     val isSharing = imageShareState is ImageShareState.Sharing
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .aspectRatio(0.75f),
+                .weight(1f),
             contentAlignment = Alignment.Center,
         ) {
             SharePreviewContent(

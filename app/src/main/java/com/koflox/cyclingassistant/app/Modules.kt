@@ -18,10 +18,14 @@ import com.koflox.di.IoDispatcher
 import com.koflox.di.LocaleDaoFactory
 import com.koflox.di.ProfileDaoFactory
 import com.koflox.di.SessionDaoFactory
+import com.koflox.di.StravaSyncDaoFactory
+import com.koflox.di.StravaTokenDaoFactory
 import com.koflox.locale.data.source.local.dao.LocaleDao
 import com.koflox.locale.domain.usecase.ObserveLocaleUseCase
 import com.koflox.profile.data.source.local.dao.ProfileDao
 import com.koflox.session.data.source.local.dao.SessionDao
+import com.koflox.strava.impl.data.source.local.dao.StravaSyncDao
+import com.koflox.strava.impl.data.source.local.dao.StravaTokenDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -87,6 +91,20 @@ internal object DatabaseHiltModule {
     fun provideSessionDaoFactory(
         dbFactory: ConcurrentFactory<AppDatabase>,
     ): ConcurrentFactory<SessionDao> = dbFactory.asDaoFactory { it.sessionDao() }
+
+    @Provides
+    @Singleton
+    @StravaSyncDaoFactory
+    fun provideStravaSyncDaoFactory(
+        dbFactory: ConcurrentFactory<AppDatabase>,
+    ): ConcurrentFactory<StravaSyncDao> = dbFactory.asDaoFactory { it.stravaSyncDao() }
+
+    @Provides
+    @Singleton
+    @StravaTokenDaoFactory
+    fun provideStravaTokenDaoFactory(
+        dbFactory: ConcurrentFactory<AppDatabase>,
+    ): ConcurrentFactory<StravaTokenDao> = dbFactory.asDaoFactory { it.stravaTokenDao() }
 }
 
 private fun <T : Any> ConcurrentFactory<AppDatabase>.asDaoFactory(

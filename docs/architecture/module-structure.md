@@ -18,12 +18,15 @@ CyclingAssistant/
 │   │   ├── nutrition-settings/       # nutrition ↔ settings
 │   │   ├── poi-settings/             # poi ↔ settings
 │   │   ├── profile-session/          # profile ↔ session
-│   │   └── session-settings/         # session ↔ settings
+│   │   ├── session-settings/         # session ↔ settings
+│   │   └── session-strava/           # session ↔ strava (GPX data + activity name)
 │   │       ├── api/                  # Interfaces exposed to consumers
 │   │       └── impl/                 # Implementations wiring to provider internals
 │   ├── connections/                  # BLE device connection and management
 │   ├── dashboard/                    # Main dashboard with expandable menu
 │   ├── destinations/                 # Destination selection feature
+│   ├── integrations/
+│   │   └── strava/                   # Strava OAuth, GPX upload, sync state (api + impl)
 │   ├── locale/                       # App language persistence and observation
 │   ├── nutrition/                    # Nutrition tracking and reminders
 │   ├── poi/                          # POI type selection and active session POI actions

@@ -88,8 +88,10 @@ private fun NavGraphBuilder.shareSessionDialog(navController: NavController) {
     dialog(
         route = SHARE_SESSION_ROUTE,
         arguments = listOf(navArgument(SESSION_ID_ARG) { type = NavType.StringType }),
-    ) {
+    ) { backStackEntry ->
+        val sessionId = backStackEntry.arguments?.getString(SESSION_ID_ARG) ?: return@dialog
         ShareSessionRoute(
+            sessionId = sessionId,
             onDismiss = { navController.popBackStack() },
             onNavigateToStatsConfig = { section -> navController.navigate(statsConfigRoute(section)) },
         )

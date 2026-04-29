@@ -32,6 +32,7 @@ dependencies {
     implementation(project(":shared:altitude"))
     implementation(project(":shared:distance"))
     implementation(project(":shared:error"))
+    implementation(project(":shared:gpx"))
     implementation(project(":shared:graphics"))
     implementation(project(":shared:id"))
     implementation(project(":shared:map"))
@@ -42,6 +43,9 @@ dependencies {
     implementation(project(":feature:bridge:nutrition-session:api"))
     implementation(project(":feature:bridge:profile-session:api"))
     implementation(project(":feature:theme"))
+
+    // Strava integration (auto-enqueue on session save)
+    implementation(project(":feature:integrations:strava:api"))
 
     testImplementation(testFixtures(project(":shared:design-system")))
 
