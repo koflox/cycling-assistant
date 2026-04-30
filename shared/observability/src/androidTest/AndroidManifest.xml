@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <application>
+        <!--
+          The androidTest APK has no google-services.json, so FirebaseInitializer crashes
+          on FirebaseApp.initializeApp(). Skip Firebase startup entirely for instrumented tests
+          of this module — there are no androidTest sources here anyway.
+        -->
+        <provider
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="${applicationId}.androidx-startup"
+            tools:node="remove" />
+    </application>
+
+</manifest>

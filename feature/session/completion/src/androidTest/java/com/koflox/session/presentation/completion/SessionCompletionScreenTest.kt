@@ -1,11 +1,14 @@
 package com.koflox.session.presentation.completion
 
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.koflox.designsystem.text.UiText
+import com.koflox.session.presentation.model.DisplayStat
 import com.koflox.session.presentation.route.MapLayer
 import com.koflox.session.presentation.route.RouteDisplayData
 import org.junit.Rule
@@ -39,6 +42,8 @@ class SessionCompletionScreenTest {
             SessionCompletionContent(
                 uiState = SessionCompletionUiState.Loading,
                 onBackClick = {},
+                onShareClick = {},
+                onNavigateToStatsConfig = {},
                 onEvent = {},
             )
         }
@@ -52,6 +57,8 @@ class SessionCompletionScreenTest {
             SessionCompletionContent(
                 uiState = SessionCompletionUiState.Error(message = ERROR_UI_TEXT),
                 onBackClick = {},
+                onShareClick = {},
+                onNavigateToStatsConfig = {},
                 onEvent = {},
             )
         }
@@ -65,11 +72,14 @@ class SessionCompletionScreenTest {
             SessionCompletionContent(
                 uiState = createContentState(),
                 onBackClick = {},
+                onShareClick = {},
+                onNavigateToStatsConfig = {},
                 onEvent = {},
             )
         }
 
-        composeTestRule.onNodeWithText(DESTINATION_NAME).assertIsDisplayed()
+        // Destination name appears twice: in TopAppBar title and in the MapHeaderOverlay.
+        composeTestRule.onAllNodesWithText(DESTINATION_NAME).assertCountEquals(2)
     }
 
     @Test
@@ -78,6 +88,8 @@ class SessionCompletionScreenTest {
             SessionCompletionContent(
                 uiState = createContentState(),
                 onBackClick = {},
+                onShareClick = {},
+                onNavigateToStatsConfig = {},
                 onEvent = {},
             )
         }
@@ -89,8 +101,17 @@ class SessionCompletionScreenTest {
     fun sessionCompletionScreen_contentState_showsSessionStats() {
         composeTestRule.setContent {
             SessionCompletionContent(
-                uiState = createContentState(),
+                uiState = createContentState(
+                    completedStats = listOf(
+                        DisplayStat(label = "Time", value = ELAPSED_TIME),
+                        DisplayStat(label = "Distance", value = "$DISTANCE km"),
+                        DisplayStat(label = "Avg", value = "$AVG_SPEED km/h"),
+                        DisplayStat(label = "Top", value = "$TOP_SPEED km/h"),
+                    ),
+                ),
                 onBackClick = {},
+                onShareClick = {},
+                onNavigateToStatsConfig = {},
                 onEvent = {},
             )
         }
@@ -107,6 +128,8 @@ class SessionCompletionScreenTest {
             SessionCompletionContent(
                 uiState = SessionCompletionUiState.Loading,
                 onBackClick = {},
+                onShareClick = {},
+                onNavigateToStatsConfig = {},
                 onEvent = {},
             )
         }
@@ -120,6 +143,8 @@ class SessionCompletionScreenTest {
             SessionCompletionContent(
                 uiState = SessionCompletionUiState.Error(message = ERROR_UI_TEXT),
                 onBackClick = {},
+                onShareClick = {},
+                onNavigateToStatsConfig = {},
                 onEvent = {},
             )
         }
@@ -128,23 +153,21 @@ class SessionCompletionScreenTest {
     }
 
     @Test
-    fun sessionCompletionScreen_clickShareIcon_triggersShareEvent() {
+    fun sessionCompletionScreen_clickShareIcon_invokesOnShareClick() {
         var shareClicked = false
         composeTestRule.setContent {
             SessionCompletionContent(
                 uiState = createContentState(),
                 onBackClick = {},
-                onEvent = { event ->
-                    if (event is SessionCompletionUiEvent.ShareClicked) {
-                        shareClicked = true
-                    }
-                },
+                onShareClick = { shareClicked = true },
+                onNavigateToStatsConfig = {},
+                onEvent = {},
             )
         }
 
         composeTestRule.onNodeWithContentDescription("Share").performClick()
 
-        assert(shareClicked) { "ShareClicked event should be triggered" }
+        assert(shareClicked) { "onShareClick should be invoked" }
     }
 
     @Test
@@ -154,6 +177,8 @@ class SessionCompletionScreenTest {
             SessionCompletionContent(
                 uiState = createContentState(),
                 onBackClick = { backClicked = true },
+                onShareClick = {},
+                onNavigateToStatsConfig = {},
                 onEvent = {},
             )
         }
@@ -164,7 +189,7 @@ class SessionCompletionScreenTest {
     }
 
     private fun createContentState(
-        overlay: Overlay? = null,
+        completedStats: List<DisplayStat> = emptyList(),
     ) = SessionCompletionUiState.Content(
         sessionId = SESSION_ID,
         destinationName = DESTINATION_NAME,
@@ -178,8 +203,9 @@ class SessionCompletionScreenTest {
         altitudeGainFormatted = ALTITUDE_GAIN,
         altitudeLossFormatted = ALTITUDE_LOSS,
         caloriesFormatted = CALORIES,
+        completedStats = completedStats,
         availableLayers = listOf(MapLayer.DEFAULT, MapLayer.SPEED),
-        routeDisplayData = RouteDisplayData.EMPTY, // Empty to avoid Google Maps initialization issues in tests
-        overlay = overlay,
+        // Empty to avoid Google Maps initialization issues in tests
+        routeDisplayData = RouteDisplayData.EMPTY,
     )
 }

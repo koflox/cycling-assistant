@@ -1,6 +1,7 @@
 package com.koflox.destinations.presentation.destinations.components
 
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -56,7 +57,8 @@ class DestinationComponentsTest {
             )
         }
 
-        composeTestRule.onNodeWithText("15 km (±2.5)", substring = true).assertIsDisplayed()
+        // Locale-dependent km vs км and `.` vs `,` decimal; only assert the integer + tolerance marker.
+        composeTestRule.onNode(hasText("15 ", substring = true).and(hasText("(±", substring = true))).assertIsDisplayed()
     }
 
     @Test

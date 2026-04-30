@@ -5,6 +5,11 @@ plugins {
 
 android {
     namespace = "com.koflox.observability"
+
+    defaultConfig {
+        // Default for library scope (incl. androidTest). App overrides per buildType.
+        manifestPlaceholders["observabilityCollectionEnabled"] = "false"
+    }
 }
 
 dependencies {

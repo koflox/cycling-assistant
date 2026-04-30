@@ -1,4 +1,5 @@
 import com.android.build.api.dsl.LibraryExtension
+import com.koflox.convention.library
 import com.koflox.convention.libs
 import com.koflox.convention.version
 
@@ -21,4 +22,11 @@ extensions.configure<LibraryExtension> {
         sourceCompatibility = javaVersion
         targetCompatibility = javaVersion
     }
+}
+
+dependencies {
+    // Required so the instrumented test APK contains AndroidJUnitRunner
+    // (testInstrumentationRunner is set above; androidx-junit alone does NOT pull androidx.test:runner).
+    "androidTestImplementation"(libs.library("androidx-junit"))
+    "androidTestImplementation"(libs.library("androidx-test-runner"))
 }
