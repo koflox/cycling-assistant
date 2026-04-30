@@ -1,0 +1,192 @@
+package com.koflox.session.service
+
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.content.Context
+import android.content.Intent
+import android.os.Build
+import androidx.compose.ui.graphics.toArgb
+import androidx.core.app.NotificationCompat
+import com.koflox.designsystem.context.LocalizedContextProvider
+import com.koflox.designsystem.theme.CyclingGreen
+import com.koflox.designsystem.theme.CyclingGreenDark
+import com.koflox.session.domain.model.Session
+import com.koflox.session.domain.model.SessionStatus
+import com.koflox.session.presentation.mapper.SessionUiMapper
+import com.koflox.session.tracking.R
+import com.koflox.theme.domain.model.AppTheme
+import com.koflox.theme.domain.usecase.ObserveThemeUseCase
+import com.koflox.theme.util.isNightMode
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
+import com.koflox.session.statsdisplay.R as StatsR
+
+interface SessionNotificationManager {
+    fun createNotificationChannel()
+    fun createInitialNotification(): Notification
+    fun buildNotification(session: Session, currentElapsedMs: Long): Notification
+}
+
+internal class SessionNotificationManagerImpl(
+    private val context: Context,
+    private val localizedContextProvider: LocalizedContextProvider,
+    private val sessionUiMapper: SessionUiMapper,
+    observeThemeUseCase: ObserveThemeUseCase,
+    dispatcherIo: CoroutineDispatcher,
+) : SessionNotificationManager {
+
+    companion object {
+        const val CHANNEL_ID = "cycling_session_channel"
+        const val NOTIFICATION_ID = 1001
+        private const val REQUEST_CODE_CONTENT = 100
+        private const val DEFAULT_NOTIFICATION_PRIORITY = NotificationCompat.PRIORITY_DEFAULT
+    }
+
+    @Volatile
+    private var currentTheme: AppTheme = AppTheme.SYSTEM
+
+    private val scope = CoroutineScope(SupervisorJob() + dispatcherIo)
+
+    init {
+        scope.launch {
+            observeThemeUseCase.observeTheme().collect { theme ->
+                currentTheme = theme
+            }
+        }
+    }
+
+    private val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+    private val localizedContext: Context get() = localizedContextProvider.getLocalizedContext()
+
+    override fun createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                CHANNEL_ID,
+                localizedContext.getString(R.string.notification_channel_name),
+                NotificationManager.IMPORTANCE_DEFAULT,
+            ).apply {
+                description = localizedContext.getString(R.string.notification_channel_description)
+                setShowBadge(false)
+            }
+            notificationManager.createNotificationChannel(channel)
+        }
+    }
+
+    override fun createInitialNotification(): Notification {
+        return NotificationCompat.Builder(context, CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_notification_cycling)
+            .setContentTitle(localizedContext.getString(R.string.notification_title_session_active))
+            .setContentText(localizedContext.getString(R.string.notification_text_starting))
+            .setColor(resolveNotificationColor())
+            .setOngoing(true)
+            .setCategory(NotificationCompat.CATEGORY_NAVIGATION)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .setPriority(DEFAULT_NOTIFICATION_PRIORITY)
+            .setContentIntent(createContentPendingIntent())
+            .build()
+    }
+
+    override fun buildNotification(session: Session, currentElapsedMs: Long): Notification {
+        val statusText = when (session.status) {
+            SessionStatus.RUNNING -> localizedContext.getString(R.string.notification_status_running)
+            else -> localizedContext.getString(R.string.notification_status_paused)
+        }
+        val elapsedTimeFormatted = sessionUiMapper.formatElapsedTime(currentElapsedMs)
+        val distanceFormatted = sessionUiMapper.formatDistance(session.traveledDistanceKm)
+
+        val contentText = "$statusText | $elapsedTimeFormatted"
+        val distanceWithUnit = localizedContext.getString(StatsR.string.session_stat_value_km, distanceFormatted)
+        val expandedText = buildString {
+            appendLine("${localizedContext.getString(R.string.notification_time)}: $elapsedTimeFormatted")
+            append("${localizedContext.getString(R.string.notification_distance)}: $distanceWithUnit")
+        }
+
+        return NotificationCompat.Builder(context, CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_notification_cycling)
+            .setContentTitle(session.destinationName ?: localizedContext.getString(R.string.session_free_roam_title))
+            .setContentText(contentText)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(expandedText))
+            .setColor(resolveNotificationColor())
+            .setOngoing(true)
+            .setOnlyAlertOnce(true)
+            .setCategory(NotificationCompat.CATEGORY_NAVIGATION)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .setPriority(DEFAULT_NOTIFICATION_PRIORITY)
+            .setContentIntent(createContentPendingIntent())
+            .addAction(createPauseResumeAction(session.status))
+            .addAction(createStopAction())
+            .build()
+    }
+
+    private fun resolveNotificationColor(): Int = (
+        when (currentTheme) {
+            AppTheme.LIGHT -> CyclingGreen
+            AppTheme.DARK -> CyclingGreenDark
+            AppTheme.SYSTEM -> if (isNightMode(context)) CyclingGreenDark else CyclingGreen
+        }
+        ).toArgb()
+
+    private fun createContentPendingIntent(): PendingIntent {
+        val intent = context.packageManager.getLaunchIntentForPackage(context.packageName)
+        return PendingIntent.getActivity(
+            context,
+            REQUEST_CODE_CONTENT,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+    }
+
+    private fun createPauseResumeAction(status: SessionStatus): NotificationCompat.Action {
+        return if (status == SessionStatus.RUNNING) {
+            NotificationCompat.Action.Builder(
+                R.drawable.ic_notification_pause,
+                localizedContext.getString(R.string.notification_action_pause),
+                createActionPendingIntent(SessionTrackingService.ACTION_PAUSE),
+            ).build()
+        } else {
+            NotificationCompat.Action.Builder(
+                R.drawable.ic_notification_resume,
+                localizedContext.getString(R.string.notification_action_resume),
+                createActionPendingIntent(SessionTrackingService.ACTION_RESUME),
+            ).build()
+        }
+    }
+
+    private fun createStopAction(): NotificationCompat.Action {
+        return NotificationCompat.Action.Builder(
+            R.drawable.ic_notification_stop,
+            localizedContext.getString(R.string.notification_action_stop),
+            createStopPendingIntent(),
+        ).build()
+    }
+
+    private fun createStopPendingIntent(): PendingIntent {
+        val intent = context.packageManager.getLaunchIntentForPackage(context.packageName)?.apply {
+            action = PendingSessionActionImpl.ACTION_STOP_CONFIRMATION
+            addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+        }
+        return PendingIntent.getActivity(
+            context,
+            PendingSessionActionImpl.ACTION_STOP_CONFIRMATION.hashCode(),
+            intent!!,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+    }
+
+    private fun createActionPendingIntent(action: String): PendingIntent {
+        val intent = Intent(context, SessionTrackingService::class.java).apply {
+            this.action = action
+        }
+        return PendingIntent.getService(
+            context,
+            action.hashCode(),
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+    }
+
+}

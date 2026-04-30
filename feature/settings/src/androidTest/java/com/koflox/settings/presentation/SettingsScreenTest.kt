@@ -10,6 +10,9 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.koflox.locale.domain.model.AppLanguage
 import com.koflox.nutritionsettings.bridge.navigator.NutritionSettingsUiNavigator
+import com.koflox.poisettings.bridge.navigator.PoiSettingsUiNavigator
+import com.koflox.sessionsettings.bridge.navigator.StatsDisplaySettingsUiNavigator
+import com.koflox.strava.api.navigator.StravaSettingsNavigator
 import com.koflox.theme.domain.model.AppTheme
 import org.junit.Rule
 import org.junit.Test
@@ -18,23 +21,56 @@ class SettingsScreenTest {
 
     private val testNutritionSettingsUiNavigator = object : NutritionSettingsUiNavigator {
         @Composable
-        override fun NutritionSettingsSection(modifier: Modifier) {
-            // No-op for tests
-        }
+        override fun NutritionSettingsSection(modifier: Modifier) = Unit
+    }
+
+    private val testPoiSettingsUiNavigator = object : PoiSettingsUiNavigator {
+        @Composable
+        override fun PoiSettingsSection(onNavigateToPoiSelection: () -> Unit, modifier: Modifier) = Unit
+
+        @Composable
+        override fun PoiSelectionScreen(onBackClick: () -> Unit, modifier: Modifier) = Unit
+    }
+
+    private val testStatsDisplaySettingsUiNavigator = object : StatsDisplaySettingsUiNavigator {
+        @Composable
+        override fun StatsDisplaySettingsSection(onNavigateToStatsConfig: () -> Unit, modifier: Modifier) = Unit
+
+        @Composable
+        override fun StatsDisplayConfigScreen(onBackClick: () -> Unit, initialSection: String?, modifier: Modifier) = Unit
+    }
+
+    private val testStravaSettingsNavigator = object : StravaSettingsNavigator {
+        @Composable
+        override fun StravaSettingsSection(onNavigateToConnect: () -> Unit, modifier: Modifier) = Unit
     }
 
     @get:Rule
     val composeTestRule = createComposeRule()
 
+    @Composable
+    private fun SettingsContentForTest(
+        uiState: SettingsUiState,
+        onEvent: (SettingsUiEvent) -> Unit = {},
+    ) {
+        SettingsContent(
+            uiState = uiState,
+            onBackClick = {},
+            onNavigateToPoiSelection = {},
+            onNavigateToStatsConfig = {},
+            onNavigateToStravaConnect = {},
+            onEvent = onEvent,
+            nutritionSettingsUiNavigator = testNutritionSettingsUiNavigator,
+            poiSettingsUiNavigator = testPoiSettingsUiNavigator,
+            statsDisplaySettingsUiNavigator = testStatsDisplaySettingsUiNavigator,
+            stravaSettingsNavigator = testStravaSettingsNavigator,
+        )
+    }
+
     @Test
     fun settingsScreen_displaysThemeAndLanguageLabels() {
         composeTestRule.setContent {
-            SettingsContent(
-                uiState = SettingsUiState(),
-                onBackClick = {},
-                onEvent = {},
-                nutritionSettingsUiNavigator = testNutritionSettingsUiNavigator,
-            )
+            SettingsContentForTest(uiState = SettingsUiState())
         }
 
         composeTestRule.onNodeWithText("Theme").assertIsDisplayed()
@@ -44,12 +80,7 @@ class SettingsScreenTest {
     @Test
     fun settingsScreen_displaysDefaultThemeValue() {
         composeTestRule.setContent {
-            SettingsContent(
-                uiState = SettingsUiState(selectedTheme = AppTheme.SYSTEM),
-                onBackClick = {},
-                onEvent = {},
-                nutritionSettingsUiNavigator = testNutritionSettingsUiNavigator,
-            )
+            SettingsContentForTest(uiState = SettingsUiState(selectedTheme = AppTheme.SYSTEM))
         }
 
         composeTestRule.onNodeWithText("System").assertIsDisplayed()
@@ -58,12 +89,7 @@ class SettingsScreenTest {
     @Test
     fun settingsScreen_displaysDefaultLanguageValue() {
         composeTestRule.setContent {
-            SettingsContent(
-                uiState = SettingsUiState(selectedLanguage = AppLanguage.ENGLISH),
-                onBackClick = {},
-                onEvent = {},
-                nutritionSettingsUiNavigator = testNutritionSettingsUiNavigator,
-            )
+            SettingsContentForTest(uiState = SettingsUiState(selectedLanguage = AppLanguage.ENGLISH))
         }
 
         composeTestRule.onNodeWithText("English").assertIsDisplayed()
@@ -72,12 +98,7 @@ class SettingsScreenTest {
     @Test
     fun settingsScreen_themeDropdownExpanded_showsAllOptions() {
         composeTestRule.setContent {
-            SettingsContent(
-                uiState = SettingsUiState(isThemeDropdownExpanded = true),
-                onBackClick = {},
-                onEvent = {},
-                nutritionSettingsUiNavigator = testNutritionSettingsUiNavigator,
-            )
+            SettingsContentForTest(uiState = SettingsUiState(isThemeDropdownExpanded = true))
         }
 
         composeTestRule.onNodeWithText("Light").assertIsDisplayed()
@@ -89,12 +110,7 @@ class SettingsScreenTest {
     @Test
     fun settingsScreen_languageDropdownExpanded_showsAllOptions() {
         composeTestRule.setContent {
-            SettingsContent(
-                uiState = SettingsUiState(isLanguageDropdownExpanded = true),
-                onBackClick = {},
-                onEvent = {},
-                nutritionSettingsUiNavigator = testNutritionSettingsUiNavigator,
-            )
+            SettingsContentForTest(uiState = SettingsUiState(isLanguageDropdownExpanded = true))
         }
 
         // "English" appears twice: in the field and in the dropdown
@@ -106,12 +122,7 @@ class SettingsScreenTest {
     @Test
     fun settingsScreen_selectDarkTheme_updatesDisplay() {
         composeTestRule.setContent {
-            SettingsContent(
-                uiState = SettingsUiState(selectedTheme = AppTheme.DARK),
-                onBackClick = {},
-                onEvent = {},
-                nutritionSettingsUiNavigator = testNutritionSettingsUiNavigator,
-            )
+            SettingsContentForTest(uiState = SettingsUiState(selectedTheme = AppTheme.DARK))
         }
 
         composeTestRule.onNodeWithText("Dark").assertIsDisplayed()
@@ -120,12 +131,7 @@ class SettingsScreenTest {
     @Test
     fun settingsScreen_selectJapaneseLanguage_updatesDisplay() {
         composeTestRule.setContent {
-            SettingsContent(
-                uiState = SettingsUiState(selectedLanguage = AppLanguage.JAPANESE),
-                onBackClick = {},
-                onEvent = {},
-                nutritionSettingsUiNavigator = testNutritionSettingsUiNavigator,
-            )
+            SettingsContentForTest(uiState = SettingsUiState(selectedLanguage = AppLanguage.JAPANESE))
         }
 
         composeTestRule.onNodeWithText("日本語").assertIsDisplayed()
@@ -135,15 +141,13 @@ class SettingsScreenTest {
     fun settingsScreen_clickThemeField_triggersToggleEvent() {
         var eventTriggered = false
         composeTestRule.setContent {
-            SettingsContent(
+            SettingsContentForTest(
                 uiState = SettingsUiState(),
-                onBackClick = {},
                 onEvent = { event ->
                     if (event is SettingsUiEvent.ThemeDropdownToggled) {
                         eventTriggered = true
                     }
                 },
-                nutritionSettingsUiNavigator = testNutritionSettingsUiNavigator,
             )
         }
 

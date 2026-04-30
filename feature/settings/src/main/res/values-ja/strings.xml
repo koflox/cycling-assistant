@@ -5,6 +5,7 @@
     <string name="settings_section_app">アプリ</string>
 
     <string name="settings_section_session">セッション</string>
+    <string name="settings_section_integrations">連携</string>
     <string name="settings_section_profile">プロフィール</string>
     <string name="settings_theme">テーマ</string>
     <string name="settings_theme_light">ライト</string>

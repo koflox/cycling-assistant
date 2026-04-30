@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="strava_connect_title">Strava</string>
+    <string name="strava_connect_back">戻る</string>
+    <string name="strava_connect_intro">セッションを Strava に自動同期します。</string>
+    <string name="strava_connect_button_text">Strava で接続</string>
+    <string name="strava_connect_button_content_description">Strava で接続</string>
+    <string name="strava_compatible_content_description">Strava 対応</string>
+    <string name="strava_connected_as">%1$s として接続済み</string>
+    <string name="strava_logout_button">切断</string>
+    <string name="strava_logout_confirm_title">Strava を切断しますか？</string>
+    <string name="strava_logout_confirm_message">再接続するまで、新しいセッションは Strava にアップロードされません。</string>
+    <string name="strava_logout_confirm_yes">切断</string>
+    <string name="strava_logout_confirm_no">キャンセル</string>
+    <string name="strava_settings_section_label">Strava</string>
+    <string name="strava_settings_connect_action">Strava を接続</string>
+    <string name="strava_share_intro">セッションを Strava に自動同期します。</string>
+    <string name="strava_share_status_pending">アップロード待機中…</string>
+    <string name="strava_share_status_uploading">Strava にアップロード中…</string>
+    <string name="strava_share_status_processing">Strava がアクティビティを処理中…</string>
+    <string name="strava_share_status_synced">Strava に同期済み</string>
+    <string name="strava_share_status_error">同期エラー</string>
+    <string name="strava_share_view_on_strava">View on Strava</string>
+    <string name="strava_share_sync_button">Strava に送信</string>
+    <string name="strava_share_retry_button">再試行</string>
+    <string name="strava_share_refresh_button">ステータスを更新</string>
+    <string name="strava_share_refresh_button_cooldown">%1$d 秒後に更新</string>
+    <string name="strava_share_reconnect_button">再接続</string>
+    <string name="strava_share_error_network">ネットワーク接続がありません。</string>
+    <string name="strava_share_error_auth">Strava 接続の期限が切れました。</string>
+    <string name="strava_share_error_rate_limited">Strava のレート制限に達しました。後で再試行してください。</string>
+    <string name="strava_share_error_invalid">このアクティビティはアップロードできません。</string>
+    <string name="strava_share_error_poll_timeout">Strava の処理に時間がかかっています。</string>
+    <string name="strava_share_error_server">Strava サーバーエラー。</string>
+    <string name="strava_share_error_unknown">予期しないエラー。</string>
+    <string name="strava_share_powered_by">Powered by Strava</string>
+    <string name="strava_privacy_hint">Strava の API ではアップロード時にプライバシーを設定できません。アップロードを非公開にするには、Strava の設定で Activity Privacy を \"Only You\" に変更してください。</string>
+    <string name="strava_privacy_open_settings">Strava のプライバシー設定を開く</string>
+    <string name="strava_error_missing_scopes">同期には Strava 認可画面で「アクティビティを表示」と「アクティビティをアップロード」の両方の権限が必要です。再接続し、両方のオプションを有効のままにしてください。</string>
+    <string name="strava_error_missing_scopes_dismiss">了解</string>
+    <string name="strava_switch_account_hint">Strava はブラウザのセッションを記憶しています。別のアカウントを接続するには、まずブラウザの strava.com からサインアウトしてください。</string>
+</resources>

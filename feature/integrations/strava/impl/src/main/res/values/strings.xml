@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="strava_connect_title">Strava</string>
+    <string name="strava_connect_back">Back</string>
+    <string name="strava_connect_intro">Sync your sessions to Strava automatically.</string>
+    <string name="strava_connect_button_text">Connect with Strava</string>
+    <string name="strava_connect_button_content_description">Connect with Strava</string>
+    <string name="strava_compatible_content_description">Compatible with Strava</string>
+    <string name="strava_connected_as">Connected as %1$s</string>
+    <string name="strava_logout_button">Disconnect</string>
+    <string name="strava_logout_confirm_title">Disconnect Strava?</string>
+    <string name="strava_logout_confirm_message">Future sessions will not be uploaded to Strava until you reconnect.</string>
+    <string name="strava_logout_confirm_yes">Disconnect</string>
+    <string name="strava_logout_confirm_no">Cancel</string>
+    <string name="strava_settings_section_label">Strava</string>
+    <string name="strava_settings_connect_action">Connect Strava</string>
+    <string name="strava_share_intro">Sync your sessions to Strava automatically.</string>
+    <string name="strava_share_status_pending">Queued for upload…</string>
+    <string name="strava_share_status_uploading">Uploading to Strava…</string>
+    <string name="strava_share_status_processing">Strava is processing your activity…</string>
+    <string name="strava_share_status_synced">Activity synced to Strava</string>
+    <string name="strava_share_status_error">Sync failed</string>
+    <string name="strava_share_view_on_strava">View on Strava</string>
+    <string name="strava_share_sync_button">Sync to Strava</string>
+    <string name="strava_share_retry_button">Retry</string>
+    <string name="strava_share_refresh_button">Refresh status</string>
+    <string name="strava_share_refresh_button_cooldown">Refresh in %1$ds</string>
+    <string name="strava_share_reconnect_button">Reconnect</string>
+    <string name="strava_share_error_network">No connection.</string>
+    <string name="strava_share_error_auth">Strava connection expired.</string>
+    <string name="strava_share_error_rate_limited">Strava rate limit reached. Try again later.</string>
+    <string name="strava_share_error_invalid">This activity cannot be uploaded.</string>
+    <string name="strava_share_error_poll_timeout">Strava is taking longer than usual.</string>
+    <string name="strava_share_error_server">Strava server error.</string>
+    <string name="strava_share_error_unknown">Unexpected error.</string>
+    <string name="strava_share_powered_by">Powered by Strava</string>
+    <string name="strava_privacy_hint">Strava\'s API does not allow setting activity privacy at upload time. To make uploads private, change Activity Privacy to \"Only You\" in Strava settings.</string>
+    <string name="strava_privacy_open_settings">Open Strava privacy settings</string>
+    <string name="strava_error_missing_scopes">Cycling Assistant needs both \"View your activities\" and \"Upload activities\" permissions on the Strava authorization screen. Please connect again and keep both options enabled.</string>
+    <string name="strava_error_missing_scopes_dismiss">Got it</string>
+    <string name="strava_switch_account_hint">Strava remembers your browser session. To connect a different account, sign out at strava.com in your browser first.</string>
+</resources>

@@ -5,6 +5,7 @@
     <string name="settings_section_app">Приложение</string>
 
     <string name="settings_section_session">Сессия</string>
+    <string name="settings_section_integrations">Интеграции</string>
     <string name="settings_section_profile">Профиль</string>
     <string name="settings_theme">Тема</string>
     <string name="settings_theme_light">Светлая</string>

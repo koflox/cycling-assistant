@@ -13,6 +13,8 @@
 | **Maps**                 | Google Maps Compose          |
 | **Location**             | Play Services Location       |
 | **Bluetooth**            | Android BLE (BluetoothGatt, BluetoothLeScanner) |
+| **Networking**           | Ktor Client (OkHttp engine), kotlinx.serialization |
+| **External APIs**        | Strava REST v3 (OAuth 2.0, GPX uploads) |
 | **Testing**              | JUnit 4, MockK, Turbine, Roborazzi, Robolectric |
 | **Observability**        | Firebase Crashlytics, Firebase Performance, Timber |
 | **Performance**          | Baseline Profiles, Macrobenchmarks |

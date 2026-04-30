@@ -8,6 +8,6 @@ android {
 }
 
 dependencies {
-    implementation(project(":shared:location"))
+    implementation(project(":shared:location:domain"))
     implementation(libs.kotlinx.coroutines.core)
 }

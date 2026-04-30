@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Device Connection Status -->
+    <string name="session_device_connecting">接続中…</string>
+    <string name="session_device_retry_countdown">%d秒後にリトライ</string>
+    <string name="session_device_offline">オフライン</string>
+
+    <!-- Session Buttons -->
+    <string name="session_button_pause">一時停止</string>
+    <string name="session_button_continue">再開</string>
+    <string name="session_button_stop">停止</string>
+
+    <!-- Confirmation Dialog -->
+    <string name="dialog_distance_format">距離: %.1f km</string>
+    <string name="dialog_button_navigate">ナビゲーション</string>
+    <string name="dialog_button_start_session">セッション開始</string>
+    <string name="dialog_button_cancel">キャンセル</string>
+
+    <!-- Notification Channel -->
+    <string name="notification_channel_name">セッション追跡</string>
+    <string name="notification_channel_description">サイクリングセッションの進捗を表示します</string>
+
+    <!-- Notification Content -->
+    <string name="notification_title_session_active">サイクリングセッション中</string>
+    <string name="notification_text_starting">セッションを開始中…</string>
+    <string name="notification_time">時間</string>
+    <string name="notification_distance">距離</string>
+
+    <!-- Notification Status -->
+    <string name="notification_status_running">走行中</string>
+    <string name="notification_status_paused">一時停止中</string>
+
+    <!-- Notification Actions -->
+    <string name="notification_action_pause">一時停止</string>
+    <string name="notification_action_resume">再開</string>
+    <string name="notification_action_stop">停止</string>
+
+    <!-- Notification Permission Dialog -->
+    <string name="permission_notification_title">通知の許可</string>
+    <string name="permission_notification_rationale">この許可により、ライド中のサイクリングセッションを安全に実行できます</string>
+    <string name="permission_button_grant">許可する</string>
+    <string name="permission_button_skip">スキップ</string>
+
+    <!-- Stop Confirmation Dialog -->
+    <string name="stop_confirmation_title">セッションを停止しますか？</string>
+    <string name="stop_confirmation_message">現在のサイクリングセッションを停止してもよろしいですか？</string>
+    <string name="stop_confirmation_stop">停止</string>
+    <string name="stop_confirmation_cancel">キャンセル</string>
+
+    <!-- Location Disabled Dialog -->
+    <string name="location_disabled_title">位置情報が無効</string>
+    <string name="location_disabled_message">位置情報サービスが無効です。サイクリングセッションを続けるには位置情報を有効にしてください。</string>
+    <string name="location_disabled_enable">有効にする</string>
+    <string name="location_disabled_dismiss">閉じる</string>
+
+    <!-- Free Roam -->
+    <string name="session_free_roam_title">フリーライド</string>
+</resources>

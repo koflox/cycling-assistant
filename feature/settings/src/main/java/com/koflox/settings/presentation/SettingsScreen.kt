@@ -43,6 +43,7 @@ import com.koflox.nutritionsettings.bridge.navigator.NutritionSettingsUiNavigato
 import com.koflox.poisettings.bridge.navigator.PoiSettingsUiNavigator
 import com.koflox.sessionsettings.bridge.navigator.StatsDisplaySettingsUiNavigator
 import com.koflox.settings.R
+import com.koflox.strava.api.navigator.StravaSettingsNavigator
 import com.koflox.theme.domain.model.AppTheme
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
@@ -55,6 +56,7 @@ internal interface SettingsEntryPoint {
     fun nutritionSettingsUiNavigator(): NutritionSettingsUiNavigator
     fun poiSettingsUiNavigator(): PoiSettingsUiNavigator
     fun statsDisplaySettingsUiNavigator(): StatsDisplaySettingsUiNavigator
+    fun stravaSettingsNavigator(): StravaSettingsNavigator
 }
 
 @Composable
@@ -62,6 +64,7 @@ internal fun SettingsRoute(
     onBackClick: () -> Unit,
     onNavigateToPoiSelection: () -> Unit,
     onNavigateToStatsConfig: () -> Unit,
+    onNavigateToStravaConnect: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -75,10 +78,12 @@ internal fun SettingsRoute(
         onBackClick = onBackClick,
         onNavigateToPoiSelection = onNavigateToPoiSelection,
         onNavigateToStatsConfig = onNavigateToStatsConfig,
+        onNavigateToStravaConnect = onNavigateToStravaConnect,
         onEvent = viewModel::onEvent,
         nutritionSettingsUiNavigator = entryPoint.nutritionSettingsUiNavigator(),
         poiSettingsUiNavigator = entryPoint.poiSettingsUiNavigator(),
         statsDisplaySettingsUiNavigator = entryPoint.statsDisplaySettingsUiNavigator(),
+        stravaSettingsNavigator = entryPoint.stravaSettingsNavigator(),
         modifier = modifier,
     )
 }
@@ -90,10 +95,12 @@ internal fun SettingsContent(
     onBackClick: () -> Unit,
     onNavigateToPoiSelection: () -> Unit,
     onNavigateToStatsConfig: () -> Unit,
+    onNavigateToStravaConnect: () -> Unit,
     onEvent: (SettingsUiEvent) -> Unit,
     nutritionSettingsUiNavigator: NutritionSettingsUiNavigator,
     poiSettingsUiNavigator: PoiSettingsUiNavigator,
     statsDisplaySettingsUiNavigator: StatsDisplaySettingsUiNavigator,
+    stravaSettingsNavigator: StravaSettingsNavigator,
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
@@ -117,9 +124,11 @@ internal fun SettingsContent(
             onEvent = onEvent,
             onNavigateToPoiSelection = onNavigateToPoiSelection,
             onNavigateToStatsConfig = onNavigateToStatsConfig,
+            onNavigateToStravaConnect = onNavigateToStravaConnect,
             nutritionSettingsUiNavigator = nutritionSettingsUiNavigator,
             poiSettingsUiNavigator = poiSettingsUiNavigator,
             statsDisplaySettingsUiNavigator = statsDisplaySettingsUiNavigator,
+            stravaSettingsNavigator = stravaSettingsNavigator,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
@@ -134,9 +143,11 @@ private fun SettingsBody(
     onEvent: (SettingsUiEvent) -> Unit,
     onNavigateToPoiSelection: () -> Unit,
     onNavigateToStatsConfig: () -> Unit,
+    onNavigateToStravaConnect: () -> Unit,
     nutritionSettingsUiNavigator: NutritionSettingsUiNavigator,
     poiSettingsUiNavigator: PoiSettingsUiNavigator,
     statsDisplaySettingsUiNavigator: StatsDisplaySettingsUiNavigator,
+    stravaSettingsNavigator: StravaSettingsNavigator,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -183,18 +194,52 @@ private fun SettingsBody(
                 },
             )
         }
-        SettingsSection(title = stringResource(R.string.settings_section_session)) {
-            poiSettingsUiNavigator.PoiSettingsSection(
-                onNavigateToPoiSelection = onNavigateToPoiSelection,
-                modifier = Modifier,
-            )
-            nutritionSettingsUiNavigator.NutritionSettingsSection(modifier = Modifier)
-            statsDisplaySettingsUiNavigator.StatsDisplaySettingsSection(
-                onNavigateToStatsConfig = onNavigateToStatsConfig,
-                modifier = Modifier,
-            )
-        }
+        SessionSettingsSection(
+            onNavigateToPoiSelection = onNavigateToPoiSelection,
+            onNavigateToStatsConfig = onNavigateToStatsConfig,
+            poiSettingsUiNavigator = poiSettingsUiNavigator,
+            nutritionSettingsUiNavigator = nutritionSettingsUiNavigator,
+            statsDisplaySettingsUiNavigator = statsDisplaySettingsUiNavigator,
+        )
+        IntegrationsSettingsSection(
+            onNavigateToStravaConnect = onNavigateToStravaConnect,
+            stravaSettingsNavigator = stravaSettingsNavigator,
+        )
         BuildInfoText(text = uiState.buildInfoText)
+    }
+}
+
+@Composable
+private fun SessionSettingsSection(
+    onNavigateToPoiSelection: () -> Unit,
+    onNavigateToStatsConfig: () -> Unit,
+    poiSettingsUiNavigator: PoiSettingsUiNavigator,
+    nutritionSettingsUiNavigator: NutritionSettingsUiNavigator,
+    statsDisplaySettingsUiNavigator: StatsDisplaySettingsUiNavigator,
+) {
+    SettingsSection(title = stringResource(R.string.settings_section_session)) {
+        poiSettingsUiNavigator.PoiSettingsSection(
+            onNavigateToPoiSelection = onNavigateToPoiSelection,
+            modifier = Modifier,
+        )
+        nutritionSettingsUiNavigator.NutritionSettingsSection(modifier = Modifier)
+        statsDisplaySettingsUiNavigator.StatsDisplaySettingsSection(
+            onNavigateToStatsConfig = onNavigateToStatsConfig,
+            modifier = Modifier,
+        )
+    }
+}
+
+@Composable
+private fun IntegrationsSettingsSection(
+    onNavigateToStravaConnect: () -> Unit,
+    stravaSettingsNavigator: StravaSettingsNavigator,
+) {
+    SettingsSection(title = stringResource(R.string.settings_section_integrations)) {
+        stravaSettingsNavigator.StravaSettingsSection(
+            onNavigateToConnect = onNavigateToStravaConnect,
+            modifier = Modifier,
+        )
     }
 }
 

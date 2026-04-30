@@ -1,10 +1,5 @@
 plugins {
-    id("cycling.library")
-    id("cycling.hilt")
-}
-
-android {
-    namespace = "com.koflox.altitude"
+    id("cycling.kotlin.library")
 }
 
 dependencies {

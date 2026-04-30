@@ -22,6 +22,8 @@ import com.koflox.session.navigation.sessionGraph
 import com.koflox.session.service.PendingSessionAction
 import com.koflox.settings.navigation.SETTINGS_GRAPH_ROUTE
 import com.koflox.settings.navigation.settingsGraph
+import com.koflox.strava.impl.navigation.STRAVA_CONNECT_ROUTE
+import com.koflox.strava.impl.navigation.stravaConnectScreen
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
@@ -81,6 +83,10 @@ private fun NavGraphBuilder.appDestinations(navController: NavHostController) {
     )
     settingsGraph(
         navController = navController,
+        onBackClick = { navController.popBackStack() },
+        onNavigateToStravaConnect = { navController.navigate(STRAVA_CONNECT_ROUTE) },
+    )
+    stravaConnectScreen(
         onBackClick = { navController.popBackStack() },
     )
 }

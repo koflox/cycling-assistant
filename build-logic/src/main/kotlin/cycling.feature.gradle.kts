@@ -32,8 +32,7 @@ dependencies {
     "implementation"(project(":shared:design-system"))
     "implementation"(project(":shared:di"))
 
-    // UI Testing
-    "androidTestImplementation"(libs.library("androidx-junit"))
+    // UI Testing — androidx-junit + AndroidJUnitRunner come from cycling.library; here we add Compose UI test deps
     "androidTestImplementation"(libs.library("androidx-ui-test-junit4"))
     "debugImplementation"(libs.library("androidx-ui-test-manifest"))
 }

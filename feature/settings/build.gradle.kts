@@ -18,4 +18,7 @@ dependencies {
     implementation(project(":feature:bridge:nutrition-settings:api"))
     implementation(project(":feature:bridge:poi-settings:api"))
     implementation(project(":feature:bridge:session-settings:api"))
+
+    // Strava integration
+    implementation(project(":feature:integrations:strava:api"))
 }

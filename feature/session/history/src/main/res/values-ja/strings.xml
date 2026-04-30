@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Sessions History List -->
+    <string name="sessions_list_title">セッション</string>
+    <string name="sessions_list_back">戻る</string>
+    <string name="sessions_list_empty_hint">フリーライドを開始するか、目的地を選択してください！</string>
+    <string name="sessions_list_status_running">走行中</string>
+    <string name="sessions_list_status_paused">一時停止中</string>
+    <string name="sessions_list_status_completed">完了</string>
+    <string name="sessions_list_free_roam_title">フリーライド</string>
+    <string name="sessions_list_share_action">共有</string>
+</resources>

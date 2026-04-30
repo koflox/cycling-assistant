@@ -25,6 +25,13 @@ fun grantPermissions() {
     device.executeShellCommand("pm grant $packageName android.permission.ACCESS_FINE_LOCATION")
     device.executeShellCommand("pm grant $packageName android.permission.ACCESS_COARSE_LOCATION")
     device.executeShellCommand("pm grant $packageName android.permission.POST_NOTIFICATIONS")
+    disableSystemAnimations(device)
+}
+
+private fun disableSystemAnimations(device: UiDevice) {
+    device.executeShellCommand("settings put global window_animation_scale 0.0")
+    device.executeShellCommand("settings put global transition_animation_scale 0.0")
+    device.executeShellCommand("settings put global animator_duration_scale 0.0")
 }
 
 private fun MacrobenchmarkScope.awaitObject(resourceId: String): UiObject2 {

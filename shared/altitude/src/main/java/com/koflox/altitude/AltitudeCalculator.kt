@@ -4,7 +4,7 @@ interface AltitudeCalculator {
     fun calculateGain(previousAltitude: Double?, currentAltitude: Double?): Double
 }
 
-internal class DefaultAltitudeCalculator : AltitudeCalculator {
+class DefaultAltitudeCalculator : AltitudeCalculator {
 
     companion object {
         private const val MIN_ALTITUDE_GAIN_THRESHOLD_METERS = 1.0

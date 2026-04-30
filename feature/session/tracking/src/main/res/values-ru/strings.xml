@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Device Connection Status -->
+    <string name="session_device_connecting">Подключение…</string>
+    <string name="session_device_retry_countdown">Повтор через %dс</string>
+    <string name="session_device_offline">Не в сети</string>
+
+    <!-- Session Buttons -->
+    <string name="session_button_pause">Пауза</string>
+    <string name="session_button_continue">Продолжить</string>
+    <string name="session_button_stop">Стоп</string>
+
+    <!-- Confirmation Dialog -->
+    <string name="dialog_distance_format">Расстояние: %.1f км</string>
+    <string name="dialog_button_navigate">Навигация</string>
+    <string name="dialog_button_start_session">Начать сессию</string>
+    <string name="dialog_button_cancel">Отмена</string>
+
+    <!-- Notification Channel -->
+    <string name="notification_channel_name">Отслеживание сессии</string>
+    <string name="notification_channel_description">Отображает прогресс велосессии</string>
+
+    <!-- Notification Content -->
+    <string name="notification_title_session_active">Велосессия активна</string>
+    <string name="notification_text_starting">Запуск сессии…</string>
+    <string name="notification_time">Время</string>
+    <string name="notification_distance">Расстояние</string>
+
+    <!-- Notification Status -->
+    <string name="notification_status_running">В процессе</string>
+    <string name="notification_status_paused">На паузе</string>
+
+    <!-- Notification Actions -->
+    <string name="notification_action_pause">Пауза</string>
+    <string name="notification_action_resume">Продолжить</string>
+    <string name="notification_action_stop">Стоп</string>
+
+    <!-- Notification Permission Dialog -->
+    <string name="permission_notification_title">Разрешение на уведомления</string>
+    <string name="permission_notification_rationale">Это разрешение позволит приложению безопасно вести велосессии во время ваших поездок</string>
+    <string name="permission_button_grant">Разрешить</string>
+    <string name="permission_button_skip">Пропустить</string>
+
+    <!-- Stop Confirmation Dialog -->
+    <string name="stop_confirmation_title">Остановить сессию?</string>
+    <string name="stop_confirmation_message">Вы уверены, что хотите остановить текущую велосессию?</string>
+    <string name="stop_confirmation_stop">Остановить</string>
+    <string name="stop_confirmation_cancel">Отмена</string>
+
+    <!-- Location Disabled Dialog -->
+    <string name="location_disabled_title">Геолокация отключена</string>
+    <string name="location_disabled_message">Службы геолокации отключены. Включите геолокацию для продолжения велосессии.</string>
+    <string name="location_disabled_enable">Включить</string>
+    <string name="location_disabled_dismiss">Закрыть</string>
+
+    <!-- Free Roam -->
+    <string name="session_free_roam_title">Свободная езда</string>
+</resources>

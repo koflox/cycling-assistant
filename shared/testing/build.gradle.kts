@@ -1,9 +1,5 @@
 plugins {
-    id("cycling.library")
-}
-
-android {
-    namespace = "com.koflox.testing"
+    id("cycling.kotlin.library")
 }
 
 dependencies {

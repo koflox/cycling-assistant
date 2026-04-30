@@ -18,7 +18,7 @@ dependencies {
 
     // Feature modules for entities/DAOs
     api(project(":feature:destinations"))
-    api(project(":feature:session"))
+    api(project(":feature:session:data"))
 
     // Testing
     testImplementation(libs.junit)

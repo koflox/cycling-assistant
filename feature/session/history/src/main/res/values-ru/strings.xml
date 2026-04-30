@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Sessions History List -->
+    <string name="sessions_list_title">Сессии</string>
+    <string name="sessions_list_back">Назад</string>
+    <string name="sessions_list_empty_hint">Начните свободную поездку или выберите направление!</string>
+    <string name="sessions_list_status_running">В процессе</string>
+    <string name="sessions_list_status_paused">На паузе</string>
+    <string name="sessions_list_status_completed">Завершено</string>
+    <string name="sessions_list_free_roam_title">Свободная езда</string>
+    <string name="sessions_list_share_action">Поделиться</string>
+</resources>

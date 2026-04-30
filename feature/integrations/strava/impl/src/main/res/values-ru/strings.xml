@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="strava_connect_title">Strava</string>
+    <string name="strava_connect_back">Назад</string>
+    <string name="strava_connect_intro">Автоматически отправляйте сессии в Strava.</string>
+    <string name="strava_connect_button_text">Войти через Strava</string>
+    <string name="strava_connect_button_content_description">Войти через Strava</string>
+    <string name="strava_compatible_content_description">Совместимо с Strava</string>
+    <string name="strava_connected_as">Подключено как %1$s</string>
+    <string name="strava_logout_button">Отключить</string>
+    <string name="strava_logout_confirm_title">Отключить Strava?</string>
+    <string name="strava_logout_confirm_message">Новые сессии не будут отправляться в Strava до повторного подключения.</string>
+    <string name="strava_logout_confirm_yes">Отключить</string>
+    <string name="strava_logout_confirm_no">Отмена</string>
+    <string name="strava_settings_section_label">Strava</string>
+    <string name="strava_settings_connect_action">Подключить Strava</string>
+    <string name="strava_share_intro">Автоматическая отправка сессий в Strava.</string>
+    <string name="strava_share_status_pending">В очереди на загрузку…</string>
+    <string name="strava_share_status_uploading">Загрузка в Strava…</string>
+    <string name="strava_share_status_processing">Strava обрабатывает активность…</string>
+    <string name="strava_share_status_synced">Сессия отправлена в Strava</string>
+    <string name="strava_share_status_error">Ошибка синхронизации</string>
+    <string name="strava_share_view_on_strava">View on Strava</string>
+    <string name="strava_share_sync_button">Отправить в Strava</string>
+    <string name="strava_share_retry_button">Повторить</string>
+    <string name="strava_share_refresh_button">Обновить статус</string>
+    <string name="strava_share_refresh_button_cooldown">Обновить через %1$d с</string>
+    <string name="strava_share_reconnect_button">Переподключить</string>
+    <string name="strava_share_error_network">Нет подключения.</string>
+    <string name="strava_share_error_auth">Подключение к Strava истекло.</string>
+    <string name="strava_share_error_rate_limited">Достигнут лимит запросов Strava. Повторите позже.</string>
+    <string name="strava_share_error_invalid">Эту активность нельзя загрузить.</string>
+    <string name="strava_share_error_poll_timeout">Strava обрабатывает дольше обычного.</string>
+    <string name="strava_share_error_server">Ошибка сервера Strava.</string>
+    <string name="strava_share_error_unknown">Непредвиденная ошибка.</string>
+    <string name="strava_share_powered_by">Powered by Strava</string>
+    <string name="strava_privacy_hint">API Strava не позволяет задавать приватность при загрузке. Чтобы загрузки были приватными, измените Activity Privacy на \"Only You\" в настройках Strava.</string>
+    <string name="strava_privacy_open_settings">Открыть настройки приватности Strava</string>
+    <string name="strava_error_missing_scopes">Для синхронизации нужны разрешения «Просмотр активностей» и «Загрузка активностей» на странице авторизации Strava. Подключитесь ещё раз и оставьте обе галочки включёнными.</string>
+    <string name="strava_error_missing_scopes_dismiss">Понятно</string>
+    <string name="strava_switch_account_hint">Strava запоминает сессию в браузере. Чтобы подключить другой аккаунт, сначала выйдите из него на strava.com в браузере.</string>
+</resources>

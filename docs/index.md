@@ -25,6 +25,7 @@ An Android app that helps cyclists discover cycling destinations, track sessions
 - **Route Visualization** — view the traveled route on an interactive map
 - **Session History** — review past cycling sessions and their details
 - **Share Results** — share session summaries as images or export as GPX files
+- **Strava Sync** — connect a Strava account and upload completed sessions automatically
 - **Nutrition Tracking** — track nutrition data linked to cycling sessions
 - **Theme Support** — light and dark theme with Material 3
 - **Language Support** — English, Russian, and Japanese

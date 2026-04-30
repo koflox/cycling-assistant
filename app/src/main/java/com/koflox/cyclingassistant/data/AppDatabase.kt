@@ -13,6 +13,10 @@ import com.koflox.profile.data.source.local.entity.ProfileSettingsEntity
 import com.koflox.session.data.source.local.dao.SessionDao
 import com.koflox.session.data.source.local.entity.SessionEntity
 import com.koflox.session.data.source.local.entity.TrackPointEntity
+import com.koflox.strava.impl.data.source.local.dao.StravaSyncDao
+import com.koflox.strava.impl.data.source.local.dao.StravaTokenDao
+import com.koflox.strava.impl.data.source.local.entity.StravaSyncEntity
+import com.koflox.strava.impl.data.source.local.entity.StravaTokenEntity
 
 // TODO: find a way to put in a separate module, e.g. :feature:database
 @Database(
@@ -22,6 +26,8 @@ import com.koflox.session.data.source.local.entity.TrackPointEntity
         PairedDeviceEntity::class,
         ProfileSettingsEntity::class,
         SessionEntity::class,
+        StravaSyncEntity::class,
+        StravaTokenEntity::class,
         TrackPointEntity::class,
     ],
     version = 1,
@@ -42,4 +48,8 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun profileDao(): ProfileDao
 
     abstract fun sessionDao(): SessionDao
+
+    abstract fun stravaSyncDao(): StravaSyncDao
+
+    abstract fun stravaTokenDao(): StravaTokenDao
 }
