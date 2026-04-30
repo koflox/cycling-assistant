@@ -6,9 +6,9 @@ targetSdk = "36"
 javaVersion = "11"
 
 # Build tools
-agp = "9.1.0"
-kotlin = "2.3.10"
-ksp = "2.3.6"
+agp = "9.1.1"
+kotlin = "2.3.21"
+ksp = "2.3.7"
 coreKtx = "1.18.0"
 junit = "4.13.2"
 junitVersion = "1.3.0"
@@ -16,9 +16,9 @@ testRunner = "1.7.0"
 espressoCore = "3.7.0"
 lifecycleRuntimeKtx = "2.10.0"
 activityCompose = "1.13.0"
-composeBom = "2026.03.00"
+composeBom = "2026.04.01"
 detekt = "1.23.8"
-kover = "0.9.7"
+kover = "0.9.8"
 moduleGraph = "0.13.0"
 
 # ViewModels & Lifecycle
@@ -36,22 +36,22 @@ javaxInject = "1"
 
 # Room Database
 room = "2.8.4"
-sqlcipher = "4.13.0"
+sqlcipher = "4.14.1"
 sqliteKtx = "2.6.2"
 
 # DataStore
-datastore = "1.2.0"
+datastore = "1.2.1"
 
 # Google Maps Compose
-mapsCompose = "8.2.0"
+mapsCompose = "8.3.0"
 playServicesLocation = "21.3.0"
 playServicesMaps = "20.0.0"
 
 # JSON Parsing
-kotlinxSerialization = "1.10.0"
+kotlinxSerialization = "1.11.0"
 
 # Navigation
-navigationCompose = "2.9.7"
+navigationCompose = "2.9.8"
 
 # Permissions
 accompanistPermissions = "0.37.3"
@@ -60,8 +60,8 @@ accompanistPermissions = "0.37.3"
 startup = "1.2.0"
 
 # Firebase
-firebaseBom = "34.10.0"
-firebaseCrashlyticsPlugin = "3.0.6"
+firebaseBom = "34.12.0"
+firebaseCrashlyticsPlugin = "3.0.7"
 firebasePerfPlugin = "2.0.2"
 googleServices = "4.4.4"
 
@@ -69,14 +69,14 @@ googleServices = "4.4.4"
 timber = "5.0.1"
 
 # HTTP Client
-ktor = "3.0.3"
+ktor = "3.4.3"
 
 # AndroidX Browser (Custom Tabs)
-androidxBrowser = "1.8.0"
+androidxBrowser = "1.10.0"
 
 # WorkManager + Hilt-Work
-work = "2.10.0"
-hiltAndroidx = "1.2.0"
+work = "2.11.2"
+hiltAndroidx = "1.3.0"
 
 # Screenshot Testing
 roborazzi = "1.59.0"
@@ -89,10 +89,10 @@ turbine = "1.2.1"
 hiltAndroidTesting = "2.59.2"
 appcompat = "1.7.1"
 material = "1.13.0"
-navigationRuntimeKtx = "2.9.7"
+navigationRuntimeKtx = "2.9.8"
 uiautomator = "2.3.0"
-benchmarkMacroJunit4 = "1.5.0-alpha03"
-baselineprofile = "1.5.0-alpha03"
+benchmarkMacroJunit4 = "1.5.0-alpha05"
+baselineprofile = "1.5.0-alpha05"
 profileinstaller = "1.4.1"
 
 [libraries]
