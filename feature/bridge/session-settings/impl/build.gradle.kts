@@ -12,5 +12,5 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.compose)
 
     implementation(project(":feature:bridge:session-settings:api"))
-    implementation(project(":feature:session"))
+    implementation(project(":feature:session:stats-display"))
 }

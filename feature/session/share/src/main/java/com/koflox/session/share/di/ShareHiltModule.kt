@@ -1,0 +1,52 @@
+package com.koflox.session.share.di
+
+import android.content.Context
+import com.koflox.di.IoDispatcher
+import com.koflox.session.presentation.share.GpxShareErrorMapper
+import com.koflox.session.presentation.share.GpxShareErrorMapperImpl
+import com.koflox.session.presentation.share.SessionGpxSharer
+import com.koflox.session.presentation.share.SessionGpxSharerImpl
+import com.koflox.session.presentation.share.SessionImageSharer
+import com.koflox.session.presentation.share.SessionImageSharerImpl
+import com.koflox.session.presentation.share.ShareErrorMapper
+import com.koflox.session.presentation.share.ShareErrorMapperImpl
+import dagger.Module
+import dagger.Provides
+import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
+import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.CoroutineDispatcher
+import javax.inject.Singleton
+
+@Module
+@InstallIn(SingletonComponent::class)
+internal object ShareHiltModule {
+
+    @Provides
+    @Singleton
+    fun provideSessionImageSharer(
+        @ApplicationContext context: Context,
+        @IoDispatcher dispatcherIo: CoroutineDispatcher,
+    ): SessionImageSharer = SessionImageSharerImpl(
+        context = context,
+        dispatcherIo = dispatcherIo,
+    )
+
+    @Provides
+    @Singleton
+    fun provideShareErrorMapper(): ShareErrorMapper = ShareErrorMapperImpl()
+
+    @Provides
+    @Singleton
+    fun provideSessionGpxSharer(
+        @ApplicationContext context: Context,
+        @IoDispatcher dispatcherIo: CoroutineDispatcher,
+    ): SessionGpxSharer = SessionGpxSharerImpl(
+        context = context,
+        dispatcherIo = dispatcherIo,
+    )
+
+    @Provides
+    @Singleton
+    fun provideGpxShareErrorMapper(): GpxShareErrorMapper = GpxShareErrorMapperImpl()
+}

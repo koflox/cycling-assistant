@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Share -->
+    <string name="share_image_processing_error">画像処理エラーが発生しました。もう一度お試しください。</string>
+    <string name="share_preview_title">セッションを共有</string>
+    <string name="share_button">共有</string>
+    <string name="share_text">%1$sへのサイクリングセッションをチェック！</string>
+    <string name="share_text_free_roam">フリーライドのサイクリングセッションをチェック！</string>
+    <string name="share_chooser_title">セッションを共有</string>
+    <string name="share_no_app_available">共有できるアプリがありません</string>
+    <string name="share_tab_image">画像</string>
+    <string name="share_tab_gpx">GPX</string>
+    <string name="share_tab_strava">Strava</string>
+    <string name="share_free_roam_title">フリーライド</string>
+
+    <!-- GPX Export -->
+    <string name="gpx_export_description">Stravaなどと互換性のあるGPXファイルとしてエクスポート</string>
+    <string name="gpx_export_generating">GPXファイルを生成中…</string>
+    <string name="gpx_export_button">GPXエクスポート</string>
+    <string name="gpx_export_file_error">GPXファイルを作成できませんでした</string>
+    <string name="gpx_export_no_app">GPXファイルを開けるアプリがありません</string>
+    <string name="gpx_chooser_title">GPXファイルをエクスポート</string>
+</resources>

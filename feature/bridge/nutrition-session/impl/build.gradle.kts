@@ -9,5 +9,5 @@ android {
 dependencies {
     implementation(project(":feature:nutrition"))
     implementation(project(":feature:bridge:nutrition-session:api"))
-    implementation(project(":feature:session"))
+    implementation(project(":feature:session:domain"))
 }

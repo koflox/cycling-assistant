@@ -34,6 +34,6 @@ dependencies {
     // Shared modules
     implementation(project(":shared:distance"))
     implementation(project(":shared:graphics"))
-    implementation(project(":shared:location"))
+    implementation(project(":shared:location:data"))
     implementation(project(":shared:map"))
 }

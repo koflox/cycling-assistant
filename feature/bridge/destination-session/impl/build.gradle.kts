@@ -13,9 +13,11 @@ dependencies {
     implementation(libs.play.services.maps)
 
     implementation(project(":feature:bridge:destination-session:api"))
-    implementation(project(":feature:session"))
+    implementation(project(":feature:session:domain"))
+    implementation(project(":feature:session:route-render"))
+    implementation(project(":feature:session:tracking"))
     implementation(project(":shared:concurrent"))
-    implementation(project(":shared:location"))
+    implementation(project(":shared:location:domain"))
 
-    testImplementation(testFixtures(project(":feature:session")))
+    testImplementation(testFixtures(project(":feature:session:data")))
 }

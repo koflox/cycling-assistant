@@ -8,6 +8,7 @@ android {
 
 dependencies {
     implementation(project(":feature:bridge:session-strava:api"))
-    implementation(project(":feature:session"))
+    implementation(project(":feature:session:domain"))
+    implementation(project(":feature:session:share"))
     implementation(project(":shared:gpx"))
 }

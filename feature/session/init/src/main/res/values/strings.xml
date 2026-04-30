@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Errors (consumed by SessionErrorMessageMapper which stays in shell) -->
+    <string name="error_location_unavailable">Unable to determine your current location. Please check your GPS settings and try again.</string>
+    <string name="error_no_active_session">No active cycling session</string>
+</resources>

@@ -1,11 +1,7 @@
 plugins {
-    id("cycling.library")
-}
-
-android {
-    namespace = "com.koflox.di"
+    id("cycling.kotlin.library")
 }
 
 dependencies {
-    implementation(libs.hilt.android)
+    implementation(libs.javax.inject)
 }

@@ -3,7 +3,6 @@ package com.koflox.cyclingassistant.app
 import android.app.Application
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
-import com.koflox.concurrent.enableStrictMode
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
 

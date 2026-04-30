@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Session Completion -->
+    <string name="session_completion_title">Session Complete</string>
+    <string name="session_completion_back">Back</string>
+    <string name="completion_share_action">Share</string>
+    <string name="completion_free_roam_title">Free Roam</string>
+
+    <!-- Map Legend -->
+    <string name="map_legend_content_description">Route legend</string>
+    <string name="map_legend_title">Route Legend</string>
+    <string name="map_legend_normal_speed">Normal speed (&lt; 30 km/h)</string>
+    <string name="map_legend_fast_speed">Fast speed (≥ 30 km/h)</string>
+    <string name="map_legend_gap">Pause</string>
+    <string name="map_legend_start">Start</string>
+    <string name="map_legend_finish">Finish</string>
+    <string name="map_legend_route">Route</string>
+    <string name="map_legend_low_power">Low power (&lt; 150 W)</string>
+    <string name="map_legend_medium_power">Medium power (150–250 W)</string>
+    <string name="map_legend_high_power">High power (≥ 250 W)</string>
+
+    <!-- Map Layers -->
+    <string name="map_layer_content_description">Map layers</string>
+    <string name="map_layer_default">Default</string>
+    <string name="map_layer_speed">Speed</string>
+    <string name="map_layer_power">Power</string>
+</resources>

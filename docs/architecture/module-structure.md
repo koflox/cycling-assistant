@@ -33,7 +33,17 @@ CyclingAssistant/
 │   ├── profile/                      # Rider profile management
 │   ├── sensor/
 │   │   └── power/                    # Power meter test mode and observation
-│   ├── session/                      # Session tracking, stats display, GPX export
+│   ├── session/                      # Composite feature split into bounded sub-modules:
+│   │   ├── completion/               # Completed-session screen
+│   │   ├── data/                     # Room/DataStore (sessions + stats display config)
+│   │   ├── domain/                   # Pure-Kotlin: entities, repos, use cases
+│   │   ├── history/                  # Sessions list
+│   │   ├── init/                     # Hilt providers for domain UseCases (mirrors :shared:init)
+│   │   ├── nav-graph/                # `sessionGraph` aggregator wired into AppNavHost
+│   │   ├── route-render/             # Shared map/route components + SessionUiMapper
+│   │   ├── share/                    # Share dialog (image/GPX/Strava tabs)
+│   │   ├── stats-display/            # Stats display config screen
+│   │   └── tracking/                 # Active session UI + foreground service
 │   ├── settings/                     # App settings (theme, language, stats display)
 │   └── theme/                        # App theme persistence and observation
 └── shared/
@@ -46,6 +56,7 @@ CyclingAssistant/
     ├── error/                        # Error mapping utilities
     ├── graphics/                     # Bitmap utilities
     ├── id/                           # ID generator
+    ├── init/                         # Hilt providers for pure-Kotlin shared modules
     ├── location/                     # Location services (validator, smoother, data sources)
     ├── map/                          # Google Maps route rendering constants & utilities
     ├── sensor-protocol/              # BLE sensor data parsing (cycling power)
@@ -77,10 +88,32 @@ Utility modules consumed by features:
 | `error`           | Error mapping utilities                            |
 | `graphics`        | Bitmap utilities                                   |
 | `id`              | ID generator                                       |
+| `init`            | Hilt providers for pure-Kotlin shared modules ([init pattern](#init-and-nav-graph-modules)) |
 | `location`        | Location services, validation, smoothing           |
 | `map`             | Google Maps route rendering constants & utilities  |
 | `sensor-protocol` | BLE sensor data parsing (cycling power measurement)|
 | `testing`         | Shared test utilities (`MainDispatcherRule`, etc)  |
+
+## `init` and `nav-graph` modules
+
+Two patterns we use when a feature is split into multiple sub-modules.
+
+### `init` modules — Hilt bootstrap for pure-Kotlin code
+
+Pure-Kotlin modules (`org.jetbrains.kotlin.jvm`) cannot host Hilt `@Module` classes — Hilt's KSP processor needs an Android library context. An `init` module is a thin Android library that exists solely to register `@Provides` for types defined in pure-Kotlin siblings (and any small Android-only utilities those siblings need at the feature level).
+
+- **`:shared:init`** registers providers for `:shared:altitude`, `:shared:distance`, `:shared:id` and `CurrentTimeProvider`.
+- **`:feature:session:init`** registers providers for the entire `:feature:session:domain` UseCase surface and hosts `SessionErrorMessageMapper` (used by VMs across `completion` and `tracking`).
+
+App depends on `init` modules so Hilt's KSP discovers the `@Module` classes. Consumers of the providers (other modules) do not need to depend on `init` directly — Hilt resolves the bindings at the application graph level.
+
+### `nav-graph` modules — navigation aggregation across sub-features
+
+When a feature is split into several presentation sub-modules, each sub-module exposes a public `Route` composable. A `nav-graph` module composes those into a single `NavGraphBuilder` extension (e.g., `sessionGraph`) that the app's `NavHost` calls once.
+
+- **`:feature:session:nav-graph`** composes routes from `:completion`, `:history`, `:share`, and `:stats-display` into `sessionGraph`. App calls `sessionGraph(navController, ...)` from `AppNavHost`.
+
+The `nav-graph` module is the only place in the feature that knows about `NavController` and the route templates; sub-features stay navigation-agnostic and just expose `Route` composables.
 
 ## Module Dependency Graph
 

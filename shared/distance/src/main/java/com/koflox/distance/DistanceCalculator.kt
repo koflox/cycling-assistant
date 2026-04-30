@@ -14,7 +14,7 @@ interface DistanceCalculator {
     ): Double
 }
 
-internal class DefaultDistanceCalculator : DistanceCalculator {
+class DefaultDistanceCalculator : DistanceCalculator {
 
     override fun calculateKm(
         lat1: Double,

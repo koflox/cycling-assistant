@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Sessions History List -->
+    <string name="sessions_list_title">Sessions</string>
+    <string name="sessions_list_back">Back</string>
+    <string name="sessions_list_empty_hint">Start a free roam ride or select a destination!</string>
+    <string name="sessions_list_status_running">Running</string>
+    <string name="sessions_list_status_paused">Paused</string>
+    <string name="sessions_list_status_completed">Completed</string>
+    <string name="sessions_list_free_roam_title">Free Roam</string>
+    <string name="sessions_list_share_action">Share</string>
+</resources>
