@@ -33,6 +33,7 @@ tasks.register("detektRun", io.gitlab.arturbosch.detekt.Detekt::class) {
     exclude("**/build/**", "**/resources/**", "**/build-logic/**")
     reports {
         xml.required.set(true)
+        xml.outputLocation.set(layout.buildDirectory.file("reports/detekt/detekt.xml"))
         html.required.set(false)
         txt.required.set(false)
     }
