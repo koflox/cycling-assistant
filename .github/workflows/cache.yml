@@ -58,6 +58,8 @@ jobs:
         with:
           google-services-json: ${{ secrets.GOOGLE_SERVICES_JSON }}
           maps-api-key: ${{ secrets.MAPS_API_KEY }}
+          strava-client-id: ${{ secrets.STRAVA_CLIENT_ID }}
+          strava-client-secret: ${{ secrets.STRAVA_CLIENT_SECRET }}
           release-keystore: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
           release-keystore-password: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
           release-key-alias: ${{ secrets.RELEASE_KEY_ALIAS }}

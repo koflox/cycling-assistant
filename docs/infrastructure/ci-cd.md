@@ -107,7 +107,9 @@ Creates project secret files and sets release signing environment variables. Inp
 | Input | Required | Creates |
 |-------|----------|---------|
 | `google-services-json` | yes | `app/google-services.json` (base64-decoded) |
-| `maps-api-key` | no | `secrets.properties` |
+| `maps-api-key` | no | `MAPS_API_KEY=` line in `secrets.properties` |
+| `strava-client-id` | no | `STRAVA_CLIENT_ID=` line in `secrets.properties` (used by `feature:integrations:strava:impl` BuildConfig) |
+| `strava-client-secret` | no | `STRAVA_CLIENT_SECRET=` line in `secrets.properties` |
 | `release-keystore` | no | `app/release.jks` (base64-decoded) |
 | `release-keystore-password` | no | `RELEASE_KEYSTORE_PASSWORD` env var |
 | `release-key-alias` | no | `RELEASE_KEY_ALIAS` env var |
