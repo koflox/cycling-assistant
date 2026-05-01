@@ -4,13 +4,13 @@ on:
   pull_request:
     branches:
       - main
-  push:
-    branches:
-      - main
+    paths-ignore:
+      - 'docs/**'
+      - 'mkdocs.yml'
+      - '**/*.md'
 
 permissions:
   contents: write
-  pull-requests: write
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -25,8 +25,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      # Checkout the PR head branch directly (not the merge commit) so we can push back.
+      # Same-repo PRs only — GITHUB_TOKEN cannot push to forks.
+      - name: Checkout PR head
         uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Android build environment
         uses: ./.github/actions/setup-android
@@ -39,17 +45,13 @@ jobs:
       - name: Generate module graph
         run: ./gradlew createModuleGraph --build-cache
 
-      - name: Create PR if changed
-        if: github.event_name == 'push'
+      # Commit the regenerated graph straight into the PR head branch. Push uses GITHUB_TOKEN,
+      # which intentionally does NOT trigger pull_request workflows again — no re-run loop.
+      - name: Commit + push if graph changed
         run: |
           git diff --quiet docs/MODULE_GRAPH.md && exit 0
-          BRANCH="auto/update-module-graph"
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git config --local user.name "github-actions[bot]"
-          git checkout -b "$BRANCH"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
           git add docs/MODULE_GRAPH.md
           git commit -m "docs: update module dependency graph"
-          git push -f origin "$BRANCH"
-          gh pr create --title "docs: update module dependency graph" --body "Auto-generated module graph update." --base main --head "$BRANCH" || true
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          git push origin HEAD:${{ github.event.pull_request.head.ref }}
