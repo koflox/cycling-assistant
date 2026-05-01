@@ -9,6 +9,14 @@ inputs:
     description: "Google Maps API key for secrets.properties"
     required: false
     default: ''
+  strava-client-id:
+    description: "Strava OAuth client ID for secrets.properties"
+    required: false
+    default: ''
+  strava-client-secret:
+    description: "Strava OAuth client secret for secrets.properties"
+    required: false
+    default: ''
   release-keystore:
     description: "Base64-encoded release keystore (.jks)"
     required: false
@@ -33,10 +41,21 @@ runs:
       shell: bash
       run: echo "${{ inputs.google-services-json }}" | base64 -d > app/google-services.json
 
+    # Always create secrets.properties so build-time lookups (e.g., STRAVA_CLIENT_ID via BuildConfig)
+    # find an empty value rather than failing — also lets us include any subset of keys per workflow.
     - name: Create secrets.properties
-      if: inputs.maps-api-key != ''
       shell: bash
-      run: echo "MAPS_API_KEY=${{ inputs.maps-api-key }}" > secrets.properties
+      run: |
+        : > secrets.properties
+        if [ -n "${{ inputs.maps-api-key }}" ]; then
+          echo "MAPS_API_KEY=${{ inputs.maps-api-key }}" >> secrets.properties
+        fi
+        if [ -n "${{ inputs.strava-client-id }}" ]; then
+          echo "STRAVA_CLIENT_ID=${{ inputs.strava-client-id }}" >> secrets.properties
+        fi
+        if [ -n "${{ inputs.strava-client-secret }}" ]; then
+          echo "STRAVA_CLIENT_SECRET=${{ inputs.strava-client-secret }}" >> secrets.properties
+        fi
 
     - name: Setup release signing
       if: inputs.release-keystore != ''

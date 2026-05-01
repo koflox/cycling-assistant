@@ -36,7 +36,19 @@ Badges are stored as JSON on a GitHub Gist and rendered via shields.io.
 Two-stage pipeline:
 
 1. **Build** — compiles debug build and caches Android build outputs
-2. **Release** — reads version from `version.properties`, builds a signed release APK, creates a GitHub release tag, and uploads the APK
+2. **Release** — reads version from `version.properties`, builds signed release APKs (per-ABI splits + universal), creates a GitHub release tag, and uploads all APKs
+
+`assembleRelease` produces three APKs in `app/build/outputs/apk/release/` thanks to the `splits.abi` block in `app/build.gradle.kts`:
+
+| Output | Target | Approx. size |
+|---|---|---|
+| `app-arm64-v8a-release.apk` | 64-bit ARM (most modern devices) | ~5.7 MB |
+| `app-x86_64-release.apk` | x86_64 (emulators, ChromeOS) | ~5.8 MB |
+| `app-universal-release.apk` | Any device — fallback | ~11 MB |
+
+armeabi-v7a (32-bit ARM) and x86 are excluded — virtually no devices left.
+
+All three APKs are uploaded to the GitHub Release (`files: *.apk`) and as a single `app-release-v<name>` workflow artifact.
 
 The `paths-ignore` filter prevents redundant rebuilds + duplicate releases on doc-only merges (e.g., the auto-generated module graph update).
 
@@ -107,7 +119,9 @@ Creates project secret files and sets release signing environment variables. Inp
 | Input | Required | Creates |
 |-------|----------|---------|
 | `google-services-json` | yes | `app/google-services.json` (base64-decoded) |
-| `maps-api-key` | no | `secrets.properties` |
+| `maps-api-key` | no | `MAPS_API_KEY=` line in `secrets.properties` |
+| `strava-client-id` | no | `STRAVA_CLIENT_ID=` line in `secrets.properties` (used by `feature:integrations:strava:impl` BuildConfig) |
+| `strava-client-secret` | no | `STRAVA_CLIENT_SECRET=` line in `secrets.properties` |
 | `release-keystore` | no | `app/release.jks` (base64-decoded) |
 | `release-keystore-password` | no | `RELEASE_KEYSTORE_PASSWORD` env var |
 | `release-key-alias` | no | `RELEASE_KEY_ALIAS` env var |

@@ -1,5 +1,15 @@
 # Setup
 
+## Install pre-built APK
+
+Each [GitHub Release](https://github.com/koflox/cycling-assistant/releases) ships three signed release APKs:
+
+- **`app-arm64-v8a-release.apk`** — recommended for almost all modern Android devices (64-bit ARM). Smallest download.
+- **`app-x86_64-release.apk`** — for x86_64 devices and emulators.
+- **`app-universal-release.apk`** — fallback that runs on any architecture; pick this if unsure or if your device's ABI is older than the two above.
+
+Sideload via your file manager (enable "Install unknown apps" for the source).
+
 ## Getting Started
 
 1. Clone the repository

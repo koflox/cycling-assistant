@@ -16,6 +16,10 @@ val versionProperties = Properties().apply {
     load(rootProject.file("version.properties").inputStream())
 }
 
+// AAB + per-ABI splits + R8 resource shrinking are incompatible (issuetracker.google.com/402800800).
+// Splits are only useful for direct APK distribution; Play Store delivers per-device from the universal AAB.
+val isBundleBuild: Boolean = gradle.startParameter.taskNames.any { it.contains("bundle", ignoreCase = true) }
+
 android {
     namespace = "com.koflox.cyclingassistant"
     compileSdk = libs.versions.compileSdk.get().toInt()
@@ -105,6 +109,19 @@ android {
         language {
             @Suppress("UnstableApiUsage")
             enableSplit = false
+        }
+    }
+
+    // Per-ABI APK splits to reduce download size. SQLCipher (.so) is the main contributor
+    // — universal stays for unknown devices and as a safe default for direct distribution.
+    // armeabi-v7a (32-bit) and x86 (rare emulators) intentionally excluded.
+    // TODO: when publishing to Play Store, add versionCodeOverride per ABI (universal lowest, arm64-v8a highest).
+    splits {
+        abi {
+            isEnable = !isBundleBuild
+            reset()
+            include("arm64-v8a", "x86_64")
+            isUniversalApk = true
         }
     }
 
