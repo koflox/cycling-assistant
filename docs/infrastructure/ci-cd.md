@@ -36,7 +36,9 @@ Badges are stored as JSON on a GitHub Gist and rendered via shields.io.
 Two-stage pipeline:
 
 1. **Build** — compiles debug build and caches Android build outputs
-2. **Release** — reads version from `version.properties`, builds signed release APKs (per-ABI splits + universal), creates a GitHub release tag, and uploads all APKs
+2. **Release** — reads version from `version.properties`, runs `lintRelease` (Android Lint, fails on errors), builds signed release APKs (per-ABI splits + universal), creates a GitHub release tag, and uploads all APKs
+
+Lint catches manifest/resource/API-misuse issues before the APK is built. Notably, the `Instantiatable` rule verifies every class referenced from `AndroidManifest.xml` (`<service>`, `<activity>`, `<receiver>`, `<provider>`) actually exists and is instantiatable — this guard would have caught the [PR #8a manifest regression](https://github.com/koflox/cycling-assistant/commit/main) where the moved `SessionTrackingService` package didn't match the new module's namespace. The HTML lint report is uploaded as `lint-report-release` artifact on failure.
 
 `assembleRelease` produces three APKs in `app/build/outputs/apk/release/` thanks to the `splits.abi` block in `app/build.gradle.kts`:
 

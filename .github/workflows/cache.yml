@@ -74,6 +74,20 @@ jobs:
           echo "name=$VERSION_NAME" >> "$GITHUB_OUTPUT"
           echo "Version: $VERSION_NAME ($VERSION_CODE)"
 
+      - name: Lint release variant
+        # Catches manifest/resource/api-misuse issues before the APK is built. Default
+        # `abortOnError=true` fails the job on any lint error (e.g., Instantiatable rule
+        # would flag a missing class referenced from AndroidManifest <service>/<activity>).
+        run: ./gradlew :app:lintRelease --build-cache
+
+      - name: Upload lint report on failure
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: lint-report-release
+          path: app/build/reports/lint-results-release.html
+          retention-days: 7
+
       - name: Build release APKs
         # Produces per-ABI APKs + a universal APK in app/build/outputs/apk/release/
         # (arm64-v8a, x86_64, universal). See `splits.abi` block in app/build.gradle.kts.

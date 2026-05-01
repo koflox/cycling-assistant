@@ -20,8 +20,13 @@
     </queries>
 
     <application>
+        <!--
+          Absolute class name: the tracking module's namespace is `com.koflox.session.tracking`
+          but this Service class still lives in the `com.koflox.session.service` package
+          (kept for backwards-compat when feature/session was split).
+        -->
         <service
-            android:name=".service.SessionTrackingService"
+            android:name="com.koflox.session.service.SessionTrackingService"
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="location" />
