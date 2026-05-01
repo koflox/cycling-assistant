@@ -226,9 +226,11 @@ The root composable in `MainActivity` enables UiAutomator access to testTags:
 Box(modifier = Modifier.semantics { testTagsAsResourceId = true }) { ... }
 ```
 
-### Permissions
+### Permissions and animations
 
 Benchmarks grant runtime permissions programmatically via `grantPermissions()` before each test iteration using `pm grant` shell commands. This prevents permission dialogs from blocking UI automation.
+
+The same `grantPermissions()` helper also disables system animations (`window_animation_scale`, `transition_animation_scale`, `animator_duration_scale` set to `0.0` via `settings put global`). Without this, baseline profile generation flakes on emulators with default animation scales — UI navigation steps time out waiting for elements that haven't finished animating in.
 
 ### CI Verification
 

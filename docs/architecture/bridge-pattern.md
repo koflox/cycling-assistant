@@ -4,17 +4,13 @@ Features in CyclingAssistant are fully isolated — they never depend on each ot
 
 ## Structure
 
-Each bridge lives under `feature/bridge/` and is named as an alphabetically-ordered pair of the two features it connects:
+Each bridge lives under `feature/bridge/` and follows the naming pattern:
 
-- `connection-session` (connections ↔ session)
-- `destination-nutrition` (destinations ↔ nutrition)
-- `destination-poi` (destinations ↔ poi)
-- `destination-session` (destinations ↔ session)
-- `nutrition-session` (nutrition ↔ session)
-- `nutrition-settings` (nutrition ↔ settings)
-- `poi-settings` (poi ↔ settings)
-- `profile-session` (profile ↔ session)
-- `session-settings` (session ↔ settings)
+```
+feature/bridge/<feature-a>-<feature-b>/
+```
+
+where `<feature-a>` and `<feature-b>` are the names of the two features it connects, **alphabetically ordered** (e.g., `destination-session`, not `session-destination`). The current set of bridges is visible in the [Module Graph](../MODULE_GRAPH.md) under `feature/bridge/`.
 
 Every bridge contains two submodules:
 

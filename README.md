@@ -23,18 +23,20 @@ An Android app that helps cyclists discover cycling destinations, track sessions
 - **Destination discovery** — randomized cycling POIs based on proximity
 - **Configurable stats** — choose which statistics to display during sessions
 - **Nutrition tracking** — reminders and intake logging linked to sessions
+- **Strava sync** — OAuth 2.0 connect, automatic GPX upload of completed sessions, per-session sync status
 - **Localization** — English, Russian, Japanese
 
 ## Under the Hood
 
-- **Multi-module Clean Architecture** — 40+ Gradle modules with bridge pattern for cross-feature communication
+- **Multi-module Clean Architecture** — 60+ Gradle modules with bridge pattern for cross-feature communication; large features split into bounded sub-modules (e.g., `feature/session/{domain, data, tracking, completion, share, history, stats-display, route-render, init, nav-graph}`)
 - **Jetpack Compose** — Material 3, light/dark theme, debounced interactions
-- **Hilt DI** — compile-time dependency injection with qualifier-based scoping
+- **Hilt DI** — compile-time dependency injection with qualifier-based scoping; `init` modules bridge pure-Kotlin domain code into the Hilt graph
+- **Ktor + WorkManager** — Strava REST + OAuth 2.0 with bearer auto-refresh, background upload via Hilt-Work workers
 - **Baseline Profiles** — AOT-compiled startup and critical user journey paths
 - **Kalman filter** — GPS smoothing with acceleration clamping and median speed buffer
 - **SQLCipher** — encrypted Room database in release builds
 - **Screenshot testing** — Roborazzi-powered visual regression tests with golden image comparison
-- **CI/CD** — automated testing, screenshot verification, baseline profiles, signed releases, coverage badges
+- **CI/CD** — automated testing, screenshot verification, baseline profiles, signed releases, coverage badges; module graph regenerated and pushed back into open PRs
 
 ## Quick Start
 
