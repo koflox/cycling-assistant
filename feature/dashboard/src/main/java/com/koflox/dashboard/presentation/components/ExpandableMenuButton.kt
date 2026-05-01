@@ -1,10 +1,5 @@
 package com.koflox.dashboard.presentation.components
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material.icons.Icons
@@ -42,11 +37,7 @@ internal fun ExpandableMenuButton(
             onClick = onToggleExpand,
             modifier = Modifier.testTag(TestTags.MENU_BUTTON),
         )
-        AnimatedVisibility(
-            visible = isExpanded,
-            enter = fadeIn() + scaleIn(),
-            exit = fadeOut() + scaleOut(),
-        ) {
+        if (isExpanded) {
             Column(
                 horizontalAlignment = Alignment.End,
                 verticalArrangement = Arrangement.spacedBy(Spacing.Small),

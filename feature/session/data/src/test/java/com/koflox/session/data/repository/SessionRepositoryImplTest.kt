@@ -346,6 +346,54 @@ class SessionRepositoryImplTest {
         assertEquals(exception, result.exceptionOrNull())
     }
 
+    @Test
+    fun `deleteSession delegates to localDataSource`() = runTest {
+        coJustRun { localDataSource.deleteSession(SESSION_ID) }
+
+        val result = repository.deleteSession(SESSION_ID)
+
+        assertTrue(result.isSuccess)
+        coVerify { localDataSource.deleteSession(SESSION_ID) }
+    }
+
+    @Test
+    fun `deleteSession clears runtime cache when active session matches`() = runTest {
+        val active = createTestSession(id = SESSION_ID, status = SessionStatus.RUNNING)
+        runtimeDataSource.setActiveSession(active)
+        coJustRun { localDataSource.deleteSession(SESSION_ID) }
+
+        repository.deleteSession(SESSION_ID)
+
+        runtimeDataSource.activeSession.test {
+            assertEquals(null, awaitItem())
+        }
+    }
+
+    @Test
+    fun `deleteSession leaves runtime cache when ids differ`() = runTest {
+        val otherId = "other-session"
+        val active = createTestSession(id = otherId, status = SessionStatus.RUNNING)
+        runtimeDataSource.setActiveSession(active)
+        coJustRun { localDataSource.deleteSession(SESSION_ID) }
+
+        repository.deleteSession(SESSION_ID)
+
+        runtimeDataSource.activeSession.test {
+            assertEquals(otherId, awaitItem()?.id)
+        }
+    }
+
+    @Test
+    fun `deleteSession returns failure on data source error`() = runTest {
+        val error = RuntimeException("Database error")
+        coEvery { localDataSource.deleteSession(SESSION_ID) } throws error
+
+        val result = repository.deleteSession(SESSION_ID)
+
+        assertTrue(result.isFailure)
+        assertEquals(error, result.exceptionOrNull())
+    }
+
     private fun createTestSession(
         id: String = SESSION_ID,
         status: SessionStatus = SessionStatus.RUNNING,

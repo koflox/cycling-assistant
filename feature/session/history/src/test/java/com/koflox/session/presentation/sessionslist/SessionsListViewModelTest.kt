@@ -1,10 +1,14 @@
 package com.koflox.session.presentation.sessionslist
 
 import app.cash.turbine.test
+import com.koflox.designsystem.text.UiText
+import com.koflox.session.domain.usecase.DeleteSessionUseCase
 import com.koflox.session.domain.usecase.GetAllSessionsUseCase
+import com.koflox.session.history.R
 import com.koflox.session.testutil.createSession
 import com.koflox.testing.coroutine.MainDispatcherRule
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.flowOf
@@ -29,6 +33,7 @@ class SessionsListViewModelTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     private val getAllSessionsUseCase: GetAllSessionsUseCase = mockk()
+    private val deleteSessionUseCase: DeleteSessionUseCase = mockk()
     private val mapper: SessionsListUiMapper = mockk()
 
     private lateinit var viewModel: SessionsListViewModel
@@ -52,6 +57,7 @@ class SessionsListViewModelTest {
     private fun createViewModel(): SessionsListViewModel {
         return SessionsListViewModel(
             getAllSessionsUseCase = getAllSessionsUseCase,
+            deleteSessionUseCase = deleteSessionUseCase,
             mapper = mapper,
             dispatcherDefault = mainDispatcherRule.testDispatcher,
         )
@@ -92,6 +98,92 @@ class SessionsListViewModelTest {
             awaitItem() // Loading
             val content = awaitItem() as SessionsListUiState.Content
             assertEquals(1, content.sessions.size)
+            assertNull(content.overlay)
+        }
+    }
+
+    @Test
+    fun `DeleteRequested shows DeleteConfirmation overlay`() = runTest {
+        val sessions = listOf(createSession(id = SESSION_ID))
+        coEvery { getAllSessionsUseCase.observeAllSessions() } returns flowOf(sessions)
+        viewModel = createViewModel()
+
+        viewModel.uiState.test {
+            awaitItem() // Loading
+            awaitItem() // initial Content
+            viewModel.onEvent(SessionsListUiEvent.DeleteRequested(SESSION_ID))
+            val content = awaitItem() as SessionsListUiState.Content
+            val overlay = content.overlay as SessionsListOverlay.DeleteConfirmation
+            assertEquals(SESSION_ID, overlay.sessionId)
+        }
+    }
+
+    @Test
+    fun `DeleteDismissed clears overlay`() = runTest {
+        val sessions = listOf(createSession(id = SESSION_ID))
+        coEvery { getAllSessionsUseCase.observeAllSessions() } returns flowOf(sessions)
+        viewModel = createViewModel()
+
+        viewModel.uiState.test {
+            awaitItem() // Loading
+            awaitItem() // Content
+            viewModel.onEvent(SessionsListUiEvent.DeleteRequested(SESSION_ID))
+            awaitItem() // overlay shown
+            viewModel.onEvent(SessionsListUiEvent.DeleteDismissed)
+            val content = awaitItem() as SessionsListUiState.Content
+            assertNull(content.overlay)
+        }
+    }
+
+    @Test
+    fun `DeleteConfirmed success shows success Toast and calls use case`() = runTest {
+        val sessions = listOf(createSession(id = SESSION_ID))
+        coEvery { getAllSessionsUseCase.observeAllSessions() } returns flowOf(sessions)
+        coEvery { deleteSessionUseCase.delete(SESSION_ID) } returns Result.success(Unit)
+        viewModel = createViewModel()
+
+        viewModel.uiState.test {
+            awaitItem() // Loading
+            awaitItem() // Content
+            viewModel.onEvent(SessionsListUiEvent.DeleteConfirmed(SESSION_ID))
+            val content = awaitItem() as SessionsListUiState.Content
+            val toast = content.overlay as SessionsListOverlay.Toast
+            assertEquals(UiText.Resource(R.string.sessions_list_delete_success), toast.message)
+        }
+        coVerify { deleteSessionUseCase.delete(SESSION_ID) }
+    }
+
+    @Test
+    fun `DeleteConfirmed failure shows error Toast`() = runTest {
+        val sessions = listOf(createSession(id = SESSION_ID))
+        coEvery { getAllSessionsUseCase.observeAllSessions() } returns flowOf(sessions)
+        coEvery { deleteSessionUseCase.delete(SESSION_ID) } returns Result.failure(RuntimeException("boom"))
+        viewModel = createViewModel()
+
+        viewModel.uiState.test {
+            awaitItem() // Loading
+            awaitItem() // Content
+            viewModel.onEvent(SessionsListUiEvent.DeleteConfirmed(SESSION_ID))
+            val content = awaitItem() as SessionsListUiState.Content
+            val toast = content.overlay as SessionsListOverlay.Toast
+            assertEquals(UiText.Resource(R.string.sessions_list_delete_error), toast.message)
+        }
+    }
+
+    @Test
+    fun `ToastDismissed clears overlay`() = runTest {
+        val sessions = listOf(createSession(id = SESSION_ID))
+        coEvery { getAllSessionsUseCase.observeAllSessions() } returns flowOf(sessions)
+        coEvery { deleteSessionUseCase.delete(SESSION_ID) } returns Result.success(Unit)
+        viewModel = createViewModel()
+
+        viewModel.uiState.test {
+            awaitItem() // Loading
+            awaitItem() // Content
+            viewModel.onEvent(SessionsListUiEvent.DeleteConfirmed(SESSION_ID))
+            awaitItem() // toast shown
+            viewModel.onEvent(SessionsListUiEvent.ToastDismissed)
+            val content = awaitItem() as SessionsListUiState.Content
             assertNull(content.overlay)
         }
     }

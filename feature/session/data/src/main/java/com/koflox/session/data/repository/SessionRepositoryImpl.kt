@@ -55,6 +55,16 @@ internal class SessionRepositoryImpl(
         }
     }
 
+    override suspend fun deleteSession(sessionId: String): Result<Unit> = suspendRunCatching {
+        mutex.withLock {
+            localDataSource.deleteSession(sessionId)
+            val cached = runtimeDataSource.activeSession.value
+            if (cached != null && cached.id == sessionId) {
+                runtimeDataSource.clearActiveSession()
+            }
+        }
+    }
+
     override suspend fun getSession(sessionId: String): Result<Session> = suspendRunCatching {
         mutex.withLock {
             val cached = runtimeDataSource.activeSession.value

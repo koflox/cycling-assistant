@@ -9,4 +9,13 @@
     <string name="sessions_list_status_completed">完了</string>
     <string name="sessions_list_free_roam_title">フリーライド</string>
     <string name="sessions_list_share_action">共有</string>
+
+    <!-- Delete confirmation -->
+    <string name="sessions_list_delete_title">セッションを削除しますか？</string>
+    <string name="sessions_list_delete_message">この端末からセッションと走行ポイントを完全に削除します。</string>
+    <string name="sessions_list_delete_external_hint">連携サービス（Strava など）に既にアップロードされたアクティビティは自動では削除されません。必要に応じてそちらでも削除してください。</string>
+    <string name="sessions_list_delete_confirm">削除</string>
+    <string name="sessions_list_delete_cancel">キャンセル</string>
+    <string name="sessions_list_delete_success">セッションを削除しました</string>
+    <string name="sessions_list_delete_error">セッションを削除できませんでした</string>
 </resources>

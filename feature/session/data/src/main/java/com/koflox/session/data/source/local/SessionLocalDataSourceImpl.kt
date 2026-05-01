@@ -35,4 +35,8 @@ internal class SessionLocalDataSourceImpl(
     override fun observeAllSessions(): Flow<List<SessionWithTrackPoints>> = flow {
         emitAll(daoFactory.get().observeAllSessions())
     }.flowOn(dispatcherIo)
+
+    override suspend fun deleteSession(sessionId: String) = withContext(dispatcherIo) {
+        daoFactory.get().deleteSession(sessionId)
+    }
 }

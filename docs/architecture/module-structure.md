@@ -1,98 +1,28 @@
 # Module Structure
 
-The project is organized into three module categories: **app**, **feature**, and **shared**.
+The project is organized into a few top-level categories. The full module list and dependency graph is auto-generated and lives in [MODULE_GRAPH.md](../MODULE_GRAPH.md) — refer there for the current inventory.
 
-## Module Tree
+## Categories
 
-```
-CyclingAssistant/
-├── app/                              # Shell — navigation, theme, Hilt bootstrap, Room DB
-├── build-logic/                      # Convention plugins (cycling.feature, cycling.library, etc.)
-├── feature/
-│   ├── bridge/                       # Cross-feature communication (alphabetical pair names)
-│   │   ├── connection-session/       # connections ↔ session
-│   │   ├── destination-nutrition/    # destinations ↔ nutrition
-│   │   ├── destination-poi/          # destinations ↔ poi
-│   │   ├── destination-session/      # destinations ↔ session
-│   │   ├── nutrition-session/        # nutrition ↔ session
-│   │   ├── nutrition-settings/       # nutrition ↔ settings
-│   │   ├── poi-settings/             # poi ↔ settings
-│   │   ├── profile-session/          # profile ↔ session
-│   │   ├── session-settings/         # session ↔ settings
-│   │   └── session-strava/           # session ↔ strava (GPX data + activity name)
-│   │       ├── api/                  # Interfaces exposed to consumers
-│   │       └── impl/                 # Implementations wiring to provider internals
-│   ├── connections/                  # BLE device connection and management
-│   ├── dashboard/                    # Main dashboard with expandable menu
-│   ├── destinations/                 # Destination selection feature
-│   ├── integrations/
-│   │   └── strava/                   # Strava OAuth, GPX upload, sync state (api + impl)
-│   ├── locale/                       # App language persistence and observation
-│   ├── nutrition/                    # Nutrition tracking and reminders
-│   ├── poi/                          # POI type selection and active session POI actions
-│   ├── profile/                      # Rider profile management
-│   ├── sensor/
-│   │   └── power/                    # Power meter test mode and observation
-│   ├── session/                      # Composite feature split into bounded sub-modules:
-│   │   ├── completion/               # Completed-session screen
-│   │   ├── data/                     # Room/DataStore (sessions + stats display config)
-│   │   ├── domain/                   # Pure-Kotlin: entities, repos, use cases
-│   │   ├── history/                  # Sessions list
-│   │   ├── init/                     # Hilt providers for domain UseCases (mirrors :shared:init)
-│   │   ├── nav-graph/                # `sessionGraph` aggregator wired into AppNavHost
-│   │   ├── route-render/             # Shared map/route components + SessionUiMapper
-│   │   ├── share/                    # Share dialog (image/GPX/Strava tabs)
-│   │   ├── stats-display/            # Stats display config screen
-│   │   └── tracking/                 # Active session UI + foreground service
-│   ├── settings/                     # App settings (theme, language, stats display)
-│   └── theme/                        # App theme persistence and observation
-└── shared/
-    ├── altitude/                     # Altitude gain calculator
-    ├── ble/                          # BLE primitives (GATT, scanning, permissions)
-    ├── concurrent/                   # Coroutine dispatchers, suspendRunCatching, ConcurrentFactory
-    ├── design-system/                # UI theme, colors, spacing, components
-    ├── di/                           # Hilt qualifier annotations
-    ├── distance/                     # Distance calculator
-    ├── error/                        # Error mapping utilities
-    ├── graphics/                     # Bitmap utilities
-    ├── id/                           # ID generator
-    ├── init/                         # Hilt providers for pure-Kotlin shared modules
-    ├── location/                     # Location services (validator, smoother, data sources)
-    ├── map/                          # Google Maps route rendering constants & utilities
-    ├── sensor-protocol/              # BLE sensor data parsing (cycling power)
-    └── testing/                      # Test utilities
-```
+### `app/`
+Shell module — owns `AppDatabase` (Room), `AppNavHost` navigation wiring, theme setup, and Hilt bootstrap (`@HiltAndroidApp`). Every feature and shared module is included here.
 
-### app
+### `build-logic/`
+Convention plugins (`cycling.library`, `cycling.feature`, `cycling.hilt`, `cycling.compose`, etc.) that consolidate per-module Gradle boilerplate. See [Convention Plugins](../infrastructure/convention-plugins.md).
 
-The shell module — owns the `AppDatabase` (Room), `AppNavHost` navigation wiring, theme setup, and Hilt bootstrap (`@HiltAndroidApp`). Every feature and shared module is included here.
+### `feature/<name>/`
+Bounded user-facing features. Each follows Clean Architecture (`di/`, `domain/`, `data/`, `presentation/`). Features are fully isolated — they communicate only through [bridge modules](bridge-pattern.md).
 
-### feature
+A composite feature can be split into bounded sub-modules under `feature/<name>/<sub>/` when scope justifies it. `feature/session/` is the largest example, split into `domain/`, `data/`, `tracking/`, `completion/`, `share/`, `history/`, `stats-display/`, `route-render/`, plus the supporting `init/` and `nav-graph/` infrastructure modules described [below](#init-and-nav-graph-modules).
 
-Each feature module contains `di/`, `domain/`, `data/`, and `presentation/` packages. Features are fully isolated and communicate only through [bridge modules](bridge-pattern.md).
+### `feature/bridge/`
+Cross-feature communication. Naming pattern `<feature-a>-<feature-b>/` (alphabetically ordered). Each bridge has `api/` (interfaces) + `impl/` (wiring). Full list in [Bridge Pattern](bridge-pattern.md).
 
-Bridge modules live under `feature/bridge/` and are named as alphabetically-ordered pairs of the two features they connect (e.g., `destination-session`, not `session-destination`). Each bridge has an `api/` submodule (interfaces) and an `impl/` submodule (wiring to the provider).
+### `feature/integrations/`
+Third-party integrations (e.g., Strava). Same `api/` + `impl/` split as bridges — `api/` exposes interfaces to other features, `impl/` contains data/presentation/work code.
 
-### shared
-
-Utility modules consumed by features:
-
-| Module            | Purpose                                            |
-|-------------------|----------------------------------------------------|
-| `altitude`        | Altitude gain calculator                           |
-| `ble`             | BLE primitives (GATT, scanning, state, permissions)|
-| `concurrent`      | Coroutine dispatchers, `suspendRunCatching`, `ConcurrentFactory` |
-| `design-system`   | Material 3 theme, colors, spacing, components      |
-| `di`              | Hilt qualifier annotations                         |
-| `distance`        | Distance calculator                                |
-| `error`           | Error mapping utilities                            |
-| `graphics`        | Bitmap utilities                                   |
-| `id`              | ID generator                                       |
-| `init`            | Hilt providers for pure-Kotlin shared modules ([init pattern](#init-and-nav-graph-modules)) |
-| `location`        | Location services, validation, smoothing           |
-| `map`             | Google Maps route rendering constants & utilities  |
-| `sensor-protocol` | BLE sensor data parsing (cycling power measurement)|
-| `testing`         | Shared test utilities (`MainDispatcherRule`, etc)  |
+### `shared/<concern>/`
+Reusable utility modules consumed by features. Naming convention: single-responsibility name (e.g., `shared/altitude`, `shared/concurrent`, `shared/location`). When a shared concern needs both a pure-Kotlin domain layer and an Android wrapper (DataSource/Repository/Hilt providers), split into `shared/<concern>/domain/` + `shared/<concern>/data/`.
 
 ## `init` and `nav-graph` modules
 
@@ -117,6 +47,6 @@ The `nav-graph` module is the only place in the feature that knows about `NavCon
 
 ## Module Dependency Graph
 
-The full dependency graph is auto-generated by CI on each push to `main`. View the standalone page: [Module Graph](../MODULE_GRAPH.md).
+The full dependency graph is auto-generated by CI on each merged PR. View the standalone page: [Module Graph](../MODULE_GRAPH.md).
 
 --8<-- "docs/MODULE_GRAPH.md:3:"

@@ -31,12 +31,14 @@ Badges are stored as JSON on a GitHub Gist and rendered via shields.io.
 
 ### Build & Release
 
-**Trigger:** Push to `main`
+**Trigger:** Push to `main`, excluding docs-only changes (`paths-ignore: docs/**`, `mkdocs.yml`, `**/*.md`)
 
 Two-stage pipeline:
 
 1. **Build** — compiles debug build and caches Android build outputs
 2. **Release** — reads version from `version.properties`, builds a signed release APK, creates a GitHub release tag, and uploads the APK
+
+The `paths-ignore` filter prevents redundant rebuilds + duplicate releases on doc-only merges (e.g., the auto-generated module graph update).
 
 ### Version Check
 
@@ -49,9 +51,14 @@ Verifies PR version bumps:
 
 ### Update Module Graph
 
-**Trigger:** Push to `main`, manual dispatch
+**Trigger:** Pull requests targeting `main`, excluding docs-only changes
 
-Generates the module dependency graph and commits the updated `docs/MODULE_GRAPH.md` if changes are detected.
+Regenerates `docs/MODULE_GRAPH.md`. If the graph changed, the workflow commits the update **directly into the PR's head branch** (typically `staging`) using `GITHUB_TOKEN`. Because pushes performed via `GITHUB_TOKEN` deliberately do not trigger new workflow runs, the update lands silently in the open PR — no auto-PR, no re-run loop, no separate commit to merge after main.
+
+Sub-features required for this flow:
+
+- `actions/checkout` uses `ref: pull_request.head.ref` to land on the real PR branch (not the virtual merge ref) so push back is possible.
+- Other PR workflows ran against the original commit; the bot's docs-only commit on top doesn't re-trigger them. Branch protection rules requiring "up-to-date branches before merging" would conflict with this flow — keep that setting off.
 
 ### Screenshot Tests
 

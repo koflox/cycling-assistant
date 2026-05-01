@@ -15,6 +15,8 @@ internal sealed interface SessionsListUiState {
 
 internal sealed interface SessionsListOverlay {
     data class LoadError(val message: UiText) : SessionsListOverlay
+    data class DeleteConfirmation(val sessionId: String) : SessionsListOverlay
+    data class Toast(val message: UiText) : SessionsListOverlay
 }
 
 internal data class SessionListItemUiModel(
@@ -24,7 +26,9 @@ internal data class SessionListItemUiModel(
     val distanceFormatted: String,
     val status: SessionListItemStatus,
     val isShareButtonVisible: Boolean,
-)
+) {
+    val isDeletable: Boolean get() = status == SessionListItemStatus.COMPLETED
+}
 
 internal enum class SessionListItemStatus {
     RUNNING,
