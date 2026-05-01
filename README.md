@@ -42,6 +42,16 @@ An Android app that helps cyclists discover cycling destinations, track sessions
 
 See the [Setup Guide](https://koflox.github.io/cycling-assistant/product/setup/) to get up and running.
 
+## Download
+
+Pre-built APKs are attached to each [GitHub Release](https://github.com/koflox/cycling-assistant/releases):
+
+| File | Use it if |
+|---|---|
+| `app-arm64-v8a-release.apk` | Modern phones (Android 7+ arm64). **Recommended for most users — smallest download.** |
+| `app-x86_64-release.apk` | x86_64 devices and emulators |
+| `app-universal-release.apk` | Unsure / any device — works everywhere, larger download |
+
 ## Documentation
 
 Full documentation is available at the [docs site](https://koflox.github.io/cycling-assistant/), including architecture details, feature guides, and contribution instructions.

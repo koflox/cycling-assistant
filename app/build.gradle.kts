@@ -108,6 +108,19 @@ android {
         }
     }
 
+    // Per-ABI APK splits to reduce download size. SQLCipher (.so) is the main contributor
+    // — universal stays for unknown devices and as a safe default for direct distribution.
+    // armeabi-v7a (32-bit) and x86 (rare emulators) intentionally excluded.
+    // TODO: when publishing to Play Store, add versionCodeOverride per ABI (universal lowest, arm64-v8a highest).
+    splits {
+        abi {
+            isEnable = true
+            reset()
+            include("arm64-v8a", "x86_64")
+            isUniversalApk = true
+        }
+    }
+
     buildFeatures {
         compose = true
         buildConfig = true
