@@ -18,6 +18,8 @@ import com.koflox.session.domain.usecase.CalculateSessionStatsUseCase
 import com.koflox.session.domain.usecase.CalculateSessionStatsUseCaseImpl
 import com.koflox.session.domain.usecase.CreateSessionUseCase
 import com.koflox.session.domain.usecase.CreateSessionUseCaseImpl
+import com.koflox.session.domain.usecase.DeleteSessionUseCase
+import com.koflox.session.domain.usecase.DeleteSessionUseCaseImpl
 import com.koflox.session.domain.usecase.GetAllSessionsUseCase
 import com.koflox.session.domain.usecase.GetAllSessionsUseCaseImpl
 import com.koflox.session.domain.usecase.GetSessionByIdUseCase
@@ -153,6 +155,13 @@ internal object SessionDomainHiltModule {
     fun provideGetAllSessionsUseCase(
         sessionRepository: SessionRepository,
     ): GetAllSessionsUseCase = GetAllSessionsUseCaseImpl(
+        sessionRepository = sessionRepository,
+    )
+
+    @Provides
+    fun provideDeleteSessionUseCase(
+        sessionRepository: SessionRepository,
+    ): DeleteSessionUseCase = DeleteSessionUseCaseImpl(
         sessionRepository = sessionRepository,
     )
 

@@ -9,4 +9,13 @@
     <string name="sessions_list_status_completed">Completed</string>
     <string name="sessions_list_free_roam_title">Free Roam</string>
     <string name="sessions_list_share_action">Share</string>
+
+    <!-- Delete confirmation -->
+    <string name="sessions_list_delete_title">Delete session?</string>
+    <string name="sessions_list_delete_message">This permanently removes the session and its track points from this device.</string>
+    <string name="sessions_list_delete_external_hint">Activities already uploaded to integrated services (e.g., Strava) are not removed automatically — delete them there if needed.</string>
+    <string name="sessions_list_delete_confirm">Delete</string>
+    <string name="sessions_list_delete_cancel">Cancel</string>
+    <string name="sessions_list_delete_success">Session deleted</string>
+    <string name="sessions_list_delete_error">Could not delete session</string>
 </resources>

@@ -9,4 +9,13 @@
     <string name="sessions_list_status_completed">Завершено</string>
     <string name="sessions_list_free_roam_title">Свободная езда</string>
     <string name="sessions_list_share_action">Поделиться</string>
+
+    <!-- Delete confirmation -->
+    <string name="sessions_list_delete_title">Удалить сессию?</string>
+    <string name="sessions_list_delete_message">Сессия и её точки маршрута будут удалены с этого устройства без возможности восстановления.</string>
+    <string name="sessions_list_delete_external_hint">Активности, уже загруженные в интегрированные сервисы (например, Strava), автоматически не удаляются — удалите их там, если нужно.</string>
+    <string name="sessions_list_delete_confirm">Удалить</string>
+    <string name="sessions_list_delete_cancel">Отмена</string>
+    <string name="sessions_list_delete_success">Сессия удалена</string>
+    <string name="sessions_list_delete_error">Не удалось удалить сессию</string>
 </resources>

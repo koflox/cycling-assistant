@@ -1,6 +1,8 @@
 package com.koflox.session.presentation.sessionslist
 
 import android.widget.Toast
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -25,6 +27,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -37,6 +40,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import com.koflox.designsystem.component.LocalizedAlertDialog
 import com.koflox.designsystem.testtag.TestTags
 import com.koflox.designsystem.text.resolve
 import com.koflox.designsystem.theme.Elevation
@@ -56,10 +60,16 @@ fun SessionsListRoute(
     val context = LocalContext.current
     LaunchedEffect(uiState) {
         val content = uiState as? SessionsListUiState.Content ?: return@LaunchedEffect
-        val overlay = content.overlay
-        if (overlay is SessionsListOverlay.LoadError) {
-            Toast.makeText(context, overlay.message.resolve(context), Toast.LENGTH_SHORT).show()
-            viewModel.onEvent(SessionsListUiEvent.LoadErrorDismissed)
+        when (val overlay = content.overlay) {
+            is SessionsListOverlay.LoadError -> {
+                Toast.makeText(context, overlay.message.resolve(context), Toast.LENGTH_SHORT).show()
+                viewModel.onEvent(SessionsListUiEvent.LoadErrorDismissed)
+            }
+            is SessionsListOverlay.Toast -> {
+                Toast.makeText(context, overlay.message.resolve(context), Toast.LENGTH_SHORT).show()
+                viewModel.onEvent(SessionsListUiEvent.ToastDismissed)
+            }
+            else -> Unit
         }
     }
     SessionsListContent(
@@ -67,6 +77,7 @@ fun SessionsListRoute(
         onBackClick = onBackClick,
         onSessionClick = onSessionClick,
         onShareClick = onShareClick,
+        onEvent = viewModel::onEvent,
         modifier = modifier,
     )
 }
@@ -78,6 +89,7 @@ private fun SessionsListContent(
     onBackClick: () -> Unit,
     onSessionClick: (sessionId: String) -> Unit,
     onShareClick: (sessionId: String) -> Unit,
+    onEvent: (SessionsListUiEvent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
@@ -100,9 +112,17 @@ private fun SessionsListContent(
             uiState = uiState,
             onSessionClick = onSessionClick,
             onShareClick = onShareClick,
+            onEvent = onEvent,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues),
+        )
+    }
+    val overlay = (uiState as? SessionsListUiState.Content)?.overlay
+    if (overlay is SessionsListOverlay.DeleteConfirmation) {
+        DeleteSessionDialog(
+            onConfirm = { onEvent(SessionsListUiEvent.DeleteConfirmed(overlay.sessionId)) },
+            onDismiss = { onEvent(SessionsListUiEvent.DeleteDismissed) },
         )
     }
 }
@@ -112,6 +132,7 @@ private fun SessionsListBody(
     uiState: SessionsListUiState,
     onSessionClick: (sessionId: String) -> Unit,
     onShareClick: (sessionId: String) -> Unit,
+    onEvent: (SessionsListUiEvent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     when (uiState) {
@@ -145,6 +166,11 @@ private fun SessionsListBody(
                         session = session,
                         onClick = { onSessionClick(session.id) },
                         onShareClick = { onShareClick(session.id) },
+                        onLongClick = if (session.isDeletable) {
+                            { onEvent(SessionsListUiEvent.DeleteRequested(session.id)) }
+                        } else {
+                            null
+                        },
                     )
                 }
                 item { Spacer(modifier = Modifier.height(Spacing.Tiny)) }
@@ -153,16 +179,22 @@ private fun SessionsListBody(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun SessionListItem(
     session: SessionListItemUiModel,
     onClick: () -> Unit,
     onShareClick: () -> Unit,
+    onLongClick: (() -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
     Card(
-        onClick = onClick,
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = onLongClick,
+            ),
         elevation = CardDefaults.cardElevation(defaultElevation = Elevation.Subtle),
     ) {
         Column(
@@ -238,4 +270,35 @@ private fun StatusChip(
             modifier = Modifier.padding(horizontal = Spacing.Small, vertical = Spacing.Tiny),
         )
     }
+}
+
+@Composable
+private fun DeleteSessionDialog(
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    LocalizedAlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.sessions_list_delete_title)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(Spacing.Small)) {
+                Text(stringResource(R.string.sessions_list_delete_message))
+                Text(
+                    text = stringResource(R.string.sessions_list_delete_external_hint),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text(stringResource(R.string.sessions_list_delete_confirm))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.sessions_list_delete_cancel))
+            }
+        },
+    )
 }

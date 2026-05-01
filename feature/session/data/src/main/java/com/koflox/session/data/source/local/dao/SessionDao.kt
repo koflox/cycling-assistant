@@ -44,4 +44,7 @@ interface SessionDao {
     @Transaction
     @Query("SELECT * FROM sessions ORDER BY startTimeMs DESC")
     fun observeAllSessions(): Flow<List<SessionWithTrackPoints>>
+
+    @Query("DELETE FROM sessions WHERE id = :sessionId")
+    suspend fun deleteSession(sessionId: String)
 }
