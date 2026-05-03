@@ -65,6 +65,12 @@ internal class SessionRepositoryImpl(
         }
     }
 
+    override suspend fun renameSession(sessionId: String, name: String): Result<Unit> = suspendRunCatching {
+        mutex.withLock {
+            localDataSource.updateSessionName(sessionId, name)
+        }
+    }
+
     override suspend fun getSession(sessionId: String): Result<Session> = suspendRunCatching {
         mutex.withLock {
             val cached = runtimeDataSource.activeSession.value

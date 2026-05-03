@@ -11,4 +11,5 @@ internal interface SessionLocalDataSource {
     fun observeFirstSessionByStatuses(statuses: List<String>): Flow<SessionWithTrackPoints?>
     fun observeAllSessions(): Flow<List<SessionWithTrackPoints>>
     suspend fun deleteSession(sessionId: String)
+    suspend fun updateSessionName(sessionId: String, name: String)
 }

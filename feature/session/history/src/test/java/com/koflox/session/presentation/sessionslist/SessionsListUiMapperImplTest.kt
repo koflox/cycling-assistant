@@ -32,13 +32,22 @@ class SessionsListUiMapperImplTest {
     }
 
     @Test
-    fun `toUiModel maps id and destination name`() {
-        val session = createSession(id = SESSION_ID, destinationName = DESTINATION_NAME)
+    fun `toUiModel falls back to destination name when session name is null`() {
+        val session = createSession(id = SESSION_ID, name = null, destinationName = DESTINATION_NAME)
 
         val result = mapper.toUiModel(session)
 
         assertEquals(SESSION_ID, result.id)
-        assertEquals(DESTINATION_NAME, result.destinationName)
+        assertEquals(DESTINATION_NAME, result.displayName)
+    }
+
+    @Test
+    fun `toUiModel prefers session name over destination name`() {
+        val session = createSession(id = SESSION_ID, name = "Morning ride", destinationName = DESTINATION_NAME)
+
+        val result = mapper.toUiModel(session)
+
+        assertEquals("Morning ride", result.displayName)
     }
 
     @Test

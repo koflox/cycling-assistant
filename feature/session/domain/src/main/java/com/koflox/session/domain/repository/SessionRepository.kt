@@ -15,4 +15,6 @@ interface SessionRepository {
 
     suspend fun deleteSession(sessionId: String): Result<Unit>
 
+    suspend fun renameSession(sessionId: String, name: String): Result<Unit>
+
 }

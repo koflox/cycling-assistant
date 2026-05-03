@@ -18,4 +18,19 @@
     <string name="sessions_list_delete_cancel">Cancel</string>
     <string name="sessions_list_delete_success">Session deleted</string>
     <string name="sessions_list_delete_error">Could not delete session</string>
+
+    <!-- Context menu -->
+    <string name="sessions_list_menu_open">More actions</string>
+    <string name="sessions_list_menu_rename">Rename</string>
+    <string name="sessions_list_menu_delete">Delete</string>
+
+    <!-- Rename dialog -->
+    <string name="sessions_list_rename_title">New session name</string>
+    <string name="sessions_list_rename_save">Save</string>
+    <string name="sessions_list_rename_cancel">Cancel</string>
+    <string name="sessions_list_rename_error_too_short">Minimum 3 characters</string>
+    <string name="sessions_list_rename_error_too_long">Maximum 20 characters</string>
+    <string name="sessions_list_rename_external_hint">Activities already uploaded to integrated services (e.g., Strava) keep their original name there — rename them manually if needed.</string>
+    <string name="sessions_list_rename_success">Session renamed</string>
+    <string name="sessions_list_rename_error">Could not rename session</string>
 </resources>

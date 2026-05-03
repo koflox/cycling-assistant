@@ -18,4 +18,19 @@
     <string name="sessions_list_delete_cancel">キャンセル</string>
     <string name="sessions_list_delete_success">セッションを削除しました</string>
     <string name="sessions_list_delete_error">セッションを削除できませんでした</string>
+
+    <!-- Context menu -->
+    <string name="sessions_list_menu_open">その他の操作</string>
+    <string name="sessions_list_menu_rename">名前を変更</string>
+    <string name="sessions_list_menu_delete">削除</string>
+
+    <!-- Rename dialog -->
+    <string name="sessions_list_rename_title">新しいセッション名</string>
+    <string name="sessions_list_rename_save">保存</string>
+    <string name="sessions_list_rename_cancel">キャンセル</string>
+    <string name="sessions_list_rename_error_too_short">3文字以上で入力してください</string>
+    <string name="sessions_list_rename_error_too_long">20文字以内で入力してください</string>
+    <string name="sessions_list_rename_external_hint">連携サービス（Strava など）にアップロード済みのアクティビティは元の名前のまま残ります。必要に応じてそちらでも名前を変更してください。</string>
+    <string name="sessions_list_rename_success">セッション名を変更しました</string>
+    <string name="sessions_list_rename_error">セッション名を変更できませんでした</string>
 </resources>

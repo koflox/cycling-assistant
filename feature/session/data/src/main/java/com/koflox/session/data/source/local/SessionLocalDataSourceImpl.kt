@@ -39,4 +39,8 @@ internal class SessionLocalDataSourceImpl(
     override suspend fun deleteSession(sessionId: String) = withContext(dispatcherIo) {
         daoFactory.get().deleteSession(sessionId)
     }
+
+    override suspend fun updateSessionName(sessionId: String, name: String) = withContext(dispatcherIo) {
+        daoFactory.get().updateSessionName(sessionId, name)
+    }
 }
