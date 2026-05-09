@@ -26,8 +26,8 @@ lifecycleViewmodelKtx = "2.10.0"
 lifecycleRuntimeCompose = "2.10.0"
 
 # Coroutines
-coroutinesCore = "1.10.2"
-coroutinesAndroid = "1.10.2"
+coroutinesCore = "1.11.0"
+coroutinesAndroid = "1.11.0"
 
 # Hilt DI
 hilt = "2.59.2"
@@ -83,7 +83,7 @@ roborazzi = "1.60.0"
 robolectric = "4.16.1"
 
 # Testing
-coroutinesTest = "1.10.2"
+coroutinesTest = "1.11.0"
 mockk = "1.14.9"
 turbine = "1.2.1"
 hiltAndroidTesting = "2.59.2"
