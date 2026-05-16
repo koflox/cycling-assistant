@@ -36,7 +36,7 @@ javaxInject = "1"
 
 # Room Database
 room = "2.8.4"
-sqlcipher = "4.15.0"
+sqlcipher = "4.16.0"
 sqliteKtx = "2.6.2"
 
 # DataStore
