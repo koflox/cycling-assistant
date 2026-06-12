@@ -15,6 +15,14 @@ plugins {
     alias(libs.plugins.baselineprofile) apply false
 }
 
+subprojects {
+    configurations.configureEach {
+        resolutionStrategy {
+            force("org.jetbrains.kotlin:kotlin-metadata-jvm:${libs.versions.kotlin.get()}")
+        }
+    }
+}
+
 // ===========================================
 // Detekt
 // ===========================================
