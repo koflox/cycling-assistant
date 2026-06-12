@@ -68,3 +68,10 @@ internal fun createReconnectingDevice(
     deviceName = deviceName,
     state = DeviceStripState.Reconnecting(remaining = remaining),
 )
+
+internal fun createPermissionRequiredDevice(
+    deviceName: String = "Favero Assioma",
+) = DeviceStripItem(
+    deviceName = deviceName,
+    state = DeviceStripState.PermissionRequired,
+)

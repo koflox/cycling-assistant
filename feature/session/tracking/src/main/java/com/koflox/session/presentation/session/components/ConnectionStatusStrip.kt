@@ -6,9 +6,11 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -25,6 +27,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.koflox.designsystem.component.DebouncedButton
 import com.koflox.designsystem.theme.Spacing
 import com.koflox.session.presentation.session.DeviceStripItem
 import com.koflox.session.presentation.session.DeviceStripState
@@ -40,14 +43,45 @@ private const val PULSE_DURATION_MS = 800
 internal fun ConnectionStatusStrip(
     items: List<DeviceStripItem>,
     onClick: () -> Unit,
+    onRequestPermission: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val isPermissionRequired = items.any { it.state is DeviceStripState.PermissionRequired }
+    if (isPermissionRequired) {
+        BlePermissionBanner(onRequestPermission = onRequestPermission, modifier = modifier)
+    }
     items.forEach { item ->
         DeviceStatusRow(
             item = item,
             onClick = onClick,
             modifier = modifier,
         )
+    }
+}
+
+@Composable
+private fun BlePermissionBanner(
+    onRequestPermission: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = Spacing.Tiny),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Text(
+            text = stringResource(R.string.session_device_permission_banner),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.error,
+        )
+        Spacer(modifier = Modifier.height(Spacing.Tiny))
+        DebouncedButton(
+            onClick = onRequestPermission,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(text = stringResource(R.string.session_device_grant_permission))
+        }
     }
 }
 
@@ -62,6 +96,7 @@ private fun DeviceStatusRow(
         is DeviceStripState.Connected -> MaterialTheme.colorScheme.primary
         is DeviceStripState.Connecting -> MaterialTheme.colorScheme.primary
         is DeviceStripState.Reconnecting -> MaterialTheme.colorScheme.error
+        is DeviceStripState.PermissionRequired -> MaterialTheme.colorScheme.error
     }
     val isAnimated = item.state is DeviceStripState.Connecting
     val iconAlpha = if (isAnimated) {
@@ -110,4 +145,5 @@ private fun formatStatusText(state: DeviceStripState): String = when (state) {
     is DeviceStripState.Connected -> stringResource(StatsR.string.session_stat_value_w, state.instantaneousPowerWatts.toString())
     DeviceStripState.Connecting -> stringResource(R.string.session_device_connecting)
     is DeviceStripState.Reconnecting -> stringResource(R.string.session_device_retry_countdown, state.remaining.inWholeSeconds.toInt())
+    DeviceStripState.PermissionRequired -> stringResource(R.string.session_device_permission_required)
 }

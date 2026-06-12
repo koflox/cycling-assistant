@@ -4,6 +4,9 @@
     <string name="session_device_connecting">Connecting…</string>
     <string name="session_device_retry_countdown">Retry in %ds</string>
     <string name="session_device_offline">Offline</string>
+    <string name="session_device_permission_required">Waiting for permission</string>
+    <string name="session_device_permission_banner">Bluetooth permission needed to read your devices</string>
+    <string name="session_device_grant_permission">Grant access</string>
 
     <!-- Session Buttons -->
     <string name="session_button_pause">Pause</string>

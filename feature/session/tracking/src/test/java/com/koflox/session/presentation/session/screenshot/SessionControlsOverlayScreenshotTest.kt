@@ -17,6 +17,7 @@ import com.koflox.session.presentation.session.SessionUiState
 import com.koflox.session.presentation.session.components.SessionControlsOverlay
 import com.koflox.session.testutil.createActiveSessionState
 import com.koflox.session.testutil.createConnectedDevice
+import com.koflox.session.testutil.createPermissionRequiredDevice
 import com.koflox.session.testutil.createReconnectingDevice
 import org.junit.Rule
 import org.junit.Test
@@ -98,6 +99,15 @@ internal class SessionControlsOverlayScreenshotTest {
     }
 
     @Test
+    fun `running with permission required device`() {
+        snapshot(
+            state = createActiveSessionState(
+                deviceStripItems = listOf(createPermissionRequiredDevice()),
+            ),
+        )
+    }
+
+    @Test
     fun `dark theme running free roam`() {
         snapshot(state = createActiveSessionState(), isDark = true)
     }
@@ -142,6 +152,7 @@ private fun TestOverlay(state: SessionUiState.Active) {
             onStopClick = {},
             onEnableLocationClick = {},
             onDeviceStripClick = {},
+            onRequestBlePermission = {},
             modifier = Modifier.fillMaxWidth(),
         )
     }
