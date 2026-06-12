@@ -55,6 +55,11 @@ cycling.bridge.impl          ← library + hilt + testing.unit + coroutines
 
 - `com.google.devtools.ksp` + `com.google.dagger.hilt.android` plugins
 - `hilt-android` (implementation) + `hilt-compiler` (ksp)
+- Overrides the Kotlin compile `moduleName` to a colon-free, per-module value
+  (`project.path.drop(1).replace(':', '_')`). Kotlin 2.4.0 defaults the module name to
+  `{group}:{project}`; the colon is illegal in the identifiers/file names Hilt generates for
+  `internal` declarations, so KSP fails with `NoSuchFileException` (notably on Windows). See
+  [google/ksp#2964](https://github.com/google/ksp/issues/2964).
 
 **`cycling.testing.unit`** — additive, standard test stack:
 
