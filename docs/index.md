@@ -14,6 +14,7 @@ An Android app that helps cyclists discover cycling destinations, track sessions
 - [Module Structure](architecture/module-structure.md) — Module tree and dependency graph
 - [Setup Guide](product/setup.md) — Get up and running
 - [Tech Stack](product/tech-stack.md) — Technologies used
+- [Stability Cheatsheet](infrastructure/cheatsheet.md) — Commands to verify the project is stable
 
 ## Features at a Glance
 
