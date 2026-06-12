@@ -4,9 +4,42 @@ CyclingAssistant uses GitHub Actions for continuous integration and delivery, wi
 
 ## Workflows
 
+### PR Checks (orchestrator)
+
+**Trigger:** Pull requests targeting `main` or `staging`, excluding docs-only changes
+(`paths-ignore: docs/**`, `mkdocs.yml`, `**/*.md`)
+
+`pr-checks.yml` is a thin orchestrator that runs the per-check **reusable workflows**
+(`on: workflow_call`) in two stages, so the heavier Stage 2 checks only start once Stage 1 has
+finished:
+
+```
+Stage 1 (parallel):  Module Graph  +  Version Check
+                              │ (both complete)
+                              ▼
+Stage 2 (parallel):  Unit Tests  +  Screenshot Tests  +  Baseline Profile Verification
+```
+
+Why staged: **Module Graph** may push a regenerated `docs/MODULE_GRAPH.md` commit to the PR
+branch. Running the expensive Stage 2 checks first would test a soon-to-be-stale commit (and the
+`GITHUB_TOKEN` push deliberately does not re-trigger them). Gating Stage 2 behind Stage 1 — and
+checking out `github.head_ref` in Stage 2 — means the heavy checks run once, against the final
+commit.
+
+- **Stage 1 is main-only** (`if: github.base_ref == 'main'`); on `staging` PRs both are skipped.
+- **Stage 2** uses `needs: [module-graph, version-check]` plus
+  `if: ${{ !cancelled() && needs.*.result != 'failure' }}` so it still runs when Stage 1 was
+  skipped (staging) but is skipped if Stage 1 failed. Screenshot/Baseline additionally gate on
+  `github.base_ref == 'main'`, so `staging` PRs run only Unit Tests — matching the previous behavior.
+
+Each check below keeps its own file as a reusable workflow; the orchestrator owns the trigger,
+`concurrency`, and per-job `permissions`. Note: as reusable workflows, the status check names are
+reported as `<orchestrator-job> / <job name>` (e.g. `unit-tests / Run Unit Tests`) — update any
+branch-protection required-check names accordingly.
+
 ### Unit Tests
 
-**Trigger:** Pull requests targeting `main` or `staging`
+**Invoked by:** PR Checks (Stage 2). Reusable workflow (`on: workflow_call`).
 
 Runs quality checks and tests on every PR:
 
@@ -56,16 +89,16 @@ The `paths-ignore` filter prevents redundant rebuilds + duplicate releases on do
 
 ### Version Check
 
-**Trigger:** Pull requests targeting `main`
+**Invoked by:** PR Checks (Stage 1, main-only). Reusable workflow (`on: workflow_call`).
 
 Verifies PR version bumps:
 
 - `versionCode` must be incremented by exactly 1
 - `versionName` (semantic version) must have at least one part bumped
 
-### Update Module Graph
+### Module Graph
 
-**Trigger:** Pull requests targeting `main`, excluding docs-only changes
+**Invoked by:** PR Checks (Stage 1, main-only). Reusable workflow (`on: workflow_call`).
 
 Regenerates `docs/MODULE_GRAPH.md`. If the graph changed, the workflow commits the update **directly into the PR's head branch** (typically `staging`) using `GITHUB_TOKEN`. Because pushes performed via `GITHUB_TOKEN` deliberately do not trigger new workflow runs, the update lands silently in the open PR — no auto-PR, no re-run loop, no separate commit to merge after main.
 
@@ -76,7 +109,7 @@ Sub-features required for this flow:
 
 ### Screenshot Tests
 
-**Trigger:** Pull requests targeting `main`
+**Invoked by:** PR Checks (Stage 2, main-only). Reusable workflow (`on: workflow_call`).
 
 Verifies that UI components haven't changed visually by comparing screenshots against committed
 golden images using Roborazzi:
@@ -88,7 +121,7 @@ golden images using Roborazzi:
 
 ### Baseline Profile Verification
 
-**Trigger:** Pull requests targeting `main`
+**Invoked by:** PR Checks (Stage 2, main-only). Reusable workflow (`on: workflow_call`).
 
 Builds a release AAB and verifies baseline profile integrity. Results are posted as a PR comment.
 

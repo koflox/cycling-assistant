@@ -234,7 +234,7 @@ The same `grantPermissions()` helper also disables system animations (`window_an
 
 ### CI Verification
 
-The `baseline-profiles.yml` workflow runs on PRs targeting `main` and validates:
+The `baseline-profiles.yml` reusable workflow (invoked by `pr-checks.yml` on PRs targeting `main`) validates:
 
 | Check | What it verifies |
 |-------|-----------------|

@@ -1,0 +1,65 @@
+name: PR Checks
+
+# Orchestrator: sequences the per-check reusable workflows so the heavier Stage 2
+# checks only run after Stage 1 (Module Graph may push a commit to the PR branch).
+# Each check still lives in its own file as a reusable workflow (on: workflow_call).
+
+on:
+  pull_request:
+    branches:
+      - main
+      - staging
+    paths-ignore:
+      - 'docs/**'
+      - 'mkdocs.yml'
+      - '**/*.md'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ── Stage 1 — fast pre-checks, in parallel. main-only; skipped on staging PRs. ──
+  module-graph:
+    if: github.base_ref == 'main'
+    permissions:
+      contents: write
+    uses: ./.github/workflows/module-graph.yml
+    secrets: inherit
+
+  version-check:
+    if: github.base_ref == 'main'
+    permissions:
+      contents: read
+    uses: ./.github/workflows/version-check.yml
+    secrets: inherit
+
+  # ── Stage 2 — heavier checks, in parallel, after Stage 1. ──
+  # `needs` waits for Stage 1; `if` still runs them when Stage 1 was skipped
+  # (staging PRs) but skips them if Stage 1 failed.
+  unit-tests:
+    needs: [module-graph, version-check]
+    if: ${{ !cancelled() && needs.module-graph.result != 'failure' && needs.version-check.result != 'failure' }}
+    permissions:
+      contents: read
+      pull-requests: write
+    uses: ./.github/workflows/unit-tests.yml
+    secrets: inherit
+
+  screenshot-tests:
+    needs: [module-graph, version-check]
+    if: ${{ !cancelled() && github.base_ref == 'main' && needs.module-graph.result != 'failure' && needs.version-check.result != 'failure' }}
+    permissions:
+      contents: read
+      pull-requests: write
+    uses: ./.github/workflows/screenshot-tests.yml
+    secrets: inherit
+
+  baseline-profiles:
+    needs: [module-graph, version-check]
+    if: ${{ !cancelled() && github.base_ref == 'main' && needs.module-graph.result != 'failure' && needs.version-check.result != 'failure' }}
+    permissions:
+      contents: read
+      pull-requests: write
+    uses: ./.github/workflows/baseline-profiles.yml
+    secrets: inherit

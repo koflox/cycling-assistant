@@ -1,11 +1,9 @@
 name: Version Check
 
+# Reusable workflow — invoked by pr-checks.yml (Stage 1).
+
 on:
-  pull_request:
-    branches:
-      - main
-    paths-ignore:
-      - 'docs/**'
+  workflow_call:
 
 jobs:
   check-version:
