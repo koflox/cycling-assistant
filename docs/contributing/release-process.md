@@ -39,11 +39,11 @@ These secrets are consumed by the [Setup Secrets](../infrastructure/ci-cd.md#set
     - [Version Check](../infrastructure/ci-cd.md#version-check) — validates version bump
     - [Baseline Profile Verification](../infrastructure/ci-cd.md#baseline-profile-verification) — AAB integrity + PR comment
 
-5. **Merge to `main`** — this triggers:
-    - [Build & Release](../infrastructure/ci-cd.md#build--release) — builds signed APK, creates GitHub release with tag `v<versionName>`
-    - [Project Stats](../infrastructure/ci-cd.md#project-stats) — updates badges
-    - [Update Module Graph](../infrastructure/ci-cd.md#update-module-graph) — commits graph if changed
+5. **Merge to `main`** — the [Main Pipeline](../infrastructure/ci-cd.md#main-pipeline-orchestrator)
+   orchestrator runs:
+    - [Build & Cache → Release APK](../infrastructure/ci-cd.md#build--cache--release-apk) — builds signed APK, creates GitHub release with tag `v<versionName>`
     - [Deploy Docs](../infrastructure/ci-cd.md#deploy-docs) — publishes docs site if docs changed
+    - [Project Stats](../infrastructure/ci-cd.md#project-stats) — updates badges (after the pipeline completes)
 
 6. **Verify** — check that the GitHub release was created with the correct tag and APK.
 

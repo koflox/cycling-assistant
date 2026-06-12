@@ -1,47 +1,17 @@
-name: Build & Release
+name: Release APK
+
+# Reusable workflow — invoked by main-pipeline.yml (Stage 2). Reuses the Gradle/build
+# cache warmed by Build & Cache.
 
 on:
-  push:
-    branches:
-      - main
-    paths-ignore:
-      - 'docs/**'
-      - 'mkdocs.yml'
-      - '**/*.md'
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  workflow_call:
 
 env:
   GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.caching=true"
 
 jobs:
-  build:
-    name: Build & Cache
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-
-      - name: Setup Android build environment
-        uses: ./.github/actions/setup-android
-        with:
-          gradle-cache-save: 'true'
-          build-cache-save: 'true'
-
-      - name: Setup project secrets
-        uses: ./.github/actions/setup-secrets
-        with:
-          google-services-json: ${{ secrets.GOOGLE_SERVICES_JSON }}
-
-      - name: Build project
-        run: ./gradlew buildDebug --build-cache -x test
-
   release:
     name: Release APK
-    needs: build
     runs-on: ubuntu-latest
     permissions:
       contents: write

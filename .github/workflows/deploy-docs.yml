@@ -1,13 +1,14 @@
 name: Deploy Docs
 
+# Invoked by main-pipeline.yml (Stage 1) on docs changes, and runnable manually.
+# The push trigger lives in the orchestrator, which gates this on docs/mkdocs changes.
+
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'docs/**'
-      - 'mkdocs.yml'
+  workflow_call:
   workflow_dispatch:
 
+# Applies to manual (workflow_dispatch) runs; for workflow_call the caller job grants
+# the equivalent permissions.
 permissions:
   contents: read
   pages: write

@@ -3,7 +3,7 @@ name: Project Stats
 on:
   workflow_dispatch:
   workflow_run:
-    workflows: ["Build & Release"]
+    workflows: ["Main Pipeline"]
     types: [completed]
     branches: [main]
 
