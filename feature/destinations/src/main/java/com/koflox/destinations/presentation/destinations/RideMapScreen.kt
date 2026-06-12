@@ -12,9 +12,12 @@ import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -214,18 +217,37 @@ private fun RideMapContent(
             onSelectedMarkerInfoClick = { onEvent(RideMapUiEvent.DestinationEvent.SelectedMarkerInfoClicked) },
             onMapLoaded = { onEvent(RideMapUiEvent.MapEvent.MapLoaded) },
         )
-        RideMapOverlay(
-            uiState = uiState,
-            onEvent = onEvent,
-            sessionUiNavigator = sessionUiNavigator,
-            nutritionUiNavigator = nutritionUiNavigator,
-            poiUiNavigator = poiUiNavigator,
-            onNavigateToSessionCompletion = onNavigateToSessionCompletion,
-            onNavigateToPoiSelection = onNavigateToPoiSelection,
-            onNavigateToConnections = onNavigateToConnections,
-            onRetryPermission = onRetryPermission,
-        )
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .windowInsetsPadding(WindowInsets.navigationBars),
+        ) {
+            RideMapOverlay(
+                uiState = uiState,
+                onEvent = onEvent,
+                sessionUiNavigator = sessionUiNavigator,
+                nutritionUiNavigator = nutritionUiNavigator,
+                poiUiNavigator = poiUiNavigator,
+                onNavigateToSessionCompletion = onNavigateToSessionCompletion,
+                onNavigateToPoiSelection = onNavigateToPoiSelection,
+                onNavigateToConnections = onNavigateToConnections,
+                onRetryPermission = onRetryPermission,
+            )
+        }
     }
+    RideMapDialogs(
+        uiState = uiState,
+        onEvent = onEvent,
+        sessionUiNavigator = sessionUiNavigator,
+    )
+}
+
+@Composable
+private fun RideMapDialogs(
+    uiState: RideMapUiState,
+    onEvent: (RideMapUiEvent) -> Unit,
+    sessionUiNavigator: CyclingSessionUiNavigator,
+) {
     when (uiState) {
         is RideMapUiState.FreeRoamIdle -> FreeRoamSessionGate(
             uiState = uiState,

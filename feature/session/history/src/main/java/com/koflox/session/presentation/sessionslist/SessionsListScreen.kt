@@ -235,35 +235,11 @@ private fun SessionListItem(
                 .fillMaxWidth()
                 .padding(Spacing.Large),
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = session.displayName,
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.weight(1f),
-                )
-                if (session.isShareButtonVisible) {
-                    IconButton(onClick = onShareClick) {
-                        Icon(
-                            imageVector = Icons.Default.Share,
-                            contentDescription = stringResource(R.string.sessions_list_share_action),
-                            tint = MaterialTheme.colorScheme.primary,
-                        )
-                    }
-                }
-                StatusChip(status = session.status)
-                if (onMoreClick != null) {
-                    IconButton(onClick = onMoreClick) {
-                        Icon(
-                            imageVector = Icons.Default.MoreVert,
-                            contentDescription = stringResource(R.string.sessions_list_menu_open),
-                        )
-                    }
-                }
-            }
+            SessionListItemHeader(
+                session = session,
+                onShareClick = onShareClick,
+                onMoreClick = onMoreClick,
+            )
             Spacer(modifier = Modifier.height(Spacing.Small))
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -278,6 +254,43 @@ private fun SessionListItem(
                     text = stringResource(StatsR.string.session_stat_value_km, session.distanceFormatted),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun SessionListItemHeader(
+    session: SessionListItemUiModel,
+    onShareClick: () -> Unit,
+    onMoreClick: (() -> Unit)?,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = session.displayName,
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.weight(1f),
+        )
+        if (session.isShareButtonVisible) {
+            IconButton(onClick = onShareClick) {
+                Icon(
+                    imageVector = Icons.Default.Share,
+                    contentDescription = stringResource(R.string.sessions_list_share_action),
+                    tint = MaterialTheme.colorScheme.primary,
+                )
+            }
+        }
+        StatusChip(status = session.status)
+        if (onMoreClick != null) {
+            IconButton(onClick = onMoreClick) {
+                Icon(
+                    imageVector = Icons.Default.MoreVert,
+                    contentDescription = stringResource(R.string.sessions_list_menu_open),
                 )
             }
         }
