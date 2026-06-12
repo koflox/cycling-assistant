@@ -1,5 +1,6 @@
 package com.koflox.session.service
 
+import com.koflox.ble.permission.BlePermissionChecker
 import com.koflox.connectionsession.bridge.model.PowerReadingData
 import com.koflox.connectionsession.bridge.model.SessionPowerDevice
 import com.koflox.connectionsession.bridge.usecase.PowerConnectionException
@@ -38,6 +39,7 @@ class PowerCollectionManagerImplTest {
     private val testDispatcher = StandardTestDispatcher()
     private val sessionPowerMeterUseCase: SessionPowerMeterUseCase = mockk()
     private val updateSessionPowerUseCase: UpdateSessionPowerUseCase = mockk(relaxed = true)
+    private val blePermissionChecker: BlePermissionChecker = mockk()
     private val stateHolder = PowerConnectionStateHolderImpl()
 
     private lateinit var manager: PowerCollectionManagerImpl
@@ -45,10 +47,12 @@ class PowerCollectionManagerImplTest {
     @Before
     fun setup() {
         justRun { sessionPowerMeterUseCase.disconnect() }
+        every { blePermissionChecker.hasPermissions() } returns true
         manager = PowerCollectionManagerImpl(
             sessionPowerMeterUseCase = sessionPowerMeterUseCase,
             updateSessionPowerUseCase = updateSessionPowerUseCase,
             powerConnectionStatePublisher = stateHolder,
+            blePermissionChecker = blePermissionChecker,
         )
     }
 
@@ -187,6 +191,35 @@ class PowerCollectionManagerImplTest {
 
         assertNull(stateHolder.deviceConnectionInfo.value)
         verify { sessionPowerMeterUseCase.disconnect() }
+    }
+
+    @Test
+    fun `missing permission publishes PermissionRequired and skips connecting`() = runManagerTest {
+        every { blePermissionChecker.hasPermissions() } returns false
+        coEvery { sessionPowerMeterUseCase.getSessionPowerDevice() } returns createDevice()
+
+        manager.start(this)
+        advanceTimeBy(1)
+
+        assertEquals(PowerConnectionState.PermissionRequired, stateHolder.deviceConnectionInfo.value?.state)
+        verify(exactly = 0) { sessionPowerMeterUseCase.observePowerReadings(any()) }
+    }
+
+    @Test
+    fun `granting permission resumes connection`() = runManagerTest {
+        every { blePermissionChecker.hasPermissions() } returns false
+        coEvery { sessionPowerMeterUseCase.getSessionPowerDevice() } returns createDevice()
+        every { sessionPowerMeterUseCase.observePowerReadings(MAC_ADDRESS) } returns MutableSharedFlow()
+
+        manager.start(this)
+        advanceTimeBy(1)
+        assertEquals(PowerConnectionState.PermissionRequired, stateHolder.deviceConnectionInfo.value?.state)
+
+        every { blePermissionChecker.hasPermissions() } returns true
+        advanceTimeBy(1000)
+
+        assertEquals(PowerConnectionState.Connecting, stateHolder.deviceConnectionInfo.value?.state)
+        verify { sessionPowerMeterUseCase.observePowerReadings(MAC_ADDRESS) }
     }
 
     @Test

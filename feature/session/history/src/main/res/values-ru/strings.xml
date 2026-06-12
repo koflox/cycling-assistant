@@ -18,4 +18,19 @@
     <string name="sessions_list_delete_cancel">Отмена</string>
     <string name="sessions_list_delete_success">Сессия удалена</string>
     <string name="sessions_list_delete_error">Не удалось удалить сессию</string>
+
+    <!-- Context menu -->
+    <string name="sessions_list_menu_open">Ещё действия</string>
+    <string name="sessions_list_menu_rename">Переименовать</string>
+    <string name="sessions_list_menu_delete">Удалить</string>
+
+    <!-- Rename dialog -->
+    <string name="sessions_list_rename_title">Новое название сессии</string>
+    <string name="sessions_list_rename_save">Сохранить</string>
+    <string name="sessions_list_rename_cancel">Отмена</string>
+    <string name="sessions_list_rename_error_too_short">Минимум 3 символа</string>
+    <string name="sessions_list_rename_error_too_long">Максимум 20 символов</string>
+    <string name="sessions_list_rename_external_hint">Активности, уже загруженные в интегрированные сервисы (например, Strava), сохраняют там старое название — переименуйте их вручную при необходимости.</string>
+    <string name="sessions_list_rename_success">Сессия переименована</string>
+    <string name="sessions_list_rename_error">Не удалось переименовать сессию</string>
 </resources>

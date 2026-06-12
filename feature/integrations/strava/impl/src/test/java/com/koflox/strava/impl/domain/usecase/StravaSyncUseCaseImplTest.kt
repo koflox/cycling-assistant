@@ -144,42 +144,67 @@ class StravaSyncUseCaseImplTest {
     }
 
     @Test
-    fun `verifySyncedActivity clears local record when activity is gone`() = runTest {
+    fun `reconcileStatus clears local record when synced activity is gone`() = runTest {
         coEvery { syncRepository.getStatus(SESSION_ID) } returns SessionSyncStatus.Synced(ACTIVITY_ID)
         coEvery { uploadRepository.activityExists(ACTIVITY_ID) } returns Result.success(false)
 
-        useCase.verifySyncedActivity(SESSION_ID)
+        useCase.reconcileStatus(SESSION_ID)
 
         coVerify { syncRepository.clear(SESSION_ID) }
     }
 
     @Test
-    fun `verifySyncedActivity keeps local record when activity exists`() = runTest {
+    fun `reconcileStatus keeps local record when synced activity exists`() = runTest {
         coEvery { syncRepository.getStatus(SESSION_ID) } returns SessionSyncStatus.Synced(ACTIVITY_ID)
         coEvery { uploadRepository.activityExists(ACTIVITY_ID) } returns Result.success(true)
 
-        useCase.verifySyncedActivity(SESSION_ID)
+        useCase.reconcileStatus(SESSION_ID)
 
         coVerify(exactly = 0) { syncRepository.clear(any()) }
     }
 
     @Test
-    fun `verifySyncedActivity is silent on network failure`() = runTest {
+    fun `reconcileStatus is silent on network failure when synced`() = runTest {
         coEvery { syncRepository.getStatus(SESSION_ID) } returns SessionSyncStatus.Synced(ACTIVITY_ID)
         coEvery { uploadRepository.activityExists(ACTIVITY_ID) } returns Result.failure(RuntimeException("boom"))
 
-        useCase.verifySyncedActivity(SESSION_ID)
+        useCase.reconcileStatus(SESSION_ID)
 
         coVerify(exactly = 0) { syncRepository.clear(any()) }
     }
 
     @Test
-    fun `verifySyncedActivity is no-op when not synced`() = runTest {
+    fun `reconcileStatus re-polls upload when processing`() = runTest {
+        coEvery { syncRepository.getStatus(SESSION_ID) } returns SessionSyncStatus.Processing
+        coEvery { syncRepository.getUploadId(SESSION_ID) } returns UPLOAD_ID
+        coEvery { uploadRepository.getUploadStatus(UPLOAD_ID) } returns
+            Result.success(UploadStatus.Ready(uploadId = UPLOAD_ID, activityId = ACTIVITY_ID))
+
+        useCase.reconcileStatus(SESSION_ID)
+
+        coVerify { syncRepository.setStatus(SESSION_ID, SessionSyncStatus.Synced(ACTIVITY_ID)) }
+    }
+
+    @Test
+    fun `reconcileStatus re-polls upload when poll timed out`() = runTest {
+        coEvery { syncRepository.getStatus(SESSION_ID) } returns
+            SessionSyncStatus.Error(SyncErrorReason.POLL_TIMEOUT, isRetryable = true)
+        coEvery { syncRepository.getUploadId(SESSION_ID) } returns UPLOAD_ID
+        coEvery { uploadRepository.getUploadStatus(UPLOAD_ID) } returns
+            Result.success(UploadStatus.Ready(uploadId = UPLOAD_ID, activityId = ACTIVITY_ID))
+
+        useCase.reconcileStatus(SESSION_ID)
+
+        coVerify { syncRepository.setStatus(SESSION_ID, SessionSyncStatus.Synced(ACTIVITY_ID)) }
+    }
+
+    @Test
+    fun `reconcileStatus is no-op when not synced`() = runTest {
         coEvery { syncRepository.getStatus(SESSION_ID) } returns SessionSyncStatus.NotSynced
 
-        useCase.verifySyncedActivity(SESSION_ID)
+        useCase.reconcileStatus(SESSION_ID)
 
         coVerify(exactly = 0) { uploadRepository.activityExists(any()) }
-        coVerify(exactly = 0) { syncRepository.clear(any()) }
+        coVerify(exactly = 0) { uploadRepository.getUploadStatus(any()) }
     }
 }

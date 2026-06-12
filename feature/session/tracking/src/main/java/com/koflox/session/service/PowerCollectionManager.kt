@@ -1,5 +1,6 @@
 package com.koflox.session.service
 
+import com.koflox.ble.permission.BlePermissionChecker
 import com.koflox.connectionsession.bridge.usecase.PowerConnectionException
 import com.koflox.connectionsession.bridge.usecase.SessionPowerMeterUseCase
 import com.koflox.session.domain.usecase.UpdateSessionPowerUseCase
@@ -20,6 +21,7 @@ internal class PowerCollectionManagerImpl(
     private val sessionPowerMeterUseCase: SessionPowerMeterUseCase,
     private val updateSessionPowerUseCase: UpdateSessionPowerUseCase,
     private val powerConnectionStatePublisher: PowerConnectionStatePublisher,
+    private val blePermissionChecker: BlePermissionChecker,
 ) : PowerCollectionManager {
 
     companion object {
@@ -27,6 +29,7 @@ internal class PowerCollectionManagerImpl(
         internal val RETRY_MAX_DELAY = 5.minutes
         internal const val RETRY_FACTOR = 2
         private val COUNTDOWN_TICK = 1.seconds
+        private val PERMISSION_POLL_INTERVAL = 1.seconds
     }
 
     private var job: Job? = null
@@ -35,7 +38,6 @@ internal class PowerCollectionManagerImpl(
         if (job?.isActive == true) return
         job = scope.launch {
             val device = sessionPowerMeterUseCase.getSessionPowerDevice() ?: return@launch
-            publishState(device.name, PowerConnectionState.Connecting)
             collectWithRetry(device.macAddress, device.name)
         }
     }
@@ -50,6 +52,7 @@ internal class PowerCollectionManagerImpl(
     private suspend fun collectWithRetry(macAddress: String, deviceName: String) {
         var retryDelay = RETRY_INITIAL_DELAY
         while (true) {
+            awaitPermission(deviceName)
             publishState(deviceName, PowerConnectionState.Connecting)
             try {
                 sessionPowerMeterUseCase.observePowerReadings(macAddress).collect { reading ->
@@ -63,8 +66,17 @@ internal class PowerCollectionManagerImpl(
             } catch (_: PowerConnectionException) {
                 // Connection error — retry with backoff
             }
+            if (!blePermissionChecker.hasPermissions()) continue
             awaitRetryWithCountdown(deviceName, retryDelay)
             retryDelay = (retryDelay.times(RETRY_FACTOR)).coerceAtMost(RETRY_MAX_DELAY)
+        }
+    }
+
+    private suspend fun awaitPermission(deviceName: String) {
+        if (blePermissionChecker.hasPermissions()) return
+        publishState(deviceName, PowerConnectionState.PermissionRequired)
+        while (!blePermissionChecker.hasPermissions()) {
+            delay(PERMISSION_POLL_INTERVAL)
         }
     }
 

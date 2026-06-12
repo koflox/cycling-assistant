@@ -32,6 +32,7 @@ internal fun SessionControlsOverlay(
     onStopClick: () -> Unit,
     onEnableLocationClick: () -> Unit,
     onDeviceStripClick: () -> Unit,
+    onRequestBlePermission: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Card(
@@ -58,6 +59,7 @@ internal fun SessionControlsOverlay(
                 ConnectionStatusStrip(
                     items = state.deviceStripItems,
                     onClick = onDeviceStripClick,
+                    onRequestPermission = onRequestBlePermission,
                 )
             }
             Spacer(modifier = Modifier.height(Spacing.Medium))

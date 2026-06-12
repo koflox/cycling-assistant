@@ -1,6 +1,7 @@
 package com.koflox.session.tracking.di
 
 import android.content.Context
+import com.koflox.ble.permission.BlePermissionChecker
 import com.koflox.concurrent.CurrentTimeProvider
 import com.koflox.connectionsession.bridge.usecase.SessionPowerMeterUseCase
 import com.koflox.di.IoDispatcher
@@ -127,10 +128,12 @@ internal object SessionServiceHiltModule {
         sessionPowerMeterUseCase: SessionPowerMeterUseCase,
         updateSessionPowerUseCase: UpdateSessionPowerUseCase,
         powerConnectionStatePublisher: PowerConnectionStatePublisher,
+        blePermissionChecker: BlePermissionChecker,
     ): PowerCollectionManager = PowerCollectionManagerImpl(
         sessionPowerMeterUseCase = sessionPowerMeterUseCase,
         updateSessionPowerUseCase = updateSessionPowerUseCase,
         powerConnectionStatePublisher = powerConnectionStatePublisher,
+        blePermissionChecker = blePermissionChecker,
     )
 
     @Provides

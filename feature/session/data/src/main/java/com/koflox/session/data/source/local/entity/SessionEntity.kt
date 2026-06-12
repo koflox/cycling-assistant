@@ -9,6 +9,7 @@ data class SessionEntity(
     val id: String,
     val destinationId: String?,
     val destinationName: String?,
+    val name: String? = null,
     val destinationLatitude: Double?,
     val destinationLongitude: Double?,
     val startLatitude: Double,

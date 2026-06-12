@@ -30,6 +30,8 @@ import com.koflox.session.domain.usecase.ObserveStatsDisplayConfigUseCase
 import com.koflox.session.domain.usecase.ObserveStatsDisplayConfigUseCaseImpl
 import com.koflox.session.domain.usecase.PowerReadingBuffer
 import com.koflox.session.domain.usecase.PowerReadingBufferImpl
+import com.koflox.session.domain.usecase.RenameSessionUseCase
+import com.koflox.session.domain.usecase.RenameSessionUseCaseImpl
 import com.koflox.session.domain.usecase.UpdateSessionLocationUseCase
 import com.koflox.session.domain.usecase.UpdateSessionLocationUseCaseImpl
 import com.koflox.session.domain.usecase.UpdateSessionPowerUseCase
@@ -38,6 +40,8 @@ import com.koflox.session.domain.usecase.UpdateSessionStatusUseCase
 import com.koflox.session.domain.usecase.UpdateSessionStatusUseCaseImpl
 import com.koflox.session.domain.usecase.UpdateStatsDisplayConfigUseCase
 import com.koflox.session.domain.usecase.UpdateStatsDisplayConfigUseCaseImpl
+import com.koflox.session.domain.usecase.ValidateSessionNameUseCase
+import com.koflox.session.domain.usecase.ValidateSessionNameUseCaseImpl
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -164,6 +168,16 @@ internal object SessionDomainHiltModule {
     ): DeleteSessionUseCase = DeleteSessionUseCaseImpl(
         sessionRepository = sessionRepository,
     )
+
+    @Provides
+    fun provideRenameSessionUseCase(
+        sessionRepository: SessionRepository,
+    ): RenameSessionUseCase = RenameSessionUseCaseImpl(
+        sessionRepository = sessionRepository,
+    )
+
+    @Provides
+    fun provideValidateSessionNameUseCase(): ValidateSessionNameUseCase = ValidateSessionNameUseCaseImpl()
 
     @Provides
     fun provideGetSessionByIdUseCase(

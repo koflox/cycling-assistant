@@ -156,6 +156,7 @@ internal class SessionViewModel @Inject constructor(
             is PowerConnectionState.Connected -> DeviceStripState.Connected(state.instantaneousPowerWatts)
             PowerConnectionState.Connecting -> DeviceStripState.Connecting
             is PowerConnectionState.Reconnecting -> DeviceStripState.Reconnecting(state.remaining)
+            PowerConnectionState.PermissionRequired -> DeviceStripState.PermissionRequired
         }
         return DeviceStripItem(deviceName = info.deviceName, state = stripState)
     }

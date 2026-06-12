@@ -169,6 +169,7 @@ graph LR
   :feature:session:tracking --> :shared:design-system
   :feature:session:tracking --> :shared:di
   :feature:session:tracking --> :feature:session:stats-display
+  :feature:session:tracking --> :shared:ble
   :feature:session:tracking --> :shared:error
   :feature:session:tracking --> :shared:location:domain
   :feature:session:tracking --> :shared:location:data

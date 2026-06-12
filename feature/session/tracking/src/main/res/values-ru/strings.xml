@@ -4,6 +4,9 @@
     <string name="session_device_connecting">Подключение…</string>
     <string name="session_device_retry_countdown">Повтор через %dс</string>
     <string name="session_device_offline">Не в сети</string>
+    <string name="session_device_permission_required">Ожидание разрешения</string>
+    <string name="session_device_permission_banner">Для чтения данных устройств нужно разрешение Bluetooth</string>
+    <string name="session_device_grant_permission">Предоставить доступ</string>
 
     <!-- Session Buttons -->
     <string name="session_button_pause">Пауза</string>

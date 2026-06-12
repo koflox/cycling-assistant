@@ -88,6 +88,18 @@ android {
 }
 ```
 
+## Unit Tests
+
+JVM unit tests run without a device or emulator.
+
+**Run commands:**
+
+```bash
+./gradlew testDebugUnitTest                          # All modules (debug variant)
+./gradlew :feature:session:tracking:testDebugUnitTest # Per-module
+./gradlew test                                       # All variants (slower)
+```
+
 ## UI Tests
 
 **Framework:** Jetpack Compose UI Testing (`androidx.compose.ui.test`)

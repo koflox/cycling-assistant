@@ -66,6 +66,7 @@ nav:
       - Strava Sync: features/strava-sync.md
       - Other Features: features/other-features.md
   - Infrastructure:
+      - Cheatsheet: infrastructure/cheatsheet.md
       - CI/CD: infrastructure/ci-cd.md
       - Concurrency: infrastructure/concurrency.md
       - Network: infrastructure/network.md

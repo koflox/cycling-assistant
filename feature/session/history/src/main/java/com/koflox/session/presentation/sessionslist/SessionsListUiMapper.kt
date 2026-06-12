@@ -3,6 +3,7 @@ package com.koflox.session.presentation.sessionslist
 import com.koflox.designsystem.context.LocalizedContextProvider
 import com.koflox.session.domain.model.Session
 import com.koflox.session.domain.model.SessionStatus
+import com.koflox.session.history.R
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -19,12 +20,15 @@ internal class SessionsListUiMapperImpl(
         private const val DATE_FORMAT_PATTERN = "MMM dd, yyyy HH:mm"
     }
 
+    private val localizedContext get() = localizedContextProvider.getLocalizedContext()
     private val appLocale: Locale
-        get() = localizedContextProvider.getLocalizedContext().resources.configuration.locales[0]
+        get() = localizedContext.resources.configuration.locales[0]
 
     override fun toUiModel(session: Session): SessionListItemUiModel = SessionListItemUiModel(
         id = session.id,
-        destinationName = session.destinationName,
+        displayName = session.name
+            ?: session.destinationName
+            ?: localizedContext.getString(R.string.sessions_list_free_roam_title),
         dateFormatted = SimpleDateFormat(DATE_FORMAT_PATTERN, appLocale).format(Date(session.startTimeMs)),
         distanceFormatted = String.format(appLocale, "%.2f", session.traveledDistanceKm),
         status = when (session.status) {

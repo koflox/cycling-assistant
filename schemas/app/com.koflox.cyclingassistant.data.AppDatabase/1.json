@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "e00af48724069c9123d1ea67929d7c8d",
+    "identityHash": "9325ee48043876ad8911c8f853029f50",
     "entities": [
       {
         "tableName": "destinations",
@@ -130,7 +130,7 @@
       },
       {
         "tableName": "sessions",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `destinationId` TEXT, `destinationName` TEXT, `destinationLatitude` REAL, `destinationLongitude` REAL, `startLatitude` REAL NOT NULL, `startLongitude` REAL NOT NULL, `startTimeMs` INTEGER NOT NULL, `lastResumedTimeMs` INTEGER NOT NULL, `endTimeMs` INTEGER, `elapsedTimeMs` INTEGER NOT NULL, `traveledDistanceKm` REAL NOT NULL, `averageSpeedKmh` REAL NOT NULL, `topSpeedKmh` REAL NOT NULL, `totalAltitudeGainMeters` REAL NOT NULL, `status` TEXT NOT NULL, `totalPowerReadings` INTEGER, `sumPowerWatts` INTEGER, `maxPowerWatts` INTEGER, `totalEnergyJoules` REAL, PRIMARY KEY(`id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `destinationId` TEXT, `destinationName` TEXT, `name` TEXT, `destinationLatitude` REAL, `destinationLongitude` REAL, `startLatitude` REAL NOT NULL, `startLongitude` REAL NOT NULL, `startTimeMs` INTEGER NOT NULL, `lastResumedTimeMs` INTEGER NOT NULL, `endTimeMs` INTEGER, `elapsedTimeMs` INTEGER NOT NULL, `traveledDistanceKm` REAL NOT NULL, `averageSpeedKmh` REAL NOT NULL, `topSpeedKmh` REAL NOT NULL, `totalAltitudeGainMeters` REAL NOT NULL, `status` TEXT NOT NULL, `totalPowerReadings` INTEGER, `sumPowerWatts` INTEGER, `maxPowerWatts` INTEGER, `totalEnergyJoules` REAL, PRIMARY KEY(`id`))",
         "fields": [
           {
             "fieldPath": "id",
@@ -146,6 +146,11 @@
           {
             "fieldPath": "destinationName",
             "columnName": "destinationName",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
             "affinity": "TEXT"
           },
           {
@@ -436,7 +441,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'e00af48724069c9123d1ea67929d7c8d')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '9325ee48043876ad8911c8f853029f50')"
     ]
   }
 }

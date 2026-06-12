@@ -1,20 +1,10 @@
 name: Module Graph
 
+# Reusable workflow — invoked by pr-checks.yml (Stage 1). Trigger, concurrency,
+# permissions and the main-only gate live in the orchestrator.
+
 on:
-  pull_request:
-    branches:
-      - main
-    paths-ignore:
-      - 'docs/**'
-      - 'mkdocs.yml'
-      - '**/*.md'
-
-permissions:
-  contents: write
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  workflow_call:
 
 env:
   GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.caching=true"
@@ -47,6 +37,7 @@ jobs:
 
       # Commit the regenerated graph straight into the PR head branch. Push uses GITHUB_TOKEN,
       # which intentionally does NOT trigger pull_request workflows again — no re-run loop.
+      # Stage 2 picks up this commit because it checks out the branch tip (`github.head_ref`).
       - name: Commit + push if graph changed
         run: |
           git diff --quiet docs/MODULE_GRAPH.md && exit 0

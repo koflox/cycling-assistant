@@ -1,23 +1,12 @@
 name: Unit Tests
 
-on:
-  pull_request:
-    branches:
-      - main
-      - staging
-    paths-ignore:
-      - 'docs/**'
+# Reusable workflow — invoked by pr-checks.yml (Stage 2).
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+on:
+  workflow_call:
 
 env:
   GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.caching=true" # to avoid process leaking and speed up the building
-
-permissions:
-  contents: read
-  pull-requests: write
 
 jobs:
   test:
@@ -25,8 +14,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Check out the branch tip (not the merge commit) so we test any commit Module
+      # Graph pushed in Stage 1.
       - name: Checkout code
         uses: actions/checkout@v6
+        with:
+          ref: ${{ github.head_ref }}
 
       - name: Setup Android build environment
         uses: ./.github/actions/setup-android
@@ -60,7 +53,7 @@ jobs:
 
       - name: Add coverage to PR
         if: github.event_name == 'pull_request'
-        uses: madrapps/jacoco-report@v1.7.2
+        uses: madrapps/jacoco-report@v1.8.0
         with:
           paths: build/reports/kover/report.xml
           token: ${{ secrets.GITHUB_TOKEN }}

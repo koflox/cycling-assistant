@@ -17,6 +17,7 @@ dependencies {
     implementation(project(":feature:session:stats-display"))
 
     // Shared modules
+    implementation(project(":shared:ble"))
     implementation(project(":shared:concurrent"))
     implementation(project(":shared:error"))
     implementation(project(":shared:location:domain"))

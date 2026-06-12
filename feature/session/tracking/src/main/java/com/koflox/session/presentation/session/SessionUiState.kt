@@ -33,6 +33,7 @@ internal sealed interface DeviceStripState {
     data class Connected(val instantaneousPowerWatts: Int) : DeviceStripState
     data object Connecting : DeviceStripState
     data class Reconnecting(val remaining: Duration) : DeviceStripState
+    data object PermissionRequired : DeviceStripState
 }
 
 internal data class DeviceStripItem(

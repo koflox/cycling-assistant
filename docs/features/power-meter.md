@@ -197,4 +197,16 @@ All fields are nullable — sessions without a power meter have no power data.
 
 Power collection starts when session status is `RUNNING` and stops (with disconnect) on `PAUSED`, `COMPLETED`, or service stop. Only `PowerConnectionException` triggers retry — cancellation propagates normally.
 
+### Permission Gating
+
+Before each connection attempt, `PowerCollectionManagerImpl` checks `BlePermissionChecker.hasPermissions()`. 
+If the "Nearby devices" permission (`BLUETOOTH_SCAN` / `BLUETOOTH_CONNECT`) is revoked — including mid-session — the manager does **not** attempt to connect (which would throw `SecurityException` and loop silently on the reconnect backoff). 
+Instead it publishes `PowerConnectionState.PermissionRequired` and polls until the permission is granted, then connects.
+
+Because the permission is app-wide (not per-device), the active-session panel renders a single "Grant access" button **above** the device list rather than one per device row; 
+each device row shows a "Waiting for permission" status until granted. 
+The button launches the runtime permission request via Accompanist (`SessionBlePermissionEntryPoint` supplies the API-level-correct permission list). 
+While a rationale can still be shown (or the permission was never requested) it triggers the system dialog; once the permission is **permanently denied** — when the dialog no longer appears — it falls back to opening the app's settings page (matching the `shouldShowRationale` pattern used by `LocationPermissionHandler`). 
+Once granted, the polling manager reconnects automatically — no manual retry needed.
+
 See also: [Session Tracking](session-tracking.md) for broader session architecture, [Performance](../infrastructure/performance.md) for retry pattern details.

@@ -77,7 +77,7 @@ internal class StravaShareViewModel @Inject constructor(
             when (event) {
                 is StravaShareUiEvent.Started -> {
                     sessionIdFlow.value = event.sessionId
-                    syncUseCase.verifySyncedActivity(event.sessionId)
+                    syncUseCase.reconcileStatus(event.sessionId)
                 }
                 StravaShareUiEvent.ConnectClicked -> navigationChannel.send(StravaShareNavigation.LaunchOAuthIntent)
                 StravaShareUiEvent.SyncClicked -> sessionIdFlow.value?.let { syncUseCase.enqueue(it) }
