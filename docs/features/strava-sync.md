@@ -112,13 +112,21 @@ feature/integrations/strava UIs. The data layer keeps an additional `uploadId` f
 polling — exposed via `setProcessing(sessionId, uploadId)` rather than carried in the domain
 model so the UI doesn't have to care about Strava's two-stage upload.
 
-## Verify-on-open
+## Reconcile-on-open
 
-Strava activities can be deleted on the web/app at any time. When the user opens the Strava
-share tab on a `Synced` session, `StravaShareViewModel` triggers
-`syncUseCase.verifySyncedActivity(sessionId)` which calls `GET /activities/{id}` — a 404 means
-the activity is gone, and we clear the local sync row so the UI falls back to `NotSynced`. Any
-other error (network, auth, etc.) is silently ignored — we only react to a definitive "deleted".
+When the user opens the Strava share tab, `StravaShareViewModel` triggers
+`syncUseCase.reconcileStatus(sessionId)`, which reconciles the local sync row against Strava's
+actual state depending on the current status:
+
+- **`Synced`** — Strava activities can be deleted on the web/app at any time, so we call
+  `GET /activities/{id}`. A 404 means the activity is gone, and we clear the local sync row so
+  the UI falls back to `NotSynced`. Any other error (network, auth, etc.) is silently ignored —
+  we only react to a definitive "deleted".
+- **`Processing` / retryable `Error`** (e.g. a poll that timed out while the app was backgrounded)
+  — we re-query `GET /uploads/{uploadId}`. If Strava finished processing in the meantime the
+  upload resolves to `Synced`, instead of leaving the UI on a stale in-progress/error state that
+  would force a duplicate re-upload. This is why the poll worker preserves `uploadId` when it
+  records a `POLL_TIMEOUT` error.
 
 ## Manual refresh cooldown
 
