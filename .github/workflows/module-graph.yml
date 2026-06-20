@@ -18,7 +18,7 @@ jobs:
       # Checkout the PR head branch directly (not the merge commit) so we can push back.
       # Same-repo PRs only — GITHUB_TOKEN cannot push to forks.
       - name: Checkout PR head
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.event.pull_request.head.ref }}
           repository: ${{ github.event.pull_request.head.repo.full_name }}
