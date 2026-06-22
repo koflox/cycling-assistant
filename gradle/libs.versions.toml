@@ -79,7 +79,7 @@ work = "2.11.2"
 hiltAndroidx = "1.3.0"
 
 # Screenshot Testing
-roborazzi = "1.63.0"
+roborazzi = "1.64.0"
 robolectric = "4.16.1"
 
 # Testing
