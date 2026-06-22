@@ -12,7 +12,7 @@ jobs:
 
     steps:
       - name: Checkout PR branch
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Read PR version
         id: pr_version
@@ -25,7 +25,7 @@ jobs:
           echo "PR versionName: $PR_VERSION_NAME"
 
       - name: Checkout main branch (sparse)
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: main
           path: main-branch

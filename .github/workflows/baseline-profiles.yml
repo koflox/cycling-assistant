@@ -17,7 +17,7 @@ jobs:
       # Check out the branch tip (not the merge commit) so we verify any commit Module
       # Graph pushed in Stage 1.
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.head_ref }}
 
