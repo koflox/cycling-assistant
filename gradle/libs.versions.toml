@@ -63,7 +63,7 @@ startup = "1.2.0"
 firebaseBom = "34.15.0"
 firebaseCrashlyticsPlugin = "3.0.7"
 firebasePerfPlugin = "2.0.2"
-googleServices = "4.4.4"
+googleServices = "4.5.0"
 
 # Logging
 timber = "5.0.1"
