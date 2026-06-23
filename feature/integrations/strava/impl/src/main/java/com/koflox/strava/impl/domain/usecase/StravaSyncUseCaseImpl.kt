@@ -43,28 +43,15 @@ internal class StravaSyncUseCaseImpl @Inject constructor(
     }
 
     override suspend fun refreshStatus(sessionId: String) {
-        internalRefreshStatus(sessionId)
-    }
-
-    override suspend fun reconcileStatus(sessionId: String) {
-        when (val current = syncRepository.getStatus(sessionId)) {
-            is SessionSyncStatus.Synced -> verifyActivityExists(sessionId, current.activityId)
-            SessionSyncStatus.Processing,
-            is SessionSyncStatus.Error,
-            -> internalRefreshStatus(sessionId)
-            else -> Unit
-        }
-    }
-
-    private suspend fun internalRefreshStatus(sessionId: String) {
         val uploadId = syncRepository.getUploadId(sessionId) ?: return
         uploadRepository.getUploadStatus(uploadId).onSuccess { status ->
             applyUploadStatus(sessionId, status)
         }
     }
 
-    private suspend fun verifyActivityExists(sessionId: String, activityId: Long) {
-        uploadRepository.activityExists(activityId).onSuccess { exists ->
+    override suspend fun verifySyncedActivity(sessionId: String) {
+        val current = syncRepository.getStatus(sessionId) as? SessionSyncStatus.Synced ?: return
+        uploadRepository.activityExists(current.activityId).onSuccess { exists ->
             if (!exists) {
                 syncRepository.clear(sessionId)
             }

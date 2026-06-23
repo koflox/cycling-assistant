@@ -29,7 +29,7 @@ internal class StravaPollWorker @AssistedInject constructor(
         } else {
             uploadRepository.getUploadStatus(uploadId).fold(
                 onSuccess = { handlePollSuccess(sessionId, it) },
-                onFailure = { handlePollFailure(sessionId, uploadId, it) },
+                onFailure = { handlePollFailure(sessionId, it) },
             )
         }
     }
@@ -45,7 +45,6 @@ internal class StravaPollWorker @AssistedInject constructor(
                     syncRepository.setStatus(
                         sessionId,
                         SessionSyncStatus.Error(SyncErrorReason.POLL_TIMEOUT, isRetryable = true),
-                        uploadId = status.uploadId,
                     )
                     Result.success()
                 } else {
@@ -61,13 +60,12 @@ internal class StravaPollWorker @AssistedInject constructor(
             }
         }
 
-    private suspend fun handlePollFailure(sessionId: String, uploadId: Long, throwable: Throwable): Result {
+    private suspend fun handlePollFailure(sessionId: String, throwable: Throwable): Result {
         val error = throwable as? StravaError ?: StravaError.Unknown()
         return if (!error.isRetryable || runAttemptCount + 1 >= StravaWorkScheduler.MAX_POLL_ATTEMPTS) {
             syncRepository.setStatus(
                 sessionId,
                 SessionSyncStatus.Error(error.reason, isRetryable = error.isRetryable),
-                uploadId = uploadId,
             )
             Result.success()
         } else {
