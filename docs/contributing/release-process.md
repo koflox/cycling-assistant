@@ -25,7 +25,7 @@ These secrets are consumed by the [Setup Secrets](../infrastructure/ci-cd.md#set
 2. **Bump version** — update `version.properties` on the release branch:
     ```properties
     versionCode=16       # increment by exactly 1
-    versionName=1.9.0    # bump at least one semver part
+    versionName=1.9.0    # bump at least one semver part (X.Y.Z; Z optional, omit for non-hotfix releases e.g. 1.9)
     ```
 
 3. **Regenerate baseline profiles** (recommended when critical user journeys changed):

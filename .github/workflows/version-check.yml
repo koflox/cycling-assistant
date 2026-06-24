@@ -81,6 +81,10 @@ jobs:
           IFS='.' read -r PR_MAJOR PR_MINOR PR_PATCH <<< "$PR_NAME"
           IFS='.' read -r MAIN_MAJOR MAIN_MINOR MAIN_PATCH <<< "$MAIN_NAME"
 
+          # Patch (Z) is optional in X.Y.Z — a missing Z means initial (non-hotfix) release, treat as 0.
+          PR_PATCH=${PR_PATCH:-0}
+          MAIN_PATCH=${MAIN_PATCH:-0}
+
           if [ "$PR_MAJOR" -gt "$MAIN_MAJOR" ] || [ "$PR_MINOR" -gt "$MAIN_MINOR" ] || [ "$PR_PATCH" -gt "$MAIN_PATCH" ]; then
             echo "versionName check passed."
           else

@@ -119,7 +119,9 @@ Main Pipeline's Detect Changes gate prevents redundant rebuilds + duplicate rele
 Verifies PR version bumps:
 
 - `versionCode` must be incremented by exactly 1
-- `versionName` (semantic version) must have at least one part bumped
+- `versionName` (semantic version `X.Y.Z`) must have at least one part bumped. The patch component
+  `Z` is optional — a missing `Z` (e.g. `1.14`) denotes an initial, non-hotfix release and is
+  treated as `0` for comparison
 
 ### Module Graph
 
