@@ -26,8 +26,8 @@ internal class StravaSyncRepositoryImpl @Inject constructor(
     override suspend fun getStatus(sessionId: String): SessionSyncStatus =
         mapper.toDomain(localDataSource.get(sessionId))
 
-    override suspend fun setStatus(sessionId: String, status: SessionSyncStatus, uploadId: Long?) {
-        localDataSource.upsert(mapper.toEntity(sessionId, status, timeProvider.currentTimeMs(), uploadId))
+    override suspend fun setStatus(sessionId: String, status: SessionSyncStatus) {
+        localDataSource.upsert(mapper.toEntity(sessionId, status, timeProvider.currentTimeMs()))
     }
 
     override suspend fun setProcessing(sessionId: String, uploadId: Long) {

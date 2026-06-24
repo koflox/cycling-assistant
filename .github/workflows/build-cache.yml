@@ -1,0 +1,33 @@
+name: Build & Cache
+
+# Reusable workflow — invoked by main-pipeline.yml (Stage 1). Warms the Gradle/build
+# cache that the Release APK stage reuses.
+
+on:
+  workflow_call:
+
+env:
+  GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.caching=true"
+
+jobs:
+  build:
+    name: Build & Cache
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Setup Android build environment
+        uses: ./.github/actions/setup-android
+        with:
+          gradle-cache-save: 'true'
+          build-cache-save: 'true'
+
+      - name: Setup project secrets
+        uses: ./.github/actions/setup-secrets
+        with:
+          google-services-json: ${{ secrets.GOOGLE_SERVICES_JSON }}
+
+      - name: Build project
+        run: ./gradlew buildDebug --build-cache -x test

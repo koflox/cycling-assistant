@@ -63,9 +63,16 @@ parameter that makes a scope mandatory, so we re-validate after the redirect:
 |---|---|---|
 | `read` | Athlete profile basics | Yes (always granted alongside others) |
 | `activity:write` | Upload activities | **Yes** |
-| `activity:read` | Read uploaded activities back (verify-on-open, view URL) | **Yes** |
+| `activity:read_all` | Read uploaded activities back (verify-on-open, view URL), **including private "Only You" activities** | **Yes** |
 
-If `activity:write` or `activity:read` is missing from the callback's `scope=` query parameter,
+`activity:read_all` is used instead of the narrower `activity:read` on purpose. Verify-on-open
+reads each synced activity back via `GET /activities/{id}`, and `activity:read` returns `404` for
+activities the athlete set to "Only You" — indistinguishable from a genuinely deleted activity.
+With only `activity:read`, a private ride would be wrongly treated as deleted and its local sync
+record cleared (the user then sees "Sync to Strava" again for an already-uploaded ride).
+`activity:read_all` can read private activities too, so a `404` becomes a reliable "deleted" signal.
+
+If `activity:write` or `activity:read_all` is missing from the callback's `scope=` query parameter,
 `StravaOAuthCodeProcessor` calls `authUseCase.logout()` (deletes the just-stored tokens) and
 emits `StravaAuthHint.MissingRequiredScopes` via `StravaAuthEvents`. The Connect screen renders
 this hint as a banner with a "Got it" dismiss button.
@@ -112,21 +119,17 @@ feature/integrations/strava UIs. The data layer keeps an additional `uploadId` f
 polling — exposed via `setProcessing(sessionId, uploadId)` rather than carried in the domain
 model so the UI doesn't have to care about Strava's two-stage upload.
 
-## Reconcile-on-open
+## Verify-on-open
 
-When the user opens the Strava share tab, `StravaShareViewModel` triggers
-`syncUseCase.reconcileStatus(sessionId)`, which reconciles the local sync row against Strava's
-actual state depending on the current status:
+Strava activities can be deleted on the web/app at any time. When the user opens the Strava
+share tab on a `Synced` session, `StravaShareViewModel` triggers
+`syncUseCase.verifySyncedActivity(sessionId)` which calls `GET /activities/{id}` — a 404 means
+the activity is gone, and we clear the local sync row so the UI falls back to `NotSynced`. Any
+other error (network, auth, etc.) is silently ignored — we only react to a definitive "deleted".
 
-- **`Synced`** — Strava activities can be deleted on the web/app at any time, so we call
-  `GET /activities/{id}`. A 404 means the activity is gone, and we clear the local sync row so
-  the UI falls back to `NotSynced`. Any other error (network, auth, etc.) is silently ignored —
-  we only react to a definitive "deleted".
-- **`Processing` / retryable `Error`** (e.g. a poll that timed out while the app was backgrounded)
-  — we re-query `GET /uploads/{uploadId}`. If Strava finished processing in the meantime the
-  upload resolves to `Synced`, instead of leaving the UI on a stale in-progress/error state that
-  would force a duplicate re-upload. This is why the poll worker preserves `uploadId` when it
-  records a `POLL_TIMEOUT` error.
+For the 404 to mean "deleted" rather than "not visible to this token", the app must hold the
+`activity:read_all` scope (see [Required scopes](#required-scopes)); `activity:read` alone 404s on
+private activities and would wrongly clear them.
 
 ## Manual refresh cooldown
 

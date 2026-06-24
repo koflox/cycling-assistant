@@ -148,13 +148,13 @@ class StravaShareViewModelTest {
     }
 
     @Test
-    fun `Started reconciles sync status`() = runTest {
+    fun `Started triggers verifySyncedActivity`() = runTest {
         val viewModel = createViewModel()
 
         viewModel.onEvent(StravaShareUiEvent.Started(SESSION_ID))
         advanceUntilIdle()
 
-        coVerify { syncUseCase.reconcileStatus(SESSION_ID) }
+        coVerify { syncUseCase.verifySyncedActivity(SESSION_ID) }
     }
 
     @Test

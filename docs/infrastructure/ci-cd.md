@@ -48,9 +48,33 @@ Runs quality checks and tests on every PR:
 - Coverage report posted as a PR comment
 - Automatic cancellation of previous runs on new commits
 
+### Main Pipeline (orchestrator)
+
+**Trigger:** Push to `main` (merges)
+
+`main-pipeline.yml` orchestrates the post-merge build/release/docs flow as **reusable workflows**
+(`on: workflow_call`) in two stages:
+
+```
+detect changes ─► Stage 1: Deploy Docs (if docs)  ∥  Build & Cache (if code)
+                         └─► Stage 2: Release APK (needs Build & Cache success)
+```
+
+- A small **Detect Changes** job diffs `github.event.before..github.sha` and sets `docs` / `code`
+  outputs. This preserves the previous path-based behavior that two separate workflows used to
+  provide: a docs-only merge deploys docs but does **not** re-release the APK (same version → bogus
+  tag); a code-only merge builds + releases but skips the docs deploy.
+- **Stage 1** runs in parallel: `deploy-docs` (gated on `docs`), `build-cache` (gated on `code`).
+- **Stage 2** `release-apk` uses `needs: [deploy-docs, build-cache]` with
+  `if: ${{ !cancelled() && needs.build-cache.result == 'success' }}` — it waits for both but only
+  **requires** Build & Cache (so a docs-only merge, where build is skipped, won't release, and a
+  Deploy Docs failure won't block a real release). Build & Cache warms the Gradle/build cache that
+  Release APK reuses.
+- `concurrency: cancel-in-progress: false` — an in-flight release is never cancelled by a newer push.
+
 ### Project Stats
 
-**Trigger:** Push to `main`, manual dispatch
+**Trigger:** `workflow_run` after **Main Pipeline** completes successfully on `main`, or manual dispatch
 
 Calculates project metrics and updates dynamic badges:
 
@@ -62,14 +86,15 @@ Calculates project metrics and updates dynamic badges:
 
 Badges are stored as JSON on a GitHub Gist and rendered via shields.io.
 
-### Build & Release
+### Build & Cache / Release APK
 
-**Trigger:** Push to `main`, excluding docs-only changes (`paths-ignore: docs/**`, `mkdocs.yml`, `**/*.md`)
+**Invoked by:** Main Pipeline — `build-cache.yml` as Stage 1 (on code changes), `release-apk.yml` as
+Stage 2. Reusable workflows (`on: workflow_call`).
 
-Two-stage pipeline:
-
-1. **Build** — compiles debug build and caches Android build outputs
-2. **Release** — reads version from `version.properties`, runs `lintRelease` (Android Lint, fails on errors), builds signed release APKs (per-ABI splits + universal), creates a GitHub release tag, and uploads all APKs
+- **Build & Cache** (`build-cache.yml`) — compiles a debug build and saves the Gradle/build cache.
+- **Release APK** (`release-apk.yml`) — reads version from `version.properties`, runs `lintRelease`
+  (Android Lint, fails on errors), builds signed release APKs (per-ABI splits + universal), creates a
+  GitHub release tag, and uploads all APKs. Reuses the cache warmed by Build & Cache.
 
 Lint catches manifest/resource/API-misuse issues before the APK is built. Notably, the `Instantiatable` rule verifies every class referenced from `AndroidManifest.xml` (`<service>`, `<activity>`, `<receiver>`, `<provider>`) actually exists and is instantiatable — this guard would have caught the [PR #8a manifest regression](https://github.com/koflox/cycling-assistant/commit/main) where the moved `SessionTrackingService` package didn't match the new module's namespace. The HTML lint report is uploaded as `lint-report-release` artifact on failure.
 
@@ -85,7 +110,7 @@ armeabi-v7a (32-bit ARM) and x86 are excluded — virtually no devices left.
 
 All three APKs are uploaded to the GitHub Release (`files: *.apk`) and as a single `app-release-v<name>` workflow artifact.
 
-The `paths-ignore` filter prevents redundant rebuilds + duplicate releases on doc-only merges (e.g., the auto-generated module graph update).
+Main Pipeline's Detect Changes gate prevents redundant rebuilds + duplicate releases on doc-only merges (e.g., the auto-generated module graph update) — `code` is `false`, so Build & Cache and Release APK are skipped.
 
 ### Version Check
 
@@ -94,7 +119,9 @@ The `paths-ignore` filter prevents redundant rebuilds + duplicate releases on do
 Verifies PR version bumps:
 
 - `versionCode` must be incremented by exactly 1
-- `versionName` (semantic version) must have at least one part bumped
+- `versionName` (semantic version `X.Y.Z`) must have at least one part bumped. The patch component
+  `Z` is optional — a missing `Z` (e.g. `1.14`) denotes an initial, non-hotfix release and is
+  treated as `0` for comparison
 
 ### Module Graph
 
@@ -137,7 +164,8 @@ See [Performance — CI Verification](performance.md#ci-verification) for techni
 
 ### Deploy Docs
 
-**Trigger:** Push to `main` (when `docs/` or `mkdocs.yml` change), manual dispatch
+**Invoked by:** Main Pipeline (Stage 1, on `docs/` or `mkdocs.yml` changes). Also runnable via manual
+dispatch (`workflow_dispatch`). Reusable workflow (`on: workflow_call`).
 
 Builds and deploys this documentation site to GitHub Pages using MkDocs Material.
 

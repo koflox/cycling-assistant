@@ -55,7 +55,7 @@ class StravaAuthUrlBuilderTest {
     fun `build requests required scopes`() {
         val url = builder.build()
 
-        assertTrue(url.contains("activity%3Aread"))
+        assertTrue(url.contains("activity%3Aread_all"))
         assertTrue(url.contains("activity%3Awrite"))
         assertTrue(url.contains("scope=read"))
     }
@@ -69,9 +69,9 @@ class StravaAuthUrlBuilderTest {
     }
 
     @Test
-    fun `required scopes contains activity read and activity write`() {
+    fun `required scopes contains activity read_all and activity write`() {
         assertEquals(
-            setOf("activity:read", "activity:write"),
+            setOf("activity:read_all", "activity:write"),
             StravaAuthUrlBuilder.REQUIRED_SCOPES,
         )
     }

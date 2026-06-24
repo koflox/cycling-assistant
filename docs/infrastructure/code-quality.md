@@ -38,38 +38,6 @@ Coverage thresholds for badge coloring:
 - **Companion object** — place at the top of the class body
 - **String resources** — follow `feature_component_description` pattern (e.g., `session_stat_*`, `notification_*`, `dialog_*`)
 
-### Method Reuse Within a Class
-
-Never call a `public`/`override` method from another method in the same class to reuse its
-logic. Extract the shared body into a `private fun` and call that from both places.
-
-**Why:** when the public method's behavior later changes, the impact must be explicit. A
-public → public internal call hides the coupling — editing one public method silently changes
-the behavior of every sibling that called it.
-
-```kotlin
-// ✗ Bad — reconcileStatus silently depends on refreshStatus's public contract
-override suspend fun refreshStatus(sessionId: String) {
-    val uploadId = syncRepository.getUploadId(sessionId) ?: return
-    uploadRepository.getUploadStatus(uploadId).onSuccess { applyUploadStatus(sessionId, it) }
-}
-override suspend fun reconcileStatus(sessionId: String) {
-    if (/* ... */) refreshStatus(sessionId)
-}
-
-// ✓ Good — both delegate to a shared private fun
-override suspend fun refreshStatus(sessionId: String) {
-    internalRefreshStatus(sessionId)
-}
-override suspend fun reconcileStatus(sessionId: String) {
-    if (/* ... */) internalRefreshStatus(sessionId)
-}
-private suspend fun internalRefreshStatus(sessionId: String) {
-    val uploadId = syncRepository.getUploadId(sessionId) ?: return
-    uploadRepository.getUploadStatus(uploadId).onSuccess { applyUploadStatus(sessionId, it) }
-}
-```
-
 ### Visibility Modifiers
 
 | Element                                          | Visibility   |

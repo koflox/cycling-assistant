@@ -1,0 +1,93 @@
+name: Main Pipeline
+
+# Orchestrator for merges to main. Runs the per-step reusable workflows in two stages:
+#
+#   detect changes ─► Stage 1: Deploy Docs (if docs)  ∥  Build & Cache (if code)
+#                            └─► Stage 2: Release APK (needs Build & Cache success)
+#
+# A change-detection gate preserves the previous path-based behavior: docs-only merges
+# deploy docs but do NOT re-release the APK; code-only merges build + release but skip the
+# docs deploy. Build & Cache warms the Gradle/build cache that Release APK reuses.
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  changes:
+    name: Detect Changes
+    runs-on: ubuntu-latest
+    outputs:
+      docs: ${{ steps.detect.outputs.docs }}
+      code: ${{ steps.detect.outputs.code }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Detect changed paths
+        id: detect
+        env:
+          BEFORE: ${{ github.event.before }}
+          AFTER: ${{ github.sha }}
+        run: |
+          # First push to the branch (or unavailable parent) — run everything.
+          if ! git rev-parse --verify --quiet "$BEFORE^{commit}" > /dev/null; then
+            echo "Previous commit unavailable — running docs + code."
+            echo "docs=true" >> "$GITHUB_OUTPUT"
+            echo "code=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          FILES=$(git diff --name-only "$BEFORE" "$AFTER")
+          echo "Changed files:"
+          echo "$FILES"
+
+          DOCS=false
+          CODE=false
+          while IFS= read -r f; do
+            [ -z "$f" ] && continue
+            case "$f" in
+              docs/*|mkdocs.yml) DOCS=true ;;   # mirrors Deploy Docs `paths`
+              *.md) ;;                          # markdown elsewhere: neither (mirrors build `paths-ignore`)
+              *) CODE=true ;;                   # anything else: a real build
+            esac
+          done <<< "$FILES"
+
+          echo "docs=$DOCS" >> "$GITHUB_OUTPUT"
+          echo "code=$CODE" >> "$GITHUB_OUTPUT"
+          echo "Result: docs=$DOCS code=$CODE"
+
+  # ── Stage 1 — in parallel, each gated on the relevant change type. ──
+  deploy-docs:
+    needs: changes
+    if: needs.changes.outputs.docs == 'true'
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    uses: ./.github/workflows/deploy-docs.yml
+
+  build-cache:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    permissions:
+      contents: read
+    uses: ./.github/workflows/build-cache.yml
+    secrets: inherit
+
+  # ── Stage 2 — after Stage 1. Requires Build & Cache success (so docs-only merges, where
+  # build is skipped, do not release); waits for Deploy Docs but does not require it. ──
+  release-apk:
+    needs: [deploy-docs, build-cache]
+    if: ${{ !cancelled() && needs.build-cache.result == 'success' }}
+    permissions:
+      contents: write
+    uses: ./.github/workflows/release-apk.yml
+    secrets: inherit
