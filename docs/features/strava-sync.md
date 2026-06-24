@@ -63,9 +63,16 @@ parameter that makes a scope mandatory, so we re-validate after the redirect:
 |---|---|---|
 | `read` | Athlete profile basics | Yes (always granted alongside others) |
 | `activity:write` | Upload activities | **Yes** |
-| `activity:read` | Read uploaded activities back (verify-on-open, view URL) | **Yes** |
+| `activity:read_all` | Read uploaded activities back (verify-on-open, view URL), **including private "Only You" activities** | **Yes** |
 
-If `activity:write` or `activity:read` is missing from the callback's `scope=` query parameter,
+`activity:read_all` is used instead of the narrower `activity:read` on purpose. Verify-on-open
+reads each synced activity back via `GET /activities/{id}`, and `activity:read` returns `404` for
+activities the athlete set to "Only You" — indistinguishable from a genuinely deleted activity.
+With only `activity:read`, a private ride would be wrongly treated as deleted and its local sync
+record cleared (the user then sees "Sync to Strava" again for an already-uploaded ride).
+`activity:read_all` can read private activities too, so a `404` becomes a reliable "deleted" signal.
+
+If `activity:write` or `activity:read_all` is missing from the callback's `scope=` query parameter,
 `StravaOAuthCodeProcessor` calls `authUseCase.logout()` (deletes the just-stored tokens) and
 emits `StravaAuthHint.MissingRequiredScopes` via `StravaAuthEvents`. The Connect screen renders
 this hint as a banner with a "Got it" dismiss button.
@@ -119,6 +126,10 @@ share tab on a `Synced` session, `StravaShareViewModel` triggers
 `syncUseCase.verifySyncedActivity(sessionId)` which calls `GET /activities/{id}` — a 404 means
 the activity is gone, and we clear the local sync row so the UI falls back to `NotSynced`. Any
 other error (network, auth, etc.) is silently ignored — we only react to a definitive "deleted".
+
+For the 404 to mean "deleted" rather than "not visible to this token", the app must hold the
+`activity:read_all` scope (see [Required scopes](#required-scopes)); `activity:read` alone 404s on
+private activities and would wrongly clear them.
 
 ## Manual refresh cooldown
 

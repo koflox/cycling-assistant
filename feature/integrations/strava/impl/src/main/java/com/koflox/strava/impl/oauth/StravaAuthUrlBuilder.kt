@@ -16,13 +16,22 @@ internal class StravaAuthUrlBuilder @Inject constructor(
         const val REDIRECT_URI = "$REDIRECT_SCHEME://$REDIRECT_HOST$REDIRECT_PATH"
 
         /**
-         * Scopes the app cannot operate without — `activity:read` and `activity:write` are
-         * required for the core Strava sync flow. `read` covers basic athlete data. The
-         * Strava consent UI presents these as user-toggleable checkboxes (there is no API
+         * Scopes the app cannot operate without — `activity:read_all` and `activity:write` are
+         * required for the core Strava sync flow. `read` covers basic athlete data.
+         *
+         * `activity:read_all` (not the narrower `activity:read`) is required because
+         * verify-on-open reads each synced activity back via `GET /activities/{id}` — and
+         * `activity:read` returns a `404` for activities the athlete set to "Only You",
+         * which is indistinguishable from a genuinely deleted activity. With only
+         * `activity:read`, a private ride would be wrongly treated as deleted and its local
+         * sync record cleared. `activity:read_all` can read private activities too, so the
+         * `404` becomes a reliable "deleted" signal.
+         *
+         * The Strava consent UI presents these as user-toggleable checkboxes (there is no API
          * to make them mandatory), so the redirect handler must re-validate the granted
          * scopes returned in the callback URL.
          */
-        val REQUIRED_SCOPES: Set<String> = setOf("activity:read", "activity:write")
+        val REQUIRED_SCOPES: Set<String> = setOf("activity:read_all", "activity:write")
 
         private const val AUTH_HOST = "www.strava.com"
         private val AUTH_PATH_SEGMENTS = listOf("oauth", "authorize")
