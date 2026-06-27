@@ -69,7 +69,7 @@ googleServices = "4.5.0"
 timber = "5.0.1"
 
 # HTTP Client
-ktor = "3.5.0"
+ktor = "3.5.1"
 
 # AndroidX Browser (Custom Tabs)
 androidxBrowser = "1.10.0"
