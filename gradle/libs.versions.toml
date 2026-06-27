@@ -44,7 +44,7 @@ datastore = "1.2.1"
 
 # Google Maps Compose
 mapsCompose = "8.3.0"
-playServicesLocation = "21.3.0"
+playServicesLocation = "21.4.0"
 playServicesMaps = "20.0.0"
 
 # JSON Parsing
