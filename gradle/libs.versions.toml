@@ -1,9 +1,10 @@
 [versions]
 # SDK
 compileSdk = "37"
+minorApiLevel = "1"
 minSdk = "24"
-targetSdk = "36"
-javaVersion = "11"
+targetSdk = "37"
+javaVersion = "17"
 
 # Build tools
 agp = "9.2.1"
