@@ -22,15 +22,15 @@ kover = "0.9.8"
 moduleGraph = "0.13.0"
 
 # ViewModels & Lifecycle
-lifecycleViewmodelKtx = "2.11.0"
-lifecycleRuntimeCompose = "2.11.0"
+lifecycleViewmodelKtx = "2.11.1"
+lifecycleRuntimeCompose = "2.11.1"
 
 # Coroutines
 coroutinesCore = "1.11.0"
 coroutinesAndroid = "1.11.0"
 
 # Hilt DI
-hilt = "2.60"
+hilt = "2.60.1"
 hiltNavigationCompose = "1.4.0"
 
 javaxInject = "1"
@@ -44,15 +44,15 @@ sqliteKtx = "2.7.1"
 datastore = "1.3.0"
 
 # Google Maps Compose
-mapsCompose = "8.3.0"
-playServicesLocation = "21.3.0"
-playServicesMaps = "20.0.0"
+mapsCompose = "9.0.1"
+playServicesLocation = "21.4.0"
+playServicesMaps = "20.1.0"
 
 # JSON Parsing
 kotlinxSerialization = "1.11.0"
 
 # Navigation
-navigationCompose = "2.10.1"
+navigationCompose = "2.10.2"
 
 # Permissions
 accompanistPermissions = "0.37.3"
