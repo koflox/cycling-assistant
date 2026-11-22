@@ -49,7 +49,7 @@ playServicesLocation = "21.4.0"
 playServicesMaps = "20.1.0"
 
 # JSON Parsing
-kotlinxSerialization = "1.11.0"
+kotlinxSerialization = "1.13.0"
 
 # Navigation
 navigationCompose = "2.10.2"
@@ -80,20 +80,20 @@ work = "2.12.0"
 hiltAndroidx = "1.4.0"
 
 # Screenshot Testing
-roborazzi = "1.65.0"
-robolectric = "4.16.1"
+roborazzi = "1.79.0"
+robolectric = "4.18.1"
 
 # Testing
 coroutinesTest = "1.11.0"
-mockk = "1.14.11"
+mockk = "1.14.12"
 turbine = "1.2.1"
 hiltAndroidTesting = "2.60.1"
-appcompat = "1.7.1"
+appcompat = "1.8.0"
 material = "1.14.0"
-navigationRuntimeKtx = "2.10.1"
-uiautomator = "2.4.0"
-benchmarkMacroJunit4 = "1.5.0-alpha07"
-baselineprofile = "1.5.0-alpha07"
+navigationRuntimeKtx = "2.10.2"
+uiautomator = "2.4.1"
+benchmarkMacroJunit4 = "1.5.0"
+baselineprofile = "1.5.0"
 profileinstaller = "1.4.1"
 
 [libraries]
