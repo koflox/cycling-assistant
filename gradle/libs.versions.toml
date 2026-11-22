@@ -30,8 +30,9 @@ coroutinesCore = "1.11.0"
 coroutinesAndroid = "1.11.0"
 
 # Hilt DI
-hilt = "2.59.2"
+hilt = "2.60"
 hiltNavigationCompose = "1.4.0"
+
 javaxInject = "1"
 
 # Room Database
