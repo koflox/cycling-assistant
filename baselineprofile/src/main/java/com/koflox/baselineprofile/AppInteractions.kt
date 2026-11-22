@@ -117,6 +117,7 @@ fun MacrobenchmarkScope.settingsStatsConfigScrolling() {
     device.waitForIdle()
 
     awaitAndPressBack()
+    awaitObject(TestTags.SETTINGS_SCREEN)
     awaitAndPressBack()
     waitForDashboard()
 }
@@ -157,6 +158,7 @@ fun MacrobenchmarkScope.statsConfigDragReorder() {
     }
 
     awaitAndPressBack()
+    awaitObject(TestTags.SETTINGS_SCREEN)
     awaitAndPressBack()
     waitForDashboard()
 }
