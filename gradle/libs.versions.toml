@@ -20,7 +20,6 @@ activityCompose = "1.13.0"
 composeBom = "2026.11.01"
 detekt = "1.23.8"
 kover = "0.9.11"
-moduleGraph = "0.15.0"
 
 # ViewModels & Lifecycle
 lifecycleViewmodelKtx = "2.11.1"
@@ -224,7 +223,6 @@ kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", versi
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
 kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
-module-graph = { id = "dev.iurysouza.modulegraph", version.ref = "moduleGraph" }
 android-library = { id = "com.android.library", version.ref = "agp" }
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 firebase-crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "firebaseCrashlyticsPlugin" }

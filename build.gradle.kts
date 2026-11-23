@@ -10,7 +10,6 @@ plugins {
     alias(libs.plugins.hilt) apply false
     alias(libs.plugins.detekt)
     alias(libs.plugins.kover)
-    alias(libs.plugins.module.graph)
     alias(libs.plugins.android.test) apply false
     alias(libs.plugins.baselineprofile) apply false
 }
@@ -100,10 +99,38 @@ kover {
 // ===========================================
 
 moduleGraphConfig {
-    readmePath.set("./docs/MODULE_GRAPH.md")
-    heading.set("# Module Dependency Graph")
-    theme.set(dev.iurysouza.modulegraph.Theme.NEUTRAL)
-    showFullPath.set(false)
-    rootModulesRegex.set(".*:app")
-    excludedModulesRegex.set(".*:testing")
+    graph(
+        readmePath = "./docs/MODULE_GRAPH.md",
+        heading = "# All Features Dependency Graph",
+    ) {
+        theme = dev.iurysouza.modulegraph.Theme.DARK
+        showFullPath = false
+        excludedModulesRegex = ".*:testing"
+        rootModulesRegex = ":app"
+        showTransitiveDependencies = false
+        focusedModulesRegex = ":feature.*"
+        nestingEnabled = true
+    }
+    graph(
+        readmePath = "./docs/MODULE_GRAPH.md",
+        heading = "# Session Feature Dependency Graph",
+    ) {
+        theme = dev.iurysouza.modulegraph.Theme.DARK
+        showFullPath = false
+        excludedModulesRegex = ".*:testing"
+        rootModulesRegex = ":feature:session.*"
+        showTransitiveDependencies = true
+        nestingEnabled = true
+    }
+    graph(
+        readmePath = "./docs/MODULE_GRAPH.md",
+        heading = "# Settings Feature Dependency Graph",
+    ) {
+        theme = dev.iurysouza.modulegraph.Theme.DARK
+        showFullPath = false
+        excludedModulesRegex = ".*:testing"
+        rootModulesRegex = ".*feature:settings.*"
+        showTransitiveDependencies = true
+        nestingEnabled = true
+    }
 }
