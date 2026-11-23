@@ -22,8 +22,11 @@ val isBundleBuild: Boolean = gradle.startParameter.taskNames.any { it.contains("
 
 android {
     namespace = "com.koflox.cyclingassistant"
-    compileSdk = libs.versions.compileSdk.get().toInt()
-
+    compileSdk {
+        version = release(libs.versions.compileSdk.get().toInt()) {
+            libs.versions.minorApiLevel.get().toIntOrNull()?.let { level -> minorApiLevel = level }
+        }
+    }
     defaultConfig {
         applicationId = "com.koflox.cyclingassistant"
         minSdk = libs.versions.minSdk.get().toInt()

@@ -20,6 +20,10 @@ dependencyResolutionManagement {
     }
 }
 
+plugins {
+    id("dev.iurysouza.modulegraph.settings") version "0.15.0"
+}
+
 rootProject.name = "CyclingAssistant"
 // alphabetically sorted
 include(":app")

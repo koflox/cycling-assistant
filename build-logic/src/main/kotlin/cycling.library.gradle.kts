@@ -10,8 +10,11 @@ plugins {
 
 extensions.configure<LibraryExtension> {
     val javaVersion = JavaVersion.toVersion(libs.version("javaVersion"))
-    compileSdk = libs.version("compileSdk").toInt()
-
+    compileSdk {
+        version = release(libs.version("compileSdk").toInt()) {
+            libs.version("minorApiLevel").toIntOrNull()?.let { level -> minorApiLevel = level }
+        }
+    }
     defaultConfig {
         minSdk = libs.version("minSdk").toInt()
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
