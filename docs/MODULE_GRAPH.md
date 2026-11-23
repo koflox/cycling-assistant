@@ -376,15 +376,3 @@ class :feature:session:tracking focus
 class :feature:settings focus
 class :feature:theme focus
 ```
-# Module Dependency Graph
-
-```mermaid
-%%{
-  init: {
-    'theme': 'neutral'
-  }
-}%%
-
-graph LR
-
-```
